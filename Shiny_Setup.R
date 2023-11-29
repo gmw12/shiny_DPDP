@@ -48,8 +48,9 @@ set_user <- function() {
 create_parameter_table <- function(session, input, output){
   cat(file = stderr(), "Function create_parameter_table", "\n")
 
-  columns <- c("fileprefix", "data_path", "backup_path", "extra_path", 
-               "qc_path", "string_path", "phos_path", "app_path")
+  columns <- c("file_prefix", "data_path", "backup_path", "extra_path", 
+               "qc_path", "string_path", "phos_path", "app_path", "raw_data_input", 
+               "ptm", "data_format")
   
   df = data.frame(matrix(nrow = 1, ncol = length(columns))) 
   colnames(df) <- columns
@@ -62,4 +63,6 @@ create_parameter_table <- function(session, input, output){
   
   gc(verbose = getOption("verbose"), reset = FALSE, full = TRUE)
   cat(file = stderr(), "Function create_parameter_table...end", "\n")
+  
+  return(df)
 }

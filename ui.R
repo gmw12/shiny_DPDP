@@ -75,15 +75,19 @@ useShinyjs()
       
       #Data
       tabItem(tabName = "data",
-              hr(),
-              box(title = "Data", status = "primary", solidHeader = TRUE, collapsible = FALSE, align = "center", width = 4, height = 300,
+              box(title = "Data", status = "primary", solidHeader = TRUE, collapsible = FALSE, align = "center", width = 4, height = 200,
                   tags$h3("Choose and Load the data file(s)..."),
                   br(),
                   shinyFilesButton('sfb_data_file', label = 'Choose Data File(s)', title = 'Please select data file(s)', multiple = TRUE,
                                    style = "color: #fff; background-color: #337ab7; border-color: #2e6da4"),
                   br(),
                   span(textOutput("data_file_name"), style = "color:blue; font-size:16px"),
-              )
+              ),
+              
+              uiOutput("box_test")
+              
+              
+              
       )      
       
       

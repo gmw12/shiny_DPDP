@@ -11,26 +11,25 @@ Simple_fread <- function(file) {
 file_set <- function(){
   cat(file = stderr(), "Function file_set", "\n")
   
-  conn <- dbConnect(RSQLite::SQLite(), database_path)
-  df <- dbReadTable(conn, "parameters")
-  
   #set paths
-  df$data_path <- data_path
-  df$backup_path <- create_dir(str_c(data_path, "Backup"))
-  df$extra_path <- create_dir(str_c(data_path, "Extra"))
-  df$qc_path <- create_dir(str_c(data_path, "QC"))
-  df$string_path <- create_dir(str_c(data_path, "String"))
-  df$phos_path <- create_dir(str_c(data_path, "Phos"))
-  df$app_path <- create_dir(str_c(data_path, "Backup/App"))
+  params$data_path <<- data_path
+  params$backup_path <<- create_dir(str_c(data_path, "Backup"))
+  params$extra_path <<- create_dir(str_c(data_path, "Extra"))
+  params$qc_path <<- create_dir(str_c(data_path, "QC"))
+  params$string_path <<- create_dir(str_c(data_path, "String"))
+  params$phos_path <<- create_dir(str_c(data_path, "Phos"))
+  params$app_path <<- create_dir(str_c(data_path, "Backup/App"))
   
-  dbWriteTable(conn, "parameters", df, overwrite = TRUE)
+  conn <- dbConnect(RSQLite::SQLite(), database_path)
+  dbWriteTable(conn, "parameters", params, overwrite = TRUE)
   dbDisconnect(conn)
   
   #archive code with data
+  cat(file = stderr(), "Function file_set... archive R files", "\n")
   r_files <- list.files()
   for (i in 1:length(r_files)) {
     if (grepl(".R$", r_files[i])) {
-      file.copy(r_files[i], str_c(df$app_path, r_files[i]))
+      file.copy(r_files[i], str_c(params$app_path, r_files[i]))
     }
   }
   
@@ -89,4 +88,17 @@ param_query <- function(param){
   return(df[1,1])
 }
 
+#----------------------------------------------------------------------------------------
+param_update <- function(param, value){
+  conn <- RSQLite::dbConnect(RSQLite::SQLite(), database_path)
+  query_str <<- str_c("UPDATE Parameters SET ", param, "=", value)
+  RSQLite::dbExecute(conn, query_str)
+  RSQLite::dbDisconnect(conn)
+}
 
+#----------------------------------------------------------------------------------------
+param_refresh <- function(){
+  conn <- RSQLite::dbConnect(RSQLite::SQLite(), database_path)
+  params <<- RSQLite::dbReadTable(conn, "parameters")
+  RSQLite::dbDisconnect(conn)
+}

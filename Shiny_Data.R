@@ -5,31 +5,67 @@ load_data_file <- function(session, input, output){
   cat(file = stderr(), "Function load_data_file", "\n")
   
   data_source <- "unkown"
-  data_sfb <<- parseFilePaths(volumes, input$sfb_data_file)
-  data_path <<- str_extract(data_sfb$datapath, "^/.*/")
+  data_sfb <- parseFilePaths(volumes, input$sfb_data_file)
+  data_path <- str_extract(data_sfb$datapath, "^/.*/")
   
   cat(file = stderr(), str_c("loading data file(s) from ", data_path[1]), "\n")
   
   #Proteome Discoverer
   if (nrow(data_sfb) > 1) {
-    cat(file = stderr(), str_c("data source <---- Proteome Discoverer"), "\n")
+    cat(file = stderr(), stringr::str_c("data source <---- Proteome Discoverer"), "\n")
     data_source <-  "PD"
     load_PD_data(data_sfb)
   }else {
     cat(file = stderr(), str_c("data source <---- Spectronaut/Fragpipe"), "\n")
-    load_data(data_path)
+    testme <- callr::r_bg(func = load_unknown_data, args = list(data_sfb, database_path, params), stderr = "error.txt", supervise = TRUE)
+    #load_unknown_data(data_sfb)
   }
 
-  
+  param_refresh()
+  gc(verbose = getOption("verbose"), reset = FALSE, full = TRUE)
   cat(file = stderr(), "Function load_data_file...end", "\n")
 }
+
+
+#----------------------------------------------------------------------------------------
+load_unknown_data <- function(data_sfb, database_path, params){
+  cat(file = stderr(), "function load_unkown_data...", "\n")
+  
+  df <- data.table::fread(file = data_sfb$datapath, header = TRUE, stringsAsFactors = FALSE, sep = "\t")
+  
+  if ("EG.PrecursorId" %in% names(df)) {
+    cat(file = stderr(), "Spectronaut data, precursor...", "\n")
+    params$raw_data_input <- "precursor"
+    
+    if ("PTMProbabilities" %in% names(df)) {
+      params$ptm <- TRUE
+    }else {
+      params$ptm <- FALSE
+    }
+    
+    if (length(grep("EG.TotalQuantity", names(df))) > 1) {
+      params$data_format <- "short"
+    }else {
+      params$data_format <- "long"
+    }
+  }
+  
+  conn <- RSQLite::dbConnect(RSQLite::SQLite(), database_path)
+  RSQLite::dbWriteTable(conn, "raw_precursor", df, overwrite = TRUE)
+  RSQLite::dbWriteTable(conn, "parameters", params, overwrite = TRUE)
+  RSQLite::dbDisconnect(conn)
+  
+  gc(verbose = getOption("verbose"), reset = FALSE, full = TRUE)
+  cat(file = stderr(), "function load_unkown_data...end", "\n")
+}
+
 
 
 #----------------------------------------------------------------------------------------
 load_PD_data <- function(data_sfb){
   cat(file = stderr(), "function load_PD_data...", "\n")
   start_time <- Sys.time()
-
+  
   #Loop through and load data in background
   for (i in 1:nrow(data_sfb) ) {
     raw_name <- data_sfb$datapath[i]
@@ -153,4 +189,3 @@ load_PD_data <- function(data_sfb){
   cat(file = stderr(), str_c("Data load time ---> ", Sys.time() - start_time), "\n")
   cat(file = stderr(), "function load_PD_data...end", "\n")
 }
-
