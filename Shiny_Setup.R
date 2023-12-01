@@ -1,3 +1,5 @@
+cat(file = stderr(), "Shiny_Setup.R", "\n")
+
 set_user <- function() {
   cat(file = stderr(), "Function - set_user", "\n")
   
@@ -42,19 +44,31 @@ set_user <- function() {
 
 
 
-
-
 #---------------------------------------------------------------------
 create_parameter_table <- function(session, input, output){
   cat(file = stderr(), "Function create_parameter_table", "\n")
 
   columns <- c("file_prefix", "data_path", "backup_path", "extra_path", 
                "qc_path", "string_path", "phos_path", "app_path", "raw_data_input", 
-               "ptm", "data_format")
+               "ptm", "data_format", "primary_group", "data_output", "norm_ptm", "norm_ptm_grep",
+               "input_ptm", "imput_ptm_grep", "peptide_select", "multi_tmt", "use_isoform"
+               )
   
   df = data.frame(matrix(nrow = 1, ncol = length(columns))) 
   colnames(df) <- columns
+  
   df$file_prefix <- input$file_prefix
+  
+  #set defaults
+  df$primary_group <- 1
+  df$data_output <- 1
+  df$norm_ptm <- FALSE
+  df$norm_ptm_grep <- "Phospho"
+  df$input_ptm <- FALSE
+  df$input_ptm_grep <- "Phospho"
+  df$peptide_select <- "razor"
+  df$multi_tmt <- FALSE
+  df$use_isoform <- FALSE
   
   conn <- RSQLite::dbConnect(RSQLite::SQLite(), database_path)
   RSQLite::dbWriteTable(conn, "parameters", df, overwrite = TRUE)
@@ -65,4 +79,43 @@ create_parameter_table <- function(session, input, output){
   cat(file = stderr(), "Function create_parameter_table...end", "\n")
   
   return(df)
+}
+
+
+#---------------------------------------------------------------------
+save_parameters <- function(session, input, output){
+  
+  cat(file = stderr(), "Function save_parameter_table...", "\n")
+  
+  params$primary_group <<- input$primary_group
+  params$data_output <<- input$data_output
+  params$norm_ptm <<- input$norm_ptm
+  params$norm_ptm_grep <<- input$norm_ptm_grep
+  params$impute_ptm <<- input$impute_ptm
+  params$impute_ptm_grep <<- input$impute_ptm_grep
+  params$peptide_select <<- input$peptide_select
+  params$multi_tmt <<- input$multi_tmt
+  params$use_isoform <<- input$use_isoform
+
+  conn <- RSQLite::dbConnect(RSQLite::SQLite(), database_path)
+  RSQLite::dbWriteTable(conn, "parameters", params, overwrite = TRUE)
+  RSQLite::dbDisconnect(conn)
+  
+  gc(verbose = getOption("verbose"), reset = FALSE, full = TRUE)
+  cat(file = stderr(), "Function save_parameter_table...end", "\n")
+  
+}
+
+
+#---------------------------------------------------------------------
+load_parameters <- function(session, input, output){
+  
+  cat(file = stderr(), "Function load_parameter_table...", "\n")
+  
+  updateCheckboxInput(session, "primary_group", value = params$primary_group)
+
+  
+  gc(verbose = getOption("verbose"), reset = FALSE, full = TRUE)
+  cat(file = stderr(), "Function load_parameter_table...end", "\n")
+  
 }

@@ -1,6 +1,6 @@
-cat(file = stderr(), "load Shiny_Startup.R", "\n")
+cat(file = stderr(), "Shiny_Startup.R", "\n")
 
-app_startup <- function(input, output, session) {
+app_startup <- function(session, input, output) {
   cat(file = stderr(), "Function - app_startup", "\n")
   
   #Check if database file present
