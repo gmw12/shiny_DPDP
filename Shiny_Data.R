@@ -4,7 +4,7 @@ cat(file = stderr(), "Shiny_Data.R", "\n")
 load_data_file <- function(session, input, output){
   cat(file = stderr(), "Function load_data_file", "\n")
   
-  data_source <- "unkown"
+  params$data_source <<- "unkown"
   data_sfb <- parseFilePaths(volumes, input$sfb_data_file)
   data_path <- str_extract(data_sfb$datapath, "^/.*/")
   
@@ -13,29 +13,33 @@ load_data_file <- function(session, input, output){
   #Proteome Discoverer
   if (nrow(data_sfb) > 1) {
     cat(file = stderr(), stringr::str_c("data source <---- Proteome Discoverer"), "\n")
-    data_source <-  "PD"
+    params$data_source <<-  "PD"
     load_PD_data(data_sfb)
   }else {
     cat(file = stderr(), str_c("data source <---- Spectronaut/Fragpipe"), "\n")
-    testme <- callr::r_bg(func = load_unknown_data, args = list(data_sfb, database_path, params), stderr = "error.txt", supervise = TRUE)
-    #load_unknown_data(data_sfb)
+    bg_proc <- callr::r_bg(func = load_unknown_data, args = list(data_sfb, params), stderr = "error.txt", supervise = TRUE)
+    bg_proc$wait()
   }
-
+  
+  #parameters are written to db during r_bg (process cannot write to params directly)
   param_refresh()
+  
   gc(verbose = getOption("verbose"), reset = FALSE, full = TRUE)
   cat(file = stderr(), "Function load_data_file...end", "\n")
 }
 
 
 #----------------------------------------------------------------------------------------
-load_unknown_data <- function(data_sfb, database_path, params){
-  cat(file = stderr(), "function load_unkown_data...", "\n")
+load_unknown_data <- function(data_sfb, params){
+  cat(file = stderr(), "Function load_unkown_data...", "\n")
   
   df <- data.table::fread(file = data_sfb$datapath, header = TRUE, stringsAsFactors = FALSE, sep = "\t")
   
   if ("EG.PrecursorId" %in% names(df)) {
     cat(file = stderr(), "Spectronaut data, precursor...", "\n")
-    params$raw_data_input <- "precursor"
+    
+    params$data_source <- "SP"
+    params$raw_data_format <- "precursor"
     
     if ("PTMProbabilities" %in% names(df)) {
       params$ptm <- TRUE
@@ -44,13 +48,13 @@ load_unknown_data <- function(data_sfb, database_path, params){
     }
     
     if (length(grep("EG.TotalQuantity", names(df))) > 1) {
-      params$data_format <- "short"
+      params$data_table_format <- "short"
     }else {
-      params$data_format <- "long"
+      params$data__table_format <- "long"
     }
   }
   
-  conn <- RSQLite::dbConnect(RSQLite::SQLite(), database_path)
+  conn <- RSQLite::dbConnect(RSQLite::SQLite(), params$database_path)
   RSQLite::dbWriteTable(conn, "raw_precursor", df, overwrite = TRUE)
   RSQLite::dbWriteTable(conn, "parameters", params, overwrite = TRUE)
   RSQLite::dbDisconnect(conn)

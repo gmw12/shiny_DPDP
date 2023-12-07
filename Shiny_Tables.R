@@ -4,7 +4,7 @@ cat(file = stderr(), "Shiny_Tables.R", "\n")
 create_design_table <- function(session, input, output){
   cat(file = stderr(), "Function create_design_table", "\n")
   
-  background <- callr::r_bg(build_design_table, args = list(database_path), supervise = TRUE)
+  background <- callr::r_bg(build_design_table, args = list(params$database_path), supervise = TRUE)
   background$wait()
   design_DT <- background$get_result()
   output$stats_design_table <-  DT::renderDataTable(design_DT)

@@ -25,3 +25,9 @@ library(DT)
 
 #parallel and background processing
 library(callr)
+
+#graphics
+library(gplots)
+library(rgl)
+library(colourpicker)
+library(randomcoloR)

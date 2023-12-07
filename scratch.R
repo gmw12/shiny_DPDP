@@ -1,5 +1,5 @@
 
-conn <- dbConnect(RSQLite::SQLite(), database_path)
+conn <- dbConnect(RSQLite::SQLite(), params$database_path)
 dbListTables(conn)
 
 df <- dbReadTable(conn, "parameters")

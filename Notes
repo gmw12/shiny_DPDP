@@ -1,0 +1,10 @@
+Group Factor removed from setup design, only used in impute .mle
+  group_factor <- rep(1, sample_groups$Count[1])
+  for (i in 2:nrow(sample_groups)) {
+    group_factor <- c(group_factor, rep(i, sample_groups$Count[i]))
+  }
+  group_factor <- factor(group_factor)
+  ------------------------
+  check shiny alerts for preventing errors in old code
+  ------------------------------------------
+  
