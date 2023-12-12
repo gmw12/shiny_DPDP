@@ -1,5 +1,8 @@
 cat(file = stderr(), "Shiny_UpdateWidgets.R", "\n")
 
+
+#-----------------------------------------------------------------------------------
+
 update_widgets <- function(session, input, output) {
   cat(file = stderr(), "Function - update_widgets", "\n")
   
@@ -21,5 +24,33 @@ update_widgets <- function(session, input, output) {
     
   }
   
+  
+}
+
+#-----------------------------------------------------------------------------------
+parameter_widget_save <- function(session, input, output){
+  cat(file = stderr(), "Function - parameter_widget_save...", "\n")
+  
+  names <- c('primary_group', 'data_output', 'ptm', 'norm_ptm', 'grep_norm_ptm', 'impute_ptm', 'grep_impute_ptm', 'multi_tmt', 
+             'peptide_select', 'use_isoform')
+  
+  for (name in names) {
+    params[[name]] <<- input[[name]]
+  }
+  
+  param_save()
+}
+
+#-----------------------------------------------------------------------------------
+filter_widget_save <- function(session, input, output){
+  cat(file = stderr(), "Function - parameter_widget_save...", "\n")
+  
+  names <- c('filter_min_measured_all', 'filter_x_percent', 'filter_x_percent_value', 'filter_cv', 'filter_cv_group', 'filter_cv_value')
+  
+  for (name in names) {
+    params[[name]] <<- input[[name]]
+  }
+  
+  param_save()
   
 }

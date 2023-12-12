@@ -3,9 +3,17 @@ conn <- dbConnect(RSQLite::SQLite(), params$database_path)
 dbListTables(conn)
 
 df <- dbReadTable(conn, "parameters")
-
+df <- dbReadTable(conn, "raw_precursor")
 
 RSQLite::dbDisconnect(conn)
+
+df <- df[(ncol(df)-params$sample_number+1):ncol(df)]
+df2 <- df |>  mutate(across(!where(is.numeric), as.numeric))
+
+
+test <- unique(df$EG.ModifiedSequence)
+test <- unique(df$PG.ProteinAccessions)
+
 
 #--------------------------------------------------------------------------------
 box(title = "Parameters", status = "primary", solidHeader = TRUE, collapsible = FALSE, align = "center", width = 4, height = 800,

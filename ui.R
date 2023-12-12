@@ -18,8 +18,7 @@ set_user()
       menuItem("Welcome", tabName = "welcome"),
       menuItem("Load", tabName = "load"),
       menuItem("Parameters", tabName = "parameters"),
-      menuItem("Overview"),
-      menuItem("Filter"),
+      menuItem("Filter", tabName = "filter"),
       menuItem("Normalize"),
       menuItem("Impute"),
       menuItem("Rollup"),
@@ -94,10 +93,12 @@ set_user()
         )
       ),
       
-      #Data
+      #Parameters
       tabItem(tabName = "parameters",
-                
-              box(id = "param_box", title = "Set analysis parameters...", status = "primary", solidHeader = TRUE, collapsible = FALSE, align = "left", width = 4, height = 750,
+          fluidRow(
+            column(width = 3,
+            fluidRow(
+              box(id = "param_box", title = "Set analysis parameters...", status = "primary", solidHeader = TRUE, collapsible = FALSE, align = "left", width = 12, height = 750,
 
                 selectInput("primary_group", label = "Full or primary group for filter and impute",
                                 choices = list("Full", "Primary"), selected = params$primary_group, width = 300),
@@ -122,13 +123,84 @@ set_user()
 
                 fluidRow(align = "center", actionButton("accept_parameters", label = "Accept Parameters",
                              style = "color: #fff; background-color: #337ab7; border-color: #2e6da4"))
-                )
-      ) 
-       
+                ))),
+        
+        column(width = 9,  
+            fluidRow(
+               box(title = "Raw Data", status = "primary", solidHeader = TRUE, collapsible = FALSE, width = 12, height = 625,
+                   fluidRow(
+                      column(width = 6, imageOutput("raw_bar")),
+                      column(width = 6, imageOutput("raw_box"))
+                   )
+               )),
+            fluidRow(
+                box(title = "Raw Meta Data", status = "primary", solidHeader = TRUE, collapsible = FALSE, width = 12, height = 100,
+                    fluidRow(
+                      column(width = 4, span(textOutput("meta_raw_precursor"), style = "color:blue; font-size:16px")),
+                      column(width = 4, span(textOutput("meta_raw_peptide"), style = "color:blue; font-size:16px")),
+                      column(width = 4, span(textOutput("meta_raw_protein"), style = "color:blue; font-size:16px"))
+                    )
+                ))
+              )
+          )
+        
+      ),
+      
+      #Filter
+      tabItem(tabName = "filter",
+              fluidRow(
+                column(width = 3,
+                       fluidRow(
+                         box(id = "filter_box", title = "Set filter parameters...", status = "primary", solidHeader = TRUE, collapsible = FALSE, align = "left", width = 12, height = 750,
+                             
+                             numericInput("filter_min_measured_all", label = "Enter minimum # measured values (all samples)", value = 2),
+                             hr(),
+                             checkboxInput("filter_x_percent", label = "Require X% measured values in at least one group"),
+                             numericInput("filter_x_percent_value", label = "Enter X% measured values (decimal)", value = 0.8),
+                             hr(),
+                             checkboxInput("filter_cv", label = "Filter on Specific Group CV"),
+                             selectInput("filter_cv_group", label = "Enter group for CV filter", 
+                                         choices = list("SPQC"), selected = "SPQC"),
+                             numericInput("filter_cv_value", label = "Enter CV% for cutoff", value = "Enter value here"),
+                             hr(),
+                             br(),
+                             
+                             fluidRow(align = "center", actionButton("filter_apply", label = "Apply Filters",
+                                                                     style = "color: #fff; background-color: #337ab7; border-color: #2e6da4"))
+                         ))),
+                
+                column(width = 9,  
+                       fluidRow(
+                         box(title = "Filter Data", status = "primary", solidHeader = TRUE, collapsible = FALSE, width = 12, height = 725,
+                             fluidRow(
+
+                             )
+                         )))
+              )
+      )
+      
+      
+      
+      
+      
+      
       
     )
   )
     
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
   
   dashboardPage(
     dashboardHeader(title = "Duke Proteomics Data Processing", titleWidth = 325),

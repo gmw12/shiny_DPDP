@@ -71,8 +71,27 @@ shinyServer(function(session, input, output) {
 
  observeEvent(input$accept_parameters, {
    cat(file = stderr(), "accept parameters clicked", "\n")
+   parameter_widget_save(session, input, output)
    set_sample_groups(session, input, output)
    param_refresh()
+   bg_bar <- callr::r_bg(func = bar_plot, args = list("raw_precursor", "Raw_Precursor", params$qc_path, params), stderr = "error.txt", supervise = TRUE)
+   bg_box <- callr::r_bg(func = box_plot, args = list("raw_precursor", "Raw_Precursor", params$qc_path, params), stderr = "error2.txt", supervise = TRUE)
+   bg_meta <- callr::r_bg(func = raw_meta, args = list("raw_precursor", params), stderr = "error3.txt", supervise = TRUE)
+   bg_bar$wait
+   bg_box$wait
+   bg_meta$wait
+   param_refresh()
+   
+   wait_cycle <- 0
+   while (!file.exists(str_c(params$qc_path,"Raw_Precursor_barplot.png"))) {
+     if (wait_cycle < 10) {
+       Sys.sleep(0.5)
+       wait_cycle <- wait_cycle + 1
+      }
+     }
+   
+   render_parameters_graphs(session, input, output)
+   
  })
   
 

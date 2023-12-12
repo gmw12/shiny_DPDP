@@ -68,6 +68,7 @@ app_startup <- function(session, input, output) {
     #create design table
     create_design_table(session, input, output)
     render_data_info(session, input, output)
+    render_parameters_graphs(session, input, output)
   }else{
     loaded_database <- "none"
     loaded_prefix <- "none"
@@ -80,8 +81,9 @@ app_startup <- function(session, input, output) {
   cat(file = stderr(), "Function - app_startup...end", "\n")
 }
 
-
+#---------------------------------------------------------------------------------------------------------
 create_default_params <- function() {
+  cat(file = stderr(), "Function - create_default_params", "\n")
   
   params <<- data.frame(
               "database_path" = "na",
@@ -111,7 +113,16 @@ create_default_params <- function() {
               "use_isoform" = FALSE,
               "sample_number" = 0,
               "group_number" = 0,
-              "unique_groups" = "na"
+              "unique_groups" = "na",
+              "meta_raw_precursor" = 0,
+              "meta_raw_peptide" = 0,
+              "meta_raw_protein" = 0,
+              "filter_min_measured_all" = 2,
+              "filter_x_percent" = FALSE,
+              "filter_x_percent_value" = 0.5,
+              "filter_cv" = FALSE,
+              "filter_cv_group" = "SPQC",
+              "filter_cv_value" = 99
               
   )
 }

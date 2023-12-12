@@ -193,3 +193,18 @@ load_PD_data <- function(data_sfb){
   cat(file = stderr(), str_c("Data load time ---> ", Sys.time() - start_time), "\n")
   cat(file = stderr(), "function load_PD_data...end", "\n")
 }
+
+
+#--------------------------------------------------------
+raw_meta <- function(table_name, params){
+  cat(file = stderr(), "function load_PD_data...", "\n")
+  
+  conn <- RSQLite::dbConnect(RSQLite::SQLite(), params$database_path)
+  df <- RSQLite::dbReadTable(conn, table_name)
+  RSQLite::dbDisconnect(conn)
+ 
+  params$meta_raw_precursor <- nrow(df)
+  params$meta_raw_peptide <- length(unique(df$EG.ModifiedSequence))
+  params$meta_raw_protein <- length(unique(df$PG.ProteinAccessions))
+   
+}

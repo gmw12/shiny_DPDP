@@ -106,7 +106,7 @@ param_refresh <- function(){
 #----------------------------------------------------------------------------------------
 param_save <- function(){
   conn <- RSQLite::dbConnect(RSQLite::SQLite(), params$database_path)
-  RSQLite::dbWriteTable(conn, "parameters", params)
+  RSQLite::dbWriteTable(conn, "parameters", params, overwrite = TRUE)
   RSQLite::dbDisconnect(conn)
 }
 
