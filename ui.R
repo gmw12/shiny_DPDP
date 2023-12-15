@@ -6,10 +6,12 @@ source("Shiny_Startup.R")
 
 if (!exists('params')) {
   cat(file = stderr(), "params file does not exist...", "\n")
-  create_default_params() }
-
-#set user
-set_user()
+  create_default_params() 
+  
+  #set user
+  set_user()
+  
+  }
 
 
   sidebar <- dashboardSidebar(width = 165,
@@ -171,11 +173,21 @@ set_user()
                 
                 column(width = 9,  
                        fluidRow(
-                         box(title = "Filter Data", status = "primary", solidHeader = TRUE, collapsible = FALSE, width = 12, height = 725,
+                         box(title = "Filter Data", status = "primary", solidHeader = TRUE, collapsible = FALSE, width = 12, height = 625,
                              fluidRow(
-
+                               column(width = 6, imageOutput("filter_bar")),
+                               column(width = 6, imageOutput("filter_box"))
                              )
-                         )))
+                         )),
+                       fluidRow(
+                         box(title = "Filter Meta Data", status = "primary", solidHeader = TRUE, collapsible = FALSE, width = 12, height = 100,
+                             fluidRow(
+                               column(width = 4, span(textOutput("meta_precursor_filter"), style = "color:blue; font-size:16px")),
+                               column(width = 4, span(textOutput("meta_peptide_filter"), style = "color:blue; font-size:16px")),
+                               column(width = 4, span(textOutput("meta_protein_filter"), style = "color:blue; font-size:16px"))
+                             )
+                         ))
+                )
               )
       )
       

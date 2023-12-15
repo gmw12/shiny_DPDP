@@ -54,7 +54,7 @@ load_design_file <- function(session, input, output){
   cat(file = stderr(), str_c("loading design file from ", params$design_path), "\n")
   
   bg_design <- callr::r_bg(excel_to_db, args = list(design_sbf$datapath, "design", params$database_path), stderr = "error_design.txt", supervise = TRUE)
-  bg_designt$wait()
+  bg_design$wait()
   cat(file = stderr(), readLines("error_design.txt"), "\n")
   
   gc(verbose = getOption("verbose"), reset = FALSE, full = TRUE)

@@ -8,7 +8,7 @@ create_design_table <- function(session, input, output){
   bg_designtable$wait()
   cat(file = stderr(), readLines("error_designtable.txt"), "\n")
   
-  design_DT <- background$get_result()
+  design_DT <- bg_designtable$get_result()
   output$stats_design_table <-  DT::renderDataTable(design_DT)
   
   cat(file = stderr(), "Function create_design_table...end", "\n")

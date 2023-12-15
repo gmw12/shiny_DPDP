@@ -6,6 +6,9 @@ df <- dbReadTable(conn, "parameters")
 df <- dbReadTable(conn, "precursor_raw")
 df <- dbReadTable(conn, "design")
 
+df <- dbReadTable(conn, "precursor_filter")
+
+
 RSQLite::dbDisconnect(conn)
 
 df <- df[(ncol(df) - params$sample_number+1):ncol(df)]

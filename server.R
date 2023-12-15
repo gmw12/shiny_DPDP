@@ -33,7 +33,7 @@ shinyServer(function(session, input, output) {
       file_set()
       
       #update UI
-      ui_update_load_design(session, input, output)
+      ui_render_load_design(session, input, output)
       
       #backup design table
       design_sbf <- parseFilePaths(volumes, input$sfb_design_file)
@@ -59,7 +59,7 @@ shinyServer(function(session, input, output) {
       output$data_file_name <- renderText({get_data_file_name()})
       
       #update UI
-      ui_update_load_data(session, input, output)
+      ui_render_load_data(session, input, output)
       
       removeModal()
     }
@@ -84,7 +84,7 @@ shinyServer(function(session, input, output) {
    cat(file = stderr(), readLines("error_boxplot.txt"), "\n")
    
 
-   bg_meta <- callr::r_bg(func = raw_meta, args = list("precursor_raw", params), stderr = "error_rawmeta.txt", supervise = TRUE)
+   bg_meta <- callr::r_bg(func = meta_data, args = list("precursor_raw", "raw", params), stderr = "error_rawmeta.txt", supervise = TRUE)
    bg_meta$wait()
    cat(file = stderr(), readLines("error_rawmeta.txt"), "\n")
    
@@ -98,7 +98,7 @@ shinyServer(function(session, input, output) {
       }
      }
 
-   ui_update_parameters(session, input, output)
+   ui_render_parameters(session, input, output)
    
    # Organize raw data into selected columns and info column names
    removeModal()
@@ -121,6 +121,30 @@ shinyServer(function(session, input, output) {
    showModal(modalDialog("Applying data filters...", footer = NULL))
    filter_data(session, input, output)
    filter_widget_save(session, input, output)
+   
+   bg_bar <- callr::r_bg(func = bar_plot, args = list("precursor_filter", "Precursor_Filter", params$qc_path, params), stderr = "error_filterbarplot.txt", supervise = TRUE)
+   bg_box <- callr::r_bg(func = box_plot, args = list("precursor_filter", "Precursor_Filter", params$qc_path, params), stderr = "error_filterboxplot.txt", supervise = TRUE)
+   bg_box$wait()
+   bg_bar$wait()
+   cat(file = stderr(), readLines("error_filterbarplot.txt"), "\n")
+   cat(file = stderr(), readLines("error_filterboxplot.txt"), "\n")
+   
+   bg_meta <- callr::r_bg(func = meta_data, args = list("precursor_filter", "filter", params), stderr = "error_filtermeta.txt", supervise = TRUE)
+   bg_meta$wait()
+   cat(file = stderr(), readLines("error_filtermeta.txt"), "\n")
+   
+   params <<- param_load_from_database()
+   
+   wait_cycle <- 0
+   while (!file.exists(str_c(params$qc_path,"Precursor_Raw_barplot.png"))) {
+     if (wait_cycle < 10) {
+       Sys.sleep(0.5)
+       wait_cycle <- wait_cycle + 1
+     }
+   }
+   
+   ui_render_filter(session, input, output)
+   
    removeModal()
    
    

@@ -67,12 +67,16 @@ app_startup <- function(session, input, output) {
     loaded_prefix <- params$file_prefix
     
     #updateUI
-    app_start <- TRUE
-    ui_update_load_design(session, input, output, app_start)
-    ui_update_load_data(session, input, output)
-    ui_update_parameters(session, input, output)
-    
+    ui_render_load_design(session, input, output)
+    ui_render_load_data(session, input, output)
+    ui_render_parameters(session, input, output)
     render_parameters_graphs(session, input, output)
+    ui_render_filter(session, input, output)
+    render_filter_graphs(session, input, output)
+    
+    #update Widgets
+    update_widgets(session, input, output)
+    
   }else{
     loaded_database <- "none"
     loaded_prefix <- "none"
@@ -125,6 +129,9 @@ create_default_params <- function() {
               "meta_precursor_raw" = 0,
               "meta_peptide_raw" = 0,
               "meta_protein_raw" = 0,
+              "meta_precursor_filter" = 0,
+              "meta_peptide_filter" = 0,
+              "meta_protein_filter" = 0,
               "filter_min_measured_all" = 2,
               "filter_x_percent" = FALSE,
               "filter_x_percent_value" = 0.5,
@@ -134,6 +141,7 @@ create_default_params <- function() {
               "info_col_precursor" = 0,
               "info_col_peptide" = 0,
               "info_col_protein" = 0
+              
               
   )
 }

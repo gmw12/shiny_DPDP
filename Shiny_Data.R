@@ -183,7 +183,7 @@ load_PD_data <- function(data_sfb){
   
   for (i in 1:nrow(data_sfb) ) {
     data_file = data_sfb$datapath[i]
-    background <- callr::r_bg(func = save_data_bg, args = list(file1 = data_file, dir1 = backup_path), supervise = TRUE)
+    bg_savedata <- callr::r_bg(func = save_data_bg, args = list(file1 = data_file, dir1 = backup_path), supervise = TRUE)
   }
   
   
@@ -197,15 +197,27 @@ load_PD_data <- function(data_sfb){
 
 
 #--------------------------------------------------------
-raw_meta <- function(table_name, params){
-  cat(file = stderr(), "function raw_meta...", "\n")
+meta_data <- function(table_name, data_format, params){
+  cat(file = stderr(), "function meta_data...", "\n")
   
   conn <- RSQLite::dbConnect(RSQLite::SQLite(), params$database_path)
   df <- RSQLite::dbReadTable(conn, table_name)
 
-  params$meta_precursor_raw <- nrow(df)
-  params$meta_peptide_raw <- length(unique(df$EG.ModifiedSequence))
-  params$meta_protein_raw <- length(unique(df$PG.ProteinAccessions))
+  precursor_name <- stringr::str_c("meta_precursor_", data_format)
+  peptide_name <- stringr::str_c("meta_peptide_", data_format)
+  protein_name <- stringr::str_c("meta_protein_", data_format)
+  
+  params[[precursor_name]] <- nrow(df)
+  
+  if (data_format == "raw"){
+    params[[peptide_name]] <- length(unique(df$EG.ModifiedSequence))
+    params[[protein_name]] <- length(unique(df$PG.ProteinAccessions))
+  } else {
+    params[[peptide_name]] <- length(unique(df$Sequence))
+    params[[protein_name]] <- length(unique(df$Accession))
+  }
+  
+  
   
   RSQLite::dbWriteTable(conn, "parameters", params, overwrite = TRUE)
   RSQLite::dbDisconnect(conn)

@@ -1,8 +1,8 @@
 cat(file = stderr(), "load Shiny_UI_Update.R", "\n")
 
 #-------------------------------------------------------------------------------------------
-ui_update_load_design <- function(session, input, output, app_start=FALSE) {
-  cat(file = stderr(), "Function ui_update_load_design", "\n")
+ui_render_load_design <- function(session, input, output) {
+  cat(file = stderr(), "Function ui_render_load_design", "\n")
   
   output$data_source <- renderText({str_c("Source:  ", params$data_source)})
   output$data_format <- renderText({str_c("Input format:  ", params$raw_data_format)})
@@ -20,15 +20,11 @@ ui_update_load_design <- function(session, input, output, app_start=FALSE) {
   #create design table
   create_design_table(session, input, output)
   
-  if (app_start) {
-    updateTextInput(session, 'file_prefix', value = params$file_prefix)
-  }
-  
   }
 
 #-------------------------------------------------------------------------------------------
-ui_update_load_data <- function(session, input, output) {
-  cat(file = stderr(), "Function ui_update_load_data", "\n")
+ui_render_load_data <- function(session, input, output) {
+  cat(file = stderr(), "Function ui_render_load_data", "\n")
 
   output$data_file_name <- renderText({params$data_file})
   
@@ -36,29 +32,15 @@ ui_update_load_data <- function(session, input, output) {
 
 
 #------------------------------------------------------------------------
-ui_update_parameters <- function(session, input, output, app_start = FALSE) {
-  cat(file = stderr(), "Function ui_update_parameters", "\n")
+ui_render_parameters <- function(session, input, output) {
+  cat(file = stderr(), "Function ui_render_parameters", "\n")
   
     render_parameters_graphs(session, input, output)
   
     output$meta_precursor_raw <- renderText({str_c('Raw Precursors:  ', params$meta_precursor_raw)})
     output$meta_peptide_raw <- renderText({str_c('Raw Peptides:  ', params$meta_peptide_raw)})
     output$meta_protein_raw <- renderText({str_c('Raw Protein:  ', params$meta_protein_raw)})
-    
-    
-    if (app_start){
-      updateCheckboxInput(session, 'ptm', value = params$ptm)
-      updateCheckboxInput(session, 'norm_ptm', value = params$norm_ptm)
-      updateTextInput(session, 'norm_ptm_grep', value = params$norm_ptm_grep)
-      updateCheckboxInput(session, 'impute_ptm', value = params$norm_ptm)
-      updateTextInput(session, 'impute_ptm_grep', value = params$norm_ptm_grep)
-      
-      updateSelectInput(session, 'peptide_select', selected = params$peptide_select)
-      
-      updateCheckboxInput(session, 'multi_tmt', value = params$multi_tmt)
-      
-      updateCheckboxInput(session, 'use_isoform', value = params$use_isoform)
-    }
+
 }
 
 #-------------------------------------------------------------------------------------------
@@ -73,9 +55,36 @@ render_parameters_graphs <- function(session, input, output) {
     list(src = str_c(params$qc_path,"Precursor_Raw_boxplot.png"), contentType = 'image/png', width = 600, height = 500, alt = "this is alt text")
   }, deleteFile = FALSE)
 
+}
 
+
+#------------------------------------------------------------------------
+ui_render_filter <- function(session, input, output) {
+  cat(file = stderr(), "Function ui_update_parameters", "\n")
+  
+  render_filter_graphs(session, input, output)
+  
+  output$meta_precursor_filter <- renderText({str_c('Raw Precursors:  ', params$meta_precursor_filter)})
+  output$meta_peptide_filter <- renderText({str_c('Raw Peptides:  ', params$meta_peptide_filter)})
+  output$meta_protein_filter <- renderText({str_c('Raw Protein:  ', params$meta_protein_filter)})
   
 }
+
+#-------------------------------------------------------------------------------------------
+render_filter_graphs <- function(session, input, output) {
+  cat(file = stderr(), "Function render_graphs", "\n")
+  
+  output$filter_bar <- renderImage({
+    list(src = str_c(params$qc_path,"Precursor_Filter_barplot.png"), contentType = 'image/png', width = 600, height = 500, alt = "this is alt text")
+  }, deleteFile = FALSE)
+  
+  output$filter_box <- renderImage({
+    list(src = str_c(params$qc_path,"Precursor_Filter_boxplot.png"), contentType = 'image/png', width = 600, height = 500, alt = "this is alt text")
+  }, deleteFile = FALSE)
+  
+}
+
+
 
 #-----------------------------------------------------------------------------------
 
@@ -84,19 +93,26 @@ update_widgets <- function(session, input, output) {
   
   if (exists("params")) {
     
+    #Load-----------------------------------------------------------------
     updateTextInput(session, 'file_prefix', value = params$file_prefix)
     
+    #Parameters--------------------------------------------------------
     updateCheckboxInput(session, 'ptm', value = params$ptm)
     updateCheckboxInput(session, 'norm_ptm', value = params$norm_ptm)
     updateTextInput(session, 'norm_ptm_grep', value = params$norm_ptm_grep)
     updateCheckboxInput(session, 'impute_ptm', value = params$norm_ptm)
     updateTextInput(session, 'impute_ptm_grep', value = params$norm_ptm_grep)
-    
     updateSelectInput(session, 'peptide_select', selected = params$peptide_select)
-    
     updateCheckboxInput(session, 'multi_tmt', value = params$multi_tmt)
-    
     updateCheckboxInput(session, 'use_isoform', value = params$use_isoform)
+    
+    #Filter---------------------------------------------------
+    updateNumericInput(session, 'filter_min_measured_all', value = params$filter_min_measured_all) 
+    updateCheckboxInput(session, 'filter_x_percent', value = params$filter_x_percent) 
+    updateNumericInput(session, 'filter_x_percent_value', value = params$filter_x_percent_value)
+    updateCheckboxInput(session, 'filter_cv', value = params$filter_cv) 
+    updateSelectInput(session, 'filter_cv_group', selected = params$filter_cv_group)
+    updateNumericInput(session, 'filter_cv_value', value = params$filter_cv_value)
     
   }
   
