@@ -73,6 +73,7 @@ app_startup <- function(session, input, output) {
     render_parameters_graphs(session, input, output)
     ui_render_filter(session, input, output)
     render_filter_graphs(session, input, output)
+    render_norm_graphs(session, input, output)
     
     #update Widgets
     update_widgets(session, input, output)
@@ -140,7 +141,11 @@ create_default_params <- function() {
               "filter_cv_value" = 99,
               "info_col_precursor" = 0,
               "info_col_peptide" = 0,
-              "info_col_protein" = 0
+              "info_col_protein" = 0,
+              "norm_include" = FALSE,
+              "include_norm_grep" = "trypsin|keratin", 
+              "norm_exclude" = FALSE,
+              "exclude_norm_grep" = "trypsin|keratin"
               
               
   )

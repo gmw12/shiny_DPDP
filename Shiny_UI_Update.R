@@ -72,7 +72,7 @@ ui_render_filter <- function(session, input, output) {
 
 #-------------------------------------------------------------------------------------------
 render_filter_graphs <- function(session, input, output) {
-  cat(file = stderr(), "Function render_graphs", "\n")
+  cat(file = stderr(), "Function render_filter_graphs", "\n")
   
   output$filter_bar <- renderImage({
     list(src = str_c(params$qc_path,"Precursor_Filter_barplot.png"), contentType = 'image/png', width = 600, height = 500, alt = "this is alt text")
@@ -91,6 +91,15 @@ render_filter_graphs <- function(session, input, output) {
 }
 
 
+#-------------------------------------------------------------------------------------------
+render_norm_graphs <- function(session, input, output) {
+  cat(file = stderr(), "Function render_norm_graphs", "\n")
+
+  output$norm_normdata_bar <- renderImage({
+    list(src = str_c(params$qc_path,"Precursor_NormData_barplot.png"), contentType = 'image/png', width = 480, height = 400, alt = "this is alt text")
+  }, deleteFile = FALSE)
+  
+}
 
 #-----------------------------------------------------------------------------------
 
@@ -156,7 +165,7 @@ filter_widget_save <- function(session, input, output){
 norm_widget_save <- function(session, input, output){
   cat(file = stderr(), "Function - parameter_widget_save...", "\n")
   
-  names <- c("checkbox_norm_exclude", "exclude_norm_grep", "checkbox_norm_include", "include_norm_grep", "norm_ptm", "grep_norm_ptm")
+  names <- c("norm_exclude", "exclude_norm_grep", "norm_include", "include_norm_grep", "norm_ptm", "grep_norm_ptm")
   
   for (name in names) {
     params[[name]] <<- input[[name]]

@@ -146,11 +146,42 @@ shinyServer(function(session, input, output) {
    ui_render_filter(session, input, output)
    
    removeModal()
-   
-   
  })
  
   
+ 
+ 
+ 
+ observeEvent(input$norm_parameters, {
+   cat(file = stderr(), "norm parameters clicked", "\n")
+   
+   norm_widget_save(session, input, output)
+   
+   norm_filter()
+   
+   render_norm_graphs(session, input, output)
+
+ })
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
  observeEvent(input$clean_environment, {
    cat(file = stderr(), "load clean environment", "\n")
    try(rm(list = ls(envir = .GlobalEnv), pos = .GlobalEnv, inherits = FALSE))

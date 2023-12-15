@@ -21,7 +21,7 @@ if (!exists('params')) {
       menuItem("Load", tabName = "load"),
       menuItem("Parameters", tabName = "parameters"),
       menuItem("Filter", tabName = "filter"),
-      menuItem("Normalize"),
+      menuItem("Normalize", tabName = "normalize"),
       menuItem("Impute"),
       menuItem("Rollup"),
       menuItem("Stats"),
@@ -110,11 +110,6 @@ if (!exists('params')) {
 
                 checkboxInput("ptm", label = "PTM Analysis?", value = params$ptm, width = 300),
                   
-                checkboxInput("norm_ptm", label = "Normalize on PTM?", value = params$norm_ptm, width = 300),
-                textInput("norm_ptm_grep", label = "Normalize PTM grep", value = params$norm_ptm_grep, width = 300),
-                checkboxInput("impute_ptm", label = "Impute Distribution based on PTM?", value = params$input_ptm, width = 300),
-                textInput("impute_ptm_grep", label = "Impute PTM grep", value = params$input_ptm_grep, width = 300),
-                    
                 checkboxInput("multi_tmt", label = "SPQC Normalized TMT sets"),
                   
                 selectInput("peptide_select", label = h5("Peptides to Use"),
@@ -189,7 +184,84 @@ if (!exists('params')) {
                          ))
                 )
               )
-      )
+      ),
+      
+      
+      #Normalize
+      tabItem(tabName = "normalize",
+              fluidRow(
+                column(width = 8,
+                  box(id = "norm_param_box", title = "Set normalization parameters...", status = "primary",
+                          solidHeader = TRUE, collapsible = FALSE, align = "left", width = 12, height = 230,
+                      fluidRow(
+                        column(width = 4,
+                          checkboxInput("norm_include", label = "Include only grep for norm (trypsin|keratin)"),
+                          textInput("include_norm_grep", label = "Filter Include grep", value = "trypsin|keratin"),
+                        ),
+                        column(width = 4,
+                          checkboxInput("norm_exclude", label = "Exclude grep from norm (trypsin|keratin)"),
+                          textInput("exclude_norm_grep", label = "Filter Exclude grep", value = "trypsin|keratin"),
+                        ),
+                        column(width = 4,
+                          checkboxInput("norm_ptm", label = "Normalize on PTM?", value = params$norm_ptm, width = 300),
+                          textInput("norm_ptm_grep", label = "Normalize PTM grep", value = params$norm_ptm_grep, width = 300),
+                          #checkboxInput("impute_ptm", label = "Impute Distribution based on PTM?", value = params$input_ptm, width = 300),
+                          #textInput("impute_ptm_grep", label = "Impute PTM grep", value = params$input_ptm_grep, width = 300),
+                        ),
+                       
+                       fluidRow(align = "center", actionButton("norm_parameters", label = "Apply Normalizaton Parameters",
+                                                               style = "color: #fff; background-color: #337ab7; border-color: #2e6da4"))
+                       
+                       )
+                      ) 
+                    ),
+                  column(width = 4,
+                    box(id = "norm_box", title = "Normalization strategy...", status = "primary",
+                          solidHeader = TRUE, collapsible = FALSE, align = "left", width = 12, height = 230, 
+                      selectInput("norm_type", label = "Select normalization strategy",
+                                         choices = list("Sample Loading - Total" = "sl",
+                                                        "Trimmed Mean" = "tmm",
+                                                        "Samle Loading Trimmed Mean" = "sltmm",
+                                                        "Protein" = "protein",
+                                                        "DirectLFQ" = "directlfq",
+                                                        "Quantile" = "quantile",
+                                                        "Linear Regression" = "lg",
+                                                        "LOESS" = "loess",
+                                                        "VSN" = "vsn",
+                                                        "Median of Total Intensity" = "mti",
+                                                        "Median Intensity" = "mi",
+                                                        "Average Intensity" = "ai"), selected = "SLTMM"),
+                      fluidRow(align = "center", actionButton("norm_apply", label = "Apply Normalization",
+                                                                     style = "color: #fff; background-color: #337ab7; border-color: #2e6da4"))
+                         )
+                    )
+                
+              ),
+              
+              fluidRow(
+                box(title = "Normalized Data", status = "primary", solidHeader = TRUE, collapsible = FALSE, width = 12, height = 500,
+                    fluidRow(
+                      column(width = 4, imageOutput("norm_data_start_bar")),
+                      column(width = 4, imageOutput("norm_normdata_bar")),
+                      column(width = 4, imageOutput("norm_bar"))
+                    )
+                )
+              )
+      )     
+      
+      
+      
+      
+      
+      
+      
+      
+      
+      
+      
+      
+      
+      
       
       
       
