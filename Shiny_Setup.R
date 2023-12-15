@@ -19,27 +19,6 @@ create_parameter_table <- function(session, input, output){
 
 
 #---------------------------------------------------------------------
-save_parameters <- function(session, input, output){
-  
-  cat(file = stderr(), "Function save_parameters...", "\n")
-
-  for (name in names(params)) {
-    if (!is.null(input[[name]])) {
-      params[[name]] <<- input[[name]]
-    }
-  }
-
-  conn <- RSQLite::dbConnect(RSQLite::SQLite(), params$database_path)
-  RSQLite::dbWriteTable(conn, "parameters", params, overwrite = TRUE)
-  RSQLite::dbDisconnect(conn)
-  
-  gc(verbose = getOption("verbose"), reset = FALSE, full = TRUE)
-  cat(file = stderr(), "Function save_parameter_table...end", "\n")
-  
-}
-
-
-#---------------------------------------------------------------------
 load_parameters <- function(session, input, output){
   
   cat(file = stderr(), "Function load_parameter_table...", "\n")
@@ -52,16 +31,19 @@ load_parameters <- function(session, input, output){
 }
 
 
-
 #---------------------------------------------------------------------
 load_design_file <- function(session, input, output){
   cat(file = stderr(), "Function load_design_file", "\n")
   
   design_sbf <- parseFilePaths(volumes, input$sfb_design_file)
-  design_path <- str_extract(design_sbf$datapath, "^/.*/")
+  params$design_path <<- str_extract(design_sbf$datapath, "^/.*/")
+  params$design_file <<- design_sbf$datapath
+  
+  # set root data dir
+  volumes <<- c(dd = params$design_path, volumes)
   
   #Global set of data and database paths
-  params$data_path <<- str_c(design_path, input$file_prefix, "/")
+  params$data_path <<- str_c(params$design_path, input$file_prefix, "/")
   database_dir <- str_c(getwd(), "/database/")
   params$database_path <<- str_c(database_dir, input$file_prefix, ".db")
   
@@ -69,10 +51,11 @@ load_design_file <- function(session, input, output){
   create_dir(params$data_path)
   create_dir(database_dir)
   
-  cat(file = stderr(), str_c("loading design file from ", design_path), "\n")
+  cat(file = stderr(), str_c("loading design file from ", params$design_path), "\n")
   
-  test <- callr::r_bg(excel_to_db, args = list(design_sbf$datapath, "design", params$database_path), stderr = "error.txt", supervise = TRUE)
-  test$wait()
+  bg_design <- callr::r_bg(excel_to_db, args = list(design_sbf$datapath, "design", params$database_path), stderr = "error_design.txt", supervise = TRUE)
+  bg_designt$wait()
+  cat(file = stderr(), readLines("error_design.txt"), "\n")
   
   gc(verbose = getOption("verbose"), reset = FALSE, full = TRUE)
   
@@ -100,9 +83,10 @@ check_comp_name_length <- function(){
 
 
 #----------------------------------------------------------------------------------------
-set_sample_groups <- function(session, input, output){
-  background <- callr::r_bg(set_sample_groups_bg, args = list(session, input, output, params), stderr = "error.txt", supervise = TRUE)
-  background$wait()
+set_sample_groups <- function(session, input, output, params){
+  bg_samplegroups <- callr::r_bg(set_sample_groups_bg, args = list(session, input, output, params), stderr = "error_setsamplegroups.txt", supervise = TRUE)
+  bg_samplegroups$wait()
+  cat(file = stderr(), readLines("error_setsamplegroups.txt"), "\n")
 }
 #----------------------------------------------------------------------------------------
 set_sample_groups_bg <- function(session, input, output, params, check_design_sort){
@@ -208,6 +192,6 @@ set_sample_groups_bg <- function(session, input, output, params, check_design_so
   RSQLite::dbWriteTable(conn, "design", design, overwrite = TRUE)
   RSQLite::dbWriteTable(conn, "parameters", params, overwrite = TRUE)
   RSQLite::dbDisconnect(conn)
-  
+  cat(file = stderr(), "set_sample_groups ...end", "\n")
 }
 

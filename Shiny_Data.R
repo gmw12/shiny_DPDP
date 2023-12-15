@@ -7,6 +7,7 @@ load_data_file <- function(session, input, output){
   params$data_source <<- "unkown"
   data_sfb <- parseFilePaths(volumes, input$sfb_data_file)
   data_path <- str_extract(data_sfb$datapath, "^/.*/")
+  params$data_file <<- basename(data_sfb$datapath)
   
   cat(file = stderr(), str_c("loading data file(s) from ", data_path[1]), "\n")
   
@@ -22,7 +23,7 @@ load_data_file <- function(session, input, output){
   }
   
   #parameters are written to db during r_bg (process cannot write to params directly)
-  param_refresh()
+  params <<- param_load_from_database()
   
   gc(verbose = getOption("verbose"), reset = FALSE, full = TRUE)
   cat(file = stderr(), "Function load_data_file...end", "\n")
@@ -55,7 +56,7 @@ load_unknown_data <- function(data_sfb, params){
   }
   
   conn <- RSQLite::dbConnect(RSQLite::SQLite(), params$database_path)
-  RSQLite::dbWriteTable(conn, "raw_precursor", df, overwrite = TRUE)
+  RSQLite::dbWriteTable(conn, "precursor_raw", df, overwrite = TRUE)
   RSQLite::dbWriteTable(conn, "parameters", params, overwrite = TRUE)
   RSQLite::dbDisconnect(conn)
   
@@ -182,7 +183,7 @@ load_PD_data <- function(data_sfb){
   
   for (i in 1:nrow(data_sfb) ) {
     data_file = data_sfb$datapath[i]
-    testme <- callr::r_bg(func = save_data_bg, args = list(file1 = data_file, dir1 = backup_path), supervise = TRUE)
+    background <- callr::r_bg(func = save_data_bg, args = list(file1 = data_file, dir1 = backup_path), supervise = TRUE)
   }
   
   
@@ -197,14 +198,388 @@ load_PD_data <- function(data_sfb){
 
 #--------------------------------------------------------
 raw_meta <- function(table_name, params){
-  cat(file = stderr(), "function load_PD_data...", "\n")
+  cat(file = stderr(), "function raw_meta...", "\n")
   
   conn <- RSQLite::dbConnect(RSQLite::SQLite(), params$database_path)
   df <- RSQLite::dbReadTable(conn, table_name)
+
+  params$meta_precursor_raw <- nrow(df)
+  params$meta_peptide_raw <- length(unique(df$EG.ModifiedSequence))
+  params$meta_protein_raw <- length(unique(df$PG.ProteinAccessions))
+  
+  RSQLite::dbWriteTable(conn, "parameters", params, overwrite = TRUE)
   RSQLite::dbDisconnect(conn)
- 
-  params$meta_raw_precursor <- nrow(df)
-  params$meta_raw_peptide <- length(unique(df$EG.ModifiedSequence))
-  params$meta_raw_protein <- length(unique(df$PG.ProteinAccessions))
-   
+  
+}
+
+
+
+
+
+
+
+
+#----------------------------------------------------------------------------------------------------------
+protein_to_peptide <- function(){
+  cat(file = stderr(), "protein_to_peptide", "\n")
+  protein <- dpmsr_set$data$data_raw_protein
+  peptide_groups <- dpmsr_set$data$data_raw_peptide
+  
+  #add columns to preserve peptide to protein links
+  peptide_groups$Proteins <- peptide_groups$Protein.Accessions
+  peptide_groups$Unique <- peptide_groups$Quan.Info
+  peptide_groups$Unique[peptide_groups$Unique == ""] <- "Unique"
+  
+  #protein raw has all confidence proteins - limit to high master
+  protein_master <- subset(protein, Master %in% ("IsMasterProtein"))
+  protein_high_master <- subset(protein_master, Protein.FDR.Confidence.Combined %in% ("High"))
+  master_accessions <- protein_high_master$Accession 
+  
+  #PD will label which proteins get the razor peptides, 
+  protein_razor <- subset(protein, Number.of.Razor.Peptides > 0)
+  razor_accessions <- protein_razor$Accession
+  
+  #gather peptides that are shared
+  peptide_shared <- subset(peptide_groups,  Quan.Info %in% ("NotUnique"))
+  #gather peptides that have no quant values
+  peptide_noquan <- subset(peptide_groups,  Quan.Info %in% ("NoQuanValues"))
+  #gather unique peptides
+  peptide_unique <- peptide_groups[peptide_groups$Quan.Info == "",]
+  
+  #expand shared peptides so that each protein has peptides listed separately
+  peptide_shared_expand  <- peptide_shared %>% 
+    mutate(Master.Protein.Accessions = strsplit(as.character(Master.Protein.Accessions), "; ", fixed = TRUE)) %>% 
+    unnest(Master.Protein.Accessions)
+  
+  if (dpmsr_set$x$peptides_to_use == "Razor") {
+    #reduce df to only peptides that have proteins that PD lists as having "razor" peptides
+    peptide_shared_expand <- subset(peptide_shared_expand, Master.Protein.Accessions %in% razor_accessions )
+    #gather df for razor proteins
+    protein_razor_lookup <- protein_razor %>% dplyr::select(Accession, Description, Number.of.Peptides, 
+                                                            Coverage.in.Percent, Number.of.Unique.Peptides, Number.of.Razor.Peptides)
+    #add columns from protein to df
+    peptide_shared_expand <- merge(peptide_shared_expand, protein_razor_lookup, by.x = "Master.Protein.Accessions", by.y = "Accession")
+    #create column to check for duplicated peptides
+    peptide_shared_expand$duplicated_test <- str_c(peptide_shared_expand$Annotated.Sequence, peptide_shared_expand$Modifications)
+    peptide_shared_expand <- peptide_shared_expand[order(peptide_shared_expand$duplicated_test, -peptide_shared_expand$Number.of.Peptides, 
+                                                         peptide_shared_expand$Coverage.in.Percent, 
+                                                         -peptide_shared_expand$Number.of.Razor.Peptides),]
+    #remove duplicated peptides
+    peptide_final <- peptide_shared_expand[!duplicated(peptide_shared_expand$duplicated_test),]
+    peptide_final$Master.Protein.Descriptions <- peptide_final$Description
+    #remove extra columns
+    peptide_final <- peptide_final[1:(ncol(peptide_groups))]
+    #combine unique and razor/shared peptides
+    peptide_final <- rbind(peptide_unique, peptide_final)
+  }else if (dpmsr_set$x$peptides_to_use == "Shared") {
+    peptide_final <- rbind(peptide_unique, peptide_shared_expand)
+  }else{
+    peptide_final <- peptide_unique
+  }
+  
+  peptide_final <- peptide_final[order(peptide_final$Master.Protein.Accessions, peptide_final$Sequence),]
+  peptide_out <- peptide_final %>% dplyr::select(Confidence, Master.Protein.Accessions, Master.Protein.Descriptions, Proteins, 
+                                                 Sequence, Modifications, Unique,
+                                                 contains('RT.in.min.by.Search.Engine.'), 
+                                                 starts_with('mz.in.Da.by.Search.Engine.'), 
+                                                 contains('Charge.by.Search.Engine.'), 
+                                                 contains('Percolator.SVM'), 
+                                                 contains("Percolator.q.Value"), contains("Abundance.F"))
+  
+  
+  if (ncol(peptide_out) != (12 + dpmsr_set$y$sample_number))
+  {
+    shinyalert("Oops!", str_c("Number of columns extracted is not as expected ", ncol(peptide_out), "/", (10 + dpmsr_set$y$sample_number)), type = "error")  
+  }
+  
+  colnames(peptide_out)[1:12] <- c("Confidence", "Accession", "Description", "All.Proteins", "Sequence", "Modifications", "Unique", "Retention.Time","Da","mz", "Ion.Score", "q-Value")
+  peptide_out <- subset(peptide_out, Accession %in% master_accessions )
+  Simple_Excel(peptide_out, "Protein_Peptide_Raw", str_c(dpmsr_set$file$extra_prefix,"_ProteinPeptide_to_Peptide_Raw.xlsx", collapse = " "))
+  return(peptide_out)
+}
+
+#----------------------------------------------------------------------------------------
+prepare_data <- function(session, input, output) {  #function(data_type, data_file_path){
+  cat(file = stderr(), "Function prepare_data...", "\n")
+  
+  if (params$raw_data_format == "protein_peptide") {
+    cat(file = stderr(), "prepare data_type 1", "\n")
+    protein_to_peptide()
+    protein_to_protein()
+    params$current_data_format <<- "peptide"
+  }else if (params$raw_data_format == "protein") {
+    cat(file = stderr(), "prepare data_type 2", "\n")
+    protein_to_protein()
+    params$current_data_format <<- "protein"
+  }else if (params$raw_data_format == "peptide") {
+    cat(file = stderr(), "prepare data_type 3", "\n")
+    peptide_to_peptide()
+    params$current_data_format <<- "peptide"
+  }else if (params$raw_data_format == "precursor") {
+    cat(file = stderr(), "prepare data_type 4", "\n")
+    bg_prepare <- callr::r_bg(func = precursor_to_precursor, args = list(params), stderr = "error_preparedata.txt", supervise = TRUE)
+    bg_prepare$wait()
+    params$current_data_format <<- "precursor"
+  }else if (params$raw_data_format == "fragment") {
+    cat(file = stderr(), "prepare data_type 5", "\n")
+    peptide_to_peptide()
+    params$current_data_format <<- "fragment"
+  }else{
+    shinyalert("Oops!", "Invalid input output in design file", type = "error") 
+    }
+  
+  if (params$use_isoform) {
+    isoform_to_isoform()
+  }
+  
+  cat(file = stderr(), "Function prepare_data...end", "\n")
+}
+
+
+#----------------------------------------------------------------------------------------
+precursor_to_precursor <- function(params){
+  cat(file = stderr(), "Function precursor_to_precursor", "\n")
+  
+  conn <- RSQLite::dbConnect(RSQLite::SQLite(), params$database_path)
+  df <- RSQLite::dbReadTable(conn, "precursor_raw")
+  
+  
+  df_colnames <- c("Accession", "Description", "Genes", "Organisms", "Sequence", "PrecursorId", "PeptidePosition")  
+  n_col <- length(df_colnames)
+  
+  df <- df |> dplyr::select(contains('ProteinAccessions'), contains('ProteinDescriptions'), contains('Genes'), contains('Organisms'),
+                                                      contains('ModifiedSequence'), contains('PrecursorId'), contains('PeptidePosition'),
+                                                      contains("TotalQuantity"))
+  
+  if (ncol(df) != (n_col + params$sample_number))
+  {
+    shinyalert("Oops!", "Number of columns extracted is not as expected", type = "error") 
+    cat(file = stderr(), "Number of columns extracted is not as expected", "\n")
+  }
+  
+  colnames(df)[1:n_col] <- df_colnames  
+  
+  # set "Filtered" in TotalQuantity to NA
+  df[df ==  "Filtered"] <- NA
+  df[(n_col + 1):ncol(df)] <- as.data.frame(lapply(df[(n_col + 1):ncol(df)], as.numeric))
+  
+  df$Description <- stringr::str_c(df$Description, ", org=", df$Organisms) 
+  df$Organisms <- NULL
+  
+  RSQLite::dbWriteTable(conn, "precursor_start", df, overwrite = TRUE)
+  RSQLite::dbDisconnect(conn)
+  
+  cat(file = stderr(), "precursor_to_precursor complete", "\n")
+}
+
+
+
+#----------------------------------------------------------------------------------------
+protein_to_protein <- function(){
+  cat(file = stderr(), "protein_to_protein", "\n")
+  protein <- dpmsr_set$data$data_raw_protein
+  
+  if (dpmsr_set$x$data_source == "PD") {
+    cat(file = stderr(), "data type  -> PD", "\n")
+    protein <- subset(protein, Master %in% ("IsMasterProtein"))
+    protein <- subset(protein, Protein.FDR.Confidence.Combined %in% ("High"))
+    protein_out <- protein %>% dplyr::select(Accession, Description, Number.of.Protein.Unique.Peptides, 
+                                             contains("Abundance"), -contains("Abundance.Count"))
+    colnames(protein_out)[1:3] <- c("Accession", "Description", "Unique.Peptides")
+  }
+  else if (dpmsr_set$x$data_source == "SP") { 
+    cat(file = stderr(), "data type  -> SP", "\n")
+    protein_out <- protein %>% dplyr::select(contains("ProteinAccessions"), contains("ProteinDescriptions"), 
+                                             contains("ProteinNames"), contains("Genes"), contains("Quantity"))
+    precursor_col <- protein %>% dplyr::select(contains("Precursors"))
+    precursor_col$average <- round(rowMeans(precursor_col), 1)
+    
+    protein_out <- protein_out %>% add_column(precursor_col$average, .after = "PG.Genes")
+    colnames(protein_out)[1:5] <- c("Accession", "Description", "ProteinName", "Gene", "PrecursorsAvg")
+    
+    #in case missing values reported as NaN
+    protein_out[, 5:ncol(protein_out)] <- sapply(protein_out[, 5:ncol(protein_out)], as.numeric)
+    protein_out[5:ncol(protein_out)][protein_out[5:ncol(protein_out)] == "NaN"] <- 0
+    
+  }else {
+    cat(file = stderr(), "protein_to_protein data source not recognized", "\n")
+  }
+  Simple_Excel(protein_out, "Protein_Protein_Raw", str_c(dpmsr_set$file$extra_prefix, "_Protein_Protein_Raw", "_Protein_to_Protein_Raw.xlsx", collapse = " "))
+  return(protein_out)
+}
+
+#----------------------------------------------------------------------------------------
+peptide_to_peptide <- function(){
+  cat(file = stderr(), "peptide_to_peptide", "\n")
+  peptide_groups <- dpmsr_set$data$data_raw_peptide
+  
+  if (dpmsr_set$x$data_source == "PD") {
+    cat(file = stderr(), "peptide_to_peptide, PD data", "\n")
+    peptide_out <- peptide_groups %>% dplyr::select(Confidence, Master.Protein.Accessions, Master.Protein.Descriptions, 
+                                                    Sequence, Modifications, 
+                                                    (starts_with("Positions.in.") & ends_with("Proteins")), 
+                                                    (starts_with("Modifications.in.") & ends_with("Proteins")), 
+                                                    contains('RT.in.min.by.Search.Engine.'), 
+                                                    contains('Percolator.SVM'),  
+                                                    contains("Percolator.q.Value"), contains("Abundance.F"))
+    
+    if (ncol(peptide_out) != (10 + dpmsr_set$y$sample_number))
+    {
+      shinyalert("Oops!", "Number of columns extracted is not as expected", type = "error")  
+    }
+    
+    colnames(peptide_out)[1:10] <- c("Confidence", "Accession", "Description", "Sequence", "Modifications", "PositionMaster", "ModificationMaster",
+                                     "Retention.Time", "SVM.Score", "q-Value")
+    peptide_out <- subset(peptide_out, Confidence %in% ("High"))
+    
+  }else if (dpmsr_set$x$data_source == "SP") {
+    cat(file = stderr(), "peptide_to_peptide, SP data", "\n")
+    
+    peptide_out <- peptide_groups %>% dplyr::select(contains('ProteinAccessions'), contains('ProteinDescriptions'), contains('Genes'), 
+                                                    contains('ModifiedSequence'), contains('PeptidePosition'),
+                                                    contains('ProteinPTMLocations'),
+                                                    contains("TotalQuantity"))
+    
+    if (ncol(peptide_out) != (6 + dpmsr_set$y$sample_number))
+    {
+      shinyalert("Oops!", "Number of columns extracted is not as expected", type = "error")  
+    }
+    
+    colnames(peptide_out)[1:6] <- c("Accession", "Description", "Genes", "Sequence", "PeptidePosition", "PTMLocations")  
+  }
+  
+  # set "Filtered" in TotalQuantity to NA
+  peptide_out[peptide_out ==  "Filtered"] <- NA
+  peptide_out[8:ncol(peptide_out)] <- as.data.frame(lapply(peptide_out[8:ncol(peptide_out)], as.numeric))
+  
+  Simple_Excel(peptide_out, "Peptide_Peptide_Raw",  str_c(dpmsr_set$file$extra_prefix, "_Peptide_to_Peptide_Raw.xlsx", collapse = " "))
+  cat(file = stderr(), "peptide_to_peptide complete", "\n")
+  return(peptide_out)
+}
+
+
+#----------------------------------------------------------------------------------------
+precursor_PTM_to_precursor_PTM <- function(){
+  cat(file = stderr(), "precursor_PTM_to_precursor_PTM", "\n")
+  
+  precursor_groups <- dpmsr_set$data$data_raw_precursor
+  precursor_colnames <- c("Accession", "Description", "Genes", "Organisms", "Stripped_Seq", "Sequence", "PrecursorId", "PeptidePosition", "PTMLocations") 
+  n_col <- length(precursor_colnames)
+  
+  precursor_out <- precursor_groups %>% dplyr::select(contains('ProteinAccessions'), contains('ProteinDescriptions'), contains('Genes'), contains('Organisms'),
+                                                      contains('StrippedSequence'), contains('ModifiedSequence'), contains('PrecursorId'), contains('PeptidePosition'),
+                                                      contains('ProteinPTMLocations'), contains("TotalQuantity"))
+  
+  if (ncol(precursor_out) != (n_col + dpmsr_set$y$sample_number))
+  {
+    shinyalert("Oops!", "Number of columns extracted is not as expected", type = "error")  
+  }
+  
+  colnames(precursor_out)[1:n_col] <- precursor_colnames  
+  
+  # set "Filtered" in TotalQuantity to NA
+  precursor_out[precursor_out ==  "Filtered"] <- NA
+  precursor_out[(n_col + 1):ncol(precursor_out)] <- as.data.frame(lapply(precursor_out[(n_col + 1):ncol(precursor_out)], as.numeric))
+  
+  precursor_out$Description <- str_c(precursor_out$Description, ", org=", precursor_out$Organisms) 
+  precursor_out$Organisms <- NULL
+  
+  Simple_Excel(precursor_out, "precursor_precursor_Raw",  str_c(dpmsr_set$file$extra_prefix, "_Precursor_to_Precursor_Raw.xlsx", collapse = " "))
+  cat(file = stderr(), "precursor_to_precursor complete", "\n")
+  return(precursor_out)
+}
+
+
+#Top.Apex.RT.in.min,
+#----------------------------------------------------------------------------------------
+isoform_to_isoform <- function(){
+  cat(file = stderr(), "isoform_to_isoform", "\n")
+  
+  if (is.null(dpmsr_set$data$data_raw_isoform)) {
+    cat(file = stderr(), "isoform text file NOT found", "\n")
+    shinyalert("Oops!", "Isoform data not imported.  TMT datasets do not automatically export isoform data.", type = "error")
+  }
+  else {
+    cat(file = stderr(), "isoform text file found", "\n")
+    peptide_groups <- dpmsr_set$data$data_raw_isoform
+    peptide_out <- try(peptide_groups %>% dplyr::select(contains("Confidence.by"), Master.Protein.Accessions, Master.Protein.Descriptions, 
+                                                        Sequence, Modifications, 
+                                                        (starts_with("Positions.in.") & ends_with("Proteins")), 
+                                                        (starts_with("Modifications.in.") & ends_with("Proteins")), 
+                                                        Top.Apex.RT.in.min, 
+                                                        contains('Percolator.SVM'),  
+                                                        contains("Percolator.q.Value"), contains("Abundance.F")))
+    if (class(peptide_out) == 'try-error') {
+      cat(file = stderr(), "column select error - retry", "\n")
+      peptide_out <- peptide_groups %>% dplyr::select(contains("Confidence.by"), Master.Protein.Accessions, Master.Protein.Descriptions,
+                                                      Sequence, Modifications, 
+                                                      (starts_with("Positions.in.") & ends_with("Proteins")), 
+                                                      (starts_with("Modifications.in.") & ends_with("Proteins")), 
+                                                      contains("Positions."),
+                                                      contains('RT.in.min.by.'), 
+                                                      contains('Percolator.SVM'), 
+                                                      contains("Percolator.q.Value"), contains("Abundance.F"))
+    }
+    
+    
+    cat(file = stderr(), str_c("There are ", ncol(peptide_out) - dpmsr_set$y$sample_number, "/10 info columns"), "\n")
+    
+    if ((ncol(peptide_out) - dpmsr_set$y$sample_number) < 10) {
+      cat(file = stderr(), "If this is TMT phos you will need to manually export the isoform text file, load the correct layout file before export", "\n")
+    }
+    
+    
+    if (ncol(peptide_out) != (10 + dpmsr_set$y$sample_number))
+    {
+      shinyalert("Oops!", "Number of isoform columns extracted is not as expected", type = "error")  
+    }
+    
+    colnames(peptide_out)[1:10] <- c("Confidence", "Accession", "Description", "Sequence", "Modifications", "PositionMaster", "ModificationMaster",
+                                     "Retention.Time", "SVM.Score", "q-Value")
+    
+    peptide_out <- subset(peptide_out, Confidence %in% ("High"))
+    Simple_Excel_bg(peptide_out, "Protein_Peptide_Raw", str_c(dpmsr_set$file$extra_prefix, "_Isoform_to_Isoform_Raw.xlsx", collapse = " "))
+    cat(file = stderr(), "isoform_to_isoform complete", "\n")
+    return(peptide_out)
+  }
+}
+
+
+#----------------------------------------------------------------------------------------
+order_rename_columns <- function(){
+  cat(file = stderr(), "Function order_columns...", "\n")
+  
+  if (params$raw_data_format == "precursor") {
+    cat(file = stderr(), "Function order_columns...precursor", "\n")
+    bg_order <- callr::r_bg(func = order_rename_columns_bg, args = list("precursor_start", params), stderr = "error_orderrename.txt", supervise = TRUE)
+    bg_order$wait()
+    params$info_col_precursor <<- bg_order$get_result()
+    }
+
+  }
+
+
+# Rearrange columns if raw data is psm, PD does not organize
+order_rename_columns_bg <- function(table_name, params) {
+  cat(file = stderr(), "Function order_columns_bg...", "\n")
+  
+  conn <- RSQLite::dbConnect(RSQLite::SQLite(), params$database_path)
+  df <- RSQLite::dbReadTable(conn, table_name)
+  design <- RSQLite::dbReadTable(conn, "design")
+  
+  info_columns <- ncol(df) - params$sample_number
+  annotate_df <- df[, 1:info_columns]
+  df <- df[, (info_columns + 1):ncol(df)]
+  df <- df[, (design$Raw_Order)]
+  
+  #make sure data is numeric
+  df <- dplyr::mutate_all(df, function(x) as.numeric(as.character(x)))
+  colnames(df) <- design$Header1
+  df <- cbind(annotate_df, df)
+  
+  RSQLite::dbWriteTable(conn, "precursor_start", df, overwrite = TRUE)
+  RSQLite::dbDisconnect(conn)
+  
+  cat(file = stderr(), "order columns end", "\n")
+  return(info_columns)
 }

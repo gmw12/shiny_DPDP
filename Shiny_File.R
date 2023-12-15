@@ -19,9 +19,7 @@ file_set <- function(){
   params$phos_path <<- create_dir(str_c(params$data_path, "Phos"))
   params$app_path <<- create_dir(str_c(params$data_path, "Backup/App"))
   
-  conn <- dbConnect(RSQLite::SQLite(), params$database_path)
-  dbWriteTable(conn, "parameters", params, overwrite = TRUE)
-  dbDisconnect(conn)
+  param_save_to_database()
   
   #archive code with data
   cat(file = stderr(), "Function file_set... archive R files", "\n")
@@ -96,15 +94,17 @@ param_update <- function(param, value){
 }
 
 #----------------------------------------------------------------------------------------
-param_refresh <- function(){
-  cat(file = stderr(), "Function - param_refresh", "\n")
+param_load_from_database <- function(){
+  cat(file = stderr(), "Function - param_load_from_database", "\n")
   conn <- RSQLite::dbConnect(RSQLite::SQLite(), params$database_path)
-  params <<- RSQLite::dbReadTable(conn, "parameters")
+  params <- RSQLite::dbReadTable(conn, "parameters")
   RSQLite::dbDisconnect(conn)
+  return(params)
 }
 
 #----------------------------------------------------------------------------------------
-param_save <- function(){
+param_save_to_database <- function(){
+  cat(file = stderr(), "Function - param_save_to_database", "\n")
   conn <- RSQLite::dbConnect(RSQLite::SQLite(), params$database_path)
   RSQLite::dbWriteTable(conn, "parameters", params, overwrite = TRUE)
   RSQLite::dbDisconnect(conn)

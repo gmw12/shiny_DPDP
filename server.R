@@ -13,10 +13,6 @@ shinyServer(function(session, input, output) {
   source("Shiny_Source.R")
   hide_enable(session, input, output)
   
-  source("Shiny_Reactive.R", local = TRUE)
-  
-  
-  
   #------------------------------------------------------------------------------------------------------  
   #Load design file
   observeEvent(input$sfb_design_file, {
@@ -31,19 +27,18 @@ shinyServer(function(session, input, output) {
       load_design_file(session, input, output)
   
       #save paramater table to database
-      param_save()
+      param_save_to_database()
       
       #set file locations
       file_set()
-  
-      #create design table
-      create_design_table(session, input, output)
+      
+      #update UI
+      ui_update_load_design(session, input, output)
       
       #backup design table
       design_sbf <- parseFilePaths(volumes, input$sfb_design_file)
       save_data(design_sbf$datapath)
       
-      output$design_file_name <- renderText({get_design_file_name()})
       removeModal()
     }
 
@@ -59,9 +54,13 @@ shinyServer(function(session, input, output) {
     
     if (is.list(input$sfb_data_file)) {
       showModal(modalDialog("Loading data...", footer = NULL))
+      
       load_data_file(session, input, output)
       output$data_file_name <- renderText({get_data_file_name()})
-      render_data_info(session, input, output)
+      
+      #update UI
+      ui_update_load_data(session, input, output)
+      
       removeModal()
     }
 
@@ -71,30 +70,62 @@ shinyServer(function(session, input, output) {
 
  observeEvent(input$accept_parameters, {
    cat(file = stderr(), "accept parameters clicked", "\n")
-   parameter_widget_save(session, input, output)
-   set_sample_groups(session, input, output)
-   param_refresh()
-   bg_bar <- callr::r_bg(func = bar_plot, args = list("raw_precursor", "Raw_Precursor", params$qc_path, params), stderr = "error.txt", supervise = TRUE)
-   bg_box <- callr::r_bg(func = box_plot, args = list("raw_precursor", "Raw_Precursor", params$qc_path, params), stderr = "error2.txt", supervise = TRUE)
-   bg_meta <- callr::r_bg(func = raw_meta, args = list("raw_precursor", params), stderr = "error3.txt", supervise = TRUE)
-   bg_bar$wait
-   bg_box$wait
-   bg_meta$wait
-   param_refresh()
+   showModal(modalDialog("Applying parameters...", footer = NULL))
    
+   parameter_widget_save(session, input, output)
+   set_sample_groups(session, input, output, params)
+   params <<- param_load_from_database()
+
+   bg_bar <- callr::r_bg(func = bar_plot, args = list("precursor_raw", "Precursor_Raw", params$qc_path, params), stderr = "error_barplot.txt", supervise = TRUE)
+   bg_box <- callr::r_bg(func = box_plot, args = list("precursor_raw", "Precursor_Raw", params$qc_path, params), stderr = "error_boxplot.txt", supervise = TRUE)
+   bg_box$wait()
+   bg_bar$wait()
+   cat(file = stderr(), readLines("error_barplot.txt"), "\n")
+   cat(file = stderr(), readLines("error_boxplot.txt"), "\n")
+   
+
+   bg_meta <- callr::r_bg(func = raw_meta, args = list("precursor_raw", params), stderr = "error_rawmeta.txt", supervise = TRUE)
+   bg_meta$wait()
+   cat(file = stderr(), readLines("error_rawmeta.txt"), "\n")
+   
+   params <<- param_load_from_database()
+
    wait_cycle <- 0
-   while (!file.exists(str_c(params$qc_path,"Raw_Precursor_barplot.png"))) {
+   while (!file.exists(str_c(params$qc_path,"Precursor_Raw_barplot.png"))) {
      if (wait_cycle < 10) {
        Sys.sleep(0.5)
        wait_cycle <- wait_cycle + 1
       }
      }
+
+   ui_update_parameters(session, input, output)
    
-   render_parameters_graphs(session, input, output)
+   # Organize raw data into selected columns and info column names
+   removeModal()
+   showModal(modalDialog("Prepare Data...", footer = NULL))
+   prepare_data(session, input, output)
+   
+   # order columns and rename sample column names
+   removeModal()
+   showModal(modalDialog("Order and rename Data...", footer = NULL))
+   order_rename_columns()
+   removeModal()
    
  })
   
+ 
+ 
+ observeEvent(input$filter_apply, {
+   cat(file = stderr(), "filter apply clicked", "\n")
 
+   showModal(modalDialog("Applying data filters...", footer = NULL))
+   filter_data(session, input, output)
+   filter_widget_save(session, input, output)
+   removeModal()
+   
+   
+ })
+ 
   
  observeEvent(input$clean_environment, {
    cat(file = stderr(), "load clean environment", "\n")

@@ -65,9 +65,13 @@ app_startup <- function(session, input, output) {
     cat(file = stderr(), "params exists", "\n")
     loaded_database <- basename(params$database_path)
     loaded_prefix <- params$file_prefix
-    #create design table
-    create_design_table(session, input, output)
-    render_data_info(session, input, output)
+    
+    #updateUI
+    app_start <- TRUE
+    ui_update_load_design(session, input, output, app_start)
+    ui_update_load_data(session, input, output)
+    ui_update_parameters(session, input, output)
+    
     render_parameters_graphs(session, input, output)
   }else{
     loaded_database <- "none"
@@ -87,9 +91,12 @@ create_default_params <- function() {
   
   params <<- data.frame(
               "database_path" = "na",
+              "design_path" = "na",
+              "design_file" = "na",
               "data_source" = "SP",
               "file_prefix" = "project_date",
               "data_path" = "na",
+              "data_file" = "na",
               "volumes" = "na",
               "volumes_name" = "na",
               "backup_path" = "na",
@@ -100,6 +107,7 @@ create_default_params <- function() {
               "app_path" = "na",
               "python_path" = "na",
               "raw_data_format" = "precursor", 
+              "current_data_fomat" = "",
               "ptm" = FALSE, 
               "data_table_format" = "short", 
               "primary_group" = "Full", 
@@ -114,15 +122,18 @@ create_default_params <- function() {
               "sample_number" = 0,
               "group_number" = 0,
               "unique_groups" = "na",
-              "meta_raw_precursor" = 0,
-              "meta_raw_peptide" = 0,
-              "meta_raw_protein" = 0,
+              "meta_precursor_raw" = 0,
+              "meta_peptide_raw" = 0,
+              "meta_protein_raw" = 0,
               "filter_min_measured_all" = 2,
               "filter_x_percent" = FALSE,
               "filter_x_percent_value" = 0.5,
               "filter_cv" = FALSE,
               "filter_cv_group" = "SPQC",
-              "filter_cv_value" = 99
+              "filter_cv_value" = 99,
+              "info_col_precursor" = 0,
+              "info_col_peptide" = 0,
+              "info_col_protein" = 0
               
   )
 }

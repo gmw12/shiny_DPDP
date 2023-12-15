@@ -136,9 +136,9 @@ set_user()
             fluidRow(
                 box(title = "Raw Meta Data", status = "primary", solidHeader = TRUE, collapsible = FALSE, width = 12, height = 100,
                     fluidRow(
-                      column(width = 4, span(textOutput("meta_raw_precursor"), style = "color:blue; font-size:16px")),
-                      column(width = 4, span(textOutput("meta_raw_peptide"), style = "color:blue; font-size:16px")),
-                      column(width = 4, span(textOutput("meta_raw_protein"), style = "color:blue; font-size:16px"))
+                      column(width = 4, span(textOutput("meta_precursor_raw"), style = "color:blue; font-size:16px")),
+                      column(width = 4, span(textOutput("meta_peptide_raw"), style = "color:blue; font-size:16px")),
+                      column(width = 4, span(textOutput("meta_protein_raw"), style = "color:blue; font-size:16px"))
                     )
                 ))
               )

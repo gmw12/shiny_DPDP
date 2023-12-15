@@ -4,8 +4,10 @@ cat(file = stderr(), "Shiny_Tables.R", "\n")
 create_design_table <- function(session, input, output){
   cat(file = stderr(), "Function create_design_table", "\n")
   
-  background <- callr::r_bg(build_design_table, args = list(params$database_path), supervise = TRUE)
-  background$wait()
+  bg_designtable <- callr::r_bg(build_design_table, args = list(params$database_path), stderr = "error_designtable.txt", supervise = TRUE)
+  bg_designtable$wait()
+  cat(file = stderr(), readLines("error_designtable.txt"), "\n")
+  
   design_DT <- background$get_result()
   output$stats_design_table <-  DT::renderDataTable(design_DT)
   
@@ -34,8 +36,6 @@ build_design_table <- function(database_path){
                                                         list(targets = c(4), visibile = TRUE, "width" = '10', className = 'dt-center'),
                                                         list(targets = c(5), visibile = TRUE, "width" = '20', className = 'dt-center'),
                                                         list(targets = c(6), visibile = TRUE, "width" = '20', className = 'dt-center')
-                                                        
-                                                        
                                       ),
                                       pageLength = 12, 
                                       lengthMenu = c(12,20,100,500)
