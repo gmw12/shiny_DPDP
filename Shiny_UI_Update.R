@@ -82,6 +82,12 @@ render_filter_graphs <- function(session, input, output) {
     list(src = str_c(params$qc_path,"Precursor_Filter_boxplot.png"), contentType = 'image/png', width = 600, height = 500, alt = "this is alt text")
   }, deleteFile = FALSE)
   
+  
+  #same graph reused in norm tab
+  output$norm_data_start_bar <- renderImage({
+    list(src = str_c(params$qc_path,"Precursor_Filter_barplot.png"), contentType = 'image/png', width = 480, height = 400, alt = "this is alt text")
+  }, deleteFile = FALSE)
+  
 }
 
 
@@ -100,8 +106,8 @@ update_widgets <- function(session, input, output) {
     updateCheckboxInput(session, 'ptm', value = params$ptm)
     updateCheckboxInput(session, 'norm_ptm', value = params$norm_ptm)
     updateTextInput(session, 'norm_ptm_grep', value = params$norm_ptm_grep)
-    updateCheckboxInput(session, 'impute_ptm', value = params$norm_ptm)
-    updateTextInput(session, 'impute_ptm_grep', value = params$norm_ptm_grep)
+    updateCheckboxInput(session, 'impute_ptm', value = params$impute_ptm)
+    updateTextInput(session, 'impute_ptm_grep', value = params$impute_ptm_grep)
     updateSelectInput(session, 'peptide_select', selected = params$peptide_select)
     updateCheckboxInput(session, 'multi_tmt', value = params$multi_tmt)
     updateCheckboxInput(session, 'use_isoform', value = params$use_isoform)
@@ -123,8 +129,7 @@ update_widgets <- function(session, input, output) {
 parameter_widget_save <- function(session, input, output){
   cat(file = stderr(), "Function - parameter_widget_save...", "\n")
   
-  names <- c('primary_group', 'data_output', 'ptm', 'norm_ptm', 'grep_norm_ptm', 'impute_ptm', 'grep_impute_ptm', 'multi_tmt', 
-             'peptide_select', 'use_isoform')
+  names <- c('primary_group', 'data_output', 'ptm', 'multi_tmt', 'peptide_select', 'use_isoform')
   
   for (name in names) {
     params[[name]] <<- input[[name]]
@@ -147,3 +152,15 @@ filter_widget_save <- function(session, input, output){
   
 }
 
+#-----------------------------------------------------------------------------------
+norm_widget_save <- function(session, input, output){
+  cat(file = stderr(), "Function - parameter_widget_save...", "\n")
+  
+  names <- c("checkbox_norm_exclude", "exclude_norm_grep", "checkbox_norm_include", "include_norm_grep", "norm_ptm", "grep_norm_ptm")
+  
+  for (name in names) {
+    params[[name]] <<- input[[name]]
+  }
+  
+  param_save_to_database()
+}
