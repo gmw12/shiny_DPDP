@@ -112,7 +112,7 @@ create_default_params <- function() {
               "app_path" = "na",
               "python_path" = "na",
               "raw_data_format" = "precursor", 
-              "current_data_fomat" = "",
+              "current_data_format" = "",
               "ptm" = FALSE, 
               "data_table_format" = "short", 
               "primary_group" = "Full", 
@@ -145,7 +145,8 @@ create_default_params <- function() {
               "norm_include" = FALSE,
               "include_norm_grep" = "trypsin|keratin", 
               "norm_exclude" = FALSE,
-              "exclude_norm_grep" = "trypsin|keratin"
+              "exclude_norm_grep" = "trypsin|keratin",
+              "norm_type" = "sl"
               
               
   )

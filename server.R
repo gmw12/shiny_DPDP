@@ -8,6 +8,7 @@ cat(file = stderr(), "server.R started", "\n")
 shinyServer(function(session, input, output) {
   
   #app start conditions
+  source('Shiny_UI_Update.R')
   app_startup(session, input, output)
   
   source("Shiny_Source.R")
@@ -165,6 +166,16 @@ shinyServer(function(session, input, output) {
  
  
  
+ observeEvent(input$norm_apply, {
+   cat(file = stderr(), "norm apply clicked", "\n")
+   
+   norm_apply_widget_save(session, input, output)
+   
+   norm_apply()
+   
+   render_norm_apply_graphs(session, input, output)
+   
+ })
  
  
  
