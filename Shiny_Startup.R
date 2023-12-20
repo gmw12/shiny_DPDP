@@ -74,6 +74,7 @@ app_startup <- function(session, input, output) {
     ui_render_filter(session, input, output)
     render_filter_graphs(session, input, output)
     render_norm_graphs(session, input, output)
+    render_norm_apply_graphs(session, input, output)
     
     #update Widgets
     update_widgets(session, input, output)
@@ -146,7 +147,7 @@ create_default_params <- function() {
               "include_norm_grep" = "trypsin|keratin", 
               "norm_exclude" = FALSE,
               "exclude_norm_grep" = "trypsin|keratin",
-              "norm_type" = "sl"
+              "norm_type" = ""
               
               
   )

@@ -188,7 +188,15 @@ norm_widget_save <- function(session, input, output){
 #-----------------------------------------------------------------------------------
 norm_apply_widget_save <- function(session, input, output){
   cat(file = stderr(), "Function - norm_apply_widget_save...", "\n")
-
-  params$norm_type <<- input$norm_type
+  
+  if (params$norm_type=="") {
+    params$norm_type <<- input$norm_type
+  } else {
+    norm_type <- str_c(input$norm_type, ",", params$norm_type)
+    norm_type <- as.list(strsplit(norm_type, ",")[[1]])
+    norm_type <- unique(norm_type)
+    params$norm_type <<- toString(norm_type)
+  }
+  
   param_save_to_database()
 }

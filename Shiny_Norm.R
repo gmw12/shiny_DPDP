@@ -58,15 +58,17 @@ norm_filter_bg <- function(table_name, new_table_name, params) {
 norm_apply <- function(){
   cat(file = stderr(), "Function - norm_apply...", "\n")
   
+  norm_type <- as.list(strsplit(params$norm_type, ",")[[1]])
+  
   if (params$raw_data_format == "precursor") {
     cat(file = stderr(), "normalizing precursor data...", "\n")
     table_data <- "precursor_filter"
     table_norm_data <- "precursor_normdata"
     info_columns <- params$info_col_precursor
-    new_table_name <- str_c("precursor_", params$norm_type)
+    new_table_name <- str_c("precursor_", norm_type[1])
   } 
  
-  bg_normapply <- callr::r_bg(func = norm_apply_bg, args = list(table_data, table_norm_data, new_table_name, info_columns, params), stderr = "error_normapply.txt", supervise = TRUE)
+  bg_normapply <- callr::r_bg(func = norm_apply_bg, args = list(table_data, table_norm_data, new_table_name, info_columns, params, norm_type[1]), stderr = "error_normapply.txt", supervise = TRUE)
   bg_normapply$wait()
   cat(file = stderr(), readLines("error_normapply.txt"), "\n")
 
@@ -78,8 +80,10 @@ norm_apply <- function(){
 
 
 #--------------------------------------------------------------------------------------
-norm_apply_bg <- function(table_data, table_norm_data, new_table_name, info_columns, params) {
+norm_apply_bg <- function(table_data, table_norm_data, new_table_name, info_columns, params, norm_type) {
   cat(file = stderr(), "Function - norm_apply_bg...", "\n")
+  
+  
   
   #--------------------------------------------------------------------------------------
   # global scaling value, sample loading normalization
@@ -95,12 +99,32 @@ norm_apply_bg <- function(table_data, table_norm_data, new_table_name, info_colu
     return(data_out)
   }
   
+  #TMM Normalized 
+  tmm_normalize <- function(norm_data, data_to_norm, info_columns){
+    cat(file = stderr(), "TMM normalize started...", "\n")
+    annotation_data <- data_to_norm[1:info_columns]
+    data_to_norm <- data_to_norm[(info_columns + 1):ncol(data_to_norm)]
+    norm_data <- norm_data[(info_columns + 1):ncol(norm_data)]
+    norm_data[is.na(norm_data)] <- 0.0
+    tmm_factor <- edgeR::calcNormFactors(norm_data, method = "TMM", sumTrim = 0.1)
+    data_out <- sweep(data_to_norm, 2, tmm_factor, FUN = "/") # this is data after SL and TMM on original scale
+    data_out <- cbind(annotation_data, data_out)
+    cat(file = stderr(), "TMM normalize complete", "\n")
+    return(data_out)
+  }
+  
   conn <- RSQLite::dbConnect(RSQLite::SQLite(), params$database_path)
   data_to_norm <- RSQLite::dbReadTable(conn, table_data)
   norm_data <- RSQLite::dbReadTable(conn, table_norm_data)
   
-  df <- sl_normalize(norm_data, data_to_norm, info_columns)
-
+  if (norm_type == "sl"){
+    df <- sl_normalize(norm_data, data_to_norm, info_columns)
+  }else if (norm_type == "tmm") {
+    df <- tmm_normalize(norm_data, data_to_norm, info_columns)
+  }else if (norm_type == "sltmm") {
+    df <- sl_normalize(norm_data, data_to_norm, info_columns)
+  }
+  
   RSQLite::dbWriteTable(conn, new_table_name, df, overwrite = TRUE)
   RSQLite::dbDisconnect(conn)
 }
