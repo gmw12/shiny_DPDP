@@ -147,7 +147,8 @@ create_default_params <- function() {
               "include_norm_grep" = "trypsin|keratin", 
               "norm_exclude" = FALSE,
               "exclude_norm_grep" = "trypsin|keratin",
-              "norm_type" = ""
+              "norm_type" = "",
+              "protein_norm_grep" = ""
               
               
   )

@@ -231,6 +231,7 @@ if (!exists('params')) {
                                                         "Median of Total Intensity" = "mti",
                                                         "Median Intensity" = "mi",
                                                         "Average Intensity" = "ai"), selected = "SLTMM"),
+                      textInput("protein_norm_grep", label = "Protein Acession", value = ""),
                       fluidRow(align = "center", actionButton("norm_apply", label = "Apply Normalization",
                                                                      style = "color: #fff; background-color: #337ab7; border-color: #2e6da4"))
                          )

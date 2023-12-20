@@ -2,4 +2,6 @@
 .Rhistory
 .RData
 .Ruserdata
+shiny_DPDP.Rproj
 error*.txt
+database/
