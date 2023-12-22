@@ -28,6 +28,10 @@ set_user <- function() {
       volumes <<- c(h1 = '/home/dpmsr/mnt/h_black1', h2 = '/home/dpmsr/mnt/h_black2', dc = 'home/dpmsr/mnt/RawData', wd = '.', Home = fs::path_home(), getVolumes()())
       site_user <<- "dpmsr"
       params$python_path <<- "/home/dpmsr/anaconda3/envs/PDP/bin/python3"
+    }else if (Sys.info()["nodename"] == "waittblack") {
+      volumes <<- c(dd = '/data', wd = '.', Home = fs::path_home(), getVolumes()())
+      site_user <<- "dpmsr"
+      params$python_path <<- "/home/dpmsr/anaconda3/envs/PDP/bin/python3"
     }else{
       #for public website
       volumes <<- c(dd = '/data', wd = '.', Home = fs::path_home(), getVolumes()())

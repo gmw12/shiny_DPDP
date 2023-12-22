@@ -9,6 +9,8 @@ df <- dbReadTable(conn, "design")
 df <- dbReadTable(conn, "precursor_filter")
 
 
+
+
 RSQLite::dbDisconnect(conn)
 
 df <- df[(ncol(df) - params$sample_number+1):ncol(df)]
@@ -21,6 +23,16 @@ test <- unique(df$PG.ProteinAccessions)
 
 test <- readLines("error.txt")
 cat(file = stderr(), readLines("error_filter.txt"), "\n")
+
+
+params$protein_norm_grep <- "A2A5R2|A2A690"
+
+protein_norm_raw <- subset(df, Accession %in% params$protein_norm_grep)
+
+
+df1 <- df[grepl(params$protein_norm_grep, df$Accession, ignore.case = TRUE),]
+
+
 
 #--------------------------------------------------------------------------------
 box(title = "Parameters", status = "primary", solidHeader = TRUE, collapsible = FALSE, align = "center", width = 4, height = 800,

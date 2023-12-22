@@ -225,7 +225,7 @@ if (!exists('params')) {
                                                         "Protein" = "protein",
                                                         "DirectLFQ" = "directlfq",
                                                         "Quantile" = "quantile",
-                                                        "Linear Regression" = "lg",
+                                                        "Linear Regression" = "lr",
                                                         "LOESS" = "loess",
                                                         "VSN" = "vsn",
                                                         "Median of Total Intensity" = "mti",
