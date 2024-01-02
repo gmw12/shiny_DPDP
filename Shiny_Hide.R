@@ -19,6 +19,14 @@ hide_enable <- function(session, input, output) {
   # })
   
   observe({
+    if (input$norm_type == "protein") {
+      shinyjs::show("protein_norm_grep")
+    } else {
+      shinyjs::hide("protein_norm_grep")
+    }
+  })
+  
+  observe({
     if (params$data_source == "PD") {
       shinyjs::show("peptide_select")
       shinyjs::show("use_isoform")
@@ -27,7 +35,5 @@ hide_enable <- function(session, input, output) {
       shinyjs::hide("use_isoform")
     }
   })
-  
-  
   
 }

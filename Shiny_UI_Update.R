@@ -101,7 +101,21 @@ render_norm_graphs <- function(session, input, output) {
   
 }
 
+#-------------------------------------------------------------------------------------------
+render_norm_apply_graphs <- function(session, input, output) {
+  cat(file = stderr(), "Function render_norm_apply_graphs", "\n")
+  
+  norm_type <- as.list(strsplit(params$norm_type, ",")[[1]])
+  
+  output$norm_bar <- renderImage({
+    list(src = str_c(params$qc_path, "Precursor_", norm_type[1],"_barplot.png"), contentType = 'image/png', width = 480, height = 400, alt = "this is alt text")
+  }, deleteFile = FALSE)
+  
+}
+
+
 #-----------------------------------------------------------------------------------
+
 
 update_widgets <- function(session, input, output) {
   cat(file = stderr(), "Function - update_widgets", "\n")
@@ -163,12 +177,28 @@ filter_widget_save <- function(session, input, output){
 
 #-----------------------------------------------------------------------------------
 norm_widget_save <- function(session, input, output){
-  cat(file = stderr(), "Function - parameter_widget_save...", "\n")
+  cat(file = stderr(), "Function - norm_widget_save...", "\n")
   
   names <- c("norm_exclude", "exclude_norm_grep", "norm_include", "include_norm_grep", "norm_ptm", "grep_norm_ptm")
   
   for (name in names) {
     params[[name]] <<- input[[name]]
+  }
+  
+  param_save_to_database()
+}
+#-----------------------------------------------------------------------------------
+norm_apply_widget_save <- function(session, input, output){
+  cat(file = stderr(), "Function - norm_apply_widget_save...", "\n")
+  
+  if (params$norm_type=="") {
+    params$norm_type <<- input$norm_type
+  } else {
+    norm_type <- str_c(input$norm_type, ",", params$norm_type)
+    norm_type <- str_replace_all(norm_type, " ", "")
+    norm_type <- as.list(strsplit(norm_type, ",")[[1]])
+    norm_type <- unique(norm_type)
+    params$norm_type <<- toString(norm_type)
   }
   
   param_save_to_database()

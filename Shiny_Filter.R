@@ -71,6 +71,20 @@ filter_data_bg <- function(table_name, new_table_name, params){
   }
   
 
+  cat(file = stderr(), "step 4 - remove_duplicates...", "\n")
+  
+  if (params$data_source == "PD") {
+    df$Modifications[is.na(df$Modifications)] <- ""
+    df$dup <- str_c(df$Sequence, "_", df$Modifications)
+    df <- dplry::distinct(df, dup, .keep_all = TRUE)
+    df$dup <- NULL
+  }
+  
+  if (params$data_source == "SP") {
+    df <- dplyr::distinct(df, PrecursorId, .keep_all = TRUE)
+  }
+  
+  cat(file = stderr(), "step 5 - write data to db...", "\n")
   RSQLite::dbWriteTable(conn, new_table_name, df, overwrite = TRUE)
   RSQLite::dbDisconnect(conn)
   
@@ -78,3 +92,22 @@ filter_data_bg <- function(table_name, new_table_name, params){
   return()
 }
 
+#----------------------------------------------------------------------------------
+
+remove_duplicates <- function(data_in){
+  cat(file = stderr(), "remove_duplicates...", "\n")
+  
+  if (dpmsr_set$x$data_source == "PD") {
+    data_in$Modifications[is.na(data_in$Modifications)] <- ""
+    data_in$dup <- str_c(data_in$Sequence, "_", data_in$Modifications)
+    data_out <- distinct(data_in, dup, .keep_all = TRUE)
+    data_out$dup <- NULL
+  }
+  
+  if (dpmsr_set$x$data_source == "SP") {
+    ##test_data_in <<- data_in
+    data_out <- distinct(data_in, PrecursorId, .keep_all = TRUE)
+  }
+  
+  return(data_out)
+}
