@@ -22,7 +22,7 @@ if (!exists('params')) {
       menuItem("Parameters", tabName = "parameters"),
       menuItem("Filter", tabName = "filter"),
       menuItem("Normalize", tabName = "normalize"),
-      menuItem("Impute"),
+      menuItem("Impute", tabName = "impute"),
       menuItem("Rollup"),
       menuItem("Stats"),
       menuItem("Save")
@@ -248,10 +248,72 @@ if (!exists('params')) {
                     )
                 )
               )
+      ),     
+      
+      
+      
+      
+      
+      #Impute
+      tabItem(tabName = "impute",
+              fluidRow(
+                column(width = 2,
+                       box(id = "impute_box", title = "Normalization strategy...", status = "primary",
+                           solidHeader = TRUE, collapsible = FALSE, align = "left", width = 12, height = 230, 
+                           selectInput("norm_type", label = "Select imputation strategy",
+                                       choices = list("Duke" = "duke",
+                                                      "BottomX" = "bottomx",
+                                                      "Floor" = "floor",
+                                                      "Minimum" = "min",
+                                                      "Average/Group" = "avg_grp",
+                                                      "Average/Global" = "avg_glb",
+                                                      "KNN" = "knn",
+                                                      "LocalLeastSquares" = "lls",
+                                                      "MLE" = "mle")),
+                           fluidRow(align = "center", actionButton("impute_apply", label = "Apply Imputation",
+                                                                   style = "color: #fff; background-color: #337ab7; border-color: #2e6da4"))
+                       )
+                ),
+
+                column(width = 10,
+                       box(id = "duke_param_box", title = "Impute parameters...", status = "primary",
+                           solidHeader = TRUE, collapsible = FALSE, align = "left", width = 12, height = 230,
+                           fluidRow(
+                             column(width = 2,
+                                    checkboxInput("impute_ptm", label = "Impute Distribution based on PTM?", value = params$input_ptm, width = 300),
+                                    textInput("impute_ptm_grep", label = "Impute PTM grep", value = params$input_ptm_grep, width = 300),
+                             ),
+                             column(width = 2,
+                                    numericInput("bottom_x", label = "Bottom X%", value = "5")
+                             ),
+                             column(width = 2,
+                                    br(),
+                                    numericInput("missing_cutoff", label = "%minimum  measured values in group to allow imputation in measured range", value = 50, width = '100%'),
+                             ),
+                             column(width = 3,
+                                    checkboxInput("checkbox_misaligned", label = "Misaligned Filter"),
+                                    numericInput("misaligned_cutoff", label = "minimum %missing values to be considered for misalignment (average > intensity cutoff)", value = 50, width = '100%'),
+                              ),                       
+                             column(width = 2,
+                                    br(),
+                                    numericInput("intensity_cutoff_mean_sd", label = "intensity cutoff = mean + x standard deviations", value = 0.5, width = '100%'),
+                             )
+                           )
+                       ) 
+                )
+
+              ),
+              
+              fluidRow(
+                box(title = "Imputation Data", status = "primary", solidHeader = TRUE, collapsible = FALSE, width = 12, height = 500,
+                    fluidRow(
+                      column(width = 4, imageOutput("norm_data_start_bar")),
+                      column(width = 4, imageOutput("norm_normdata_bar")),
+                      column(width = 4, imageOutput("norm_bar"))
+                    )
+                )
+              )
       )     
-      
-      
-      
       
       
       
