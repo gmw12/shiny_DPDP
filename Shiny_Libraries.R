@@ -1,5 +1,14 @@
 cat(file = stderr(), "load R Libraries", "\n")
 
+testit <- function() {
+  message("testing package startup messages")
+  packageStartupMessage("initializing ...", appendLF = FALSE)
+  Sys.sleep(1)
+  packageStartupMessage(" done")
+}
+
+suppressPackageStartupMessages(testit())
+
 #shiny
 library(shiny)
 library(shinyjs)

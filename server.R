@@ -1,11 +1,24 @@
-app_version <<- '2023.12.01'
+cat(file = stderr(), "server.R started", "\n")
+#app_version <- '2024.01.05'
 
 options(shiny.maxRequestSize = 4000*1024^2)
 
-cat(file = stderr(), "server.R started", "\n")
+source("Shiny_Setup.R")
+source("Shiny_Startup.R")
 
+if (!exists('params')) {
+  cat(file = stderr(), "params file does not exist...", "\n")
+  create_default_params() 
+  
+  #set user
+  set_user()
+  
+} else {
+  cat(file = stderr(), "params file exists...", "\n")
+}
 
 shinyServer(function(session, input, output) {
+  cat(file = stderr(), "Shiny Server started ...1", "\n")
   
   #app start conditions
   source('Shiny_UI_Update.R')
@@ -13,6 +26,10 @@ shinyServer(function(session, input, output) {
   
   source("Shiny_Source.R")
   hide_enable(session, input, output)
+  
+  #set file choosers
+  set_file_choosers(session, input, output)
+  
   
   #------------------------------------------------------------------------------------------------------  
   #Load design file
@@ -178,18 +195,22 @@ shinyServer(function(session, input, output) {
  })
  
  
+ observeEvent(input$impute_apply, {
+   cat(file = stderr(), "impute apply clicked", "\n")
+   
+   impute_apply_widget_save(session, input, output)
+   
+   bg_impute <- callr::r_bg(func = histogram_plot, args = list("precursor_sltmm", "histogramy", params), stderr = "error_impute.txt", supervise = TRUE)
+   bg_impute$wait()
+   
+   cat(file = stderr(), readLines("error_impute.txt"), "\n")
+ })
  
  
  
  
  
- 
- 
- 
- 
- 
- 
- 
+
  
  
  
@@ -202,5 +223,9 @@ shinyServer(function(session, input, output) {
    set_user()
    session$reload()  
  })
-    
+
+ 
+ 
+ 
+     
 })

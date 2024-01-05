@@ -1,18 +1,6 @@
 cat(file = stderr(), "ui.R started", "\n")
 
 source("Shiny_Libraries.R")
-source("Shiny_Setup.R")
-source("Shiny_Startup.R")
-
-if (!exists('params')) {
-  cat(file = stderr(), "params file does not exist...", "\n")
-  create_default_params() 
-  
-  #set user
-  set_user()
-  
-  }
-
 
   sidebar <- dashboardSidebar(width = 165,
     useShinyjs(),
@@ -103,12 +91,12 @@ if (!exists('params')) {
               box(id = "param_box", title = "Set analysis parameters...", status = "primary", solidHeader = TRUE, collapsible = FALSE, align = "left", width = 12, height = 750,
 
                 selectInput("primary_group", label = "Full or primary group for filter and impute",
-                                choices = list("Full", "Primary"), selected = params$primary_group, width = 300),
+                                choices = list("Full", "Primary"), selected = "Full", width = 300),
                 selectInput("data_output", label = ("Select Output Data Type"),
                                 choices = list("Protein", "Peptide"),
-                                selected = params$data_output, width = 300),
+                                selected = "Protein", width = 300),
 
-                checkboxInput("ptm", label = "PTM Analysis?", value = params$ptm, width = 300),
+                checkboxInput("ptm", label = "PTM Analysis?", value = 0, width = 300),
                   
                 checkboxInput("multi_tmt", label = "SPQC Normalized TMT sets"),
                   
@@ -203,10 +191,8 @@ if (!exists('params')) {
                           textInput("exclude_norm_grep", label = "Filter Exclude grep", value = "trypsin|keratin"),
                         ),
                         column(width = 4,
-                          checkboxInput("norm_ptm", label = "Normalize on PTM?", value = params$norm_ptm, width = 300),
-                          textInput("norm_ptm_grep", label = "Normalize PTM grep", value = params$norm_ptm_grep, width = 300),
-                          #checkboxInput("impute_ptm", label = "Impute Distribution based on PTM?", value = params$input_ptm, width = 300),
-                          #textInput("impute_ptm_grep", label = "Impute PTM grep", value = params$input_ptm_grep, width = 300),
+                          checkboxInput("norm_ptm", label = "Normalize on PTM?", value = FALSE, width = 300),
+                          textInput("norm_ptm_grep", label = "Normalize PTM grep", value = "Phospho", width = 300),
                         ),
                        
                        fluidRow(align = "center", actionButton("norm_parameters", label = "Apply Normalizaton Parameters",
@@ -258,9 +244,9 @@ if (!exists('params')) {
       tabItem(tabName = "impute",
               fluidRow(
                 column(width = 2,
-                       box(id = "impute_box", title = "Normalization strategy...", status = "primary",
+                       box(id = "impute_box", title = "Imputation strategy...", status = "primary",
                            solidHeader = TRUE, collapsible = FALSE, align = "left", width = 12, height = 230, 
-                           selectInput("norm_type", label = "Select imputation strategy",
+                           selectInput("impute_type", label = "Select imputation strategy",
                                        choices = list("Duke" = "duke",
                                                       "BottomX" = "bottomx",
                                                       "Floor" = "floor",
@@ -280,11 +266,11 @@ if (!exists('params')) {
                            solidHeader = TRUE, collapsible = FALSE, align = "left", width = 12, height = 230,
                            fluidRow(
                              column(width = 2,
-                                    checkboxInput("impute_ptm", label = "Impute Distribution based on PTM?", value = params$input_ptm, width = 300),
-                                    textInput("impute_ptm_grep", label = "Impute PTM grep", value = params$input_ptm_grep, width = 300),
+                                    checkboxInput("impute_ptm", label = "Impute Distribution based on PTM?", value = 0, width = 300),
+                                    textInput("impute_ptm_grep", label = "Impute PTM grep", value = "Phospho", width = 300),
                              ),
                              column(width = 2,
-                                    numericInput("bottom_x", label = "Bottom X%", value = "5")
+                                    numericInput("bottom_x", label = "Bottom X%", value = "2")
                              ),
                              column(width = 2,
                                     br(),
@@ -296,7 +282,7 @@ if (!exists('params')) {
                               ),                       
                              column(width = 2,
                                     br(),
-                                    numericInput("intensity_cutoff_mean_sd", label = "intensity cutoff = mean + x standard deviations", value = 0.5, width = '100%'),
+                                    numericInput("intensity_cutoff_sd", label = "intensity cutoff = mean + x standard deviations", value = 0.5, width = '100%'),
                              )
                            )
                        ) 
@@ -307,25 +293,13 @@ if (!exists('params')) {
               fluidRow(
                 box(title = "Imputation Data", status = "primary", solidHeader = TRUE, collapsible = FALSE, width = 12, height = 500,
                     fluidRow(
-                      column(width = 4, imageOutput("norm_data_start_bar")),
-                      column(width = 4, imageOutput("norm_normdata_bar")),
-                      column(width = 4, imageOutput("norm_bar"))
+                      #column(width = 4, imageOutput("norm_data_start_bar")),
+                      #column(width = 4, imageOutput("norm_normdata_bar")),
+                      #column(width = 4, imageOutput("norm_bar"))
                     )
                 )
               )
       )     
-      
-      
-      
-      
-      
-      
-      
-      
-      
-      
-      
-      
       
       
       
@@ -337,21 +311,16 @@ if (!exists('params')) {
     
   
   
+
   
   
   
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  dashboardPage(
+ dashboardPage(
     dashboardHeader(title = "Duke Proteomics Data Processing", titleWidth = 325),
     sidebar,
     body
-  )
+ )  
+  
+  
+  
   

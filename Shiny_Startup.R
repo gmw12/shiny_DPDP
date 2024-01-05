@@ -49,6 +49,20 @@ set_user <- function() {
   return(site_user)
 }
 
+#---------------------------------------------------------------------------------------------------------
+
+
+set_file_choosers <- function(session, input, output) {
+  cat(file = stderr(), "Function - set_file_choosers...", "\n")
+  
+  shinyFileChoose(input, 'sfb_design_file', session = session, roots = volumes, filetypes = c('', 'xlsx'))
+  shinyFileChoose(input, 'sfb_data_file', session = session, roots = volumes, filetypes = c('', 'tsv', 'txt'))
+  shinyFileChoose(input, 'sfb_database_file', session = session, roots = volumes, filetypes = c('', 'db'))
+  
+  cat(file = stderr(), "Function - set_file_choosers...end", "\n")
+}
+
+
 
 #---------------------------------------------------------------------------------------------------------
 
@@ -56,14 +70,7 @@ set_user <- function() {
 app_startup <- function(session, input, output) {
   cat(file = stderr(), "Function - app_startup", "\n")
   
-  #update_widgets(session, input, output)
-  
-  shinyFileChoose(input, 'sfb_design_file', session = session, roots = volumes, filetypes = c('', 'xlsx'))
-  
-  shinyFileChoose(input, 'sfb_data_file', session = session, roots = volumes, filetypes = c('', 'tsv', 'txt'))
-  
-  shinyFileChoose(input, 'sfb_database_file', session = session, roots = volumes, filetypes = c('', 'db'))
-  
+
   #Check if database file present
   if (params$database_path != "na") {
     cat(file = stderr(), "params exists", "\n")
@@ -97,7 +104,7 @@ app_startup <- function(session, input, output) {
 
 #---------------------------------------------------------------------------------------------------------
 create_default_params <- function() {
-  cat(file = stderr(), "Function - create_default_params", "\n")
+  cat(file = stderr(), "Function - create_default_params...", "\n")
   
   params <<- data.frame(
               "database_path" = "na",
@@ -124,8 +131,6 @@ create_default_params <- function() {
               "data_output" = "Protein", 
               "norm_ptm" = FALSE, 
               "norm_ptm_grep" = "Phospho",
-              "impute_ptm" = FALSE, 
-              "impute_ptm_grep" = "Phospho", 
               "peptide_select" = 'razor', 
               "multi_tmt" = FALSE, 
               "use_isoform" = FALSE,
@@ -152,8 +157,18 @@ create_default_params <- function() {
               "norm_exclude" = FALSE,
               "exclude_norm_grep" = "trypsin|keratin",
               "norm_type" = "",
-              "protein_norm_grep" = ""
-              
-              
+              "protein_norm_grep" = "",
+              "impute_type" = "duke",
+              "bottom_x" = 2,
+              "impute_ptm" = FALSE, 
+              "impute_ptm_grep" = "Phospho", 
+              "intensity_cutoff" = 5000000,
+              "intensity_mean" = 1,
+              "intensity_cutoff_sd" = 0.5,
+              "missing_cutof" = 50,
+              "checkbox_misaligned" = FALSE,
+              "misaligned_cutoff" = 50
   )
+  
+  cat(file = stderr(), "Function - create_default_params...end", "\n")
 }

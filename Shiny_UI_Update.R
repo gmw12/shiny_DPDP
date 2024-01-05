@@ -143,6 +143,26 @@ update_widgets <- function(session, input, output) {
     updateSelectInput(session, 'filter_cv_group', selected = params$filter_cv_group)
     updateNumericInput(session, 'filter_cv_value', value = params$filter_cv_value)
     
+    #Norm---------------------------------------------------
+    updateCheckboxInput(session, 'norm_exclude', value = params$norm_exclude) 
+    updateTextInput(session, "exclude_norm_grep", value = params$exclude_norm_grep)
+    updateCheckboxInput(session, 'norm_include', value = params$norm_include) 
+    updateTextInput(session, "include_norm_grep", value = params$include_norm_grep)
+    updateCheckboxInput(session, 'norm_ptm', value = params$norm_ptm) 
+    updateTextInput(session, "ptm_norm_grep", value = params$ptm_norm_grep)
+    norm_type <- as.list(strsplit(params$norm_type, ",")[[1]])[[1]]
+    updateSelectInput(session, "norm_type", selected = norm_type)
+    
+    #Impute---------------------------------------------------
+    updateSelectInput(session, "impute_type", selected = params$impute_type)
+    updateCheckboxInput(session, 'impute_ptm', value = params$impute_ptm) 
+    updateTextInput(session, "ptm_impute_grep", value = params$ptm_impute_grep)
+    updateNumericInput(session, 'bottom_x', value = params$bottom_x)
+    updateNumericInput(session, 'missing_cutoff', value = params$missing_cutoff)
+    updateCheckboxInput(session, 'checkbox_misaligned', value = params$checkbox_misaligned) 
+    updateNumericInput(session, 'misaligned_cutoff', value = params$misaligned_cutoff)
+    updateNumericInput(session, 'intensity_cutoff_sc', value = params$intensity_cutoff_sd)
+    
   }
   
   
@@ -179,7 +199,7 @@ filter_widget_save <- function(session, input, output){
 norm_widget_save <- function(session, input, output){
   cat(file = stderr(), "Function - norm_widget_save...", "\n")
   
-  names <- c("norm_exclude", "exclude_norm_grep", "norm_include", "include_norm_grep", "norm_ptm", "grep_norm_ptm")
+  names <- c("norm_exclude", "exclude_norm_grep", "norm_include", "include_norm_grep", "norm_ptm", "norm_ptm_grep")
   
   for (name in names) {
     params[[name]] <<- input[[name]]
@@ -191,7 +211,7 @@ norm_widget_save <- function(session, input, output){
 norm_apply_widget_save <- function(session, input, output){
   cat(file = stderr(), "Function - norm_apply_widget_save...", "\n")
   
-  if (params$norm_type=="") {
+  if (params$norm_type == "") {
     params$norm_type <<- input$norm_type
   } else {
     norm_type <- str_c(input$norm_type, ",", params$norm_type)
@@ -203,3 +223,17 @@ norm_apply_widget_save <- function(session, input, output){
   
   param_save_to_database()
 }
+
+
+impute_apply_widget_save <- function(session, input, output){
+  cat(file = stderr(), "Function - impute_apply_widget_save...", "\n")
+  
+  names <- c("impute_type", "impute_ptm", "impute_ptm_grep", "bottom_x", "intensity_cutoff", "intensity_mean", "intensity_cutoff_sd", "missing_cutoff", "checkbox_misaligned", "misaligned_cutoff" )
+  
+  for (name in names) {
+    params[[name]] <<- input[[name]]
+  }
+  
+  param_save_to_database()
+}
+
