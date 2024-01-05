@@ -71,6 +71,7 @@ histogram_plot <- function(table_name, plottitle, params)
   start <- Sys.time()
   cat(file = stderr(), "Function histogram_plot...", "\n")
   library(grid)
+  grDevices::pdf(NULL)
   
   conn <- RSQLite::dbConnect(RSQLite::SQLite(), params$database_path)
   design <- RSQLite::dbReadTable(conn, "design")
