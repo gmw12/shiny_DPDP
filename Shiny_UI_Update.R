@@ -121,6 +121,9 @@ render_impute_parameter_graphs <- function(session, input, output) {
     list(src = str_c(params$qc_path, "Precursor_Filtered_Histogram.png"), contentType = 'image/png', width = 600, height = 600, alt = "this is alt text")
   }, deleteFile = FALSE)
   
+  output$impute_total_na <- renderText({str_c("Total missing:  ", params$total_na)})
+  output$impute_total_misaligned <- renderText({str_c("Total misaligned:  ", params$total_misaligned)})
+  
 }
 #-----------------------------------------------------------------------------------
 

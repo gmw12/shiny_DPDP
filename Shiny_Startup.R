@@ -169,7 +169,9 @@ create_default_params <- function() {
               "intensity_cutoff_sd" = 0.5,
               "missing_cutoff" = 50,
               "checkbox_misaligned" = FALSE,
-              "misaligned_cutoff" = 50
+              "misaligned_cutoff" = 50,
+              "total_na" = 0,
+              "total_misaligned" = 0
   )
   
   cat(file = stderr(), "Function - create_default_params...end", "\n")

@@ -294,12 +294,16 @@ source("Shiny_Libraries.R")
                 column(width = 8,
                     box(title = "Intensity Histogram", status = "primary", solidHeader = TRUE, collapsible = FALSE, align = 'left', width = 12, height = 750,
                      fluidRow(
-                       column(width = 9,  imageOutput("impute_histogram")),
-                       column(width = 3)
+                       column(width = 9,  imageOutput("impute_histogram")
+                      ),
+                       column(width = 3, 
+                              span(textOutput("impute_total_na"), style = "color:blue; font-size:16px"),
+                              span(textOutput("impute_total_misaligned"), style = "color:blue; font-size:16px")
                      )
-                )
-              )
+                   )
+                 )
         )   
+       )
       )
   
       

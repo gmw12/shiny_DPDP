@@ -37,14 +37,9 @@ df1 <- df[grepl(params$protein_norm_grep, df$Accession, ignore.case = TRUE),]
 
 
 df <- df[(ncol(df)-params$sample_number+1):ncol(df)]
-total_na <- sum(is.na(df))
-total_data <- ncol(df) * nrow(df)
-
-total_na/total_data *100
 
 
-
-testme <- function(x) {
+test_alignment <- function(x) {
   missing <- sum(is.na(x))/length(x) * 100
   return_x <- 0
   if (missing > params$misaligned_cutoff){
@@ -56,7 +51,7 @@ testme <- function(x) {
 count_misaligned <- 0
 for (i in nrow(df_groups)) {
   temp_df <- df[df_groups$start[i]:df_groups$end[i]] 
-  temp_df$test <- apply(temp_df, 1, testme )
+  temp_df$test <- apply(temp_df, 1, test_alignment )
   count_misaligned <- count_misaligned + sum(temp_df$test)  
 }
 

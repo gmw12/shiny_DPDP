@@ -75,7 +75,7 @@ histogram_plot <- function(table_name, plottitle, params)
 
   conn <- RSQLite::dbConnect(RSQLite::SQLite(), params$database_path)
   df <- RSQLite::dbReadTable(conn, table_name)
-  
+  df_groups <- RSQLite::dbReadTable(conn, "sample_groups")
   
   df <- df[(ncol(df) - params$sample_number + 1):ncol(df)]
   title <- as.character(params$file_prefix)
@@ -105,6 +105,28 @@ histogram_plot <- function(table_name, plottitle, params)
   df_gather <- tidyr::gather(df)
   df_gather <- subset(df_gather, df_gather$value > 0)
   df_gather$value <- log2(df_gather$value)
+  
+  #create impute stats
+  total_na <- sum(is.na(df))
+  
+  test_alignment <- function(x) {
+    missing <- sum(is.na(x))/length(x) * 100
+    return_x <- 0
+    if (missing > params$misaligned_cutoff){
+      return_x <- sum(x > params$intensity_cutoff, na.rm = TRUE)
+    }
+    return(return_x)
+  }
+  
+  count_misaligned <- 0
+  for (i in nrow(df_groups)) {
+    temp_df <- df[df_groups$start[i]:df_groups$end[i]] 
+    temp_df$test <- apply(temp_df, 1, test_alignment )
+    count_misaligned <- count_misaligned + sum(temp_df$test)  
+  }
+  
+  params$total_na <- total_na
+  params$total_misaligned <- count_misaligned
   
   
   #save params to database
