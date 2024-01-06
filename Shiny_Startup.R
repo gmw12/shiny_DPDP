@@ -86,6 +86,7 @@ app_startup <- function(session, input, output) {
     render_filter_graphs(session, input, output)
     render_norm_graphs(session, input, output)
     render_norm_apply_graphs(session, input, output)
+    render_impute_parameter_graphs(session, input, output)
     
     #update Widgets
     update_widgets(session, input, output)
@@ -163,9 +164,10 @@ create_default_params <- function() {
               "impute_ptm" = FALSE, 
               "impute_ptm_grep" = "Phospho", 
               "intensity_cutoff" = 5000000,
+              "custom_intensity_cutoff" = FALSE,
               "intensity_mean" = 1,
               "intensity_cutoff_sd" = 0.5,
-              "missing_cutof" = 50,
+              "missing_cutoff" = 50,
               "checkbox_misaligned" = FALSE,
               "misaligned_cutoff" = 50
   )

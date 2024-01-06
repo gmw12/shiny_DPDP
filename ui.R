@@ -140,13 +140,13 @@ source("Shiny_Libraries.R")
                              
                              numericInput("filter_min_measured_all", label = "Enter minimum # measured values (all samples)", value = 2),
                              hr(),
-                             checkboxInput("filter_x_percent", label = "Require X% measured values in at least one group"),
+                             checkboxInput("filter_x_percent", label = "Require X% measured values in at least one group?"),
                              numericInput("filter_x_percent_value", label = "Enter X% measured values (decimal)", value = 0.8),
                              hr(),
-                             checkboxInput("filter_cv", label = "Filter on Specific Group CV"),
+                             checkboxInput("filter_cv", label = "Filter on Specific Group CV?"),
                              selectInput("filter_cv_group", label = "Enter group for CV filter", 
                                          choices = list("SPQC"), selected = "SPQC"),
-                             numericInput("filter_cv_value", label = "Enter CV% for cutoff", value = "Enter value here"),
+                             numericInput("filter_cv_value", label = "Enter CV% for cutoff", value = 99),
                              hr(),
                              br(),
                              
@@ -243,9 +243,9 @@ source("Shiny_Libraries.R")
       #Impute
       tabItem(tabName = "impute",
               fluidRow(
-                column(width = 2,
+                column(width = 4,
                        box(id = "impute_box", title = "Imputation strategy...", status = "primary",
-                           solidHeader = TRUE, collapsible = FALSE, align = "left", width = 12, height = 230, 
+                           solidHeader = TRUE, collapsible = FALSE, align = "left", width = 12, height = 125, 
                            selectInput("impute_type", label = "Select imputation strategy",
                                        choices = list("Duke" = "duke",
                                                       "BottomX" = "bottomx",
@@ -255,67 +255,62 @@ source("Shiny_Libraries.R")
                                                       "Average/Global" = "avg_glb",
                                                       "KNN" = "knn",
                                                       "LocalLeastSquares" = "lls",
-                                                      "MLE" = "mle")),
-                           fluidRow(align = "center", actionButton("impute_apply", label = "Apply Imputation",
-                                                                   style = "color: #fff; background-color: #337ab7; border-color: #2e6da4"))
+                                                      "MLE" = "mle"))
+                       ),
+                       
+                       box(id = "duke_param_box", title = "Impute parameters...", status = "primary",
+                           solidHeader = TRUE, collapsible = FALSE, align = "left", width = 12, height = 500,
+                           fluidRow(
+                            column(width = 6, checkboxInput("impute_ptm", label = "Impute Distribution based on PTM?", value = 0, width = 300)),
+                            column(width = 6, textInput("impute_ptm_grep", label = "Impute PTM grep", value = "Phospho", width = 300))
+                           ),
+                           fluidRow(
+                             column(width = 12,
+                              numericInput("bottom_x", label = "Bottom X%", value = "2"),
+                              numericInput("missing_cutoff", label = "%minimum  measured values in group to allow imputation in measured range", value = 50, width = '100%'),
+                              fluidRow(
+                                column(width = 6, checkboxInput("checkbox_misaligned", label = "Misaligned Filter?")),
+                                column(width = 6, numericInput("misaligned_cutoff", label = "min %missing values to be considered for misalignment if average > intensity cutoff", value = 50, width = '100%'))
+                              ),
+                              fluidRow(
+                                column(width = 6, checkboxInput("custom_intensity_cutoff", label = "Custom Intensity Cutoff?")),
+                                column(width = 6, numericInput("intensity_cutoff_sd", label = "intensity cutoff = mean+(x*stdev)", value = 0.5, width = '100%'))
+                              )
+                              )
+                            )
+                       ),
+                       box(id = "impute_apply_box", title = "Start...", status = "primary",
+                           solidHeader = TRUE, collapsible = FALSE, align = "left", width = 12, height = 100, 
+                           fluidRow(align = "center", 
+                              column(width = 6, actionButton("impute_parameters", label = "Set Parameters",
+                                                                   style = "color: #fff; background-color: #337ab7; border-color: #2e6da4")),
+                              column(width = 6, actionButton("impute_apply", label = "Apply Imputation",
+                                           style = "color: #fff; background-color: #337ab7; border-color: #2e6da4"))
+                              )
                        )
+              
                 ),
 
-                column(width = 10,
-                       box(id = "duke_param_box", title = "Impute parameters...", status = "primary",
-                           solidHeader = TRUE, collapsible = FALSE, align = "left", width = 12, height = 230,
-                           fluidRow(
-                             column(width = 2,
-                                    checkboxInput("impute_ptm", label = "Impute Distribution based on PTM?", value = 0, width = 300),
-                                    textInput("impute_ptm_grep", label = "Impute PTM grep", value = "Phospho", width = 300),
-                             ),
-                             column(width = 2,
-                                    numericInput("bottom_x", label = "Bottom X%", value = "2")
-                             ),
-                             column(width = 2,
-                                    br(),
-                                    numericInput("missing_cutoff", label = "%minimum  measured values in group to allow imputation in measured range", value = 50, width = '100%'),
-                             ),
-                             column(width = 3,
-                                    checkboxInput("checkbox_misaligned", label = "Misaligned Filter"),
-                                    numericInput("misaligned_cutoff", label = "minimum %missing values to be considered for misalignment (average > intensity cutoff)", value = 50, width = '100%'),
-                              ),                       
-                             column(width = 2,
-                                    br(),
-                                    numericInput("intensity_cutoff_sd", label = "intensity cutoff = mean + x standard deviations", value = 0.5, width = '100%'),
-                             )
-                           )
-                       ) 
-                )
-
-              ),
-              
-              fluidRow(
-                box(title = "Imputation Data", status = "primary", solidHeader = TRUE, collapsible = FALSE, width = 12, height = 500,
-                    fluidRow(
-                      #column(width = 4, imageOutput("norm_data_start_bar")),
-                      #column(width = 4, imageOutput("norm_normdata_bar")),
-                      #column(width = 4, imageOutput("norm_bar"))
-                    )
+                column(width = 8,
+                    box(title = "Intensity Histogram", status = "primary", solidHeader = TRUE, collapsible = FALSE, align = 'left', width = 12, height = 750,
+                     fluidRow(
+                       column(width = 9,  imageOutput("impute_histogram")),
+                       column(width = 3)
+                     )
                 )
               )
-      )     
-      
-      
-      
-      
+        )   
+      )
+  
       
       
     )
   )
-    
-  
-  
+      
+      
 
   
-  
-  
- dashboardPage(
+dashboardPage(
     dashboardHeader(title = "Duke Proteomics Data Processing", titleWidth = 325),
     sidebar,
     body

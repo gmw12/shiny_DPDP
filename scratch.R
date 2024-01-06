@@ -2,9 +2,10 @@
 conn <- dbConnect(RSQLite::SQLite(), params$database_path)
 dbListTables(conn)
 
-df <- dbReadTable(conn, "parameters")
+df2 <- dbReadTable(conn, "parameters")
 df <- dbReadTable(conn, "precursor_raw")
-df <- dbReadTable(conn, "design")
+df_design <- dbReadTable(conn, "design")
+df_groups <- dbReadTable(conn, "sample_groups")
 
 df <- dbReadTable(conn, "precursor_filter")
 
@@ -31,6 +32,35 @@ protein_norm_raw <- subset(df, Accession %in% params$protein_norm_grep)
 
 
 df1 <- df[grepl(params$protein_norm_grep, df$Accession, ignore.case = TRUE),]
+
+
+
+
+df <- df[(ncol(df)-params$sample_number+1):ncol(df)]
+total_na <- sum(is.na(df))
+total_data <- ncol(df) * nrow(df)
+
+total_na/total_data *100
+
+
+for (i in nrow(df_groups)) {
+  i=1
+  temp_df <- df[df_groups$start[i]:df_groups$end[i]] 
+
+  testme <- function(x) {
+    missing <- sum(is.na(x))/length(x) * 100
+    return_x <- 0
+    if (missing > params$misaligned_cutoff){
+      return_x <- sum(x > params$intensity_cutoff, na.rm = TRUE)
+    }
+    return(return_x)
+  }
+  
+  temp_df$test <- apply(temp_df, 1, testme )
+  
+}
+
+
 
 
 

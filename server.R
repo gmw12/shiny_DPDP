@@ -172,6 +172,7 @@ shinyServer(function(session, input, output) {
  
  observeEvent(input$norm_parameters, {
    cat(file = stderr(), "norm parameters clicked", "\n")
+   showModal(modalDialog("Setting normalization parameters...", footer = NULL))
    
    norm_widget_save(session, input, output)
    
@@ -179,12 +180,15 @@ shinyServer(function(session, input, output) {
    
    render_norm_graphs(session, input, output)
 
+   removeModal()
+   
  })
  
  
  
  observeEvent(input$norm_apply, {
    cat(file = stderr(), "norm apply clicked", "\n")
+   showModal(modalDialog("Normalizing data...", footer = NULL))
    
    norm_apply_widget_save(session, input, output)
    
@@ -192,18 +196,26 @@ shinyServer(function(session, input, output) {
    
    render_norm_apply_graphs(session, input, output)
    
+   removeModal()
  })
  
  
- observeEvent(input$impute_apply, {
+ observeEvent(input$impute_parameters, {
    cat(file = stderr(), "impute apply clicked", "\n")
-   
+   showModal(modalDialog("Setting imputation parameters, creating histogram...", footer = NULL))
+
    impute_apply_widget_save(session, input, output)
    
-   bg_impute <- callr::r_bg(func = histogram_plot, args = list("precursor_sltmm", "histogramy", params), stderr = "error_impute.txt", supervise = TRUE)
+   bg_impute <- callr::r_bg(func = histogram_plot, args = list("precursor_filter", "Precursor_Filtered_Histogram", params), stderr = "error_impute.txt", supervise = TRUE)
    bg_impute$wait()
    
    cat(file = stderr(), readLines("error_impute.txt"), "\n")
+   
+   render_impute_parameter_graphs(session, input, output)
+   
+   params <<- param_load_from_database()
+   
+   removeModal()
  })
  
  

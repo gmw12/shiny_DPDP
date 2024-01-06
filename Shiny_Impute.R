@@ -403,20 +403,5 @@ impute_mle <- function(df){
 
 
 
-#--------------------------------------------------------------------------------
-adjust_intensity_cutoff <- function(session, input, output){
-  cat(file=stderr(), "Calclulate new intensity cutoff", "\n")
-  if(as.numeric(dpmsr_set$x$int_cutoff_sd) < 0) {
-    dpmsr_set$x$int_cutoff <<- dpmsr_set$y$intensity_mean + (as.numeric(dpmsr_set$x$int_cutoff_sd) * dpmsr_set$y$intensity_sd )
-    cat(file=stderr(), str_c("std < 0    ",  dpmsr_set$x$int_cutoff ), "\n")
-  }else{
-    dpmsr_set$x$int_cutoff <<- dpmsr_set$y$intensity_mean + (dpmsr_set$x$int_cutoff_sd * dpmsr_set$y$intensity_sd )
-    cat(file=stderr(), str_c("std > 0    ",  dpmsr_set$x$int_cutoff ), "\n")
-  }
-  dpmsr_set$x$int_cutoff <<- trunc(2^dpmsr_set$x$int_cutoff,0)
-  output$text_i2 <- renderText(str_c("Intensity cutoff:  ", as.character(dpmsr_set$x$int_cutoff)))
-  
-}
-
 
 

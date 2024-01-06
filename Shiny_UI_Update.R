@@ -113,7 +113,15 @@ render_norm_apply_graphs <- function(session, input, output) {
   
 }
 
-
+#-------------------------------------------------------------------------------------------
+render_impute_parameter_graphs <- function(session, input, output) {
+  cat(file = stderr(), "Function render_impute_parameter_graphs", "\n")
+  
+  output$impute_histogram <- renderImage({
+    list(src = str_c(params$qc_path, "Precursor_Filtered_Histogram.png"), contentType = 'image/png', width = 600, height = 600, alt = "this is alt text")
+  }, deleteFile = FALSE)
+  
+}
 #-----------------------------------------------------------------------------------
 
 
@@ -150,18 +158,19 @@ update_widgets <- function(session, input, output) {
     updateTextInput(session, "include_norm_grep", value = params$include_norm_grep)
     updateCheckboxInput(session, 'norm_ptm', value = params$norm_ptm) 
     updateTextInput(session, "ptm_norm_grep", value = params$ptm_norm_grep)
-    norm_type <- as.list(strsplit(params$norm_type, ",")[[1]])[[1]]
-    updateSelectInput(session, "norm_type", selected = norm_type)
-    
+    if(params$norm_type != ""){
+      norm_type <- as.list(strsplit(params$norm_type, ",")[[1]])[[1]]
+      updateSelectInput(session, "norm_type", selected = norm_type)
+    }
     #Impute---------------------------------------------------
     updateSelectInput(session, "impute_type", selected = params$impute_type)
     updateCheckboxInput(session, 'impute_ptm', value = params$impute_ptm) 
     updateTextInput(session, "ptm_impute_grep", value = params$ptm_impute_grep)
     updateNumericInput(session, 'bottom_x', value = params$bottom_x)
     updateNumericInput(session, 'missing_cutoff', value = params$missing_cutoff)
-    updateCheckboxInput(session, 'checkbox_misaligned', value = params$checkbox_misaligned) 
+    updateCheckboxInput(session, 'custom_intensity_cutoff', value = params$custom_intensity_cutoff) 
     updateNumericInput(session, 'misaligned_cutoff', value = params$misaligned_cutoff)
-    updateNumericInput(session, 'intensity_cutoff_sc', value = params$intensity_cutoff_sd)
+    updateNumericInput(session, 'intensity_cutoff_sd', value = params$intensity_cutoff_sd)
     
   }
   
@@ -228,7 +237,8 @@ norm_apply_widget_save <- function(session, input, output){
 impute_apply_widget_save <- function(session, input, output){
   cat(file = stderr(), "Function - impute_apply_widget_save...", "\n")
   
-  names <- c("impute_type", "impute_ptm", "impute_ptm_grep", "bottom_x", "intensity_cutoff", "intensity_mean", "intensity_cutoff_sd", "missing_cutoff", "checkbox_misaligned", "misaligned_cutoff" )
+  names <- c("impute_type", "impute_ptm", "impute_ptm_grep", "bottom_x", "intensity_cutoff_sd", "missing_cutoff",
+             "checkbox_misaligned", "misaligned_cutoff", "custom_intensity_cutoff")
   
   for (name in names) {
     params[[name]] <<- input[[name]]
