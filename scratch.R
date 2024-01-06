@@ -43,21 +43,21 @@ total_data <- ncol(df) * nrow(df)
 total_na/total_data *100
 
 
-for (i in nrow(df_groups)) {
-  i=1
-  temp_df <- df[df_groups$start[i]:df_groups$end[i]] 
 
-  testme <- function(x) {
-    missing <- sum(is.na(x))/length(x) * 100
-    return_x <- 0
-    if (missing > params$misaligned_cutoff){
-      return_x <- sum(x > params$intensity_cutoff, na.rm = TRUE)
-    }
-    return(return_x)
+testme <- function(x) {
+  missing <- sum(is.na(x))/length(x) * 100
+  return_x <- 0
+  if (missing > params$misaligned_cutoff){
+    return_x <- sum(x > params$intensity_cutoff, na.rm = TRUE)
   }
-  
+  return(return_x)
+}
+
+count_misaligned <- 0
+for (i in nrow(df_groups)) {
+  temp_df <- df[df_groups$start[i]:df_groups$end[i]] 
   temp_df$test <- apply(temp_df, 1, testme )
-  
+  count_misaligned <- count_misaligned + sum(temp_df$test)  
 }
 
 
