@@ -3,7 +3,7 @@ conn <- dbConnect(RSQLite::SQLite(), params$database_path)
 dbListTables(conn)
 
 df2 <- dbReadTable(conn, "parameters")
-df <- dbReadTable(conn, "precursor_raw")
+df <- dbReadTable(conn, "precursor_filter")
 df_design <- dbReadTable(conn, "design")
 df_groups <- dbReadTable(conn, "sample_groups")
 
@@ -38,21 +38,23 @@ df1 <- df[grepl(params$protein_norm_grep, df$Accession, ignore.case = TRUE),]
 
 df <- df[(ncol(df)-params$sample_number+1):ncol(df)]
 
-
 test_alignment <- function(x) {
   missing <- sum(is.na(x))/length(x) * 100
-  return_x <- 0
+  misaligned_count <- 0
   if (missing > params$misaligned_cutoff){
-    return_x <- sum(x > params$intensity_cutoff, na.rm = TRUE)
+    misaligned_count <- sum(x > params$intensity_cutoff, na.rm = TRUE)
   }
-  return(return_x)
+  return(misaligned_count)
 }
 
-count_misaligned <- 0
-for (i in nrow(df_groups)) {
+count_misaligned <- list()
+for (i in 1:nrow(df_groups)) {
   temp_df <- df[df_groups$start[i]:df_groups$end[i]] 
   temp_df$test <- apply(temp_df, 1, test_alignment )
-  count_misaligned <- count_misaligned + sum(temp_df$test)  
+  test <- sum(temp_df$test)
+  print(i)
+  print(test)
+  count_misaligned <- c(count_misaligned, test)  
 }
 
 

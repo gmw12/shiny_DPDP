@@ -107,26 +107,28 @@ histogram_plot <- function(table_name, plottitle, params)
   df_gather$value <- log2(df_gather$value)
   
   #create impute stats
-  total_na <- sum(is.na(df))
-  
   test_alignment <- function(x) {
     missing <- sum(is.na(x))/length(x) * 100
-    return_x <- 0
+    misaligned_count <- 0
     if (missing > params$misaligned_cutoff){
-      return_x <- sum(x > params$intensity_cutoff, na.rm = TRUE)
+      misaligned_count <- sum(x > params$intensity_cutoff, na.rm = TRUE)
     }
-    return(return_x)
+    return(misaligned_count)
   }
   
-  count_misaligned <- 0
-  for (i in nrow(df_groups)) {
+  total_na <- list()
+  total_misaligned <- list()
+  for (i in 1:nrow(df_groups)) {
     temp_df <- df[df_groups$start[i]:df_groups$end[i]] 
+    count_na <- sum(is.na(temp_df))
     temp_df$test <- apply(temp_df, 1, test_alignment )
-    count_misaligned <- count_misaligned + sum(temp_df$test)  
-  }
+    count_miss <- sum(temp_df$test)
+    total_misaligned <- c(total_misaligned, count_miss) 
+    total_na <- c(total_na, count_na)
+  } 
   
-  params$total_na <- total_na
-  params$total_misaligned <- count_misaligned
+  params$total_na <- toString(total_na)
+  params$total_misaligned <- toString(total_misaligned)
   
   
   #save params to database
