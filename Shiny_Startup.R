@@ -153,6 +153,15 @@ create_default_params <- function() {
               "info_col_precursor" = 0,
               "info_col_peptide" = 0,
               "info_col_protein" = 0,
+              "intensity_cutoff" = 5000000,
+              "custom_intensity_cutoff" = FALSE,
+              "intensity_mean" = 1,
+              "intensity_cutoff_sd" = 0.5,
+              "missing_cutoff" = 50,
+              "checkbox_misaligned" = FALSE,
+              "misaligned_cutoff" = 50,
+              "total_na" = 0,
+              "total_misaligned" = 0,
               "norm_include" = FALSE,
               "include_norm_grep" = "trypsin|keratin", 
               "norm_exclude" = FALSE,
@@ -162,16 +171,8 @@ create_default_params <- function() {
               "impute_type" = "duke",
               "bottom_x" = 2,
               "impute_ptm" = FALSE, 
-              "impute_ptm_grep" = "Phospho", 
-              "intensity_cutoff" = 5000000,
-              "custom_intensity_cutoff" = FALSE,
-              "intensity_mean" = 1,
-              "intensity_cutoff_sd" = 0.5,
-              "missing_cutoff" = 50,
-              "checkbox_misaligned" = FALSE,
-              "misaligned_cutoff" = 50,
-              "total_na" = 0,
-              "total_misaligned" = 0
+              "impute_ptm_grep" = "Phospho" 
+
   )
   
   cat(file = stderr(), "Function - create_default_params...end", "\n")

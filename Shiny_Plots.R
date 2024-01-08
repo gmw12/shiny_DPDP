@@ -32,7 +32,7 @@ bar_plot <- function(table_name, plot_title, plot_dir, params) {
           axis.text.x = ggplot2::element_text(size = 5, angle = 90,  color = "black"),
           axis.text.y = ggplot2::element_text(size = 5,  color = "black"),
     ) 
-  ggplot2::ggsave(file_name, width = 5, height = 4)
+  ggplot2::ggsave(file_name, width = 5, height = 5)
   return("done")
 }
 
@@ -49,7 +49,7 @@ box_plot <- function(table_name, plot_title, plot_dir, params) {
   df <- df |>  dplyr::mutate(across(!where(is.numeric), as.numeric))
   
   
-  png(filename = stringr::str_c(plot_dir, plot_title, "_boxplot.png"), width = 888, height = 571)
+  png(filename = stringr::str_c(plot_dir, plot_title, "_boxplot.png"), width = 400, height = 250)
   data_box <- log2(df)
   data_box[data_box == -Inf ] <- NA
   graphics::boxplot(data_box, 
@@ -60,7 +60,7 @@ box_plot <- function(table_name, plot_title, plot_dir, params) {
           axes = TRUE,
           horizontal = TRUE,
           las = 1,
-          graphics::par(mar = c(8,10,4,2)))
+          graphics::par(mar = c(2,8,4,1))) #bottom, left, top, right
   dev.off()
 }
 

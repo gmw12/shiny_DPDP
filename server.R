@@ -137,6 +137,7 @@ shinyServer(function(session, input, output) {
    cat(file = stderr(), "filter apply clicked", "\n")
 
    showModal(modalDialog("Applying data filters...", footer = NULL))
+   
    filter_data(session, input, output)
    filter_widget_save(session, input, output)
    

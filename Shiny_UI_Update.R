@@ -75,11 +75,11 @@ render_filter_graphs <- function(session, input, output) {
   cat(file = stderr(), "Function render_filter_graphs", "\n")
   
   output$filter_bar <- renderImage({
-    list(src = str_c(params$qc_path,"Precursor_Filter_barplot.png"), contentType = 'image/png', width = 600, height = 500, alt = "this is alt text")
+    list(src = str_c(params$qc_path,"Precursor_Filter_barplot.png"), contentType = 'image/png', width = 400, height = 400, alt = "this is alt text")
   }, deleteFile = FALSE)
   
   output$filter_box <- renderImage({
-    list(src = str_c(params$qc_path,"Precursor_Filter_boxplot.png"), contentType = 'image/png', width = 600, height = 500, alt = "this is alt text")
+    list(src = str_c(params$qc_path,"Precursor_Filter_boxplot.png"), contentType = 'image/png', width = 400, height = 250, alt = "this is alt text")
   }, deleteFile = FALSE)
   
   
@@ -153,6 +153,10 @@ update_widgets <- function(session, input, output) {
     updateCheckboxInput(session, 'filter_cv', value = params$filter_cv) 
     updateSelectInput(session, 'filter_cv_group', selected = params$filter_cv_group)
     updateNumericInput(session, 'filter_cv_value', value = params$filter_cv_value)
+    updateCheckboxInput(session, 'checkbox_misaligned', value = params$checkbox_misaligned) 
+    updateNumericInput(session, 'misaligned_cutoff', value = params$misaligned_cutoff)
+    updateCheckboxInput(session, 'custom_intensity_cutoff', value = params$custom_intensity_cutoff) 
+    updateNumericInput(session, 'intensity_cutoff_sd', value = params$intensity_cutoff_sd)
     
     #Norm---------------------------------------------------
     updateCheckboxInput(session, 'norm_exclude', value = params$norm_exclude) 
@@ -161,7 +165,7 @@ update_widgets <- function(session, input, output) {
     updateTextInput(session, "include_norm_grep", value = params$include_norm_grep)
     updateCheckboxInput(session, 'norm_ptm', value = params$norm_ptm) 
     updateTextInput(session, "ptm_norm_grep", value = params$ptm_norm_grep)
-    if(params$norm_type != ""){
+    if (params$norm_type != "") {
       norm_type <- as.list(strsplit(params$norm_type, ",")[[1]])[[1]]
       updateSelectInput(session, "norm_type", selected = norm_type)
     }
@@ -171,9 +175,7 @@ update_widgets <- function(session, input, output) {
     updateTextInput(session, "ptm_impute_grep", value = params$ptm_impute_grep)
     updateNumericInput(session, 'bottom_x', value = params$bottom_x)
     updateNumericInput(session, 'missing_cutoff', value = params$missing_cutoff)
-    updateCheckboxInput(session, 'custom_intensity_cutoff', value = params$custom_intensity_cutoff) 
-    updateNumericInput(session, 'misaligned_cutoff', value = params$misaligned_cutoff)
-    updateNumericInput(session, 'intensity_cutoff_sd', value = params$intensity_cutoff_sd)
+
     
   }
   
@@ -197,7 +199,8 @@ parameter_widget_save <- function(session, input, output){
 filter_widget_save <- function(session, input, output){
   cat(file = stderr(), "Function - parameter_widget_save...", "\n")
   
-  names <- c('filter_min_measured_all', 'filter_x_percent', 'filter_x_percent_value', 'filter_cv', 'filter_cv_group', 'filter_cv_value')
+  names <- c('filter_min_measured_all', 'filter_x_percent', 'filter_x_percent_value', 'filter_cv', 'filter_cv_group', 'filter_cv_value',
+             "checkbox_misaligned", "misaligned_cutoff", "custom_intensity_cutoff", "intensity_cutoff_sd")
   
   for (name in names) {
     params[[name]] <<- input[[name]]
@@ -240,8 +243,7 @@ norm_apply_widget_save <- function(session, input, output){
 impute_apply_widget_save <- function(session, input, output){
   cat(file = stderr(), "Function - impute_apply_widget_save...", "\n")
   
-  names <- c("impute_type", "impute_ptm", "impute_ptm_grep", "bottom_x", "intensity_cutoff_sd", "missing_cutoff",
-             "checkbox_misaligned", "misaligned_cutoff", "custom_intensity_cutoff")
+  names <- c("impute_type", "impute_ptm", "impute_ptm_grep", "bottom_x", "intensity_cutoff_sd", "missing_cutoff")
   
   for (name in names) {
     params[[name]] <<- input[[name]]

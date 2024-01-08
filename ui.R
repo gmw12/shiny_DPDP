@@ -140,30 +140,43 @@ source("Shiny_Libraries.R")
                              
                              numericInput("filter_min_measured_all", label = "Enter minimum # measured values (all samples)", value = 2),
                              hr(),
-                             checkboxInput("filter_x_percent", label = "Require X% measured values in at least one group?"),
-                             numericInput("filter_x_percent_value", label = "Enter X% measured values (decimal)", value = 0.8),
-                             hr(),
-                             checkboxInput("filter_cv", label = "Filter on Specific Group CV?"),
-                             selectInput("filter_cv_group", label = "Enter group for CV filter", 
-                                         choices = list("SPQC"), selected = "SPQC"),
-                             numericInput("filter_cv_value", label = "Enter CV% for cutoff", value = 99),
-                             hr(),
-                             br(),
+                             fluidRow(
+                             column(width = 6, checkboxInput("filter_x_percent", label = "Require X% measured values in at least one group?")),
+                             column(width = 6, numericInput("filter_x_percent_value", label = "Enter X% measured values (decimal)", value = 0.8))
+                             ),
+                             fluidRow(
+                              column(width = 4, checkboxInput("filter_cv", label = "Filter on Group CV?")),
+                              column(width = 4, selectInput("filter_cv_group", label = "Group?", 
+                                         choices = list("SPQC"), selected = "SPQC")),
+                              column(width = 4, numericInput("filter_cv_value", label = "Cutoff%?", value = 99))
+                             ),
+                             fluidRow(
+                               column(width = 6, checkboxInput("checkbox_misaligned", label = "Misaligned Filter?")),
+                               column(width = 6, numericInput("misaligned_cutoff", label = "X% missing values to be considered for misalignment if average > intensity cutoff", value = 51, width = '100%'))
+                             ),
+                             fluidRow(
+                               column(width = 6, checkboxInput("custom_intensity_cutoff", label = "Custom Intensity Cutoff?")),
+                               column(width = 6, numericInput("intensity_cutoff_sd", label = "intensity cutoff = mean+(x*stdev)", value = 0.5, width = '100%'))
+                             ),
                              
                              fluidRow(align = "center", actionButton("filter_apply", label = "Apply Filters",
                                                                      style = "color: #fff; background-color: #337ab7; border-color: #2e6da4"))
                          ))),
                 
-                column(width = 9,  
+                column(width = 7,  
                        fluidRow(
-                         box(title = "Filter Data", status = "primary", solidHeader = TRUE, collapsible = FALSE, width = 12, height = 625,
+                         box(title = "Filter Data", status = "primary", solidHeader = TRUE, collapsible = FALSE, width = 12, height = 750,
                              fluidRow(
-                               column(width = 6, imageOutput("filter_bar")),
+                               column(width = 6, imageOutput("filter_bar"))
+                               ),
+                             fluidRow(
                                column(width = 6, imageOutput("filter_box"))
                              )
-                         )),
+                         ))),
+                
+                column(width = 2, 
                        fluidRow(
-                         box(title = "Filter Meta Data", status = "primary", solidHeader = TRUE, collapsible = FALSE, width = 12, height = 100,
+                         box(title = "Filter Meta Data", status = "primary", solidHeader = TRUE, collapsible = FALSE, width = 12, height = 750,
                              fluidRow(
                                column(width = 4, span(textOutput("meta_precursor_filter"), style = "color:blue; font-size:16px")),
                                column(width = 4, span(textOutput("meta_peptide_filter"), style = "color:blue; font-size:16px")),
@@ -268,14 +281,7 @@ source("Shiny_Libraries.R")
                              column(width = 12,
                               numericInput("bottom_x", label = "Bottom X%", value = "2"),
                               numericInput("missing_cutoff", label = "%minimum  measured values in group to allow imputation in measured range", value = 50, width = '100%'),
-                              fluidRow(
-                                column(width = 6, checkboxInput("checkbox_misaligned", label = "Misaligned Filter?")),
-                                column(width = 6, numericInput("misaligned_cutoff", label = "min %missing values to be considered for misalignment if average > intensity cutoff", value = 50, width = '100%'))
-                              ),
-                              fluidRow(
-                                column(width = 6, checkboxInput("custom_intensity_cutoff", label = "Custom Intensity Cutoff?")),
-                                column(width = 6, numericInput("intensity_cutoff_sd", label = "intensity cutoff = mean+(x*stdev)", value = 0.5, width = '100%'))
-                              )
+      
                               )
                             )
                        ),
