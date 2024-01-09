@@ -110,14 +110,16 @@ source("Shiny_Libraries.R")
                              style = "color: #fff; background-color: #337ab7; border-color: #2e6da4"))
                 ))),
         
-        column(width = 9,  
+        column(width = 7,  
             fluidRow(
                box(title = "Raw Data", status = "primary", solidHeader = TRUE, collapsible = FALSE, width = 12, height = 625,
                    fluidRow(
                       column(width = 6, imageOutput("raw_bar")),
                       column(width = 6, imageOutput("raw_box"))
                    )
-               )),
+               ))),
+        
+          column(width = 2,  
             fluidRow(
                 box(title = "Raw Meta Data", status = "primary", solidHeader = TRUE, collapsible = FALSE, width = 12, height = 100,
                     fluidRow(
@@ -125,11 +127,13 @@ source("Shiny_Libraries.R")
                       column(width = 4, span(textOutput("meta_peptide_raw"), style = "color:blue; font-size:16px")),
                       column(width = 4, span(textOutput("meta_protein_raw"), style = "color:blue; font-size:16px"))
                     )
-                ))
-              )
+                    )))
           )
-        
       ),
+      
+      
+      
+      
       
       #Filter
       tabItem(tabName = "filter",
