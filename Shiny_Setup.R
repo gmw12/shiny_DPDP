@@ -84,15 +84,20 @@ check_comp_name_length <- function(){
 
 #----------------------------------------------------------------------------------------
 set_sample_groups <- function(session, input, output, params){
+  cat(file = stderr(), "Function set_sample_groups...", "\n")
+  showModal(modalDialog("Setting Sample Groups...", footer = NULL))
+  
   bg_samplegroups <- callr::r_bg(set_sample_groups_bg, args = list(session, input, output, params), stderr = "error_setsamplegroups.txt", supervise = TRUE)
   bg_samplegroups$wait()
+  removeModal()
   cat(file = stderr(), readLines("error_setsamplegroups.txt"), "\n")
+  
+  cat(file = stderr(), "set_sample_groups...end", "\n")
 }
+
 #----------------------------------------------------------------------------------------
 set_sample_groups_bg <- function(session, input, output, params, check_design_sort){
-  cat(file = stderr(), "Function set_sample_groups...", "\n")
-  
-  
+  cat(file = stderr(), "Function set_sample_groups_bg ...", "\n")
   #----------------------------------------------------------------------------------------
   #check if sample list is sorted (groups are together)
   
@@ -192,6 +197,6 @@ set_sample_groups_bg <- function(session, input, output, params, check_design_so
   RSQLite::dbWriteTable(conn, "design", design, overwrite = TRUE)
   RSQLite::dbWriteTable(conn, "parameters", params, overwrite = TRUE)
   RSQLite::dbDisconnect(conn)
-  cat(file = stderr(), "set_sample_groups ...end", "\n")
+  cat(file = stderr(), "set_sample_groups_bg ...end", "\n")
 }
 

@@ -48,11 +48,11 @@ render_parameters_graphs <- function(session, input, output) {
   cat(file = stderr(), "Function render_graphs", "\n")
   
   output$raw_bar <- renderImage({
-    list(src = str_c(params$qc_path,"Precursor_Raw_barplot.png"), contentType = 'image/png', width = 600, height = 500, alt = "this is alt text")
+    list(src = str_c(params$qc_path,"Precursor_Raw_barplot.png"), contentType = 'image/png', width = 400, height = 400, alt = "this is alt text")
   }, deleteFile = FALSE)
   
   output$raw_box <- renderImage({
-    list(src = str_c(params$qc_path,"Precursor_Raw_boxplot.png"), contentType = 'image/png', width = 600, height = 500, alt = "this is alt text")
+    list(src = str_c(params$qc_path,"Precursor_Raw_boxplot.png"), contentType = 'image/png', width = 400, height = 250, alt = "this is alt text")
   }, deleteFile = FALSE)
 
 }
@@ -118,7 +118,7 @@ render_impute_parameter_graphs <- function(session, input, output) {
   cat(file = stderr(), "Function render_impute_parameter_graphs", "\n")
   
   output$impute_histogram <- renderImage({
-    list(src = str_c(params$qc_path, "Precursor_Filtered_Histogram.png"), contentType = 'image/png', width = 600, height = 600, alt = "this is alt text")
+    list(src = str_c(params$qc_path, "Precursor_Start_Histogram.png"), contentType = 'image/png', width = 600, height = 600, alt = "this is alt text")
   }, deleteFile = FALSE)
   
   output$impute_total_na <- renderText({str_c("Total missing:  ", params$total_na)})

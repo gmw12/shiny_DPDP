@@ -2,7 +2,9 @@
 conn <- dbConnect(RSQLite::SQLite(), params$database_path)
 dbListTables(conn)
 
-df2 <- dbReadTable(conn, "parameters")
+df <- dbReadTable(conn, "parameters")
+df <- dbReadTable(conn, "precursor_raw")
+df <- dbReadTable(conn, "precursor_start")
 df <- dbReadTable(conn, "precursor_filter")
 df_design <- dbReadTable(conn, "design")
 df_groups <- dbReadTable(conn, "sample_groups")

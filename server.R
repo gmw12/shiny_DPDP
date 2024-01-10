@@ -85,49 +85,27 @@ shinyServer(function(session, input, output) {
   }) 
 
    
-
+#------------------------------------------------------------------------------------------------------  
+#accept parameters
  observeEvent(input$accept_parameters, {
    cat(file = stderr(), "accept parameters clicked", "\n")
-   showModal(modalDialog("Applying parameters...", footer = NULL))
-   
+
    parameter_widget_save(session, input, output)
    set_sample_groups(session, input, output, params)
    params <<- param_load_from_database()
-
-   bg_bar <- callr::r_bg(func = bar_plot, args = list("precursor_raw", "Precursor_Raw", params$qc_path, params), stderr = "error_barplot.txt", supervise = TRUE)
-   bg_box <- callr::r_bg(func = box_plot, args = list("precursor_raw", "Precursor_Raw", params$qc_path, params), stderr = "error_boxplot.txt", supervise = TRUE)
-   bg_box$wait()
-   bg_bar$wait()
-   cat(file = stderr(), readLines("error_barplot.txt"), "\n")
-   cat(file = stderr(), readLines("error_boxplot.txt"), "\n")
-   
 
    bg_meta <- callr::r_bg(func = meta_data, args = list("precursor_raw", "raw", params), stderr = "error_rawmeta.txt", supervise = TRUE)
    bg_meta$wait()
    cat(file = stderr(), readLines("error_rawmeta.txt"), "\n")
    
    params <<- param_load_from_database()
-
-   wait_cycle <- 0
-   while (!file.exists(str_c(params$qc_path,"Precursor_Raw_barplot.png"))) {
-     if (wait_cycle < 10) {
-       Sys.sleep(0.5)
-       wait_cycle <- wait_cycle + 1
-      }
-     }
-
-   ui_render_parameters(session, input, output)
    
    # Organize raw data into selected columns and info column names
-   removeModal()
-   showModal(modalDialog("Prepare Data...", footer = NULL))
-   prepare_data(session, input, output)
-   
    # order columns and rename sample column names
-   removeModal()
-   showModal(modalDialog("Order and rename Data...", footer = NULL))
    order_rename_columns()
-   removeModal()
+   
+   # create graphs
+   parameter_create_plots(sesion, input, output, params)
    
  })
   
@@ -206,13 +184,6 @@ shinyServer(function(session, input, output) {
    showModal(modalDialog("Setting imputation parameters, creating histogram...", footer = NULL))
 
    impute_apply_widget_save(session, input, output)
-   
-   bg_impute <- callr::r_bg(func = histogram_plot, args = list("precursor_filter", "Precursor_Filtered_Histogram", params), stderr = "error_impute.txt", supervise = TRUE)
-   bg_impute$wait()
-   
-   cat(file = stderr(), readLines("error_impute.txt"), "\n")
-   
-   render_impute_parameter_graphs(session, input, output)
    
    params <<- param_load_from_database()
    

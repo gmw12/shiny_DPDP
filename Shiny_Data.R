@@ -313,6 +313,7 @@ protein_to_peptide <- function(){
 #----------------------------------------------------------------------------------------
 prepare_data <- function(session, input, output) {  #function(data_type, data_file_path){
   cat(file = stderr(), "Function prepare_data...", "\n")
+  showModal(modalDialog("Prepare Data...", footer = NULL))
   
   if (params$raw_data_format == "protein_peptide") {
     cat(file = stderr(), "prepare data_type 1", "\n")
@@ -344,6 +345,7 @@ prepare_data <- function(session, input, output) {  #function(data_type, data_fi
     isoform_to_isoform()
   }
   
+  removeModal()
   cat(file = stderr(), "Function prepare_data...end", "\n")
 }
 
@@ -560,14 +562,17 @@ isoform_to_isoform <- function(){
 #----------------------------------------------------------------------------------------
 order_rename_columns <- function(){
   cat(file = stderr(), "Function order_columns...", "\n")
+  showModal(modalDialog("Order and rename Data...", footer = NULL))
   
   if (params$raw_data_format == "precursor") {
     cat(file = stderr(), "Function order_columns...precursor", "\n")
-    bg_order <- callr::r_bg(func = order_rename_columns_bg, args = list("precursor_start", params), stderr = "error_orderrename.txt", supervise = TRUE)
+    bg_order <- callr::r_bg(func = order_rename_columns_bg, args = list("precursor_raw", params), stderr = "error_orderrename.txt", supervise = TRUE)
     bg_order$wait()
     params$info_col_precursor <<- bg_order$get_result()
-    }
-
+  }
+  
+  removeModal()
+  cat(file = stderr(), "order_rename_columns end", "\n")
   }
 
 

@@ -112,16 +112,17 @@ source("Shiny_Libraries.R")
         
         column(width = 7,  
             fluidRow(
-               box(title = "Raw Data", status = "primary", solidHeader = TRUE, collapsible = FALSE, width = 12, height = 625,
+               box(title = "Raw Data", status = "primary", solidHeader = TRUE, collapsible = FALSE, width = 12, height = 750,
                    fluidRow(
-                      column(width = 6, imageOutput("raw_bar")),
-                      column(width = 6, imageOutput("raw_box"))
+                      column(width = 6, 
+                              imageOutput("raw_bar"),
+                              imageOutput("raw_box"))
                    )
                ))),
         
           column(width = 2,  
             fluidRow(
-                box(title = "Raw Meta Data", status = "primary", solidHeader = TRUE, collapsible = FALSE, width = 12, height = 100,
+                box(title = "Raw Meta Data", status = "primary", solidHeader = TRUE, collapsible = FALSE, width = 12, height = 750,
                     fluidRow(
                       column(width = 4, span(textOutput("meta_precursor_raw"), style = "color:blue; font-size:16px")),
                       column(width = 4, span(textOutput("meta_peptide_raw"), style = "color:blue; font-size:16px")),
@@ -171,10 +172,10 @@ source("Shiny_Libraries.R")
                        fluidRow(
                          box(title = "Filter Data", status = "primary", solidHeader = TRUE, collapsible = FALSE, width = 12, height = 750,
                              fluidRow(
-                               column(width = 6, imageOutput("filter_bar"))
-                               ),
-                             fluidRow(
-                               column(width = 6, imageOutput("filter_box"))
+                               column(width = 6,  imageOutput("impute_histogram")),
+                               column(width = 6, 
+                                      imageOutput("filter_bar"),
+                                      imageOutput("filter_box"))
                              )
                          ))),
                 
@@ -304,17 +305,17 @@ source("Shiny_Libraries.R")
                 column(width = 8,
                     box(title = "Intensity Histogram", status = "primary", solidHeader = TRUE, collapsible = FALSE, align = 'left', width = 12, height = 750,
                      fluidRow(
-                       column(width = 9,  imageOutput("impute_histogram")
+                       #column(width = 9,  imageOutput("impute_histogram")
                       ),
                        column(width = 3, 
                               span(textOutput("impute_total_na"), style = "color:blue; font-size:16px"),
-                              span(textOutput("impute_total_misaligned"), style = "color:blue; font-size:16px")
-                     )
+                              span(textOutput("impute_total_misaligned"), style = "color:blue; font-size:16px"))
                    )
                  )
-        )   
-       )
-      )
+                
+        ))   
+       
+      
   
       
       
