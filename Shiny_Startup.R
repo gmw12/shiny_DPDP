@@ -86,7 +86,7 @@ app_startup <- function(session, input, output) {
     render_filter_graphs(session, input, output)
     render_norm_graphs(session, input, output)
     render_norm_apply_graphs(session, input, output)
-    render_impute_parameter_graphs(session, input, output)
+    render_filter_histogram_graphs(session, input, output)
     
     #update Widgets
     update_widgets(session, input, output)

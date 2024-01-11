@@ -9,7 +9,7 @@ Simple_fread <- function(file) {
 
 #----------------------------------------------------------------------------------------
 file_set <- function(){
-  cat(file = stderr(), "Function file_set", "\n")
+  cat(file = stderr(), "\n", "Function file_set", "\n")
   
   #set paths
   params$backup_path <<- create_dir(str_c(params$data_path, "Backup"))
@@ -36,7 +36,7 @@ file_set <- function(){
 
 #----------------------------------------------------------------------------------------
 create_dir <- function(name){
-  cat(file = stderr(), "Function create_dir...", "\n")
+  cat(file = stderr(),"\n",  "Function create_dir...", "\n")
   if (is_dir(name)) {
     #added file delete, dir delete not working on customer shiny server
     cat(file = stderr(), "dir exists, deleting...", "\n")

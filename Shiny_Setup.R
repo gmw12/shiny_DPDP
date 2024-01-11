@@ -5,7 +5,7 @@ cat(file = stderr(), "Shiny_Setup.R", "\n")
 
 #---------------------------------------------------------------------
 create_parameter_table <- function(session, input, output){
-  cat(file = stderr(), "Function create_parameter_table", "\n")
+  cat(file = stderr(), "\n",  "Function create_parameter_table", "\n")
 
   conn <- RSQLite::dbConnect(RSQLite::SQLite(), params$database_path)
   RSQLite::dbWriteTable(conn, "parameters", df, overwrite = TRUE)

@@ -97,6 +97,7 @@ histogram_plot <- function(table_name, plottitle, params)
   params$intensity_sd <- x_stdev
   
   if (params$custom_intensity_cutoff) {
+    cat(file = stderr(), "using custom intensity cutoff...", "\n")
     intensity_cutoff <- x_mean + (as.numeric(params$intensity_cutoff_sd) * x_stdev)
     params$intensity_cutoff <- trunc(2^intensity_cutoff)
     cat(file = stderr(), stringr::str_c("new intensity_cuttoff = ", intensity_cutoff), "\n")
@@ -110,7 +111,7 @@ histogram_plot <- function(table_name, plottitle, params)
   test_alignment <- function(x) {
     missing <- sum(is.na(x))/length(x) * 100
     misaligned_count <- 0
-    if (missing > params$misaligned_cutoff){
+    if (missing > params$misaligned_cutoff) {
       misaligned_count <- sum(x > params$intensity_cutoff, na.rm = TRUE)
     }
     return(misaligned_count)
@@ -129,7 +130,8 @@ histogram_plot <- function(table_name, plottitle, params)
   
   params$total_na <- toString(total_na)
   params$total_misaligned <- toString(total_misaligned)
-  
+ 
+  cat(file = stderr(), stringr::str_c("na - > ", params$total_na, "   ma -> ", params$total_misaligned), "\n")
   
   #save params to database
   RSQLite::dbWriteTable(conn, "parameters", params, overwrite = TRUE)

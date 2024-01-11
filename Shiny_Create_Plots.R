@@ -26,7 +26,7 @@ parameter_create_plots <- function(sesion, input, output, params){
   
   ui_render_parameters(session, input, output)
   
-  render_impute_parameter_graphs(session, input, output)
+  render_filter_histogram_graphs(session, input, output)
   
   cat(file = stderr(), "create parameter plots end", "\n")
   removeModal()

@@ -2,7 +2,7 @@ cat(file = stderr(), "Shiny_Data.R", "\n")
 
 #---------------------------------------------------------------------
 load_data_file <- function(session, input, output){
-  cat(file = stderr(), "Function load_data_file", "\n")
+  cat(file = stderr(), "\n", "Function load_data_file", "\n")
   
   params$data_source <<- "unkown"
   data_sfb <- parseFilePaths(volumes, input$sfb_data_file)
@@ -32,7 +32,7 @@ load_data_file <- function(session, input, output){
 
 #----------------------------------------------------------------------------------------
 load_unknown_data <- function(data_sfb, params){
-  cat(file = stderr(), "Function load_unkown_data...", "\n")
+  cat(file = stderr(), "\n",  "Function load_unkown_data...", "\n")
   
   df <- data.table::fread(file = data_sfb$datapath, header = TRUE, stringsAsFactors = FALSE, sep = "\t")
   
@@ -198,7 +198,7 @@ load_PD_data <- function(data_sfb){
 
 #--------------------------------------------------------
 meta_data <- function(table_name, data_format, params){
-  cat(file = stderr(), "function meta_data...", "\n")
+  cat(file = stderr(),"\n",  "Function meta_data...", "\n")
   
   conn <- RSQLite::dbConnect(RSQLite::SQLite(), params$database_path)
   df <- RSQLite::dbReadTable(conn, table_name)
@@ -312,7 +312,7 @@ protein_to_peptide <- function(){
 
 #----------------------------------------------------------------------------------------
 prepare_data <- function(session, input, output) {  #function(data_type, data_file_path){
-  cat(file = stderr(), "Function prepare_data...", "\n")
+  cat(file = stderr(), "\n", "Function prepare_data...", "\n")
   showModal(modalDialog("Prepare Data...", footer = NULL))
   
   if (params$raw_data_format == "protein_peptide") {
@@ -330,8 +330,8 @@ prepare_data <- function(session, input, output) {  #function(data_type, data_fi
     params$current_data_format <<- "peptide"
   }else if (params$raw_data_format == "precursor") {
     cat(file = stderr(), "prepare data_type 4", "\n")
-    bg_prepare <- callr::r_bg(func = precursor_to_precursor, args = list(params), stderr = "error_preparedata.txt", supervise = TRUE)
-    bg_prepare$wait()
+    bg_precursor_to_precursor <- callr::r_bg(func = precursor_to_precursor, args = list(params), stderr = "error_preparedata.txt", supervise = TRUE)
+    bg_precursor_to_precursor$wait()
     params$current_data_format <<- "precursor"
   }else if (params$raw_data_format == "fragment") {
     cat(file = stderr(), "prepare data_type 5", "\n")
@@ -352,7 +352,7 @@ prepare_data <- function(session, input, output) {  #function(data_type, data_fi
 
 #----------------------------------------------------------------------------------------
 precursor_to_precursor <- function(params){
-  cat(file = stderr(), "Function precursor_to_precursor", "\n")
+  cat(file = stderr(), "\n", "Function precursor_to_precursor", "\n")
   
   conn <- RSQLite::dbConnect(RSQLite::SQLite(), params$database_path)
   df <- RSQLite::dbReadTable(conn, "precursor_raw")

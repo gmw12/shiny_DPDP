@@ -106,6 +106,7 @@ shinyServer(function(session, input, output) {
    
    # create graphs
    parameter_create_plots(sesion, input, output, params)
+   params <<- param_load_from_database()
    
  })
   

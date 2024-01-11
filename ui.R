@@ -124,9 +124,10 @@ source("Shiny_Libraries.R")
             fluidRow(
                 box(title = "Raw Meta Data", status = "primary", solidHeader = TRUE, collapsible = FALSE, width = 12, height = 750,
                     fluidRow(
-                      column(width = 4, span(textOutput("meta_precursor_raw"), style = "color:blue; font-size:16px")),
-                      column(width = 4, span(textOutput("meta_peptide_raw"), style = "color:blue; font-size:16px")),
-                      column(width = 4, span(textOutput("meta_protein_raw"), style = "color:blue; font-size:16px"))
+                      column(width = 12,
+                        span(textOutput("meta_parameters_precursor_raw"), style = "color:blue; font-size:16px"),
+                        span(textOutput("meta_parameters_peptide_raw"), style = "color:blue; font-size:16px"),
+                        span(textOutput("meta_parameters_protein_raw"), style = "color:blue; font-size:16px"))
                     )
                     )))
           )
@@ -183,9 +184,18 @@ source("Shiny_Libraries.R")
                        fluidRow(
                          box(title = "Filter Meta Data", status = "primary", solidHeader = TRUE, collapsible = FALSE, width = 12, height = 750,
                              fluidRow(
-                               column(width = 4, span(textOutput("meta_precursor_filter"), style = "color:blue; font-size:16px")),
-                               column(width = 4, span(textOutput("meta_peptide_filter"), style = "color:blue; font-size:16px")),
-                               column(width = 4, span(textOutput("meta_protein_filter"), style = "color:blue; font-size:16px"))
+                               column(width = 12, 
+                                span(textOutput("meta_filter_precursor_raw"), style = "color:blue; font-size:16px"),
+                                span(textOutput("meta_filter_peptide_raw"), style = "color:blue; font-size:16px"),
+                                span(textOutput("meta_filter_protein_raw"), style = "color:blue; font-size:16px"),
+                                br(),
+                                span(textOutput("impute_total_na"), style = "color:blue; font-size:16px"),
+                                span(textOutput("impute_total_misaligned"), style = "color:blue; font-size:16px"),
+                                br(),
+                                span(textOutput("meta_filter_precursor_filtered"), style = "color:blue; font-size:16px"),
+                                span(textOutput("meta_filter_peptide_filtered"), style = "color:blue; font-size:16px"),
+                                span(textOutput("meta_filter_protein_filtered"), style = "color:blue; font-size:16px"))
+
                              )
                          ))
                 )
@@ -308,8 +318,9 @@ source("Shiny_Libraries.R")
                        #column(width = 9,  imageOutput("impute_histogram")
                       ),
                        column(width = 3, 
-                              span(textOutput("impute_total_na"), style = "color:blue; font-size:16px"),
-                              span(textOutput("impute_total_misaligned"), style = "color:blue; font-size:16px"))
+                              #span(textOutput("impute_total_na"), style = "color:blue; font-size:16px"),
+                              #span(textOutput("impute_total_misaligned"), style = "color:blue; font-size:16px")
+                              )
                    )
                  )
                 

@@ -37,10 +37,13 @@ ui_render_parameters <- function(session, input, output) {
   
     render_parameters_graphs(session, input, output)
   
-    output$meta_precursor_raw <- renderText({str_c('Raw Precursors:  ', params$meta_precursor_raw)})
-    output$meta_peptide_raw <- renderText({str_c('Raw Peptides:  ', params$meta_peptide_raw)})
-    output$meta_protein_raw <- renderText({str_c('Raw Protein:  ', params$meta_protein_raw)})
+    output$meta_parameters_precursor_raw <- renderText({str_c('Raw Precursors:  ', params$meta_precursor_raw)})
+    output$meta_parameters_peptide_raw <- renderText({str_c('Raw Peptides:  ', params$meta_peptide_raw)})
+    output$meta_parameters_protein_raw <- renderText({str_c('Raw Protein:  ', params$meta_protein_raw)})
 
+    output$meta_filter_precursor_raw <- renderText({str_c('Raw Precursors:  ', params$meta_precursor_raw)})
+    output$meta_filter_peptide_raw <- renderText({str_c('Raw Peptides:  ', params$meta_peptide_raw)})
+    output$meta_filter_protein_raw <- renderText({str_c('Raw Protein:  ', params$meta_protein_raw)})
 }
 
 #-------------------------------------------------------------------------------------------
@@ -48,25 +51,37 @@ render_parameters_graphs <- function(session, input, output) {
   cat(file = stderr(), "Function render_graphs", "\n")
   
   output$raw_bar <- renderImage({
-    list(src = str_c(params$qc_path,"Precursor_Raw_barplot.png"), contentType = 'image/png', width = 400, height = 400, alt = "this is alt text")
+    list(src = str_c(params$qc_path,"Precursor_Start_barplot.png"), contentType = 'image/png', width = 400, height = 400, alt = "this is alt text")
   }, deleteFile = FALSE)
   
   output$raw_box <- renderImage({
-    list(src = str_c(params$qc_path,"Precursor_Raw_boxplot.png"), contentType = 'image/png', width = 400, height = 250, alt = "this is alt text")
+    list(src = str_c(params$qc_path,"Precursor_Start_boxplot.png"), contentType = 'image/png', width = 400, height = 250, alt = "this is alt text")
   }, deleteFile = FALSE)
 
 }
 
 
+#-------------------------------------------------------------------------------------------
+render_filter_histogram_graphs <- function(session, input, output) {
+  cat(file = stderr(), "Function render_filter_histogram_graphs", "\n")
+  
+  output$impute_histogram <- renderImage({
+    list(src = str_c(params$qc_path, "Precursor_Start_Histogram.png"), contentType = 'image/png', width = 600, height = 600, alt = "this is alt text")
+  }, deleteFile = FALSE)
+  
+  output$impute_total_na <- renderText({str_c("Total missing:  ", params$total_na)})
+  output$impute_total_misaligned <- renderText({str_c("Total misaligned:  ", params$total_misaligned)})
+  
+}
 #------------------------------------------------------------------------
 ui_render_filter <- function(session, input, output) {
   cat(file = stderr(), "Function ui_update_parameters", "\n")
   
   render_filter_graphs(session, input, output)
   
-  output$meta_precursor_filter <- renderText({str_c('Raw Precursors:  ', params$meta_precursor_filter)})
-  output$meta_peptide_filter <- renderText({str_c('Raw Peptides:  ', params$meta_peptide_filter)})
-  output$meta_protein_filter <- renderText({str_c('Raw Protein:  ', params$meta_protein_filter)})
+  output$meta_filter_precursor_filtered <- renderText({str_c('Filtered Precursors:  ', params$meta_precursor_filter)})
+  output$meta_filter_peptide_filtered <- renderText({str_c('Filtered Peptides:  ', params$meta_peptide_filter)})
+  output$meta_filter_protein_filtered <- renderText({str_c('Filtered Protein:  ', params$meta_protein_filter)})
   
 }
 
@@ -90,7 +105,6 @@ render_filter_graphs <- function(session, input, output) {
   
 }
 
-
 #-------------------------------------------------------------------------------------------
 render_norm_graphs <- function(session, input, output) {
   cat(file = stderr(), "Function render_norm_graphs", "\n")
@@ -113,18 +127,7 @@ render_norm_apply_graphs <- function(session, input, output) {
   
 }
 
-#-------------------------------------------------------------------------------------------
-render_impute_parameter_graphs <- function(session, input, output) {
-  cat(file = stderr(), "Function render_impute_parameter_graphs", "\n")
-  
-  output$impute_histogram <- renderImage({
-    list(src = str_c(params$qc_path, "Precursor_Start_Histogram.png"), contentType = 'image/png', width = 600, height = 600, alt = "this is alt text")
-  }, deleteFile = FALSE)
-  
-  output$impute_total_na <- renderText({str_c("Total missing:  ", params$total_na)})
-  output$impute_total_misaligned <- renderText({str_c("Total misaligned:  ", params$total_misaligned)})
-  
-}
+
 #-----------------------------------------------------------------------------------
 
 
