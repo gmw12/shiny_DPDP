@@ -17,9 +17,6 @@ ui_render_load_design <- function(session, input, output) {
   
   output$design_file_name <- renderText({params$design_file})
 
-  #create design table
-  create_design_table(session, input, output)
-  
   }
 
 #-------------------------------------------------------------------------------------------

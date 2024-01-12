@@ -30,12 +30,14 @@ shinyServer(function(session, input, output) {
   #set file choosers
   set_file_choosers(session, input, output)
   
+  #update UI
+  ui_render_load_design(session, input, output)
   
   #------------------------------------------------------------------------------------------------------  
   #Load design file
   observeEvent(input$sfb_design_file, {
     
-    cat(file = stderr(), "sfb_design_file button clicked...", "\n")
+    cat(file = stderr(), "\n", "sfb_design_file button clicked...", "\n")
     
     if (is.list(input$sfb_design_file)) {
       
@@ -53,6 +55,9 @@ shinyServer(function(session, input, output) {
       #update UI
       ui_render_load_design(session, input, output)
       
+      #create design table
+      create_design_table(session, input, output)
+      
       #backup design table
       design_sbf <- parseFilePaths(volumes, input$sfb_design_file)
       save_data(design_sbf$datapath)
@@ -68,16 +73,18 @@ shinyServer(function(session, input, output) {
   #Load data file
   observeEvent(input$sfb_data_file, {
     
-    cat(file = stderr(), "sfb_data_file button clicked...", "\n")
+    cat(file = stderr(), "\n","sfb_data_file button clicked...", "\n")
     
     if (is.list(input$sfb_data_file)) {
       showModal(modalDialog("Loading data...", footer = NULL))
       
+      #read data files
       load_data_file(session, input, output)
       output$data_file_name <- renderText({get_data_file_name()})
       
       #update UI
       ui_render_load_data(session, input, output)
+      ui_render_load_design(session, input, output)
       
       removeModal()
     }
@@ -88,18 +95,14 @@ shinyServer(function(session, input, output) {
 #------------------------------------------------------------------------------------------------------  
 #accept parameters
  observeEvent(input$accept_parameters, {
-   cat(file = stderr(), "accept parameters clicked", "\n")
+   cat(file = stderr(), "\n", "accept parameters clicked", "\n")
 
    parameter_widget_save(session, input, output)
    set_sample_groups(session, input, output, params)
-   params <<- param_load_from_database()
-
-   bg_meta <- callr::r_bg(func = meta_data, args = list("precursor_raw", "raw", params), stderr = "error_rawmeta.txt", supervise = TRUE)
-   bg_meta$wait()
-   cat(file = stderr(), readLines("error_rawmeta.txt"), "\n")
    
-   params <<- param_load_from_database()
-   
+   # gather info on raw data for ui
+   meta_data()
+ 
    # Organize raw data into selected columns and info column names
    # order columns and rename sample column names
    order_rename_columns()
@@ -113,7 +116,7 @@ shinyServer(function(session, input, output) {
  
  
  observeEvent(input$filter_apply, {
-   cat(file = stderr(), "filter apply clicked", "\n")
+   cat(file = stderr(), "\n", "filter apply clicked", "\n")
 
    showModal(modalDialog("Applying data filters...", footer = NULL))
    
@@ -151,7 +154,7 @@ shinyServer(function(session, input, output) {
  
  
  observeEvent(input$norm_parameters, {
-   cat(file = stderr(), "norm parameters clicked", "\n")
+   cat(file = stderr(), "\n", "norm parameters clicked", "\n")
    showModal(modalDialog("Setting normalization parameters...", footer = NULL))
    
    norm_widget_save(session, input, output)
@@ -167,7 +170,7 @@ shinyServer(function(session, input, output) {
  
  
  observeEvent(input$norm_apply, {
-   cat(file = stderr(), "norm apply clicked", "\n")
+   cat(file = stderr(), "\n", "norm apply clicked", "\n")
    showModal(modalDialog("Normalizing data...", footer = NULL))
    
    norm_apply_widget_save(session, input, output)
@@ -181,7 +184,7 @@ shinyServer(function(session, input, output) {
  
  
  observeEvent(input$impute_parameters, {
-   cat(file = stderr(), "impute apply clicked", "\n")
+   cat(file = stderr(), "\n", "impute apply clicked", "\n")
    showModal(modalDialog("Setting imputation parameters, creating histogram...", footer = NULL))
 
    impute_apply_widget_save(session, input, output)

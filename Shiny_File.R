@@ -13,6 +13,7 @@ file_set <- function(){
   
   #set paths
   params$backup_path <<- create_dir(str_c(params$data_path, "Backup"))
+  params$error_path <<- create_dir(str_c(params$data_path, "Error"))
   params$extra_path <<- create_dir(str_c(params$data_path, "Extra"))
   params$qc_path <<- create_dir(str_c(params$data_path, "QC"))
   params$string_path <<- create_dir(str_c(params$data_path, "String"))
@@ -113,4 +114,13 @@ param_save_to_database <- function(){
 #----------------------------------------------------------------------------------------
 up <- function(packed_string){
   return(strsplit(packed_string, ","))
+}
+
+
+#----------------------------------------------------------------------------------------
+print_stderr <- function(file_name){
+  error_list = readLines(str_c(params$error_path, "//", file_name))
+  for (i in 1:length(error_list)) {
+    cat(file = stderr(), error_list[i], "\n")
   }
+}

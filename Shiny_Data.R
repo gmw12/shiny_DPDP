@@ -18,8 +18,9 @@ load_data_file <- function(session, input, output){
     load_PD_data(data_sfb)
   }else {
     cat(file = stderr(), str_c("data source <---- Spectronaut/Fragpipe"), "\n")
-    bg_proc <- callr::r_bg(func = load_unknown_data, args = list(data_sfb, params), stderr = "error.txt", supervise = TRUE)
-    bg_proc$wait()
+    bg_load_unknown_data <- callr::r_bg(func = load_unknown_data, args = list(data_sfb, params), stderr = str_c(params$error_path, "//error_load_unkown_data.txt"), supervise = TRUE)
+    bg_load_unknown_data$wait()
+    print_stderr("error_load_unknown_data.txt")
   }
   
   #parameters are written to db during r_bg (process cannot write to params directly)
@@ -197,8 +198,20 @@ load_PD_data <- function(data_sfb){
 
 
 #--------------------------------------------------------
-meta_data <- function(table_name, data_format, params){
+meta_data <- function(){
   cat(file = stderr(),"\n",  "Function meta_data...", "\n")
+  
+  bg_meta <- callr::r_bg(func = meta_data, args = list("precursor_raw", "raw", params), stderr = str_c(params$error_path, "//error_rawmeta.txt"), supervise = TRUE)
+  bg_meta$wait()
+  print_stderr("error_rawmeta.txt")
+  
+  params <<- param_load_from_database()
+  
+  cat(file = stderr(),"\n",  "Function meta_data...end", "\n")
+}
+
+meta_data_bg <- function(table_name, data_format, params){
+  cat(file = stderr(),"\n",  "Function meta_data bg...", "\n")
   
   conn <- RSQLite::dbConnect(RSQLite::SQLite(), params$database_path)
   df <- RSQLite::dbReadTable(conn, table_name)
@@ -217,10 +230,10 @@ meta_data <- function(table_name, data_format, params){
     params[[protein_name]] <- length(unique(df$Accession))
   }
   
-  
-  
   RSQLite::dbWriteTable(conn, "parameters", params, overwrite = TRUE)
   RSQLite::dbDisconnect(conn)
+  
+  cat(file = stderr(),"\n",  "Function meta_data bg...end", "\n")
   
 }
 

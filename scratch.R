@@ -82,3 +82,8 @@ box(title = "Parameters", status = "primary", solidHeader = TRUE, collapsible = 
     checkboxInput("tmt", label = "SPQC Normalized TMT sets"),
     checkboxInput("isoform", label = "Use Peptide Isoform?"),
 )
+
+
+test = readLines("error_setsamplegroups.txt")
+cat(file = stderr(), readLines("error_setsamplegroups.txt"), "\n")
+length(test)

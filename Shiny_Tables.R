@@ -4,9 +4,9 @@ cat(file = stderr(), "Shiny_Tables.R", "\n")
 create_design_table <- function(session, input, output){
   cat(file = stderr(), "Function create_design_table", "\n")
   
-  bg_designtable <- callr::r_bg(build_design_table, args = list(params$database_path), stderr = "error_designtable.txt", supervise = TRUE)
+  bg_designtable <- callr::r_bg(build_design_table, args = list(params$database_path), stderr = str_c(params$error_path, "//error_designtable.txt"), supervise = TRUE)
   bg_designtable$wait()
-  cat(file = stderr(), readLines("error_designtable.txt"), "\n")
+  print_stderr("error_designtable.txt")
   
   design_DT <- bg_designtable$get_result()
   output$stats_design_table <-  DT::renderDataTable(design_DT)

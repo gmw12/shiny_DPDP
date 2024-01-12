@@ -53,9 +53,9 @@ load_design_file <- function(session, input, output){
   
   cat(file = stderr(), str_c("loading design file from ", params$design_path), "\n")
   
-  bg_design <- callr::r_bg(excel_to_db, args = list(design_sbf$datapath, "design", params$database_path), stderr = "error_design.txt", supervise = TRUE)
+  bg_design <- callr::r_bg(excel_to_db, args = list(design_sbf$datapath, "design", params$database_path), stderr = str_c(params$error_path, "//error_design.txt"), supervise = TRUE)
   bg_design$wait()
-  cat(file = stderr(), readLines("error_design.txt"), "\n")
+  print_stderr("error_design.txt")
   
   gc(verbose = getOption("verbose"), reset = FALSE, full = TRUE)
   
@@ -87,11 +87,12 @@ set_sample_groups <- function(session, input, output, params){
   cat(file = stderr(), "Function set_sample_groups...", "\n")
   showModal(modalDialog("Setting Sample Groups...", footer = NULL))
   
-  bg_samplegroups <- callr::r_bg(set_sample_groups_bg, args = list(session, input, output, params), stderr = "error_setsamplegroups.txt", supervise = TRUE)
+  bg_samplegroups <- callr::r_bg(set_sample_groups_bg, args = list(session, input, output, params), stderr = str_c(params$error_path, "//error_setsamplegroups.txt"), supervise = TRUE)
   bg_samplegroups$wait()
+  print_stderr("error_setsamplegroups.txt")
   removeModal()
-  cat(file = stderr(), readLines("error_setsamplegroups.txt"), "\n")
   
+  params <<- param_load_from_database()
   cat(file = stderr(), "set_sample_groups...end", "\n")
 }
 
@@ -197,6 +198,7 @@ set_sample_groups_bg <- function(session, input, output, params, check_design_so
   RSQLite::dbWriteTable(conn, "design", design, overwrite = TRUE)
   RSQLite::dbWriteTable(conn, "parameters", params, overwrite = TRUE)
   RSQLite::dbDisconnect(conn)
+  
   cat(file = stderr(), "set_sample_groups_bg ...end", "\n")
 }
 
