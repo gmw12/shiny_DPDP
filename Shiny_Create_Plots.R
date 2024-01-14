@@ -5,16 +5,16 @@ parameter_create_plots <- function(sesion, input, output, params){
   cat(file = stderr(), "Function parameter_create_plots", "\n")
   showModal(modalDialog("Creating Plots...", footer = NULL))
   
-  bg_bar <- callr::r_bg(func = bar_plot, args = list("precursor_start", "Precursor_Start", params$qc_path, params), stderr = "error_barplot.txt", supervise = TRUE)
-  bg_box <- callr::r_bg(func = box_plot, args = list("precursor_start", "Precursor_Start", params$qc_path, params), stderr = "error_boxplot.txt", supervise = TRUE)
+  bg_bar <- callr::r_bg(func = bar_plot, args = list("precursor_start", "Precursor_Start", params$qc_path, params), stderr = str_c(params$error_path, "//error_barplot.txt"), supervise = TRUE)
+  bg_box <- callr::r_bg(func = box_plot, args = list("precursor_start", "Precursor_Start", params$qc_path, params), stderr = str_c(params$error_path, "//error_boxplot.txt"), supervise = TRUE)
   bg_box$wait()
   bg_bar$wait()
-  cat(file = stderr(), readLines("error_barplot.txt"), "\n")
-  cat(file = stderr(), readLines("error_boxplot.txt"), "\n")
+  print_stderr("error_barplot.txt")
+  print_stderr("error_boxplot.txt")
   
-  bg_histogram <- callr::r_bg(func = histogram_plot, args = list("precursor_start", "Precursor_Start_Histogram", params), stderr = "error_histogram.txt", supervise = TRUE)
+  bg_histogram <- callr::r_bg(func = histogram_plot, args = list("precursor_start", "Precursor_Start_Histogram", params), stderr = str_c(params$error_path, "//error_histogram.txt"), supervise = TRUE)
   bg_histogram$wait()
-  cat(file = stderr(), readLines("error_histogram.txt"), "\n")
+  print_stderr("error_histogram.txt")
   
   wait_cycle <- 0
   while (!file.exists(str_c(params$qc_path,"Precursor_Start_barplot.png"))) {

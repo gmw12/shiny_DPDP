@@ -18,7 +18,7 @@ if (!exists('params')) {
 }
 
 shinyServer(function(session, input, output) {
-  cat(file = stderr(), "Shiny Server started ...1", "\n")
+  cat(file = stderr(), "\n\n", "Shiny Server started ...1", "\n")
   
   #app start conditions
   source('Shiny_UI_Update.R')
@@ -32,12 +32,14 @@ shinyServer(function(session, input, output) {
   
   #update UI
   ui_render_load_design(session, input, output)
+  if (params$data_path != "")  {create_design_table(session, input, output)}
+  
   
   #------------------------------------------------------------------------------------------------------  
   #Load design file
   observeEvent(input$sfb_design_file, {
     
-    cat(file = stderr(), "\n", "sfb_design_file button clicked...", "\n")
+    cat(file = stderr(), "\n\n", "sfb_design_file button clicked...", "\n")
     
     if (is.list(input$sfb_design_file)) {
       
@@ -70,7 +72,7 @@ shinyServer(function(session, input, output) {
   #Load data file
   observeEvent(input$sfb_data_file, {
     
-    cat(file = stderr(), "\n","sfb_data_file button clicked...", "\n")
+    cat(file = stderr(), "\n\n","sfb_data_file button clicked...", "\n")
     
     if (is.list(input$sfb_data_file)) {
       showModal(modalDialog("Loading data...", footer = NULL))
@@ -92,22 +94,28 @@ shinyServer(function(session, input, output) {
 #------------------------------------------------------------------------------------------------------  
 #accept parameters
  observeEvent(input$accept_parameters, {
-   cat(file = stderr(), "\n", "accept parameters clicked", "\n")
+   cat(file = stderr(), "\n\n", "accept parameters clicked", "\n")
 
+   #save inputs to params
    parameter_widget_save(session, input, output)
+   
+   #organize design table with parameter input
    set_sample_groups(session, input, output, params)
+
+   # Organize raw data into selected columns and info column names
+   prepare_data(session, input, output)
+   
+   # order columns and rename sample column names
+   order_rename_columns()
    
    # gather info on raw data for ui
    meta_data()
- 
-   # Organize raw data into selected columns and info column names
-   # order columns and rename sample column names
-   order_rename_columns()
    
    # create graphs
    parameter_create_plots(sesion, input, output, params)
    params <<- param_load_from_database()
    
+
  })
   
  
@@ -124,16 +132,16 @@ shinyServer(function(session, input, output) {
    filter_data(session, input, output)
    
    
-   bg_bar <- callr::r_bg(func = bar_plot, args = list("precursor_filter", "Precursor_Filter", params$qc_path, params), stderr = "error_filterbarplot.txt", supervise = TRUE)
-   bg_box <- callr::r_bg(func = box_plot, args = list("precursor_filter", "Precursor_Filter", params$qc_path, params), stderr = "error_filterboxplot.txt", supervise = TRUE)
+   bg_bar <- callr::r_bg(func = bar_plot, args = list("precursor_filter", "Precursor_Filter", params$qc_path, params), stderr = str_c(params$error_path,  "//error_filterbarplot.txt"), supervise = TRUE)
+   bg_box <- callr::r_bg(func = box_plot, args = list("precursor_filter", "Precursor_Filter", params$qc_path, params), stderr = str_c(params$error_path, "//error_filterboxplot.txt"), supervise = TRUE)
    bg_box$wait()
    bg_bar$wait()
-   cat(file = stderr(), readLines("error_filterbarplot.txt"), "\n")
-   cat(file = stderr(), readLines("error_filterboxplot.txt"), "\n")
+   print_stderr("error_filterbarplot.txt")
+   print_stderr("error_filterboxplot.txt")
    
-   bg_meta <- callr::r_bg(func = meta_data, args = list("precursor_filter", "filter", params), stderr = "error_filtermeta.txt", supervise = TRUE)
+   bg_meta <- callr::r_bg(func = meta_data, args = list("precursor_filter", "filter", params), stderr = str_c(params$error_path, "//error_filtermeta.txt"), supervise = TRUE)
    bg_meta$wait()
-   cat(file = stderr(), readLines("error_filtermeta.txt"), "\n")
+   print_stderr("error_filtermeta.txt")
    
    params <<- param_load_from_database()
    

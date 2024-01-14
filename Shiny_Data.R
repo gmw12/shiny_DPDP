@@ -343,8 +343,9 @@ prepare_data <- function(session, input, output) {  #function(data_type, data_fi
     params$current_data_format <<- "peptide"
   }else if (params$raw_data_format == "precursor") {
     cat(file = stderr(), "prepare data_type 4", "\n")
-    bg_precursor_to_precursor <- callr::r_bg(func = precursor_to_precursor, args = list(params), stderr = "error_preparedata.txt", supervise = TRUE)
+    bg_precursor_to_precursor <- callr::r_bg(func = precursor_to_precursor_bg, args = list(params), stderr = str_c(params$error_path, "//error_preparedata.txt"), supervise = TRUE)
     bg_precursor_to_precursor$wait()
+    print_stderr("error_preparedata.txt")
     params$current_data_format <<- "precursor"
   }else if (params$raw_data_format == "fragment") {
     cat(file = stderr(), "prepare data_type 5", "\n")
@@ -364,8 +365,8 @@ prepare_data <- function(session, input, output) {  #function(data_type, data_fi
 
 
 #----------------------------------------------------------------------------------------
-precursor_to_precursor <- function(params){
-  cat(file = stderr(), "\n", "Function precursor_to_precursor", "\n")
+precursor_to_precursor_bg <- function(params){
+  cat(file = stderr(), "\n", "Function precursor_to_precursor_bg", "\n")
   
   conn <- RSQLite::dbConnect(RSQLite::SQLite(), params$database_path)
   df <- RSQLite::dbReadTable(conn, "precursor_raw")
@@ -396,7 +397,7 @@ precursor_to_precursor <- function(params){
   RSQLite::dbWriteTable(conn, "precursor_start", df, overwrite = TRUE)
   RSQLite::dbDisconnect(conn)
   
-  cat(file = stderr(), "precursor_to_precursor complete", "\n")
+  cat(file = stderr(), "precursor_to_precursor_bg complete", "\n")
 }
 
 
@@ -574,13 +575,14 @@ isoform_to_isoform <- function(){
 
 #----------------------------------------------------------------------------------------
 order_rename_columns <- function(){
-  cat(file = stderr(), "Function order_columns...", "\n")
+  cat(file = stderr(), "\n\n", "Function order_rename_columns...", "\n")
   showModal(modalDialog("Order and rename Data...", footer = NULL))
   
   if (params$raw_data_format == "precursor") {
-    cat(file = stderr(), "Function order_columns...precursor", "\n")
-    bg_order <- callr::r_bg(func = order_rename_columns_bg, args = list("precursor_raw", params), stderr = "error_orderrename.txt", supervise = TRUE)
+    cat(file = stderr(), "Function order_rename_columns...precursor", "\n")
+    bg_order <- callr::r_bg(func = order_rename_columns_bg, args = list("precursor_start", params), stderr = str_c(params$error_path, "//error_orderrename.txt"), supervise = TRUE)
     bg_order$wait()
+    print_stderr("error_orderrename.txt")
     params$info_col_precursor <<- bg_order$get_result()
   }
   
@@ -598,8 +600,8 @@ order_rename_columns_bg <- function(table_name, params) {
   design <- RSQLite::dbReadTable(conn, "design")
   
   info_columns <- ncol(df) - params$sample_number
-  annotate_df <- df[, 1:info_columns]
-  df <- df[, (info_columns + 1):ncol(df)]
+  annotate_df <- df[, 1:(ncol(df)-params$sample_number)]
+  df <- df[, (ncol(df) - params$sample_number + 1):ncol(df)]
   df <- df[, (design$Raw_Order)]
   
   #make sure data is numeric
