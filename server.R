@@ -45,17 +45,14 @@ shinyServer(function(session, input, output) {
       
       #load design from excel, create database
       load_design_file(session, input, output)
-  
-      #save paramater table to database
-      param_save_to_database()
-      
+
       #set file locations
       file_set()
       
       #update UI
       ui_render_load_design(session, input, output)
       
-      #create design table
+      #create design table, save to database
       create_design_table(session, input, output)
       
       #backup design table
@@ -120,8 +117,12 @@ shinyServer(function(session, input, output) {
 
    showModal(modalDialog("Applying data filters...", footer = NULL))
    
-   filter_data(session, input, output)
+   #save filter inputs to params file
    filter_widget_save(session, input, output)
+   
+   
+   filter_data(session, input, output)
+   
    
    bg_bar <- callr::r_bg(func = bar_plot, args = list("precursor_filter", "Precursor_Filter", params$qc_path, params), stderr = "error_filterbarplot.txt", supervise = TRUE)
    bg_box <- callr::r_bg(func = box_plot, args = list("precursor_filter", "Precursor_Filter", params$qc_path, params), stderr = "error_filterboxplot.txt", supervise = TRUE)

@@ -33,7 +33,7 @@ load_parameters <- function(session, input, output){
 
 #---------------------------------------------------------------------
 load_design_file <- function(session, input, output){
-  cat(file = stderr(), "Function load_design_file", "\n")
+  cat(file = stderr(), "\n", "Function load_design_file", "\n")
   
   design_sbf <- parseFilePaths(volumes, input$sfb_design_file)
   params$design_path <<- str_extract(design_sbf$datapath, "^/.*/")
@@ -51,6 +51,10 @@ load_design_file <- function(session, input, output){
   create_dir(params$data_path)
   create_dir(database_dir)
   
+  #create error directory for background
+  params$error_path <<- str_c(params$data_path, "Error")
+  create_dir(params$error_path)
+  
   cat(file = stderr(), str_c("loading design file from ", params$design_path), "\n")
   
   bg_design <- callr::r_bg(excel_to_db, args = list(design_sbf$datapath, "design", params$database_path), stderr = str_c(params$error_path, "//error_design.txt"), supervise = TRUE)
@@ -58,6 +62,9 @@ load_design_file <- function(session, input, output){
   print_stderr("error_design.txt")
   
   gc(verbose = getOption("verbose"), reset = FALSE, full = TRUE)
+  
+  #save paramater table to database
+  param_save_to_database()
   
   cat(file = stderr(), "Function load_design_file...end", "\n")
 }

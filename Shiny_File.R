@@ -13,7 +13,6 @@ file_set <- function(){
   
   #set paths
   params$backup_path <<- create_dir(str_c(params$data_path, "Backup"))
-  params$error_path <<- create_dir(str_c(params$data_path, "Error"))
   params$extra_path <<- create_dir(str_c(params$data_path, "Extra"))
   params$qc_path <<- create_dir(str_c(params$data_path, "QC"))
   params$string_path <<- create_dir(str_c(params$data_path, "String"))

@@ -80,6 +80,7 @@ app_startup <- function(session, input, output) {
     #updateUI
     ui_render_load_design(session, input, output)
     ui_render_load_data(session, input, output)
+    create_design_table(session, input, output)
     ui_render_parameters(session, input, output)
     render_parameters_graphs(session, input, output)
     ui_render_filter(session, input, output)

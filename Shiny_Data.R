@@ -18,7 +18,7 @@ load_data_file <- function(session, input, output){
     load_PD_data(data_sfb)
   }else {
     cat(file = stderr(), str_c("data source <---- Spectronaut/Fragpipe"), "\n")
-    bg_load_unknown_data <- callr::r_bg(func = load_unknown_data, args = list(data_sfb, params), stderr = str_c(params$error_path, "//error_load_unkown_data.txt"), supervise = TRUE)
+    bg_load_unknown_data <- callr::r_bg(func = load_unknown_data, args = list(data_sfb, params), stderr = str_c(params$error_path, "//error_load_unknown_data.txt"), supervise = TRUE)
     bg_load_unknown_data$wait()
     print_stderr("error_load_unknown_data.txt")
   }
@@ -201,7 +201,7 @@ load_PD_data <- function(data_sfb){
 meta_data <- function(){
   cat(file = stderr(),"\n",  "Function meta_data...", "\n")
   
-  bg_meta <- callr::r_bg(func = meta_data, args = list("precursor_raw", "raw", params), stderr = str_c(params$error_path, "//error_rawmeta.txt"), supervise = TRUE)
+  bg_meta <- callr::r_bg(func = meta_data_bg, args = list("precursor_raw", "raw", params), stderr = str_c(params$error_path, "//error_rawmeta.txt"), supervise = TRUE)
   bg_meta$wait()
   print_stderr("error_rawmeta.txt")
   
