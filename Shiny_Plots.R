@@ -47,8 +47,9 @@ box_plot <- function(table_name, plot_title, plot_dir, params) {
   RSQLite::dbDisconnect(conn)
   
   df <- df[(ncol(df) - params$sample_number + 1):ncol(df)]
-  df <- df |>  dplyr::mutate(across(!where(is.numeric), as.numeric))
+  colnames(df) <- design$Label
   
+  df <- df |>  dplyr::mutate(across(!where(is.numeric), as.numeric))
   
   png(filename = stringr::str_c(plot_dir, plot_title, "_boxplot.png"), width = 400, height = 250)
   data_box <- log2(df)
@@ -57,6 +58,7 @@ box_plot <- function(table_name, plot_title, plot_dir, params) {
           col = design$colorlist, 
           notch = TRUE, 
           boxwex = 0.8,
+          #ylab = design$Label,
           main = c(plot_title),
           axes = TRUE,
           horizontal = TRUE,
@@ -108,13 +110,15 @@ histogram_plot <- function(table_name, plottitle, params)
   df_gather <- tidyr::gather(df)
   df_gather <- subset(df_gather, df_gather$value > 0)
   df_gather$value <- log2(df_gather$value)
-  
+
   #create impute stats
   test_alignment <- function(x) {
     missing <- sum(is.na(x))/length(x) * 100
     misaligned_count <- 0
-    if (missing > params$misaligned_cutoff) {
-      misaligned_count <- sum(x > params$intensity_cutoff, na.rm = TRUE)
+    if (missing > params$misaligned_cutoff && missing < 100) {
+      if (mean(x, na.rm = TRUE) >= params$intensity_cutoff) {
+        misaligned_count <- sum(x > 0, na.rm = TRUE)
+      }
     }
     return(misaligned_count)
   }

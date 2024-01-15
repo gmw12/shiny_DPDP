@@ -164,6 +164,10 @@ source("Shiny_Libraries.R")
                                column(width = 6, checkboxInput("custom_intensity_cutoff", label = "Custom Intensity Cutoff?")),
                                column(width = 6, numericInput("intensity_cutoff_sd", label = "intensity cutoff = mean+(x*stdev)", value = 0.5, width = '100%'))
                              ),
+                             fluidRow(align = "center", actionButton("filter_cutoff", label = "Recalculate Cutoff",
+                                                                     style = "color: #fff; background-color: #337ab7; border-color: #2e6da4")),
+                             hr(),
+                             hr(),
                              
                              fluidRow(align = "center", actionButton("filter_apply", label = "Apply Filters",
                                                                      style = "color: #fff; background-color: #337ab7; border-color: #2e6da4"))

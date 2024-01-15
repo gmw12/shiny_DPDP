@@ -113,11 +113,25 @@ shinyServer(function(session, input, output) {
    
    # create graphs
    parameter_create_plots(sesion, input, output, params)
-   params <<- param_load_from_database()
+   
    
 
  })
+
   
+  #------------------------------------------------------------------------------------------------------  
+  
+  observeEvent(input$filter_cutoff, {
+    cat(file = stderr(), "\n", "filter cutoff clicked", "\n")  
+    
+    #save filter inputs to params file
+    filter_widget_save(session, input, output)
+    
+    filter_histogram_plot(sesion, input, output, params)
+    
+    cat(file = stderr(), "\n", "filter cutoff...end", "\n")  
+  })
+    
 #------------------------------------------------------------------------------------------------------  
  
  observeEvent(input$filter_apply, {

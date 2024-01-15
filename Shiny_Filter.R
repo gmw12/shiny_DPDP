@@ -70,8 +70,39 @@ filter_data_bg <- function(table_name, new_table_name, params){
   
   }
   
-
-  cat(file = stderr(), "step 4 - remove_duplicates...", "\n")
+  #Step 4 optional misaligned filter
+  cat(file = stderr(), "step 4, misaligned filter...", "\n")
+  
+  if (params$checkbox_misaligned) {
+    cat(file = stderr(), "setting misaligned to NA...", "\n")
+    
+    #function to find misalignments
+    test_alignment <- function(x) {
+      misaligned <- FALSE
+      missing <- sum(is.na(x))/length(x) * 100
+      if (missing > params$misaligned_cutoff && missing < 100) {
+        if (mean(x, na.rm = TRUE) >= params$intensity_cutoff) {
+          misaligned <- TRUE
+        }
+      }
+      return(misaligned)
+    }
+    
+    misaligned_count <- 0
+    for (i in 1:nrow(sample_groups)) {
+      temp_df <- df[,(sample_groups$start[i]+info_columns):(sample_groups$end[i]+info_columns)] 
+      test <- apply(temp_df, 1, test_alignment )
+      misaligned_rows <- which(test == TRUE)
+      misaligned_count = misaligned_count + length(misaligned_rows)
+      temp_df[misaligned_rows, ] <- NA
+      df[,(sample_groups$start[i]+info_columns):(sample_groups$end[i]+info_columns)] <- temp_df
+    } 
+    
+    cat(file = stderr(), stringr::str_c("Misaligned rows --> ", misaligned_count), "\n")
+  }
+  
+  
+  cat(file = stderr(), "step 5 - remove_duplicates...", "\n")
   
   if (params$data_source == "PD") {
     df$Modifications[is.na(df$Modifications)] <- ""
@@ -84,7 +115,7 @@ filter_data_bg <- function(table_name, new_table_name, params){
     df <- dplyr::distinct(df, PrecursorId, .keep_all = TRUE)
   }
   
-  cat(file = stderr(), "step 5 - write data to db...", "\n")
+  cat(file = stderr(), "step 6 - write data to db...", "\n")
   RSQLite::dbWriteTable(conn, new_table_name, df, overwrite = TRUE)
   RSQLite::dbDisconnect(conn)
   
