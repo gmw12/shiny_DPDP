@@ -173,8 +173,8 @@ source("Shiny_Libraries.R")
                        fluidRow(
                          box(title = "Filter Data", status = "primary", solidHeader = TRUE, collapsible = FALSE, width = 12, height = 750,
                              fluidRow(
-                               column(width = 6,  imageOutput("impute_histogram")),
-                               column(width = 6, 
+                               column(width = 7,  imageOutput("impute_histogram")),
+                               column(width = 5, 
                                       imageOutput("filter_bar"),
                                       imageOutput("filter_box"))
                              )

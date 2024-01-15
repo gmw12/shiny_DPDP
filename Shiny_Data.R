@@ -198,12 +198,15 @@ load_PD_data <- function(data_sfb){
 
 
 #--------------------------------------------------------
-meta_data <- function(){
+meta_data <- function(table_string){
   cat(file = stderr(),"\n",  "Function meta_data...", "\n")
   
-  bg_meta <- callr::r_bg(func = meta_data_bg, args = list("precursor_raw", "raw", params), stderr = str_c(params$error_path, "//error_rawmeta.txt"), supervise = TRUE)
+  table_name <- str_c("precursor_", table_string)
+  error_file <- str_c("error_", table_string, "meta.txt")
+  
+  bg_meta <- callr::r_bg(func = meta_data_bg, args = list("precursor_raw", "raw", params), stderr = str_c(params$error_path, "//", error_file), supervise = TRUE)
   bg_meta$wait()
-  print_stderr("error_rawmeta.txt")
+  print_stderr(error_file)
   
   params <<- param_load_from_database()
   

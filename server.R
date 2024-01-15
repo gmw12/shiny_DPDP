@@ -109,7 +109,7 @@ shinyServer(function(session, input, output) {
    order_rename_columns()
    
    # gather info on raw data for ui
-   meta_data()
+   meta_data("raw")
    
    # create graphs
    parameter_create_plots(sesion, input, output, params)
@@ -118,7 +118,7 @@ shinyServer(function(session, input, output) {
 
  })
   
- 
+#------------------------------------------------------------------------------------------------------  
  
  observeEvent(input$filter_apply, {
    cat(file = stderr(), "\n", "filter apply clicked", "\n")
@@ -128,7 +128,7 @@ shinyServer(function(session, input, output) {
    #save filter inputs to params file
    filter_widget_save(session, input, output)
    
-   
+   #apply data filters, save to new dataframe
    filter_data(session, input, output)
    
    
@@ -139,14 +139,12 @@ shinyServer(function(session, input, output) {
    print_stderr("error_filterbarplot.txt")
    print_stderr("error_filterboxplot.txt")
    
-   bg_meta <- callr::r_bg(func = meta_data, args = list("precursor_filter", "filter", params), stderr = str_c(params$error_path, "//error_filtermeta.txt"), supervise = TRUE)
-   bg_meta$wait()
-   print_stderr("error_filtermeta.txt")
+   meta_data("filter")
    
    params <<- param_load_from_database()
    
    wait_cycle <- 0
-   while (!file.exists(str_c(params$qc_path,"Precursor_Raw_barplot.png"))) {
+   while (!file.exists(str_c(params$qc_path,"Precursor_Filter_barplot.png"))) {
      if (wait_cycle < 10) {
        Sys.sleep(0.5)
        wait_cycle <- wait_cycle + 1
@@ -159,7 +157,7 @@ shinyServer(function(session, input, output) {
  })
  
   
- 
+  #------------------------------------------------------------------------------------------------------   
  
  
  observeEvent(input$norm_parameters, {

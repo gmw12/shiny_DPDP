@@ -33,6 +33,7 @@ bar_plot <- function(table_name, plot_title, plot_dir, params) {
           axis.text.y = ggplot2::element_text(size = 5,  color = "black"),
     ) 
   ggplot2::ggsave(file_name, width = 5, height = 5)
+  cat(file = stderr(), "Function bar_plot...end", "\n")
   return("done")
 }
 
@@ -62,6 +63,7 @@ box_plot <- function(table_name, plot_title, plot_dir, params) {
           las = 1,
           graphics::par(mar = c(2,8,4,1))) #bottom, left, top, right
   dev.off()
+  cat(file = stderr(), "Function box_plot...end", "\n")
 }
 
 
