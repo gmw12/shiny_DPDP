@@ -45,6 +45,33 @@ filter_histogram_plot <- function(sesion, input, output, params){
   removeModal()
 }
 
+#------------------------------------------------------------------------------------------------------
+filter_create_plots <- function(sesion, input, output, params){
+  cat(file = stderr(), "Function filter_create_plots", "\n")
+  showModal(modalDialog("Creating Plots...", footer = NULL))
+  
+  bg_bar <- callr::r_bg(func = bar_plot, args = list("precursor_filter", "Precursor_Filter", params$qc_path, params), stderr = str_c(params$error_path,  "//error_filterbarplot.txt"), supervise = TRUE)
+  bg_box <- callr::r_bg(func = box_plot, args = list("precursor_filter", "Precursor_Filter", params$qc_path, params), stderr = str_c(params$error_path, "//error_filterboxplot.txt"), supervise = TRUE)
+  bg_box$wait()
+  bg_bar$wait()
+  print_stderr("error_filterbarplot.txt")
+  print_stderr("error_filterboxplot.txt")
+  
+  wait_cycle <- 0
+  while (!file.exists(str_c(params$qc_path,"Precursor_Filter_barplot.png"))) {
+    if (wait_cycle < 10) {
+      Sys.sleep(0.5)
+      wait_cycle <- wait_cycle + 1
+    }
+  }
+  
+  ui_render_filter(session, input, output)
+  
+  cat(file = stderr(), "create filter plots end", "\n")
+  removeModal()
+}
+
+
 
 
 

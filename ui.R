@@ -275,7 +275,7 @@ source("Shiny_Libraries.R")
       #Impute
       tabItem(tabName = "impute",
               fluidRow(
-                column(width = 4,
+                column(width = 3,
                        box(id = "impute_box", title = "Imputation strategy...", status = "primary",
                            solidHeader = TRUE, collapsible = FALSE, align = "left", width = 12, height = 125, 
                            selectInput("impute_type", label = "Select imputation strategy",
@@ -291,7 +291,7 @@ source("Shiny_Libraries.R")
                        ),
                        
                        box(id = "duke_param_box", title = "Impute parameters...", status = "primary",
-                           solidHeader = TRUE, collapsible = FALSE, align = "left", width = 12, height = 500,
+                           solidHeader = TRUE, collapsible = FALSE, align = "left", width = 12, height = 350,
                            fluidRow(
                             column(width = 6, checkboxInput("impute_ptm", label = "Impute Distribution based on PTM?", value = 0, width = 300)),
                             column(width = 6, textInput("impute_ptm_grep", label = "Impute PTM grep", value = "Phospho", width = 300))
@@ -305,7 +305,7 @@ source("Shiny_Libraries.R")
                             )
                        ),
                        box(id = "impute_apply_box", title = "Start...", status = "primary",
-                           solidHeader = TRUE, collapsible = FALSE, align = "left", width = 12, height = 100, 
+                           solidHeader = TRUE, collapsible = FALSE, align = "left", width = 12, height = 150, 
                            fluidRow(align = "center", 
                               column(width = 6, actionButton("impute_parameters", label = "Set Parameters",
                                                                    style = "color: #fff; background-color: #337ab7; border-color: #2e6da4")),
@@ -316,17 +316,22 @@ source("Shiny_Libraries.R")
               
                 ),
 
-                column(width = 8,
+                column(width = 7,
                     box(title = "Intensity Histogram", status = "primary", solidHeader = TRUE, collapsible = FALSE, align = 'left', width = 12, height = 750,
                      fluidRow(
                        #column(width = 9,  imageOutput("impute_histogram")
-                      ),
-                       column(width = 3, 
-                              #span(textOutput("impute_total_na"), style = "color:blue; font-size:16px"),
-                              #span(textOutput("impute_total_misaligned"), style = "color:blue; font-size:16px")
-                              )
-                   )
-                 )
+                      )
+                   )),
+                
+                column(width = 2,  
+                       fluidRow(
+                         box(title = "Impute Meta Data", status = "primary", solidHeader = TRUE, collapsible = FALSE, width = 12, height = 750,
+                             fluidRow(
+                               column(width = 12,
+                                      span(textOutput("meta_impute_na"), style = "color:blue; font-size:16px"),
+                                      )
+                             )
+                         )))
                 
         ))   
        

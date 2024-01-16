@@ -51,7 +51,7 @@ filter_data_bg <- function(table_name, new_table_name, params){
   #Step 3 optional filter by cv of specific sample group
   cat(file = stderr(), "step 3, cv minimum...", "\n")
   if (params$filter_cv) {
-    cat(file = stderr(), str_c("filter by cv"), "\n")
+    cat(file = stderr(), stringr::str_c("filter by cv"), "\n")
 
     #Percent CV ---------------------------------
     percentCV <- function(x) {
@@ -106,7 +106,7 @@ filter_data_bg <- function(table_name, new_table_name, params){
   
   if (params$data_source == "PD") {
     df$Modifications[is.na(df$Modifications)] <- ""
-    df$dup <- str_c(df$Sequence, "_", df$Modifications)
+    df$dup <- stringr::str_c(df$Sequence, "_", df$Modifications)
     df <- dplry::distinct(df, dup, .keep_all = TRUE)
     df$dup <- NULL
   }

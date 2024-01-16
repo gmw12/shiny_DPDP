@@ -213,6 +213,7 @@ meta_data <- function(table_string){
   cat(file = stderr(),"\n",  "Function meta_data...end", "\n")
 }
 
+#--------------------------------------------------------
 meta_data_bg <- function(table_name, data_format, params){
   cat(file = stderr(),"\n",  "Function meta_data bg...", "\n")
   
@@ -225,7 +226,7 @@ meta_data_bg <- function(table_name, data_format, params){
   
   params[[precursor_name]] <- nrow(df)
   
-  if (data_format == "raw"){
+  if (data_format == "raw") {
     params[[peptide_name]] <- length(unique(df$EG.ModifiedSequence))
     params[[protein_name]] <- length(unique(df$PG.ProteinAccessions))
   } else {
@@ -239,6 +240,54 @@ meta_data_bg <- function(table_name, data_format, params){
   cat(file = stderr(),"\n",  "Function meta_data bg...end", "\n")
   
 }
+
+#--------------------------------------------------------
+
+#--------------------------------------------------------
+impute_meta_data <- function(){
+  cat(file = stderr(),"\n",  "Function meta_data...", "\n")
+  
+  table_name <- str_c("precursor_", table_string)
+  error_file <- str_c("error_", table_string, "meta.txt")
+  
+  bg_meta <- callr::r_bg(func = impute_meta_data_bg, args = list(table_name, table_string, params), stderr = str_c(params$error_path, "//", error_file), supervise = TRUE)
+  bg_meta$wait()
+  print_stderr(error_file)
+  
+  params <<- param_load_from_database()
+  
+  cat(file = stderr(),"\n",  "Function meta_data...end", "\n")
+}
+
+#--------------------------------------------------------
+impute_meta_data_bg <- function(table_name, data_format, params){
+  cat(file = stderr(),"\n",  "Function meta_data bg...", "\n")
+  
+  conn <- RSQLite::dbConnect(RSQLite::SQLite(), params$database_path)
+  df <- RSQLite::dbReadTable(conn, table_name)
+  
+  precursor_name <- stringr::str_c("meta_precursor_", data_format)
+  peptide_name <- stringr::str_c("meta_peptide_", data_format)
+  protein_name <- stringr::str_c("meta_protein_", data_format)
+  
+  params[[precursor_name]] <- nrow(df)
+  
+  if (data_format == "raw") {
+    params[[peptide_name]] <- length(unique(df$EG.ModifiedSequence))
+    params[[protein_name]] <- length(unique(df$PG.ProteinAccessions))
+  } else {
+    params[[peptide_name]] <- length(unique(df$Sequence))
+    params[[protein_name]] <- length(unique(df$Accession))
+  }
+  
+  RSQLite::dbWriteTable(conn, "parameters", params, overwrite = TRUE)
+  RSQLite::dbDisconnect(conn)
+  
+  cat(file = stderr(),"\n",  "Function meta_data bg...end", "\n")
+  
+}
+
+#--------------------------------------------------------
 
 
 

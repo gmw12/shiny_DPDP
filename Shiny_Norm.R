@@ -6,13 +6,13 @@ norm_filter <- function() {
   
   if (params$raw_data_format == "precursor") {
     cat(file = stderr(), "norm filter precursor...", "\n")
-    bg_normfilter <- callr::r_bg(func = norm_filter_bg, args = list("precursor_filter", "precursor_normdata", params), stderr = "error_normfilter.txt", supervise = TRUE)
+    bg_normfilter <- callr::r_bg(func = norm_filter_bg, args = list("precursor_filter", "precursor_normdata", params), stderr = str_c(params$error_path, "//error_normfilter.txt"), supervise = TRUE)
     bg_normfilter$wait()
-    cat(file = stderr(), readLines("error_normfilter.txt"), "\n")
+    print_stderr("error_normfilter.txt")
     
-    bg_bar <- callr::r_bg(func = bar_plot, args = list("precursor_normdata", "Precursor_NormData", params$qc_path, params), stderr = "error_normdatabarplot.txt", supervise = TRUE)
+    bg_bar <- callr::r_bg(func = bar_plot, args = list("precursor_normdata", "Precursor_NormData", params$qc_path, params), stderr = str_c(params$error_path, "//error_normdatabarplot.txt"), supervise = TRUE)
     bg_bar$wait()
-    cat(file = stderr(), readLines("error_normdatabarplot.txt"), "\n")
+    print_stderr("error_normdatabarplot.txt")
   } 
 
   
@@ -68,13 +68,13 @@ norm_apply <- function(){
     new_table_name <- str_c("precursor_", norm_type[1])
   } 
  
-  bg_normapply <- callr::r_bg(func = norm_apply_bg, args = list(table_data, table_norm_data, new_table_name, info_columns, params, norm_type[1]), stderr = "error_normapply.txt", supervise = TRUE)
+  bg_normapply <- callr::r_bg(func = norm_apply_bg, args = list(table_data, table_norm_data, new_table_name, info_columns, params, norm_type[1]), stderr = str_c(params$error_path, "//error_normapply.txt"), supervise = TRUE)
   bg_normapply$wait()
-  cat(file = stderr(), readLines("error_normapply.txt"), "\n")
+  print_stderr("error_normapply.txt")
 
-  bg_normbar <- callr::r_bg(func = bar_plot, args = list(new_table_name, str_c("Precursor_",  norm_type[1]), params$qc_path, params), stderr = "error_normbarplot.txt", supervise = TRUE)
+  bg_normbar <- callr::r_bg(func = bar_plot, args = list(new_table_name, str_c("Precursor_",  norm_type[1]), params$qc_path, params), stderr = str_c(params$error_path, "//error_normbarplot.txt"), supervise = TRUE)
   bg_normbar$wait()
-  cat(file = stderr(), readLines("error_normbarplot.txt"), "\n")
+  print_stderr("error_normbarplot.txt")
    
 }
 
@@ -82,8 +82,6 @@ norm_apply <- function(){
 #--------------------------------------------------------------------------------------
 norm_apply_bg <- function(table_data, table_norm_data, new_table_name, info_columns, params, norm_type) {
   cat(file = stderr(), "Function - norm_apply_bg...", "\n")
-  
-  
   
   #--------------------------------------------------------------------------------------
   # global scaling value, sample loading normalization
@@ -254,7 +252,7 @@ norm_apply_bg <- function(table_data, table_norm_data, new_table_name, info_colu
   data_to_norm <- RSQLite::dbReadTable(conn, table_data)
   norm_data <- RSQLite::dbReadTable(conn, table_norm_data)
   
-  if (norm_type == "sl"){
+  if (norm_type == "sl") {
     df <- sl_normalize(norm_data, data_to_norm, info_columns)
   }else if (norm_type == "tmm") {
     df <- tmm_normalize(norm_data, data_to_norm, info_columns)
@@ -381,9 +379,6 @@ directlfq_normalize <- function(data_to_norm, data_title){
   
   return(ungroup(data_out))
 }
-
-
-
 
 
 # average global scaling value, sample loading normalization

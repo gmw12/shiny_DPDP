@@ -127,6 +127,7 @@ shinyServer(function(session, input, output) {
     #save filter inputs to params file
     filter_widget_save(session, input, output)
     
+    #create histogram and calculate cutoff values
     filter_histogram_plot(sesion, input, output, params)
     
     cat(file = stderr(), "\n", "filter cutoff...end", "\n")  
@@ -145,35 +146,18 @@ shinyServer(function(session, input, output) {
    #apply data filters, save to new dataframe
    filter_data(session, input, output)
    
+   #create plots
+   filter_create_plots(sesion, input, output, params)
    
-   bg_bar <- callr::r_bg(func = bar_plot, args = list("precursor_filter", "Precursor_Filter", params$qc_path, params), stderr = str_c(params$error_path,  "//error_filterbarplot.txt"), supervise = TRUE)
-   bg_box <- callr::r_bg(func = box_plot, args = list("precursor_filter", "Precursor_Filter", params$qc_path, params), stderr = str_c(params$error_path, "//error_filterboxplot.txt"), supervise = TRUE)
-   bg_box$wait()
-   bg_bar$wait()
-   print_stderr("error_filterbarplot.txt")
-   print_stderr("error_filterboxplot.txt")
-   
+   #gather meta data for filtered dataframe
    meta_data("filter")
-   
-   params <<- param_load_from_database()
-   
-   wait_cycle <- 0
-   while (!file.exists(str_c(params$qc_path,"Precursor_Filter_barplot.png"))) {
-     if (wait_cycle < 10) {
-       Sys.sleep(0.5)
-       wait_cycle <- wait_cycle + 1
-     }
-   }
-   
-   ui_render_filter(session, input, output)
    
    removeModal()
  })
  
   
-  #------------------------------------------------------------------------------------------------------   
- 
- 
+#------------------------------------------------------------------------------------------------------   
+
  observeEvent(input$norm_parameters, {
    cat(file = stderr(), "\n", "norm parameters clicked", "\n")
    showModal(modalDialog("Setting normalization parameters...", footer = NULL))
@@ -188,7 +172,7 @@ shinyServer(function(session, input, output) {
    
  })
  
- 
+#------------------------------------------------------------------------------------------------------  
  
  observeEvent(input$norm_apply, {
    cat(file = stderr(), "\n", "norm apply clicked", "\n")
@@ -202,15 +186,21 @@ shinyServer(function(session, input, output) {
    
    removeModal()
  })
- 
- 
+
+   
+#------------------------------------------------------------------------------------------------------   
+  
  observeEvent(input$impute_parameters, {
    cat(file = stderr(), "\n", "impute apply clicked", "\n")
    showModal(modalDialog("Setting imputation parameters, creating histogram...", footer = NULL))
 
    impute_apply_widget_save(session, input, output)
    
-   params <<- param_load_from_database()
+   # gather info on raw data for ui
+   impute_meta_data()
+   
+   # create graphs
+   #impute_create_plots(sesion, input, output, params)
    
    removeModal()
  })

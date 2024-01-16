@@ -243,7 +243,7 @@ norm_apply_widget_save <- function(session, input, output){
 impute_apply_widget_save <- function(session, input, output){
   cat(file = stderr(), "Function - impute_apply_widget_save...", "\n")
   
-  names <- c("impute_type", "impute_ptm", "impute_ptm_grep", "bottom_x", "intensity_cutoff_sd", "missing_cutoff")
+  names <- c("impute_type", "impute_ptm", "impute_ptm_grep", "bottom_x", "missing_cutoff")
   
   for (name in names) {
     params[[name]] <<- input[[name]]
