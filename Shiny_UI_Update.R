@@ -124,6 +124,13 @@ render_norm_apply_graphs <- function(session, input, output) {
   
 }
 
+#-------------------------------------------------------------------------------------------
+render_impute_parameters <- function(session, input, output) {
+  cat(file = stderr(), "Function render_impute_parameters", "\n")
+  
+  output$meta_impute_na <- renderText({str_c("Missing Values:  ", params$meta_impute_na)})
+  
+}
 
 #-----------------------------------------------------------------------------------
 

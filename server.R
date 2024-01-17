@@ -192,17 +192,19 @@ shinyServer(function(session, input, output) {
   
  observeEvent(input$impute_parameters, {
    cat(file = stderr(), "\n", "impute apply clicked", "\n")
-   showModal(modalDialog("Setting imputation parameters, creating histogram...", footer = NULL))
 
+   #save inputs
    impute_apply_widget_save(session, input, output)
    
-   # gather info on raw data for ui
+   #gather info on raw data for ui
    impute_meta_data()
    
-   # create graphs
-   #impute_create_plots(sesion, input, output, params)
+   #render text
+   render_impute_parameters(session, input, output) 
    
-   removeModal()
+   #render plots
+   #impute_create_plots(sesion, input, output, params)
+
  })
  
  

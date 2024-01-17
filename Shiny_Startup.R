@@ -87,7 +87,8 @@ app_startup <- function(session, input, output) {
     render_norm_graphs(session, input, output)
     render_norm_apply_graphs(session, input, output)
     render_filter_histogram_graphs(session, input, output)
-    
+    render_impute_parameters(session, input, output) 
+      
     #update Widgets
     update_widgets(session, input, output)
     
@@ -172,7 +173,8 @@ create_default_params <- function() {
               "impute_type" = "duke",
               "bottom_x" = 2,
               "impute_ptm" = FALSE, 
-              "impute_ptm_grep" = "Phospho" 
+              "impute_ptm_grep" = "Phospho",
+              "meta_impute_na" = ""
 
   )
   

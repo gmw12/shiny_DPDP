@@ -5,14 +5,9 @@ dbListTables(conn)
 df <- dbReadTable(conn, "parameters")
 df <- dbReadTable(conn, "precursor_raw")
 df <- dbReadTable(conn, "precursor_start")
-df2 <- dbReadTable(conn, "precursor_filter")
+df <- dbReadTable(conn, "precursor_filter")
 df_design <- dbReadTable(conn, "design")
 df_groups <- dbReadTable(conn, "sample_groups")
-
-df <- dbReadTable(conn, "precursor_filter")
-
-
-
 
 RSQLite::dbDisconnect(conn)
 

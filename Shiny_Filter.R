@@ -108,7 +108,7 @@ filter_data_bg <- function(table_name, new_table_name, params){
   if (params$data_source == "PD") {
     df$Modifications[is.na(df$Modifications)] <- ""
     df$dup <- stringr::str_c(df$Sequence, "_", df$Modifications)
-    df <- dplry::distinct(df, dup, .keep_all = TRUE)
+    df <- dplyr::distinct(df, dup, .keep_all = TRUE)
     df$dup <- NULL
   }
   

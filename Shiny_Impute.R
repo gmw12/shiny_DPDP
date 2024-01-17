@@ -1,5 +1,29 @@
+impute_apply <- function(session, input, output) {
+  cat(file = stderr(), "Function - impute_apply...", "\n")
+  
+  norm_type <- as.list(strsplit(params$norm_type, ",")[[1]])
 
-apply_impute <- function(session, input, output){
+  for (norm in norm_type) {
+    
+  }
+  
+  
+}
+
+
+#----------------------------------------------------------------------------------------------------
+
+impute_apply_bg <- function(norm, params) {
+  cat(file = stderr(), "Function - impute_apply...", "\n")
+  
+
+  
+}
+
+
+#----------------------------------------------------------------------------------------------------
+
+old_apply_impute <- function(session, input, output){
   cat(file = stderr(), "apply_impute function...1", "\n")
   
   # save set of random numbers to be used for impute, if reimpute numbers the same
