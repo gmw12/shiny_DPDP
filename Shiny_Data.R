@@ -245,45 +245,66 @@ meta_data_bg <- function(table_name, data_format, params){
 
 #--------------------------------------------------------
 impute_meta_data <- function(){
-  cat(file = stderr(),"\n",  "Function meta_data...", "\n")
+  cat(file = stderr(),"\n",  "Function impute_meta_data...", "\n")
+  showModal(modalDialog("Setting imputation parameters, calculating meta data, setting Duke impute intensity table...", footer = NULL))
   
-  table_name <- str_c("precursor_", table_string)
-  error_file <- str_c("error_", table_string, "meta.txt")
-  
-  bg_meta <- callr::r_bg(func = impute_meta_data_bg, args = list(table_name, table_string, params), stderr = str_c(params$error_path, "//", error_file), supervise = TRUE)
+  bg_meta <- callr::r_bg(func = impute_meta_data_bg, args = list("precursor_filter", params), stderr = str_c(params$error_path, "//impute_meta_data.txt"), supervise = TRUE)
   bg_meta$wait()
-  print_stderr(error_file)
+  print_stderr("impute_meta_data.txt")
   
   params <<- param_load_from_database()
   
-  cat(file = stderr(),"\n",  "Function meta_data...end", "\n")
+  removeModal()
+  cat(file = stderr(),"\n",  "Function impute_meta_data...end", "\n")
 }
 
 #--------------------------------------------------------
-impute_meta_data_bg <- function(table_name, data_format, params){
-  cat(file = stderr(),"\n",  "Function meta_data bg...", "\n")
+impute_meta_data_bg <- function(table_name, params){
+  cat(file = stderr(),"\n",  "Function impute_meta_data bg...", "\n")
   
   conn <- RSQLite::dbConnect(RSQLite::SQLite(), params$database_path)
   df <- RSQLite::dbReadTable(conn, table_name)
-  
-  precursor_name <- stringr::str_c("meta_precursor_", data_format)
-  peptide_name <- stringr::str_c("meta_peptide_", data_format)
-  protein_name <- stringr::str_c("meta_protein_", data_format)
-  
-  params[[precursor_name]] <- nrow(df)
-  
-  if (data_format == "raw") {
-    params[[peptide_name]] <- length(unique(df$EG.ModifiedSequence))
-    params[[protein_name]] <- length(unique(df$PG.ProteinAccessions))
-  } else {
-    params[[peptide_name]] <- length(unique(df$Sequence))
-    params[[protein_name]] <- length(unique(df$Accession))
+  df_groups <- RSQLite::dbReadTable(conn, "sample_groups")
+
+  #filter data if imputation stats based on modification data only
+  if (params$impute_ptm) {
+    df <- df[grep(params$impute_ptm_grep, df$Sequence, ignore.case = TRUE),]
   }
   
+  df <- df[(ncol(df) - params$sample_number + 1):ncol(df)]
+  
+  total_na <- list()
+  for (i in 1:nrow(df_groups)) {
+    temp_df <- df[df_groups$start[i]:df_groups$end[i]] 
+    count_na <- sum(is.na(temp_df))
+    total_na <- c(total_na, count_na)
+    
+    temp_df$average <- apply(temp_df, 1, FUN = function(x) {mean(x, na.rm = TRUE)})
+    temp_df$sd <- apply(temp_df, 1, FUN = function(x) {sd(x, na.rm = TRUE)})
+    temp_df$bin <- dplyr::ntile(temp_df$average, 20)  
+
+    impute_bin_table <- subset(temp_df, !is.na(sd)) |> dplyr::group_by(bin) |> dplyr::summarize(min = min(average), max = max(average), sd = mean(sd))
+    for (x in 1:(nrow(impute_bin_table) - 1)) {impute_bin_table$max[x] <- impute_bin_table$min[x + 1]}
+    impute_bin_table$max[nrow(impute_bin_table)] <- 100
+    impute_bin_table$min2 <- impute_bin_table$min
+    impute_bin_table$min2[1] <- 0
+    impute_bin_table <- impute_bin_table[-21,]
+    
+    impute_bin_table_name <- stringr::str_c("impute_bin_", df_groups$Group[i])
+    RSQLite::dbWriteTable(conn, impute_bin_table_name, impute_bin_table, overwrite = TRUE)
+  } 
+
+  params$meta_impute_na <- toString(total_na)
+  
+  #create random table for imputation
+  set.seed(123)
+  rand_df = data.frame(matrix(runif(ncol(df) * nrow(df), min = -1, max = 1), ncol = ncol(df)))
+  
+  RSQLite::dbWriteTable(conn, "random", rand_df, overwrite = TRUE)
   RSQLite::dbWriteTable(conn, "parameters", params, overwrite = TRUE)
   RSQLite::dbDisconnect(conn)
   
-  cat(file = stderr(),"\n",  "Function meta_data bg...end", "\n")
+  cat(file = stderr(),"\n",  "Function impute_meta_data bg...end", "\n")
   
 }
 

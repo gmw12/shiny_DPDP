@@ -25,7 +25,7 @@ norm_filter_bg <- function(table_name, new_table_name, params) {
   
   start <- Sys.time()
 
-  source('Shiny_Norm_Function.R')
+  source('Shiny_Norm_Functions.R')
     
   conn <- RSQLite::dbConnect(RSQLite::SQLite(), params$database_path)
   df <- RSQLite::dbReadTable(conn, table_name)

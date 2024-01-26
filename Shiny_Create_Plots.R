@@ -71,7 +71,19 @@ filter_create_plots <- function(sesion, input, output, params){
   removeModal()
 }
 
-
+#------------------------------------------------------------------------------------------------------
+impute_create_plots <- function(sesion, input, output, params){
+  cat(file = stderr(), "Function impute_create_plots", "\n")
+  
+  showModal(modalDialog("Creating Plots...", footer = NULL))
+  
+  bg_histogram <- callr::r_bg(func = histogram_plot, args = list("precursor_", "Precursor_Start_Histogram", params), stderr = str_c(params$error_path, "//error_histogram.txt"), supervise = TRUE)
+  bg_histogram$wait()
+  print_stderr("error_histogram.txt")
+  
+  cat(file = stderr(), "create parameter plots end", "\n")
+  removeModal()
+}
 
 
 

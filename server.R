@@ -191,23 +191,30 @@ shinyServer(function(session, input, output) {
 #------------------------------------------------------------------------------------------------------   
   
  observeEvent(input$impute_parameters, {
-   cat(file = stderr(), "\n", "impute apply clicked", "\n")
+   cat(file = stderr(), "\n", "impute parameters clicked", "\n")
 
    #save inputs
    impute_apply_widget_save(session, input, output)
    
-   #gather info on raw data for ui
+   #gather info on raw data for ui, create random table for imputing
    impute_meta_data()
    
    #render text
    render_impute_parameters(session, input, output) 
    
    #render plots
-   #impute_create_plots(sesion, input, output, params)
+   #impute_create_plots(session, input, output, params)
 
  })
  
- 
+  #------------------------------------------------------------------------------------------------------   
+  
+  observeEvent(input$impute_apply, {
+    cat(file = stderr(), "\n", "impute apply clicked", "\n")
+    
+
+    
+  })
  
  
  

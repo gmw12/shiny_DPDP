@@ -56,7 +56,7 @@ for (i in 1:nrow(df_groups)) {
 
 
 
-
+test = data.frame(matrix(runif(ncol(df)*nrow(df), min = -1, max = 1), ncol=ncol(df)))
 
 #--------------------------------------------------------------------------------
 box(title = "Parameters", status = "primary", solidHeader = TRUE, collapsible = FALSE, align = "center", width = 4, height = 800,
