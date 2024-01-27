@@ -2,46 +2,23 @@ cat(file = stderr(), "Shiny_Impute_Functions.R", "\n")
 
 #--------------------------------------------------------------------------------
 # imputation of missing data
-impute_duke <- function(df, params) {
+impute_duke <- function(df, df_groups, params) {
   cat(file = stderr(), "Function - impute_duke...", "\n")
   
   df <- df[(ncol(df) - params$sample_number + 1):ncol(df)]
   df <- log(df,2)
   
-  for (i in 1:dpmsr_set$y$group_number) {
+  for (i in 1:nrow(df_groups)) {
     # calculate stats for each sample group
-    #assign(dpmsr_set$y$sample_groups$Group[i], data.frame(data_in[c(dpmsr_set$y$sample_groups$start[i]:dpmsr_set$y$sample_groups$end[i])]))
-    #df <- get(dpmsr_set$y$sample_groups$Group[i])
-    df <- data.frame(data_in[c(dpmsr_set$y$sample_groups$start[i]:dpmsr_set$y$sample_groups$end[i])])
+    df_temp <- data.frame(df[c(df_groups$start[i]:df_groups$end[i])])
     
     # adding if statement incase there are non quant groups (1 sample)
-    if (ncol(df) > 1) {
-      
-      df$sum <- rowSums(df, na.rm = TRUE)
-      df$rep <- dpmsr_set$y$sample_groups$Count[i]
-      #df$min <- dpmsr_set$y$sample_groups$Count[i]/2
-      df$max_missing <- dpmsr_set$y$sample_groups$Count[i]*((100 - as.numeric(dpmsr_set$x$missing_cutoff))/100)
-      df$max_misaligned <- dpmsr_set$y$sample_groups$Count[i]*(as.numeric(dpmsr_set$x$misaligned_cutoff)/100)
-      df$missings <- rowSums(is.na(df[1:dpmsr_set$y$sample_groups$Count[i]]))
-      df$average <- apply(df[1:dpmsr_set$y$sample_groups$Count[i]], 1, FUN = function(x) {mean(x, na.rm = TRUE)})
-      
-      #separate calc for distribution data - for low ptm sets where impute cold be skewed if keep the high abundance data
-      df2 <- data.frame(distribution_data[c(dpmsr_set$y$sample_groups$start[i]:dpmsr_set$y$sample_groups$end[i])])
-      #df2$sum <- rowSums(df2, na.rm = TRUE)
-      #df2$rep <- dpmsr_set$y$sample_groups$Count[i]
-      #df2$min <- dpmsr_set$y$sample_groups$Count[i]/2
-      #df2$missings <- rowSums(is.na(df2[1:dpmsr_set$y$sample_groups$Count[i]]))
-      df2$average <- apply(df2[1:dpmsr_set$y$sample_groups$Count[i]], 1, FUN = function(x) {mean(x, na.rm = TRUE)})
-      df2$sd <- apply(df2[1:dpmsr_set$y$sample_groups$Count[i]], 1, FUN = function(x) {sd(x, na.rm = TRUE)})
-      df2$bin <- ntile(df2$average, 20)  
-      #sd_info <- subset(df2, missings ==0) %>% group_by(bin) %>% summarize(min = min(average), max = max(average), sd = mean(sd))
-      sd_info <- subset(df2, !is.na(sd)) %>% group_by(bin) %>% summarize(min = min(average), max = max(average), sd = mean(sd))
-      for (x in 1:(nrow(sd_info) - 1)) {sd_info$max[x] <- sd_info$min[x + 1]}
-      sd_info$max[nrow(sd_info)] <- 100
-      sd_info$min2 <- sd_info$min
-      sd_info$min2[1] <- 0
-      sd_info <- sd_info[-21,]
-      
+    if (ncol(df_temp) > 1) {
+      df_temp$sum <- rowSums(df_temp, na.rm = TRUE)
+      df_temp$rep <- df_groups$Count[i]
+      df_temp$max_missing <- df_groups$Count[i]*((100 - as.numeric(params$missing_cutoff))/100)
+      df_temp$missings <- rowSums(is.na(df[1:dpmsr_set$y$sample_groups$Count[i]]))
+      df_temp$average <- apply(df[1:dpmsr_set$y$sample_groups$Count[i]], 1, FUN = function(x) {mean(x, na.rm = TRUE)})
       
       # if the number of missing values <= minimum then will impute based on normal dist of measured values
       if (dpmsr_set$x$impute_method == "Duke") {  

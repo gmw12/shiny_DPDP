@@ -34,8 +34,9 @@ impute_apply_bg <- function(norm, params) {
   
   conn <- RSQLite::dbConnect(RSQLite::SQLite(), params$database_path)
   df <- RSQLite::dbReadTable(conn, table_name)
+  df_groups <- dbReadTable(conn, "sample_groups")
   
-  if (params$impute_type == "duke") {df_impute <- duke_impute(df, params)}
+  if (params$impute_type == "duke") {df_impute <- duke_impute(df, df_groups, params)}
 
   new_table_name <- stringr::str_c('precursor_impute_', norm)
   RSQLite::dbWriteTable(conn, new_table_name, df_impute, overwrite = TRUE)
