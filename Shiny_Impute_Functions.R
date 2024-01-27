@@ -17,61 +17,24 @@ impute_duke <- function(df, df_groups, params) {
       df_temp$sum <- rowSums(df_temp, na.rm = TRUE)
       df_temp$rep <- df_groups$Count[i]
       df_temp$max_missing <- df_groups$Count[i]*((100 - as.numeric(params$missing_cutoff))/100)
-      df_temp$missings <- rowSums(is.na(df[1:dpmsr_set$y$sample_groups$Count[i]]))
-      df_temp$average <- apply(df[1:dpmsr_set$y$sample_groups$Count[i]], 1, FUN = function(x) {mean(x, na.rm = TRUE)})
+      df_temp$missings <- rowSums(is.na(df_temp[1:df_groups$Count[i]]))
+      df_temp$average <- apply(df_temp[1:df_groups$Count[i]], 1, FUN = function(x) {mean(x, na.rm = TRUE)})
       
       # if the number of missing values <= minimum then will impute based on normal dist of measured values
-      if (dpmsr_set$x$impute_method == "Duke") {  
-        find_rows <- which(df$missings > 0 & df$missings <= df$max_missing)
-        for (j in find_rows) {
-          findsd <- sd_info %>% filter(df$average[j] >= min2, df$average[j] <= max)
-          for (k in 1:dpmsr_set$y$sample_groups$Count[i]) {
-            if (is.na(df[j,k])) {
-              #nf <-  rnorm(1, 0, 1)
-              #nf <- mean(runif(4, min=-1, max=1))
-              df[j,k] = df$average[j] + (dpmsr_set$y$rand_impute[rand_count] * findsd$sd[1])
-              rand_count <- rand_count + 1
-            }
+      find_rows <- which(df_temp$missings > 0 & df_temp$missings <= df_temp$max_missing)
+      for (j in find_rows) {
+        findsd <- sd_info %>% filter(df_temp$average[j] >= min2, df_temp$average[j] <= max)
+        for (k in 1:df_groups$Count[i]) {
+          if (is.na(df_temp[j,k])) {
+            df_temp[j,k] = df_temp$average[j] + (dpmsr_set$y$rand_impute[rand_count] * findsd$sd[1])
+            rand_count <- rand_count + 1
           }
         }
       }
-      
-      
-      # if number of missing greater than minimum and measured value is above intensity cuttoff then remove measured value
-      df$missings <- rowSums(is.na(df[1:dpmsr_set$y$sample_groups$Count[i]]))  #recalc if Duke filled, filters may overlap
-      if (as.logical(dpmsr_set$x$duke_misaligned)) {
-        cat(file = stderr(), str_c("finding and removing misaligned values"), "\n")
-        find_rows <- which(df$missings > df$max_misaligned  & df$average >= log(dpmsr_set$x$int_cutoff,2) )
-        for (j in find_rows) {
-          for (k in 1:dpmsr_set$y$sample_groups$Count[i]) {
-            df[j,k] <- NA
-          }
-        }
-      }
-    } # end of if ncol(df)>1
-    
-    #save group dataframe
-    assign(dpmsr_set$y$sample_groups$Group[i], df[1:dpmsr_set$y$sample_groups$Count[i]])
-    gc()
+    }
   }
-  
-  
-  #get first group
-  df3 <- get(dpmsr_set$y$sample_groups$Group[1])
-  #add remaining groups
-  for (i in 2:dpmsr_set$y$group_number)  {
-    df3 <- cbind(df3, get(dpmsr_set$y$sample_groups$Group[i]))
-  }
-  
-  if (dpmsr_set$x$impute_method == "LocalLeastSquares") {df3 <- impute_lls(df3)}
-  if (dpmsr_set$x$impute_method == "KNN") {df3 <- impute_knn(df3)}  
-  
-  
-  df3 <- data.frame(2^df3)
-  
-  if (dpmsr_set$x$impute_method == "Duke") {
     df3 <- impute_bottomx(df3, distribution_in, info_columns)
-  }
+
   
   return(df3)
 }
