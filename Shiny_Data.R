@@ -272,6 +272,7 @@ impute_meta_data_bg <- function(table_name, params){
   }
   
   df <- df[(ncol(df) - params$sample_number + 1):ncol(df)]
+  df <- log(df,2)
   
   total_na <- list()
   for (i in 1:nrow(df_groups)) {
