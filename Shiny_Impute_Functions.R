@@ -5,39 +5,123 @@ cat(file = stderr(), "Shiny_Impute_Functions.R", "\n")
 impute_duke <- function(df, df_groups, params) {
   cat(file = stderr(), "Function - impute_duke...", "\n")
   
+  df_impute <- df[1:(ncol(df)-params$sample_number)]
   df <- df[(ncol(df) - params$sample_number + 1):ncol(df)]
   df <- log(df,2)
+  
+  conn <- RSQLite::dbConnect(RSQLite::SQLite(), params$database_path)
+  df_random <- RSQLite::dbReadTable(conn, "random")
   
   for (i in 1:nrow(df_groups)) {
     # calculate stats for each sample group
     df_temp <- data.frame(df[c(df_groups$start[i]:df_groups$end[i])])
+    df_temp_random <- data.frame(df_random[c(df_groups$start[i]:df_groups$end[i])])
     
     # adding if statement incase there are non quant groups (1 sample)
     if (ncol(df_temp) > 1) {
-      df_temp$sum <- rowSums(df_temp, na.rm = TRUE)
-      df_temp$rep <- df_groups$Count[i]
       df_temp$max_missing <- df_groups$Count[i]*((100 - as.numeric(params$missing_cutoff))/100)
       df_temp$missings <- rowSums(is.na(df_temp[1:df_groups$Count[i]]))
       df_temp$average <- apply(df_temp[1:df_groups$Count[i]], 1, FUN = function(x) {mean(x, na.rm = TRUE)})
       
+      #get table for intensity, sd, average 
+      df_impute_bin_name <- stringr::str_c("impute_bin_", df_groups$Group[i])
+      df_impute_bin <- RSQLite::dbReadTable(conn, df_impute_bin_name)
+      
       # if the number of missing values <= minimum then will impute based on normal dist of measured values
       find_rows <- which(df_temp$missings > 0 & df_temp$missings <= df_temp$max_missing)
       for (j in find_rows) {
-        findsd <- sd_info %>% filter(df_temp$average[j] >= min2, df_temp$average[j] <= max)
+        findsd <- df_impute_bin |> dplyr::filter(df_temp$average[j] >= min2, df_temp$average[j] <= max)
         for (k in 1:df_groups$Count[i]) {
           if (is.na(df_temp[j,k])) {
-            df_temp[j,k] = df_temp$average[j] + (dpmsr_set$y$rand_impute[rand_count] * findsd$sd[1])
-            rand_count <- rand_count + 1
+            df_temp[j,k] = df_temp$average[j] + (df_temp_random[j,k] * findsd$sd[1])
           }
         }
       }
     }
+    df_impute <- cbind(df_impute, df_temp[1:df_groups$Count[i]])
   }
-    df3 <- impute_bottomx(df3, distribution_in, info_columns)
-
   
-  return(df3)
+
+    RSQLite::dbDisconnect(conn)
+    cat(file = stderr(), "Function - impute_duke...end", "\n")
+    
+  return(df_impute)
 }
+
+#--------------------------------------------------------------------------------
+# imputation of missing data
+impute_bottomx <- function(df, params){
+  cat(file = stderr(), "apply_bottomx function...", "\n")
+  
+  conn <- RSQLite::dbConnect(RSQLite::SQLite(), params$database_path)
+  df_random <- RSQLite::dbReadTable(conn, "random")
+  RSQLite::dbDisconnect(conn)
+  
+  df_impute <- df[1:(ncol(df)-params$sample_number)]
+  
+  #Use all data for distribution or only ptm
+  if (as.logical(params$impute_ptm)) {
+    if ("Modifications" %in% colnames(df)) {
+      df_bottomx_data <- df[grep(params$impute_ptm_grep, df$Modifications),]
+    } else {
+      df_bottomx_data <- df[grep(params$impute_ptm_grep, df_data$Sequence),]
+    }  
+  } else {
+    df_bottomx_data <- df
+  }
+  
+  df_bottomx_data <- df_bottomx_data[(ncol(df_bottomx_data) - params$sample_number + 1):ncol(df_bottomx_data)] 
+  df_bottomx_data <- log(df_bottomx_data,2)
+  
+  df <- df[(ncol(df) - params$sample_number + 1):ncol(df)] 
+  df <- log(df,2)
+  
+  #calc 100 bins for Bottom X%
+  data_dist <- as.vector(t(df_bottomx_data))
+  data_dist <- data_dist[!is.na(data_dist)]
+  data_dist <- data_dist[data_dist > 0]
+  data_dist <- data.frame(data_dist)
+  data_dist$bin <- ntile(data_dist, 100)  
+  bottomx_min <- min(data_dist[data_dist$bin == 1,]$data_dist)
+  bottomx_max <- max(data_dist[data_dist$bin == as.numeric(params$bottom_x),]$data_dist)
+  
+  test <- apply(is.na(df), 2, which)
+  test <- test[lapply(test,length) > 0]
+  
+  for (n in names(test)) {
+    for (r in (test[[n]])) {
+      c <- which(colnames(df)==n )
+      # uses stored random numbers from -1 to 1
+      df[c,r] <- bottomx_min + (abs(as.numeric(df_random[c,r])) * (bottomx_max - bottomx_min))
+    }
+  }
+  
+  df <- data.frame(2^df)
+  df_impute <- cbind(df_impute, df)
+  
+  return(df_impute)
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 #--------------------------------------------------------------------------------

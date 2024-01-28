@@ -212,7 +212,7 @@ shinyServer(function(session, input, output) {
   observeEvent(input$impute_apply, {
     cat(file = stderr(), "\n", "impute apply clicked", "\n")
     
-
+    impute_apply(session, input, output)
     
   })
  

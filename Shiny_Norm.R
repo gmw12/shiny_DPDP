@@ -24,8 +24,6 @@ norm_filter_bg <- function(table_name, new_table_name, params) {
   cat(file = stderr(), "Function - norm_filter_bg...", "\n")
   
   start <- Sys.time()
-
-  source('Shiny_Norm_Functions.R')
     
   conn <- RSQLite::dbConnect(RSQLite::SQLite(), params$database_path)
   df <- RSQLite::dbReadTable(conn, table_name)
@@ -84,6 +82,8 @@ norm_apply <- function(){
 #--------------------------------------------------------------------------------------
 norm_apply_bg <- function(table_data, table_norm_data, new_table_name, info_columns, params, norm_type) {
   cat(file = stderr(), "Function - norm_apply_bg...", "\n")
+  
+  source('Shiny_Norm_Functions.R')
   
   conn <- RSQLite::dbConnect(RSQLite::SQLite(), params$database_path)
   data_to_norm <- RSQLite::dbReadTable(conn, table_data)

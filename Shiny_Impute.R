@@ -5,14 +5,17 @@ impute_apply <- function(session, input, output) {
   norm_type <- as.list(strsplit(params$norm_type, ",")[[1]])
 
   for (norm in norm_type) {
+    cat(file = stderr(), str_c("impute_apply...", norm), "\n")
+    norm <- str_replace_all(norm, " ", "")
     bg_name <- str_c('bg_impute_', norm)
     bg_file <- str_c(params$error_path, "//error_", bg_name, ".txt")
     assign(bg_name, callr::r_bg(func = impute_apply_bg, args = list(norm, params), stderr = bg_file, supervise = TRUE))
   }
   
   for (norm in norm_type) {
+    norm <- str_replace_all(norm, " ", "")
     bg_name <- str_c('bg_impute_', norm)
-    bg_file <- str_c(params$error_path, "//error_", bg_name, ".txt")
+    bg_file <- str_c("error_", bg_name, ".txt")
     bg_impute <- get(bg_name)
     bg_impute$wait()
     print_stderr(bg_file)
@@ -30,13 +33,13 @@ impute_apply_bg <- function(norm, params) {
   
   source('Shiny_Impute_Functions.R')
   
-  table_name <-  stringr::str_c("precursor_", norm)
+  table_name <- stringr::str_c("precursor_", norm)
   
   conn <- RSQLite::dbConnect(RSQLite::SQLite(), params$database_path)
   df <- RSQLite::dbReadTable(conn, table_name)
-  df_groups <- dbReadTable(conn, "sample_groups")
+  df_groups <- RSQLite::dbReadTable(conn, "sample_groups")
   
-  if (params$impute_type == "duke") {df_impute <- duke_impute(df, df_groups, params)}
+  if (params$impute_type == "duke") {df_impute <- impute_duke(df, df_groups, params)}
 
   new_table_name <- stringr::str_c('precursor_impute_', norm)
   RSQLite::dbWriteTable(conn, new_table_name, df_impute, overwrite = TRUE)

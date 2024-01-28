@@ -7,7 +7,9 @@ df <- dbReadTable(conn, "precursor_raw")
 df <- dbReadTable(conn, "precursor_start")
 df <- dbReadTable(conn, "precursor_filter")
 df_design <- dbReadTable(conn, "design")
+df <- dbReadTable(conn, "precursor_sltmm")
 df_groups <- dbReadTable(conn, "sample_groups")
+df_test <- dbReadTable(conn, "impute_bin_CA")
 
 RSQLite::dbDisconnect(conn)
 
