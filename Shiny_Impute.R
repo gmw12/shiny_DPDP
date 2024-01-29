@@ -23,6 +23,7 @@ impute_apply <- function(session, input, output) {
   }
   
   removeModal()
+  cat(file = stderr(), "Function - impute_apply...end", "\n")
 }
 
 
@@ -37,13 +38,28 @@ impute_apply_bg <- function(norm, params) {
   
   conn <- RSQLite::dbConnect(RSQLite::SQLite(), params$database_path)
   df <- RSQLite::dbReadTable(conn, table_name)
+  df_random <- RSQLite::dbReadTable(conn, "random")
   df_groups <- RSQLite::dbReadTable(conn, "sample_groups")
+  RSQLite::dbDisconnect(conn)
   
-  if (params$impute_type == "duke") {df_impute <- impute_duke(df, df_groups, params)}
-
+  if (params$impute_type == "duke") {
+    df_impute <- impute_duke(df, df_random, df_groups, params)
+    df_impute <- impute_bottomx(df_impute, df_random, params)
+    }
+  if (params$impute_type == "bottomx") {df_impute <- impute_bottomx(df, df_random, params)}
+  
+  
+  #if sltmm then apply tmm
+  if (norm == "sltmm") {
+    
+  }
+  
   new_table_name <- stringr::str_c('precursor_impute_', norm)
+  conn <- RSQLite::dbConnect(RSQLite::SQLite(), params$database_path)
   RSQLite::dbWriteTable(conn, new_table_name, df_impute, overwrite = TRUE)
   RSQLite::dbDisconnect(conn)
+  
+  cat(file = stderr(), "Function - impute_apply_bg...end", "\n")
 }
 
 

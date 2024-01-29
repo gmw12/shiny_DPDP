@@ -2,15 +2,12 @@ cat(file = stderr(), "Shiny_Impute_Functions.R", "\n")
 
 #--------------------------------------------------------------------------------
 # imputation of missing data
-impute_duke <- function(df, df_groups, params) {
+impute_duke <- function(df, df_random, df_groups, params) {
   cat(file = stderr(), "Function - impute_duke...", "\n")
   
-  df_impute <- df[1:(ncol(df)-params$sample_number)]
+  df_impute <- df[1:(ncol(df) - params$sample_number)]
   df <- df[(ncol(df) - params$sample_number + 1):ncol(df)]
   df <- log(df,2)
-  
-  conn <- RSQLite::dbConnect(RSQLite::SQLite(), params$database_path)
-  df_random <- RSQLite::dbReadTable(conn, "random")
   
   for (i in 1:nrow(df_groups)) {
     # calculate stats for each sample group
@@ -25,7 +22,9 @@ impute_duke <- function(df, df_groups, params) {
       
       #get table for intensity, sd, average 
       df_impute_bin_name <- stringr::str_c("impute_bin_", df_groups$Group[i])
+      conn <- RSQLite::dbConnect(RSQLite::SQLite(), params$database_path)
       df_impute_bin <- RSQLite::dbReadTable(conn, df_impute_bin_name)
+      RSQLite::dbDisconnect(conn)
       
       # if the number of missing values <= minimum then will impute based on normal dist of measured values
       find_rows <- which(df_temp$missings > 0 & df_temp$missings <= df_temp$max_missing)
@@ -38,11 +37,12 @@ impute_duke <- function(df, df_groups, params) {
         }
       }
     }
+    df_temp <- df_temp[1:df_groups$Count[i]]
+    df_temp <- data.frame(2^df_temp)
     df_impute <- cbind(df_impute, df_temp[1:df_groups$Count[i]])
   }
   
-
-    RSQLite::dbDisconnect(conn)
+   
     cat(file = stderr(), "Function - impute_duke...end", "\n")
     
   return(df_impute)
@@ -50,21 +50,17 @@ impute_duke <- function(df, df_groups, params) {
 
 #--------------------------------------------------------------------------------
 # imputation of missing data
-impute_bottomx <- function(df, params){
+impute_bottomx <- function(df, df_random, params){
   cat(file = stderr(), "apply_bottomx function...", "\n")
   
-  conn <- RSQLite::dbConnect(RSQLite::SQLite(), params$database_path)
-  df_random <- RSQLite::dbReadTable(conn, "random")
-  RSQLite::dbDisconnect(conn)
-  
-  df_impute <- df[1:(ncol(df)-params$sample_number)]
+  df_impute <- df[1:(ncol(df) - params$sample_number)]
   
   #Use all data for distribution or only ptm
   if (as.logical(params$impute_ptm)) {
     if ("Modifications" %in% colnames(df)) {
       df_bottomx_data <- df[grep(params$impute_ptm_grep, df$Modifications),]
     } else {
-      df_bottomx_data <- df[grep(params$impute_ptm_grep, df_data$Sequence),]
+      df_bottomx_data <- df[grep(params$impute_ptm_grep, df$Sequence),]
     }  
   } else {
     df_bottomx_data <- df
@@ -81,7 +77,7 @@ impute_bottomx <- function(df, params){
   data_dist <- data_dist[!is.na(data_dist)]
   data_dist <- data_dist[data_dist > 0]
   data_dist <- data.frame(data_dist)
-  data_dist$bin <- ntile(data_dist, 100)  
+  data_dist$bin <- dplyr::ntile(data_dist, 100)  
   bottomx_min <- min(data_dist[data_dist$bin == 1,]$data_dist)
   bottomx_max <- max(data_dist[data_dist$bin == as.numeric(params$bottom_x),]$data_dist)
   
@@ -90,256 +86,20 @@ impute_bottomx <- function(df, params){
   
   for (n in names(test)) {
     for (r in (test[[n]])) {
-      c <- which(colnames(df)==n )
+      c <- which(colnames(df) == n )
       # uses stored random numbers from -1 to 1
-      df[c,r] <- bottomx_min + (abs(as.numeric(df_random[c,r])) * (bottomx_max - bottomx_min))
+      df[r,c] <- bottomx_min + (abs(as.numeric(df_random[r,c])) * (bottomx_max - bottomx_min))
     }
   }
   
   df <- data.frame(2^df)
   df_impute <- cbind(df_impute, df)
   
+  cat(file = stderr(), "Function - impute_bottomx...end", "\n")
+  
   return(df_impute)
 }
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-#--------------------------------------------------------------------------------
-impute_only <-  function(data_in, norm_name){
-  cat(file = stderr(), str_c("impute_only... ", norm_name), "\n")
-  cat(file = stderr(), str_c("impute method... ", dpmsr_set$x$impute_method), "\n")
-  
-  #data_in <- dpmsr_set$data$normalized$sl
-  
-  info_columns <- ncol(data_in) - dpmsr_set$y$sample_number
-  distribution_data <- data_in
-  annotation_data <- data_in[1:info_columns]
-  data_out <- data_in[(info_columns + 1):ncol(data_in)]
-  
-  if (dpmsr_set$x$impute_method == "Duke" ||
-      dpmsr_set$x$impute_method == "KNN" || dpmsr_set$x$impute_method == "LocalLeastSquares") {
-    data_out <- impute_multi(data_out, distribution_data, info_columns)
-  } else if (dpmsr_set$x$impute_method == "Floor") {
-    data_out[is.na(data_out)] <- dpmsr_set$x$area_floor
-  } else if (dpmsr_set$x$impute_method == "Average/Group") {
-    data_out <- impute_average_group(data_out)
-  } else if (dpmsr_set$x$impute_method == "Minimium") {
-    data_out <- impute_minimum(data_out)
-  } else if (dpmsr_set$x$impute_method == "MLE") {
-    data_out <- impute_mle(data_out)  
-  } else if (dpmsr_set$x$impute_method == "BottomX") {
-    data_out <- impute_bottomx(data_out, distribution_data, info_columns)  
-  } else if (dpmsr_set$x$impute_method == "Average/Global") {
-    data_out <- impute_average_global(data_out)  
-  } else {
-    data_out[is.na(data_out)] <- 0.0}
-  data_out <- data.frame(lapply(data_out, as.numeric))
-  data_out <- cbind(annotation_data, data_out)
-  return(data_out)
-}
-
-#--------------------------------------------------------------------------------
-# forcing option of bottom x without misalignment filter, allows check for signfig because of misaligned filter
-#--------------------------------------------------------------------------------
-impute_bottom <-  function(data_in, norm_name){
-  cat(file = stderr(), str_c("impute_bottom... ", norm_name), "\n")
-  
-  info_columns <- ncol(data_in) - dpmsr_set$y$sample_number
-  distribution_data <- data_in
-  annotation_data <- data_in[1:info_columns]
-  data_out <- data_in[(info_columns + 1):ncol(data_in)]
-  data_out <- impute_bottomx(data_out, distribution_data, info_columns) 
-  data_out <- data.frame(lapply(data_out, as.numeric))
-  data_out <- cbind(annotation_data, data_out)
-  return(data_out)
-}
-
-
-#--------------------------------------------------------------------------------
-# imputation of missing data
-impute_multi <- function(data_in, distribution_in, info_columns){
-  #distribution_in <- distribution_data
-  #data_in <- data_out
-  
-  #Use all data for distribution or only ptm
-  if (as.logical(dpmsr_set$x$peptide_ptm_impute)) {
-    if ("Modifications" %in% colnames(distribution_in)) {
-      distribution_data <- distribution_in[grep(dpmsr_set$x$peptide_impute_grep, distribution_in$Modifications),]
-    } else {
-      distribution_data <- distribution_in[grep(dpmsr_set$x$peptide_impute_grep, distribution_in$Sequence),]
-    } 
-  }else{
-    distribution_data <- distribution_in
-  }
-  
-  distribution_data <- distribution_data[(info_columns + 1):ncol(distribution_data)] 
-  distribution_data <- log(distribution_data,2)
-  #distribution_data[is.na(distribution_data)] <- 0.0
-  
-  # reset rand_count every time it starts to impute a new normalization
-  rand_count <- 1
-  
-  data_in <- log(data_in,2)
-  #data_in[is.na(data_in)] <- 0.0
-  
-  for (i in 1:dpmsr_set$y$group_number) {
-    # calculate stats for each sample group
-    #assign(dpmsr_set$y$sample_groups$Group[i], data.frame(data_in[c(dpmsr_set$y$sample_groups$start[i]:dpmsr_set$y$sample_groups$end[i])]))
-    #df <- get(dpmsr_set$y$sample_groups$Group[i])
-    df <- data.frame(data_in[c(dpmsr_set$y$sample_groups$start[i]:dpmsr_set$y$sample_groups$end[i])])
-    
-    # adding if statement incase there are non quant groups (1 sample)
-    if (ncol(df) > 1) {
-      
-      df$sum <- rowSums(df, na.rm = TRUE)
-      df$rep <- dpmsr_set$y$sample_groups$Count[i]
-      #df$min <- dpmsr_set$y$sample_groups$Count[i]/2
-      df$max_missing <- dpmsr_set$y$sample_groups$Count[i]*((100 - as.numeric(dpmsr_set$x$missing_cutoff))/100)
-      df$max_misaligned <- dpmsr_set$y$sample_groups$Count[i]*(as.numeric(dpmsr_set$x$misaligned_cutoff)/100)
-      df$missings <- rowSums(is.na(df[1:dpmsr_set$y$sample_groups$Count[i]]))
-      df$average <- apply(df[1:dpmsr_set$y$sample_groups$Count[i]], 1, FUN = function(x) {mean(x, na.rm = TRUE)})
-      
-      #separate calc for distribution data - for low ptm sets where impute cold be skewed if keep the high abundance data
-      df2 <- data.frame(distribution_data[c(dpmsr_set$y$sample_groups$start[i]:dpmsr_set$y$sample_groups$end[i])])
-      #df2$sum <- rowSums(df2, na.rm = TRUE)
-      #df2$rep <- dpmsr_set$y$sample_groups$Count[i]
-      #df2$min <- dpmsr_set$y$sample_groups$Count[i]/2
-      #df2$missings <- rowSums(is.na(df2[1:dpmsr_set$y$sample_groups$Count[i]]))
-      df2$average <- apply(df2[1:dpmsr_set$y$sample_groups$Count[i]], 1, FUN = function(x) {mean(x, na.rm = TRUE)})
-      df2$sd <- apply(df2[1:dpmsr_set$y$sample_groups$Count[i]], 1, FUN = function(x) {sd(x, na.rm = TRUE)})
-      df2$bin <- ntile(df2$average, 20)  
-      #sd_info <- subset(df2, missings ==0) %>% group_by(bin) %>% summarize(min = min(average), max = max(average), sd = mean(sd))
-      sd_info <- subset(df2, !is.na(sd)) %>% group_by(bin) %>% summarize(min = min(average), max = max(average), sd = mean(sd))
-      for (x in 1:(nrow(sd_info) - 1)) {sd_info$max[x] <- sd_info$min[x + 1]}
-      sd_info$max[nrow(sd_info)] <- 100
-      sd_info$min2 <- sd_info$min
-      sd_info$min2[1] <- 0
-      sd_info <- sd_info[-21,]
-      
-      
-      # if the number of missing values <= minimum then will impute based on normal dist of measured values
-      if (dpmsr_set$x$impute_method == "Duke") {  
-        find_rows <- which(df$missings > 0 & df$missings <= df$max_missing)
-        for (j in find_rows) {
-          findsd <- sd_info %>% filter(df$average[j] >= min2, df$average[j] <= max)
-          for (k in 1:dpmsr_set$y$sample_groups$Count[i]) {
-            if (is.na(df[j,k])) {
-              #nf <-  rnorm(1, 0, 1)
-              #nf <- mean(runif(4, min=-1, max=1))
-              df[j,k] = df$average[j] + (dpmsr_set$y$rand_impute[rand_count] * findsd$sd[1])
-              rand_count <- rand_count + 1
-            }
-          }
-        }
-      }
-      
-      
-      # if number of missing greater than minimum and measured value is above intensity cuttoff then remove measured value
-      df$missings <- rowSums(is.na(df[1:dpmsr_set$y$sample_groups$Count[i]]))  #recalc if Duke filled, filters may overlap
-      if (as.logical(dpmsr_set$x$duke_misaligned)) {
-        cat(file = stderr(), str_c("finding and removing misaligned values"), "\n")
-        find_rows <- which(df$missings > df$max_misaligned  & df$average >= log(dpmsr_set$x$int_cutoff,2) )
-        for (j in find_rows) {
-          for (k in 1:dpmsr_set$y$sample_groups$Count[i]) {
-            df[j,k] <- NA
-          }
-        }
-      }
-    } # end of if ncol(df)>1
-    
-    #save group dataframe
-    assign(dpmsr_set$y$sample_groups$Group[i], df[1:dpmsr_set$y$sample_groups$Count[i]])
-    gc()
-  }
-  
-  
-  #get first group
-  df3 <- get(dpmsr_set$y$sample_groups$Group[1])
-  #add remaining groups
-  for (i in 2:dpmsr_set$y$group_number)  {
-    df3 <- cbind(df3, get(dpmsr_set$y$sample_groups$Group[i]))
-  }
-  
-  if (dpmsr_set$x$impute_method == "LocalLeastSquares") {df3 <- impute_lls(df3)}
-  if (dpmsr_set$x$impute_method == "KNN") {df3 <- impute_knn(df3)}  
-  
-  
-  df3 <- data.frame(2^df3)
-  
-  if (dpmsr_set$x$impute_method == "Duke") {
-    df3 <- impute_bottomx(df3, distribution_in, info_columns)
-  }
-  
-  return(df3)
-}
-
-
-#--------------------------------------------------------------------------------
-# imputation of missing data
-impute_bottomx <- function(data_in, distribution_data, info_columns){
-  cat(file = stderr(), "apply_bottomx function...", "\n")
-  
-  # reset rand_count every time it starts to impute a new normalization
-  rand_count <- 1
-  
-  #Use all data for distribution or only ptm
-  if (as.logical(dpmsr_set$x$peptide_ptm_impute)) {
-    if ("Modifications" %in% colnames(distribution_data)) {
-      distribution_data <- distribution_data[grep(dpmsr_set$x$peptide_impute_grep, distribution_data$Modifications),]
-    } else {
-      distribution_data <- distribution_data[grep(dpmsr_set$x$peptide_impute_grep, distribution_data$Sequence),]
-    } 
-  }
-  
-  distribution_data <- distribution_data[(info_columns + 1):ncol(distribution_data)] 
-  distribution_data <- log(distribution_data,2)
-  
-  
-  #calc 100 bins for Bottom X%
-  data_dist <- as.vector(t(distribution_data))
-  data_dist <- data_dist[!is.na(data_dist)]
-  data_dist <- data_dist[data_dist > 0]
-  data_dist <- data.frame(data_dist)
-  data_dist$bin <- ntile(data_dist, 100)  
-  bottomx_min <- min(data_dist[data_dist$bin == 1,]$data_dist)
-  bottomx_max <- max(data_dist[data_dist$bin == as.numeric(dpmsr_set$x$bottom_x),]$data_dist)
-  
-  data_in <- log(data_in,2)
-  test <- apply(is.na(data_in), 2, which)
-  test <- test[lapply(test,length) > 0]
-  
-  for (n in names(test)) {
-    for (l in (test[[n]])) {
-      #data_in[[n]][l] <- mean(runif(4, bottomx_min, bottomx_max))
-      # uses stored random numbers from -1 to 1
-      data_in[[n]][l] <- bottomx_min + (abs(as.numeric(dpmsr_set$y$rand_impute[rand_count])) * (bottomx_max - bottomx_min))
-      rand_count <- rand_count + 1
-    }
-  }
-  
-  data_in <- data.frame(2^data_in)
-  return(data_in)
-}
 
 #--------------------------------------------------------------------------------
 # Local least squares imputation (lls)
