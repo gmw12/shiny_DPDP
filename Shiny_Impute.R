@@ -51,7 +51,11 @@ impute_apply_bg <- function(norm, params) {
   
   #if sltmm then apply tmm
   if (norm == "sltmm") {
-    
+    info_columns <- ncol(df_impute) - params$sample_number
+    conn <- RSQLite::dbConnect(RSQLite::SQLite(), params$database_path)
+    df <- RSQLite::dbReadTable(conn, "precursor_normdata")
+    RSQLite::dbDisconnect(conn)
+    df_impute <- tmm_normalize(norm_data, df_impute, info_columns)
   }
   
   new_table_name <- stringr::str_c('precursor_impute_', norm)
