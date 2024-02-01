@@ -13,7 +13,7 @@ df_test <- dbReadTable(conn, "impute_bin_CA")
 
 RSQLite::dbDisconnect(conn)
 
-df <- df[(ncol(df) - params$sample_number+1):ncol(df)]
+df <- df[(ncol(df) - params$sample_number + 1):ncol(df)]
 df2 <- df |>  mutate(across(!where(is.numeric), as.numeric))
 
 
