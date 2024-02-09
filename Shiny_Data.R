@@ -689,3 +689,14 @@ order_rename_columns_bg <- function(table_name, params) {
   cat(file = stderr(), "order columns end", "\n")
   return(info_columns)
 }
+
+
+#-------------------------------------------------------------------
+named_list <- function(input_string) {
+  cat(file = stderr(), "Function named_list...", "\n")
+  
+  named_list <- as.list(strsplit(input_string, ","))
+  names(named_list) <- named_list
+  
+  return(named_list)
+}

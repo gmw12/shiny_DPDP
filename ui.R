@@ -317,9 +317,11 @@ source("Shiny_Libraries.R")
                 ),
 
                 column(width = 7,
-                    box(title = "Intensity Histogram", status = "primary", solidHeader = TRUE, collapsible = FALSE, align = 'left', width = 12, height = 750,
+                    box(title = "Plots", status = "primary", solidHeader = TRUE, collapsible = FALSE, align = 'left', width = 12, height = 750,
                      fluidRow(
-                       #column(width = 9,  imageOutput("impute_histogram")
+                       selectInput("impute_plot_norm", label = "Select norm",
+                                   choices = named_list(params$norm_type))
+                       #plotOutput("stats_barplot", width = 600, height = 400)
                       )
                    )),
                 
