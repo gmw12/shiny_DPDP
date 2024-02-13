@@ -128,7 +128,7 @@ render_norm_apply_graphs <- function(session, input, output) {
 render_impute_parameters <- function(session, input, output) {
   cat(file = stderr(), "Function render_impute_parameters", "\n")
   
-  output$meta_impute_na <- renderText({str_c("Missing Values:  ", params$meta_impute_na)})
+  #output$meta_impute_na <- renderText({str_c("Missing Values:  ", params$meta_impute_na)})
   
 }
 
@@ -176,13 +176,14 @@ update_widgets <- function(session, input, output) {
       norm_type <- as.list(strsplit(params$norm_type, ",")[[1]])[[1]]
       updateSelectInput(session, "norm_type", selected = norm_type)
     }
+    
     #Impute---------------------------------------------------
     updateSelectInput(session, "impute_type", selected = params$impute_type)
     updateCheckboxInput(session, 'impute_ptm', value = params$impute_ptm) 
     updateTextInput(session, "ptm_impute_grep", value = params$ptm_impute_grep)
     updateNumericInput(session, 'bottom_x', value = params$bottom_x)
     updateNumericInput(session, 'missing_cutoff', value = params$missing_cutoff)
-
+    #updateSelectInput(session, "impute_plot_norm", named_list(params$norm_type))
     
   }
   

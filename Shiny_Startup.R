@@ -87,7 +87,7 @@ app_startup <- function(session, input, output) {
     render_norm_graphs(session, input, output)
     render_norm_apply_graphs(session, input, output)
     render_filter_histogram_graphs(session, input, output)
-    render_impute_parameters(session, input, output) 
+    #render_impute_parameters(session, input, output) 
       
     #update Widgets
     update_widgets(session, input, output)
@@ -179,4 +179,22 @@ create_default_params <- function() {
   )
   
   cat(file = stderr(), "Function - create_default_params...end", "\n")
+}
+
+
+
+
+#-------------------------------------------------------------------
+named_list <- function(input_string) {
+  cat(file = stderr(), "Function named_list...", "\n")
+  
+  input_string <- params$norm_type
+  named_list <- strsplit(input_string, ", ")
+  list_names <- named_list
+  named_list <- as.list(named_list)
+  test <- c(named_list)
+  test <- unlist(test)
+  
+  names(named_list) <- c(test)
+  return(named_list)
 }

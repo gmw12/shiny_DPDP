@@ -200,9 +200,10 @@ shinyServer(function(session, input, output) {
    impute_meta_data()
    
    #render text
-   render_impute_parameters(session, input, output) 
+   #render_impute_parameters(session, input, output) 
    
    #render plots
+   create_impute_table(session, input, output)
    #impute_create_plots(session, input, output, params)
 
  })

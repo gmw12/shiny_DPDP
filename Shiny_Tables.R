@@ -43,3 +43,54 @@ create_design_table_bg <- function(database_path){
   cat(file = stderr(), "Function build_design_table...end", "\n")
   return(design_DT)   
 }
+
+
+#--------------------------------------------------------------------------------------------------------------------
+
+
+#load design table
+create_impute_table <- function(session, input, output){
+  cat(file = stderr(), "Function create_impute_table", "\n")
+  
+  bg_imputetable <- callr::r_bg(create_impute_table_bg, args = list(params$database_path), stderr = str_c(params$error_path, "//error_imputetable.txt"), supervise = TRUE)
+  bg_imputetable$wait()
+  print_stderr("error_imputetable.txt")
+  
+  impute_DT <- bg_imputetable$get_result()
+  output$impute_meta_table <-  DT::renderDataTable(impute_DT)
+  
+  cat(file = stderr(), "Function create_impute_table...end", "\n")
+}
+
+#--------------------------------
+
+create_impute_table_bg <- function(database_path){
+  cat(file = stderr(), "Function build_design_table", "\n")
+  
+  #get design data
+  conn <- RSQLite::dbConnect(RSQLite::SQLite(), database_path)
+  df <- RSQLite::dbReadTable(conn, "precursor_filter")
+  RSQLite::dbDisconnect(conn)
+  
+  missing.values <- df |>
+    tidyr::gather(key = "key", value = "val") |>
+    dplyr::mutate(is.missing = is.na(val)) |>
+    dplyr::group_by(key, is.missing) |>
+    dplyr::summarise(num.missing = dplyr::n()) |>
+    dplyr::filter(is.missing == T) |>
+    dplyr::select(-is.missing) |>
+    dplyr::arrange(desc(num.missing)) 
+  
+  impute_DT <-  DT::datatable(missing.values,
+                              rownames = FALSE,
+                              options = list(
+                                autoWidth = TRUE,
+                                columnDefs = list(list(targets = c(0), visibile = TRUE, "width" = '5', className = 'dt-center'),
+                                                  list(targets = c(1), visibile = TRUE, "width" = '5', className = 'dt-center')
+                                ),
+                                pageLength = 12, 
+                                lengthMenu = c(12,20,100,500)
+                              ))
+  cat(file = stderr(), "Function build_impute_table...end", "\n")
+  return(impute_DT)   
+}

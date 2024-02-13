@@ -216,11 +216,11 @@ source("Shiny_Libraries.R")
                       fluidRow(
                         column(width = 4,
                           checkboxInput("norm_include", label = "Include only grep for norm (trypsin|keratin)"),
-                          textInput("include_norm_grep", label = "Filter Include grep", value = "trypsin|keratin"),
+                          textInput("include_norm_grep", label = "Filter Include grep", value = "trypsin|keratin|casein"),
                         ),
                         column(width = 4,
                           checkboxInput("norm_exclude", label = "Exclude grep from norm (trypsin|keratin)"),
-                          textInput("exclude_norm_grep", label = "Filter Exclude grep", value = "trypsin|keratin"),
+                          textInput("exclude_norm_grep", label = "Filter Exclude grep", value = "trypsin|keratin|casein"),
                         ),
                         column(width = 4,
                           checkboxInput("norm_ptm", label = "Normalize on PTM?", value = FALSE, width = 300),
@@ -239,7 +239,7 @@ source("Shiny_Libraries.R")
                       selectInput("norm_type", label = "Select normalization strategy",
                                          choices = list("Sample Loading - Total" = "sl",
                                                         "Trimmed Mean" = "tmm",
-                                                        "Samle Loading Trimmed Mean" = "sltmm",
+                                                        "Sample Loading Trimmed Mean" = "sltmm",
                                                         "Protein" = "protein",
                                                         "DirectLFQ" = "directlfq",
                                                         "Quantile" = "quantile",
@@ -319,8 +319,6 @@ source("Shiny_Libraries.R")
                 column(width = 7,
                     box(title = "Plots", status = "primary", solidHeader = TRUE, collapsible = FALSE, align = 'left', width = 12, height = 750,
                      fluidRow(
-                       selectInput("impute_plot_norm", label = "Select norm",
-                                   choices = named_list(params$norm_type))
                        #plotOutput("stats_barplot", width = 600, height = 400)
                       )
                    )),
@@ -330,7 +328,8 @@ source("Shiny_Libraries.R")
                          box(title = "Impute Meta Data", status = "primary", solidHeader = TRUE, collapsible = FALSE, width = 12, height = 750,
                              fluidRow(
                                column(width = 12,
-                                      span(textOutput("meta_impute_na"), style = "color:blue; font-size:16px"),
+                                      #span(textOutput("meta_impute_na"), style = "color:blue; font-size:16px"),
+                                      DT::dataTableOutput("impute_meta_table")
                                       )
                              )
                          )))
