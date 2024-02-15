@@ -69,19 +69,10 @@ create_impute_table_bg <- function(database_path){
   
   #get design data
   conn <- RSQLite::dbConnect(RSQLite::SQLite(), database_path)
-  df <- RSQLite::dbReadTable(conn, "precursor_filter")
+  df <- RSQLite::dbReadTable(conn, "missing_values")
   RSQLite::dbDisconnect(conn)
   
-  missing.values <- df |>
-    tidyr::gather(key = "key", value = "val") |>
-    dplyr::mutate(is.missing = is.na(val)) |>
-    dplyr::group_by(key, is.missing) |>
-    dplyr::summarise(num.missing = dplyr::n()) |>
-    dplyr::filter(is.missing == T) |>
-    dplyr::select(-is.missing) |>
-    dplyr::arrange(desc(num.missing)) 
-  
-  impute_DT <-  DT::datatable(missing.values,
+  impute_DT <-  DT::datatable(df,
                               rownames = FALSE,
                               options = list(
                                 autoWidth = TRUE,

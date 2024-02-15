@@ -116,7 +116,31 @@ filter_data_bg <- function(table_name, new_table_name, params){
     df <- dplyr::distinct(df, PrecursorId, .keep_all = TRUE)
   }
   
-  cat(file = stderr(), "step 6 - write data to db...", "\n")
+  cat(file = stderr(), "step 6 - create missing.values table for impute page...", "\n")
+  df_samples <- df[(info_columns + 1):ncol(df)]
+  missing.values <- df_samples |>
+    tidyr::gather(key = "key", value = "val") |>
+    dplyr::mutate(is.missing = is.na(val)) |>
+    dplyr::group_by(key, is.missing) |>
+    dplyr::summarise(num.missing = dplyr::n()) |>
+    dplyr::filter(is.missing == T) |>
+    dplyr::select(-is.missing) |>
+    dplyr::arrange(desc(num.missing)) 
+  RSQLite::dbWriteTable(conn, "missing_values", missing.values, overwrite = TRUE)
+  
+  cat(file = stderr(), "step 7 - create missing.values2 table for impute page plots...", "\n")
+  missing.values2 <- df_samples |>
+    tidyr::gather(key = "key", value = "val") |>
+    dplyr::mutate(isna = is.na(val)) |>
+    dplyr::group_by(key) |>
+    dplyr::mutate(total = dplyr::n()) |>
+    dplyr::group_by(key, total, isna) |>
+    dplyr::summarise(num.isna = dplyr::n()) |>
+    dplyr::mutate(pct = num.isna / total * 100)
+  
+  RSQLite::dbWriteTable(conn, "missing_values_plots", missing.values2, overwrite = TRUE)
+  
+  cat(file = stderr(), "step 8 - write data to db...", "\n")
   RSQLite::dbWriteTable(conn, new_table_name, df, overwrite = TRUE)
   RSQLite::dbDisconnect(conn)
   

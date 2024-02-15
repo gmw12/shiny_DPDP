@@ -219,7 +219,7 @@ source("Shiny_Libraries.R")
                           textInput("include_norm_grep", label = "Filter Include grep", value = "trypsin|keratin|casein"),
                         ),
                         column(width = 4,
-                          checkboxInput("norm_exclude", label = "Exclude grep from norm (trypsin|keratin)"),
+                          checkboxInput("norm_exclude", label = "Exclude grep from norm (trypsin|keratin)", value = TRUE),
                           textInput("exclude_norm_grep", label = "Filter Exclude grep", value = "trypsin|keratin|casein"),
                         ),
                         column(width = 4,
@@ -319,7 +319,8 @@ source("Shiny_Libraries.R")
                 column(width = 7,
                     box(title = "Plots", status = "primary", solidHeader = TRUE, collapsible = FALSE, align = 'left', width = 12, height = 750,
                      fluidRow(
-                       #plotOutput("stats_barplot", width = 600, height = 400)
+                       column(width = 6, imageOutput("missing_bar_plot")),
+                       column(width = 6, imageOutput("missing_percent_plot"))
                       )
                    )),
                 

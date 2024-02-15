@@ -125,11 +125,17 @@ render_norm_apply_graphs <- function(session, input, output) {
 }
 
 #-------------------------------------------------------------------------------------------
-render_impute_parameters <- function(session, input, output) {
-  cat(file = stderr(), "Function render_impute_parameters", "\n")
+render_impute_graphs <- function(session, input, output) {
+  cat(file = stderr(), "Function render_impute_graphs", "\n")
   
-  #output$meta_impute_na <- renderText({str_c("Missing Values:  ", params$meta_impute_na)})
-  
+  output$missing_bar_plot <- renderImage({
+    list(src = str_c(params$qc_path,"missing_bar_plot.png"), contentType = 'image/png', width = 400, height = 400, alt = "this is alt text")
+  }, deleteFile = FALSE)
+ 
+  output$missing_percent_plot <- renderImage({
+    list(src = str_c(params$qc_path,"missing_percent_plot.png"), contentType = 'image/png', width = 420, height = 480, alt = "this is alt text")
+  }, deleteFile = FALSE)
+   
 }
 
 #-----------------------------------------------------------------------------------

@@ -19,7 +19,6 @@ impute_apply <- function(session, input, output) {
     bg_impute <- get(bg_name)
     bg_impute$wait()
     print_stderr(bg_file)
-    
   }
   
   removeModal()
@@ -33,6 +32,7 @@ impute_apply_bg <- function(norm, params) {
   cat(file = stderr(), "Function - impute_apply_bg...", "\n")
   
   source('Shiny_Impute_Functions.R')
+  source('Shiny_Norm_Functions.R')
   
   table_name <- stringr::str_c("precursor_", norm)
   
@@ -46,14 +46,17 @@ impute_apply_bg <- function(norm, params) {
     df_impute <- impute_duke(df, df_random, df_groups, params)
     df_impute <- impute_bottomx(df_impute, df_random, params)
     }
-  if (params$impute_type == "bottomx") {df_impute <- impute_bottomx(df, df_random, params)}
+  if (params$impute_type == "bottomx") {
+    df_impute <- impute_bottomx(df, df_random, params)
+    }
   
   
   #if sltmm then apply tmm
   if (norm == "sltmm") {
+    cat(file = stderr(), "sltmm found, apply tmm norm now ...", "\n")
     info_columns <- ncol(df_impute) - params$sample_number
     conn <- RSQLite::dbConnect(RSQLite::SQLite(), params$database_path)
-    df <- RSQLite::dbReadTable(conn, "precursor_normdata")
+    norm_data <- RSQLite::dbReadTable(conn, "precursor_normdata")
     RSQLite::dbDisconnect(conn)
     df_impute <- tmm_normalize(norm_data, df_impute, info_columns)
   }

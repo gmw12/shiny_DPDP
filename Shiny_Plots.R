@@ -143,7 +143,7 @@ histogram_plot <- function(table_name, plottitle, params)
   RSQLite::dbWriteTable(conn, "parameters", params, overwrite = TRUE)
   RSQLite::dbDisconnect(conn)
   
-  my_legend1 <- grid::grid.text(stringr::str_c("Misaligned Intensity Cutoff:", round(intensity_cutoff, digits=1), " / ", round(params$intensity_cutoff, digits=1)), x = .80, y = .95, gp = grid::gpar(col = "green4", fontsize = 10))
+  my_legend1 <- grid::grid.text(stringr::str_c("Misaligned Intensity Cutoff:", round(intensity_cutoff, digits = 1), " / ", round(params$intensity_cutoff, digits = 1)), x = .80, y = .95, gp = grid::gpar(col = "green4", fontsize = 10))
   my_legend2 <- grid::grid.text(stringr::str_c("Mean: ", round(x_mean, digits = 1), " / ", (trunc((2^x_mean),0))), x = .80, y = .90, gp = grid::gpar(col = "black", fontsize = 10))
   my_legend8 <- grid::grid.text(stringr::str_c("Stdev: ", round(x_stdev, digits = 1), " / ", (trunc((2^x_stdev),0))), x = .80, y = .85, gp = grid::gpar(col = "black", fontsize = 10))
   my_legend3 <- grid::grid.text(stringr::str_c("Mean + Stdev: ", round((x_mean + x_stdev),digits = 1), " / ",  (trunc((2^(x_mean + x_stdev) ),0))  ), x = .80, y = .80, gp = grid::gpar(col = "black", fontsize = 10))
@@ -179,3 +179,47 @@ histogram_plot <- function(table_name, plottitle, params)
 
 
 
+#Bar plot-------------------------------------------------
+missing_bar_plot <- function(params) {
+  cat(file = stderr(), "Function missing_bar_plot", "\n")
+  
+  conn <- RSQLite::dbConnect(RSQLite::SQLite(), params$database_path)
+  df <- RSQLite::dbReadTable(conn, "missing_values")
+  RSQLite::dbDisconnect(conn)
+  
+  ggplot2::ggplot(df) +
+  ggplot2::geom_bar(ggplot2::aes(x = key, y = num.missing), stat = 'identity') +
+  ggplot2::labs(x = 'variable', y = "number of missing values", title = 'Number of missing values') +
+  ggplot2::theme(axis.text.x = ggplot2::element_text(angle = 45, hjust = 1))
+  ggplot2::ggsave(stringr::str_c(params$qc_path, "missing_bar_plot.png"), width = 8, height = 8)
+  
+  cat(file = stderr(), "Function missing_bar_plot...end", "\n")
+  return("done")
+}
+
+#Bar plot-------------------------------------------------
+missing_percent_plot <- function(params) {
+  cat(file = stderr(), "Function missing_percent_plot", "\n")
+  
+  conn <- RSQLite::dbConnect(RSQLite::SQLite(), params$database_path)
+  df <- RSQLite::dbReadTable(conn, "missing_values_plots")
+  RSQLite::dbDisconnect(conn)
+  
+  
+  levels <- (df  |> dplyr::filter(isna == T) |> dplyr::arrange(dplyr::desc(pct)))$key
+  
+  ggplot2::ggplot(df) +
+  ggplot2::geom_bar(ggplot2::aes(x = reorder(key, dplyr::desc(pct)), 
+               y = pct, fill = as.logical(isna)), 
+           stat = 'identity', alpha = 0.8) +
+  ggplot2::scale_x_discrete(limits = levels) +
+  ggplot2::scale_fill_manual(name = "", 
+                    values = c('steelblue', 'tomato3'), labels = c("Present", "Missing")) +
+  ggplot2::coord_flip() +
+  ggplot2::labs(title = "Percentage of missing values", x =
+         'Variable', y = "% of missing values")
+  ggplot2::ggsave(stringr::str_c(params$qc_path, "missing_percent_plot.png"), width = 6, height = 8)
+  
+  cat(file = stderr(), "Function missing_percent_plot...end", "\n")
+  return("done")
+}

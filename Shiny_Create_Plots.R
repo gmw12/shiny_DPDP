@@ -77,11 +77,16 @@ impute_create_plots <- function(sesion, input, output, params){
   
   showModal(modalDialog("Creating Plots...", footer = NULL))
   
-  bg_histogram <- callr::r_bg(func = histogram_plot, args = list("precursor_", "Precursor_Start_Histogram", params), stderr = str_c(params$error_path, "//error_histogram.txt"), supervise = TRUE)
-  bg_histogram$wait()
-  print_stderr("error_histogram.txt")
+  bg_missing_bar <- callr::r_bg(func = missing_bar_plot, args = list(params), stderr = str_c(params$error_path, "//error_missing_bar.txt"), supervise = TRUE)
+  bg_missing_percent <- callr::r_bg(func = missing_percent_plot, args = list(params), stderr = str_c(params$error_path, "//error_missing_percent.txt"), supervise = TRUE)
   
-  cat(file = stderr(), "create parameter plots end", "\n")
+  bg_missing_bar$wait()
+  print_stderr("error_missing_bar.txt")
+  
+  bg_missing_percent$wait()
+  print_stderr("error_missing_percent.txt")
+  
+  cat(file = stderr(), "Function impute_create_plots... end", "\n")
   removeModal()
 }
 

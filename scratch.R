@@ -10,10 +10,12 @@ df_design <- dbReadTable(conn, "design")
 df <- dbReadTable(conn, "precursor_sltmm")
 df_groups <- dbReadTable(conn, "sample_groups")
 df_test <- dbReadTable(conn, "impute_bin_CA")
+df <- dbReadTable(conn, "missing_values")
+df2 <- dbReadTable(conn, "missing_values_plots")
 
 RSQLite::dbDisconnect(conn)
 
-df <- df[(ncol(df) - params$sample_number + 1):ncol(df)]
+df_samples <- df[(ncol(df) - params$sample_number + 1):ncol(df)]
 df2 <- df |>  mutate(across(!where(is.numeric), as.numeric))
 
 
@@ -112,15 +114,17 @@ missing.values <- df_samples %>%
   arrange(desc(num.missing)) 
 
 
-missing.values %>%
-  ggplot() +
-  geom_bar(aes(x=key, y=num.missing), stat = 'identity') +
-  labs(x='variable', y="number of missing values", title='Number of missing values') +
-  theme(axis.text.x = element_text(angle = 45, hjust = 1))
+missing.values |>
+  ggplot2::ggplot() +
+  ggplot2::geom_bar(ggplot2::aes(x = key, y = num.missing), stat = 'identity') +
+  ggplot2::labs(x = 'variable', y = "number of missing values", title = 'Number of missing values') +
+  ggplot2::theme(axis.text.x = element_text(angle = 45, hjust = 1))
 
-levels <-
-  (missing.values  %>% filter(isna == T) %>% arrange(desc(pct)))$key
-
+ggplot2::ggplot(df_samples) +
+  ggplot2::geom_bar(ggplot2::aes(x = key, y = num.missing), stat = 'identity') +
+  ggplot2::labs(x = 'variable', y = "number of missing values", title = 'Number of missing values') +
+  ggplot2::theme(axis.text.x = element_text(angle = 45, hjust = 1))
+ggplot2::ggsave(stringr::str_c(params$qc_path, "missing_bar_plot.png"), width = 8, height = 8)
 
 missing.values <- df_samples %>%
   gather(key = "key", value = "val") %>%
@@ -154,7 +158,7 @@ row.plot <- df_samples %>%
   gather(-id, key = "key", value = "val") %>%
   mutate(isna = is.na(val)) %>%
   ggplot(aes(key, id, fill = isna)) +
-  geom_raster(alpha=0.8) +
+  geom_raster(alpha = 0.8) +
   scale_fill_manual(name = "",
                     values = c('steelblue', 'tomato3'),
                     labels = c("Present", "Missing")) +
