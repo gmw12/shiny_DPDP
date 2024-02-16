@@ -30,8 +30,6 @@ impute_apply_bg <- function(norm_type, params) {
 
   source("Shiny_Impute.R")
 
-  norm_type <- as.list(strsplit(params$norm_type, ",")[[1]])
-
   conn <- RSQLite::dbConnect(RSQLite::SQLite(), params$database_path)
   df_random <- RSQLite::dbReadTable(conn, "random")
   df_groups <- RSQLite::dbReadTable(conn, "sample_groups")

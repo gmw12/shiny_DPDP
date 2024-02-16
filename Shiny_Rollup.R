@@ -2,15 +2,46 @@ cat(file = stderr(), "Shiny_Rollup.R", "\n")
 #--------------------------------------------------------------------
 
 rollup_apply <- function(session, input, output){ 
+  cat(file = stderr(), "Function - rollup_apply...", "\n")
   showModal(modalDialog("Apply Rollup...", footer = NULL))
   
   norm_type <- as.list(strsplit(params$norm_type, ",")[[1]])
+  rollup_type <- input$radio_rollup
+  topn_count <- input$rollup_topN_count
   
-  bg_rollup_apply <- callr::r_bg(func = rollup_apply_bg, args = list(norm_type, params), stderr = str_c(params$error_path, "//error_rollup_bg.txt"), supervise = TRUE)
+  cat(file = stderr(), str_c("rollup_type = ", rollup_type), "\n")
+  
+  bg_rollup_apply <- callr::r_bg(func = rollup_apply_bg, args = list(norm_type, params, rollup_type, topn_count), stderr = str_c(params$error_path, "//error_rollup_bg.txt"), supervise = TRUE)
   bg_rollup_apply$wait()
   print_stderr("error_rollup_bg.txt")
 
   removeModal()
+}
+
+#--------------------------------------------------------------------
+
+rollup_apply_bg <- function(norm_type, params, rollup_type, topn_count) {
+  cat(file = stderr(), "Function - impute_apply_bg...", "\n")
+  
+  source("Shiny_Impute.R")
+  
+  norm_type <- as.list(strsplit(params$norm_type, ",")[[1]])
+  
+  for (norm in norm_type) {
+    norm <- stringr::str_replace_all(norm, " ", "")
+    table_name <- stringr::str_c("precursor_impute_", norm)
+    
+    conn <- RSQLite::dbConnect(RSQLite::SQLite(), params$database_path)
+    df <- RSQLite::dbReadTable(conn, table_name)
+    RSQLite::dbDisconnect(conn)
+    
+    if (rollup_type == "sum") {
+      
+    }
+    
+    
+  }
+
 }
 
 #---------------------------------------------------------------------------------------------------------
