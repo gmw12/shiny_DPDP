@@ -1,23 +1,21 @@
+cat(file = stderr(), "Shiny_Impute.R", "\n")
+
+#--------------------------------------------------------------------------------
 impute_apply <- function(session, input, output) {
   cat(file = stderr(), "Function - impute_apply...", "\n")
   showModal(modalDialog("Apply Imputation...", footer = NULL))
   
   norm_type <- as.list(strsplit(params$norm_type, ",")[[1]])
-
-  for (norm in norm_type) {
-    cat(file = stderr(), str_c("impute_apply...", norm), "\n")
-    norm <- str_replace_all(norm, " ", "")
-    bg_name <- str_c('bg_impute_', norm)
-    bg_file <- str_c(params$error_path, "//error_", bg_name, ".txt")
-    assign(bg_name, callr::r_bg(func = impute_apply_bg, args = list(norm, params), stderr = bg_file, supervise = TRUE))
-  }
   
+  bg_impute_apply <- callr::r_bg(func = impute_apply_bg, args = list(norm_type, params), stderr = str_c(params$error_path, "//error_impute_bg.txt"), supervise = TRUE)
+  bg_impute_apply$wait()
+  print_stderr("error_impute_bg.txt")
+
+  # print error messages
   for (norm in norm_type) {
-    norm <- str_replace_all(norm, " ", "")
-    bg_name <- str_c('bg_impute_', norm)
-    bg_file <- str_c("error_", bg_name, ".txt")
-    bg_impute <- get(bg_name)
-    bg_impute$wait()
+    norm <- stringr::str_replace_all(norm, " ", "")
+    bg_name <- stringr::str_c('bg_impute_', norm)
+    bg_file <- stringr::str_c("error_", bg_name, ".txt")
     print_stderr(bg_file)
   }
   
@@ -25,11 +23,44 @@ impute_apply <- function(session, input, output) {
   cat(file = stderr(), "Function - impute_apply...end", "\n")
 }
 
+#----------------------------------------------------------------------------------------------------
+
+impute_apply_bg <- function(norm_type, params) {
+  cat(file = stderr(), "Function - impute_apply_bg...", "\n")
+
+  source("Shiny_Impute.R")
+
+  norm_type <- as.list(strsplit(params$norm_type, ",")[[1]])
+
+  conn <- RSQLite::dbConnect(RSQLite::SQLite(), params$database_path)
+  df_random <- RSQLite::dbReadTable(conn, "random")
+  df_groups <- RSQLite::dbReadTable(conn, "sample_groups")
+  RSQLite::dbDisconnect(conn)
+  
+  
+  for (norm in norm_type) {
+    cat(file = stderr(), stringr::str_c("impute_apply...", norm), "\n")
+    norm <- stringr::str_replace_all(norm, " ", "")
+    bg_name <- stringr::str_c('bg_impute_', norm)
+    bg_file <- stringr::str_c(params$error_path, "//error_", bg_name, ".txt")
+    assign(bg_name, callr::r_bg(func = impute_apply_bg2, args = list(norm, params, df_random, df_groups), stderr = bg_file, supervise = TRUE))
+  }
+  
+  for (norm in norm_type) {
+    norm <- stringr::str_replace_all(norm, " ", "")
+    bg_name <- stringr::str_c('bg_impute_', norm)
+    bg_impute <- get(bg_name)
+    bg_impute$wait()
+  }
+
+  cat(file = stderr(), "Function - impute_apply_bg...end", "\n")
+}
+
 
 #----------------------------------------------------------------------------------------------------
 
-impute_apply_bg <- function(norm, params) {
-  cat(file = stderr(), "Function - impute_apply_bg...", "\n")
+impute_apply_bg2 <- function(norm, params, df_random, df_groups) {
+  cat(file = stderr(), "Function - impute_apply_bg2...", "\n")
   
   source('Shiny_Impute_Functions.R')
   source('Shiny_Norm_Functions.R')
@@ -38,8 +69,6 @@ impute_apply_bg <- function(norm, params) {
   
   conn <- RSQLite::dbConnect(RSQLite::SQLite(), params$database_path)
   df <- RSQLite::dbReadTable(conn, table_name)
-  df_random <- RSQLite::dbReadTable(conn, "random")
-  df_groups <- RSQLite::dbReadTable(conn, "sample_groups")
   RSQLite::dbDisconnect(conn)
   
   if (params$impute_type == "duke") {
@@ -66,7 +95,7 @@ impute_apply_bg <- function(norm, params) {
   RSQLite::dbWriteTable(conn, new_table_name, df_impute, overwrite = TRUE)
   RSQLite::dbDisconnect(conn)
   
-  cat(file = stderr(), "Function - impute_apply_bg...end", "\n")
+  cat(file = stderr(), "Function - impute_apply_bg2...end", "\n")
 }
 
 

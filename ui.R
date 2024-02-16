@@ -11,7 +11,7 @@ source("Shiny_Libraries.R")
       menuItem("Filter", tabName = "filter"),
       menuItem("Normalize", tabName = "normalize"),
       menuItem("Impute", tabName = "impute"),
-      menuItem("Rollup"),
+      menuItem("Rollup", tabName = "rollup"),
       menuItem("Stats"),
       menuItem("Save")
     )
@@ -334,12 +334,38 @@ source("Shiny_Libraries.R")
                                       )
                              )
                          )))
-                
-        ))   
+        )),   
        
       
+      #Rollup
+      tabItem(tabName = "rollup",
+              fluidRow(
+                column(width = 3,
+                       box(id = "rollup_box", title = "Rollup strategy...", status = "primary",
+                           solidHeader = TRUE, collapsible = FALSE, align = "left", width = 12, height = 500, 
+                           radioButtons("radio_rollup", label = NULL,
+                                        choices = list("Sum" = 1, "Median" = 2, "Median_Polish" = 3, "Mean" = 4,
+                                                       "IQ_MaxLFQ" = 5, "TopN" = 7),
+                                        selected = 1),
+                           br(),
+                           selectInput("rollup_topN_count", label = "topN rollup", width = 150,
+                                       choices = list(1,2,3,4,5), 
+                                       selected = 3),
+                           br(),
+                           br(),
+                           actionButton("rollup_apply", label = "Apply Rollup", width = 300,
+                                        style = "color: #fff; background-color: #337ab7; border-color: #2e6da4")
+                       )
+                ),
+
+              ))    
   
       
+      
+      
+      
+      
+          
       
     )
   )

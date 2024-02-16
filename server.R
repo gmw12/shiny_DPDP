@@ -212,18 +212,31 @@ shinyServer(function(session, input, output) {
   #------------------------------------------------------------------------------------------------------   
   
   observeEvent(input$impute_apply, {
-    cat(file = stderr(), "\n", "impute apply clicked", "\n")
+    cat(file = stderr(), "\n", "impute_apply clicked", "\n")
     
     impute_apply(session, input, output)
     
   })
  
- 
+  #------------------------------------------------------------------------------------------------------   
+  
+  observeEvent(input$rollup_apply, {
+    cat(file = stderr(), "\n", "rollup_apply clicked", "\n")
+    
+    rollup_apply(session, input, output)
+    
+  }) 
  
 
  
+  
+  
+  
+  
+  
+  
  
- 
+  #------------------------------------------------------------------------------------------------------   
  observeEvent(input$clean_environment, {
    cat(file = stderr(), "load clean environment", "\n")
    try(rm(list = ls(envir = .GlobalEnv), pos = .GlobalEnv, inherits = FALSE))
