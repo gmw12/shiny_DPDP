@@ -12,6 +12,8 @@ df_groups <- dbReadTable(conn, "sample_groups")
 df_test <- dbReadTable(conn, "impute_bin_CA")
 df <- dbReadTable(conn, "missing_values")
 df2 <- dbReadTable(conn, "missing_values_plots")
+df <- dbReadTable(conn, "precursor_impute_sl")
+df <- dbReadTable(conn, "protein_sl")
 
 RSQLite::dbDisconnect(conn)
 
@@ -169,3 +171,18 @@ row.plot <- df_samples %>%
 
 row.plot
 
+#--------------------------------------------------
+df2 <- df |> dplyr::select(contains(c("Accession", "Description", "Gene", df_design$ID)))
+
+norm_type <- as.list(strsplit(params$norm_type, ",")[[1]])
+
+for (norm in norm_type) {
+  norm <- stringr::str_replace_all(norm, " ", "")
+  cat(file = stderr(), stringr::str_c("norm_type = ", norm, ",   rollup_method = ", params$rollup_method), "\n")
+}  
+    
+
+for (norm in norm_type) {
+  norm <- stringr::str_replace_all(norm, " ", "")
+  print(norm)
+}                        

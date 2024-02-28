@@ -191,6 +191,10 @@ update_widgets <- function(session, input, output) {
     updateNumericInput(session, 'missing_cutoff', value = params$missing_cutoff)
     #updateSelectInput(session, "impute_plot_norm", named_list(params$norm_type))
     
+    #Rollup---------------------------------------------------
+    updateRadioButtons(session, "rollup_method", selected = params$rollup_method)
+    updateSelectInput(session, "rollup_topn", selected = params$rollup_topn)
+    
   }
   
   
@@ -253,7 +257,7 @@ norm_apply_widget_save <- function(session, input, output){
   param_save_to_database()
 }
 
-
+#-----------------------------------------------------------------------------------
 impute_apply_widget_save <- function(session, input, output){
   cat(file = stderr(), "Function - impute_apply_widget_save...", "\n")
   
@@ -266,3 +270,16 @@ impute_apply_widget_save <- function(session, input, output){
   param_save_to_database()
 }
 
+#-----------------------------------------------------------------------------------
+rollup_widget_save <- function(session, input, output){
+  cat(file = stderr(), "Function - rollup_widget_save...", "\n")
+  
+  names <- c("rollup_method", "rollup_topn")
+  
+  for (name in names) {
+    params[[name]] <<- input[[name]]
+  }
+  
+  param_save_to_database()
+  
+}

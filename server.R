@@ -20,13 +20,13 @@ if (!exists('params')) {
 shinyServer(function(session, input, output) {
   cat(file = stderr(), "\n\n", "Shiny Server started ...1", "\n")
   
-  #app start conditions
-  source('Shiny_UI_Update.R')
-  app_startup(session, input, output)
-  
   source("Shiny_Source.R")
   hide_enable(session, input, output)
   
+  #app start conditions
+  source('Shiny_UI_Update.R')
+  app_startup(session, input, output)
+
   #set file choosers
   set_file_choosers(session, input, output)
   
@@ -223,6 +223,10 @@ shinyServer(function(session, input, output) {
   observeEvent(input$rollup_apply, {
     cat(file = stderr(), "\n", "rollup_apply clicked", "\n")
     
+    #save parameters
+    rollup_widget_save(session, input, output) 
+    
+    #start rollup
     rollup_apply(session, input, output)
     
   }) 

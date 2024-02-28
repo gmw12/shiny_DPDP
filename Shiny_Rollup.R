@@ -5,13 +5,7 @@ rollup_apply <- function(session, input, output){
   cat(file = stderr(), "Function - rollup_apply...", "\n")
   showModal(modalDialog("Apply Rollup...", footer = NULL))
   
-  norm_type <- as.list(strsplit(params$norm_type, ",")[[1]])
-  rollup_type <- input$radio_rollup
-  topn_count <- input$rollup_topN_count
-  
-  cat(file = stderr(), str_c("rollup_type = ", rollup_type), "\n")
-  
-  bg_rollup_apply <- callr::r_bg(func = rollup_apply_bg, args = list(norm_type, params, rollup_type, topn_count), stderr = str_c(params$error_path, "//error_rollup_bg.txt"), supervise = TRUE)
+  bg_rollup_apply <- callr::r_bg(func = rollup_apply_bg, args = list(params), stderr = str_c(params$error_path, "//error_rollup_bg.txt"), supervise = TRUE)
   bg_rollup_apply$wait()
   print_stderr("error_rollup_bg.txt")
 
@@ -20,28 +14,37 @@ rollup_apply <- function(session, input, output){
 
 #--------------------------------------------------------------------
 
-rollup_apply_bg <- function(norm_type, params, rollup_type, topn_count) {
-  cat(file = stderr(), "Function - impute_apply_bg...", "\n")
+rollup_apply_bg <- function(params) {
+  cat(file = stderr(), "Function - rollup_apply_bg...", "\n")
   
-  source("Shiny_Impute.R")
+  source("Shiny_Rollup_Functions.R") 
   
   norm_type <- as.list(strsplit(params$norm_type, ",")[[1]])
   
+  conn <- RSQLite::dbConnect(RSQLite::SQLite(), params$database_path)
+  df_design <- RSQLite::dbReadTable(conn, "design")
+  
   for (norm in norm_type) {
     norm <- stringr::str_replace_all(norm, " ", "")
+    
+    cat(file = stderr(), stringr::str_c("norm = ", norm_type,    ",   rollup_method = ", params$rollup_method), "\n")
+    
     table_name <- stringr::str_c("precursor_impute_", norm)
+    table_name_out <- stringr::str_c("protein_", norm)
     
-    conn <- RSQLite::dbConnect(RSQLite::SQLite(), params$database_path)
     df <- RSQLite::dbReadTable(conn, table_name)
-    RSQLite::dbDisconnect(conn)
+    df <- df |> dplyr::select(contains(c("Accession", "Description", "Genes", df_design$ID))) |> 
+      dplyr::mutate(Precursors = 1, .after = Genes)
     
-    if (rollup_type == "sum") {
-      
-    }
+    if (params$rollup_method == "sum") {protein_df <-  rollup_sum(df)}
+      else if (params$rollup_method == "median") {protein_df <-  rollup_median(df)}
+      else if (params$rollup_method == "mean") {protein_df <-  rollup_mean(df)}
+      else if (params$rollup_method == "topn") {protein_df <-  rollup_topn(df, params$rollup_topn)}
     
-    
+    RSQLite::dbWriteTable(conn, table_name_out, protein_df, overwrite = TRUE)
   }
-
+  
+  RSQLite::dbDisconnect(conn)
 }
 
 #---------------------------------------------------------------------------------------------------------

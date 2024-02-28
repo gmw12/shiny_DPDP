@@ -1,71 +1,55 @@
 cat(file = stderr(), "Shiny_Rollup_Functions.R", "\n")
 
 #--------------------------------------------------------------------------------
-rollup_sum <- function(peptide_data, info_columns){
+rollup_sum <- function(df){
+  cat(file = stderr(), "function rollup_sum...", "\n")
   
-  #test_peptide_data <<- peptide_data; test_info_column <<- info_columns
-  #peptide_data <- test_peptide_data; info_columns <- test_info_column
+  protein_df <- df |> dplyr::group_by(Accession, Description, Genes) |> dplyr::summarise_all(list(sum))
+  protein_df <- data.frame(dplyr::ungroup(protein_df))
   
-  peptide_data$Detected_Imputed <- NULL
-  
-  cat(file = stderr(), "rollup_sum triggered...", "\n")
-  
-  protein_data <- peptide_data %>% group_by(Accession, Description, Genes) %>% summarise_all(list(sum))
-  protein_data <- data.frame(ungroup(protein_data))
-  
-  return(protein_data)
+  return(protein_df)
 }
 
 #--------------------------------------------------------------------------------
-rollup_median <- function(peptide_data, info_columns){
-  cat(file = stderr(), "rollup_median triggered...", "\n")
+rollup_median <- function(df){
+  cat(file = stderr(), "function rollup_median...", "\n")
   
-  df <- peptide_data[,1:info_columns]
-  df <- df %>% group_by(Accession, Description, Genes) %>% summarise_all(list(sum))
-  df <- data.frame(ungroup(df))
+  #group and sum for precursors column
+  df_info <- df |> dplyr::select(contains(c("Accession", "Description", "Gene", "Precursors"))) |> 
+    dplyr::group_by(Accession, Description, Genes) |> dplyr::summarise_all(list(sum))
+  df_info <- data.frame(dplyr::ungroup(df_info))
   
   #select data and log
-  df_data <- peptide_data[,(info_columns + 1):ncol(peptide_data)]
-  df_data[df_data == 0] <- NA
-  df_data <- log2(df_data)
-  df_data$Accession <- peptide_data$Accession
-  df_data$Description <- peptide_data$Description
-  df_data$Genes <- peptide_data$Genes
+  df[,(ncol(df_info) + 1):ncol(df)] <- log2(df[,(ncol(df_info) + 1):ncol(df)])
   
-  df_data <- df_data %>% group_by(Accession, Description, Genes) %>% summarise_all(list(median))
-  df_data <- data.frame(ungroup(df_data))
-  df_data[,3:ncol(df_data)] <- 2^df_data[,3:ncol(df_data)] 
-  df_data[is.na(df_data)] <- 0
+  df <- df |> dplyr::group_by(Accession, Description, Genes) |> dplyr::summarise_all(list(median))
+  df <- data.frame(dplyr::ungroup(df))
   
-  df_data <- cbind(df, df_data[,3:(ncol(df_data)) ])
+  df[,(ncol(df_info) + 1):ncol(df)] <- 2^(df[,(ncol(df_info) + 1):ncol(df)])
+  df$Precursors <- df_info$Precursors
   
-  return(df_data)
+  return(df)
 }
 
 #--------------------------------------------------------------------------------
 rollup_mean <- function(peptide_data, info_columns){
   cat(file = stderr(), "rollup_mean triggered...", "\n")
   
-  df <- peptide_data[,1:info_columns]
-  df <- df %>% group_by(Accession, Description) %>% summarise_all(list(sum))
+  #group and sum for precursors column
+  df_info <- df |> dplyr::select(contains(c("Accession", "Description", "Gene", "Precursors"))) |> 
+    dplyr::group_by(Accession, Description, Genes) |> dplyr::summarise_all(list(sum))
+  df_info <- data.frame(dplyr::ungroup(df_info))
   
   #select data and log
-  df_data <- peptide_data[,(info_columns + 1):ncol(peptide_data)]
-  df_data[df_data == 0] <- NA
-  df_data <- log2(df_data)
+  df[,(ncol(df_info) + 1):ncol(df)] <- log2(df[,(ncol(df_info) + 1):ncol(df)])
   
-  df_data$Accession <- peptide_data$Accession
-  df_data$Description <- peptide_data$Description
-  df_data$Genes <- peptide_data$Genes
+  df <- df |> dplyr::group_by(Accession, Description, Genes) |> dplyr::summarise_all(list(mean))
+  df <- data.frame(dplyr::ungroup(df))
   
-  df_data <- df_data %>% group_by(Accession, Description, Genes) %>% summarise_all(list(mean))
-  df_data <- data.frame(ungroup(df_data))
-  df_data[,3:ncol(df_data)] <- 2^df_data[,3:ncol(df_data)]
-  df_data[is.na(df_data)] <- 0
+  df[,(ncol(df_info) + 1):ncol(df)] <- 2^(df[,(ncol(df_info) + 1):ncol(df)])
+  df$Precursors <- df_info$Precursors
   
-  df_data <- cbind(df, df_data[,3:(ncol(df_data)) ])
-  
-  return(df_data)
+  return(df)
 }
 
 #--------------------------------------------------------------------------------
@@ -90,35 +74,32 @@ rollup_median_polish <- function(peptide_data, info_columns){
     df[i,(info_columns + 1):ncol(df)] <- 2^data_out
   }
   
-  
   return(df)
 }
 
 
 #--------------------------------------------------------------------------------
-rollup_topn <- function(peptide_data, info_columns){
+rollup_topn <- function(df, topn_count){
   cat(file = stderr(), "rollup_topn triggered...", "\n")
   
   #group and sum data (summed samples will be over written below)
-  df <- peptide_data %>% group_by(Accession, Description, Genes) %>% summarise_all(list(sum))
-  df <- data.frame(ungroup(df))
+  df_info <- df |> dplyr::group_by(Accession, Description, Genes) |> dplyr::summarise_all(list(sum))
+  df_info <- data.frame(dplyr::ungroup(df_info))
   
-  #select data and log
-  df_data <- peptide_data[,(info_columns + 1):ncol(peptide_data)]
-  df_data[df_data == 0] <- NA
-  df_data <- log2(df_data)
+  #select data and log, hardcoded start of data for now...
+  df_data <- log2(df[,5:ncol(df)])
   
   #loop through each grouped protein and rollup
-  for (i in 1:nrow(df)) {
-    df_temp <- df_data[which(peptide_data$Accession == df$Accession[i] & peptide_data$Description == df$Description[i] & peptide_data$Genes == df$Genes[i]),] 
+  for (i in 1:nrow(df_info)) {
+    df_temp <- df_data[which(df$Accession == df_info$Accession[i] & df$Description == df_info$Description[i] & df$Genes == df_info$Genes[i]),] 
     data_mean_row <- rowMeans(df_temp, na.rm = TRUE)
     data_mean_row_sorted <- sort(data_mean_row, decreasing = TRUE, na.last = TRUE, index.return = TRUE)
-    data_out <- colMeans(df_temp[data_mean_row_sorted$ix[1:min(dpmsr_set$y$rollup_topN_count, length(data_mean_row))],], na.rm = TRUE)
-    data_out <- replace_na(data_out, 0)
-    df[i,(info_columns + 1):ncol(df)] <- 2^data_out
+    data_out <- colMeans(df_temp[data_mean_row_sorted$ix[1:min(topn_count, length(data_mean_row))],], na.rm = TRUE)
+    data_out <- tidyr::replace_na(data_out, 0)
+    df_info[i,5:ncol(df_info)] <- 2^data_out
   }
   
-  return(df)
+  return(df_info)
 }
 
 

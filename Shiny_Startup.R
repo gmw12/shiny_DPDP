@@ -87,7 +87,7 @@ app_startup <- function(session, input, output) {
     render_norm_graphs(session, input, output)
     render_norm_apply_graphs(session, input, output)
     render_filter_histogram_graphs(session, input, output)
-    create_impute_table(session, input, output)
+    #create_impute_table(session, input, output)
     render_impute_graphs(session, input, output) 
       
     #update Widgets
@@ -175,7 +175,9 @@ create_default_params <- function() {
               "bottom_x" = 2,
               "impute_ptm" = FALSE, 
               "impute_ptm_grep" = "Phospho",
-              "meta_impute_na" = ""
+              "meta_impute_na" = "",
+              "rollup_method" = "sum",
+              "rollup_topn" = 3
 
   )
   
