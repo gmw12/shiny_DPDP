@@ -185,4 +185,43 @@ for (norm in norm_type) {
 for (norm in norm_type) {
   norm <- stringr::str_replace_all(norm, " ", "")
   print(norm)
-}                        
+}     
+
+
+
+#-------------------------------------------------
+#inflection
+library(inflection)
+
+test <- df[,7:15]
+test <- unlist(test, use.names = FALSE)
+test <- test[test > 1]
+test <- sort(test[!is.na(test)], decreasing = TRUE)
+test <- log(test, 2)
+
+testdf <- data.frame(test)
+testdf$ID <- seq.int(nrow(testdf))
+
+plotdf <- testdf[(nrow(testdf)*0.1):(nrow(testdf)),]
+testdf <- testdf[(nrow(testdf)*0.7):(nrow(testdf)),]
+
+x <- testdf$ID 
+y <- testdf$test
+
+cc = check_curve(x,y)
+cc
+cc$index
+
+ipede = ede(x,y,cc$index)
+ipede
+ipede[3]
+
+2^testdf$test[testdf$ID == floor(ipede[3])]
+
+xx <- plotdf$ID 
+yy <- plotdf$test
+
+plot(xx, yy, main = "Main title",
+     xlab = "X axis title", ylab = "Y axis title",
+     pch = 19, frame = FALSE)
+abline(v = ipede[3])
