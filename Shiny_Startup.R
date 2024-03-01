@@ -83,6 +83,7 @@ app_startup <- function(session, input, output) {
     ui_render_parameters(session, input, output)
     render_parameters_graphs(session, input, output)
     ui_render_filter(session, input, output)
+    render_noise_graphs(session, input, output)
     render_filter_graphs(session, input, output)
     render_norm_graphs(session, input, output)
     render_norm_apply_graphs(session, input, output)
@@ -147,6 +148,9 @@ create_default_params <- function() {
               "meta_precursor_filter" = 0,
               "meta_peptide_filter" = 0,
               "meta_protein_filter" = 0,
+              "noise_type" = "none",
+              "noise_baseline_value" = 1,
+              "noise_inflection" = 0,
               "filter_min_measured_all" = 2,
               "filter_x_percent" = FALSE,
               "filter_x_percent_value" = 0.5,

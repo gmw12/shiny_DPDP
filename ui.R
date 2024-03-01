@@ -8,6 +8,7 @@ source("Shiny_Libraries.R")
       menuItem("Welcome", tabName = "welcome"),
       menuItem("Load", tabName = "load"),
       menuItem("Parameters", tabName = "parameters"),
+      menuItem("Noise", tabName = "noise"),
       menuItem("Filter", tabName = "filter"),
       menuItem("Normalize", tabName = "normalize"),
       menuItem("Impute", tabName = "impute"),
@@ -134,7 +135,64 @@ source("Shiny_Libraries.R")
       ),
       
       
-      
+      #Noise
+      tabItem(tabName = "noise",
+              fluidRow(
+                column(width = 3,
+                       fluidRow(
+                         box(id = "noise_box", title = "Set noise reduction parameters...", status = "primary", solidHeader = TRUE, collapsible = FALSE, align = "left", width = 12, height = 750,
+                             br(),
+                             br(),
+                             fluidRow(align = "center", 
+                                      actionButton("noise_inflection_apply", label = "Calculate Noise Inflection Point",
+                                                   style = "color: #fff; background-color: #337ab7; border-color: #2e6da4")),
+                             br(),
+                             hr(),
+                             br(),
+                             selectInput("noise_type", label = "Select noise reduction strategy",
+                                           choices = list("None" = "none",
+                                                          "Fixed" = "fixed",
+                                                          "Dynamic" = "dynamic"), selected = "none"),
+                               
+                               fluidRow( 
+                               column(width = 6, numericInput("noise_baseline_value", label = "Enter fixed baseline", value = 1))
+                             ),
+                             br(),
+                             hr(),
+                             br(),
+                             fluidRow(align = "center", 
+                                      actionButton("noise_apply", label = "Apply Noise",
+                                                                     style = "color: #fff; background-color: #337ab7; border-color: #2e6da4"))
+                         ))),
+                
+                column(width = 7,  
+                       fluidRow(
+                         box(title = "Noise Data", status = "primary", solidHeader = TRUE, collapsible = FALSE, width = 12, height = 750,
+                             fluidRow(
+                               column(width = 7,  imageOutput("noise_plot"))
+                             )
+                         ))),
+                
+                column(width = 2, 
+                       fluidRow(
+                         box(title = "Noise Meta Data", status = "primary", solidHeader = TRUE, collapsible = FALSE, width = 12, height = 750,
+                             fluidRow(
+                               column(width = 12, 
+                                      #span(textOutput("meta_filter_precursor_raw"), style = "color:blue; font-size:16px"),
+                                      #span(textOutput("meta_filter_peptide_raw"), style = "color:blue; font-size:16px"),
+                                      #span(textOutput("meta_filter_protein_raw"), style = "color:blue; font-size:16px"),
+                                      #br(),
+                                      #span(textOutput("impute_total_na"), style = "color:blue; font-size:16px"),
+                                      #span(textOutput("impute_total_misaligned"), style = "color:blue; font-size:16px"),
+                                      #br(),
+                                      #span(textOutput("meta_filter_precursor_filtered"), style = "color:blue; font-size:16px"),
+                                      #span(textOutput("meta_filter_peptide_filtered"), style = "color:blue; font-size:16px"),
+                                      #span(textOutput("meta_filter_protein_filtered"), style = "color:blue; font-size:16px")
+                                    ))
+                         ))
+                )
+              )
+      ),     
       
       
       #Filter

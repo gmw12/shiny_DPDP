@@ -20,10 +20,8 @@ RSQLite::dbDisconnect(conn)
 df_samples <- df[(ncol(df) - params$sample_number + 1):ncol(df)]
 df2 <- df |>  mutate(across(!where(is.numeric), as.numeric))
 
-
 test <- unique(df$EG.ModifiedSequence)
 test <- unique(df$PG.ProteinAccessions)
-
 
 test <- readLines("error.txt")
 cat(file = stderr(), readLines("error_filter.txt"), "\n")
@@ -202,8 +200,7 @@ test <- log(test, 2)
 testdf <- data.frame(test)
 testdf$ID <- seq.int(nrow(testdf))
 
-plotdf <- testdf[(nrow(testdf)*0.1):(nrow(testdf)),]
-testdf <- testdf[(nrow(testdf)*0.7):(nrow(testdf)),]
+testdf <- testdf[1:(nrow(testdf)),]
 
 x <- testdf$ID 
 y <- testdf$test
@@ -218,10 +215,34 @@ ipede[3]
 
 2^testdf$test[testdf$ID == floor(ipede[3])]
 
-xx <- plotdf$ID 
-yy <- plotdf$test
+testdf2 <- testdf[ipede[3]:(nrow(testdf)),]
 
-plot(xx, yy, main = "Main title",
-     xlab = "X axis title", ylab = "Y axis title",
-     pch = 19, frame = FALSE)
-abline(v = ipede[3])
+x <- testdf2$ID 
+y <- testdf2$test
+
+cc = check_curve(x,y)
+cc
+cc$index
+
+ipede = ede(x,y,cc$index)
+ipede
+ipede[3]
+
+inflection <- round(2^testdf$test[testdf$ID == floor(ipede[3])], digits = 0)
+
+plotdf <- testdf[seq(1, nrow(testdf), 10),]
+
+ggplot2::ggplot(plotdf, ggplot2::aes(x = ID, y = test)) +
+  ggplot2::geom_point(ggplot2::aes(color = "blue")) +
+  ggplot2::theme_minimal() +
+  ggplot2::theme(legend.position = "none") +
+  ggplot2::geom_vline(xintercept = ipede[3]) +
+  ggplot2::labs(title = stringr::str_c("Dataset Values - Inflection = ", inflection ), x =
+                  'Count', y = "Intensity") +
+  ggplot2::theme(plot.title = element_text(hjust = 0.5))
+  
+  
+ggplot2::ggsave(stringr::str_c(params$qc_path, "Inflection_Point.png"), width = 6, height = 8)
+
+
+                   

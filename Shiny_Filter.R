@@ -6,7 +6,7 @@ filter_data <- function(session, input, output){
 
   if (params$raw_data_format == "precursor") {
     cat(file = stderr(), "preprocess filter precursor...", "\n")
-    bg_filter <- callr::r_bg(func = filter_data_bg, args = list("precursor_start", "precursor_filter", params), stderr = str_c(params$error_path, "//error_filter.txt"), supervise = TRUE)
+    bg_filter <- callr::r_bg(func = filter_data_bg, args = list("precursor_noise", "precursor_filter", params), stderr = str_c(params$error_path, "//error_filter.txt"), supervise = TRUE)
     bg_filter$wait()
     print_stderr("error_filter.txt")
   } 

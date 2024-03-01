@@ -82,6 +82,18 @@ ui_render_filter <- function(session, input, output) {
   
 }
 
+
+#-------------------------------------------------------------------------------------------
+render_noise_graphs <- function(session, input, output) {
+  cat(file = stderr(), "Function render_filter_graphs", "\n")
+  
+  output$noise_plot <- renderImage({
+    list(src = str_c(params$qc_path,"Inflection_Point.png"), contentType = 'image/png', width = 800, height = 600, alt = "this is alt text")
+  }, deleteFile = FALSE)
+  
+}
+
+
 #-------------------------------------------------------------------------------------------
 render_filter_graphs <- function(session, input, output) {
   cat(file = stderr(), "Function render_filter_graphs", "\n")
@@ -159,6 +171,10 @@ update_widgets <- function(session, input, output) {
     updateCheckboxInput(session, 'multi_tmt', value = params$multi_tmt)
     updateCheckboxInput(session, 'use_isoform', value = params$use_isoform)
     
+    #Noise---------------------------------------------------
+    updateNumericInput(session, 'noise_baseline_value', value = params$noise_baseline_value)
+    updateSelectInput(session, 'noise_type', selected = params$noise_type)
+    
     #Filter---------------------------------------------------
     updateNumericInput(session, 'filter_min_measured_all', value = params$filter_min_measured_all) 
     updateCheckboxInput(session, 'filter_x_percent', value = params$filter_x_percent) 
@@ -212,6 +228,20 @@ parameter_widget_save <- function(session, input, output){
   
   param_save_to_database()
 }
+
+#-----------------------------------------------------------------------------------
+noise_widget_save <- function(session, input, output){
+  cat(file = stderr(), "Function - noise_widget_save...", "\n")
+  
+  names <- c('noise_type', 'noise_baseline_value')
+  
+  for (name in names) {
+    params[[name]] <<- input[[name]]
+  }
+  
+  param_save_to_database()
+}
+
 
 #-----------------------------------------------------------------------------------
 filter_widget_save <- function(session, input, output){

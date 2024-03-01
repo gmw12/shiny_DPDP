@@ -118,6 +118,34 @@ shinyServer(function(session, input, output) {
 
  })
 
+  #------------------------------------------------------------------------------------------------------  
+  
+  observeEvent(input$noise_inflection_apply, {
+    cat(file = stderr(), "\n", "noise inflection apply clicked", "\n")  
+    
+    #calculate noise inflection and create plot
+    noise_inflection(session, input, output, params)
+    render_noise_graphs(session, input, output)
+    
+    cat(file = stderr(), "\n", "noise inflection apply...end", "\n")  
+  })
+  
+  
+  #------------------------------------------------------------------------------------------------------  
+  
+  observeEvent(input$noise_apply, {
+    cat(file = stderr(), "\n", "noise apply clicked", "\n")  
+    
+    #save noise inputs to params file
+    noise_widget_save(session, input, output)
+    
+    #remove noise from df and save new df
+    noise_remove(session, input, output, params)
+      
+    cat(file = stderr(), "\n", "noise apply...end", "\n")
+    
+  })
+  
   
   #------------------------------------------------------------------------------------------------------  
   
