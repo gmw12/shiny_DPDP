@@ -63,7 +63,7 @@ impute_apply_bg2 <- function(norm, params, df_random, df_groups) {
   source('Shiny_Impute_Functions.R')
   source('Shiny_Norm_Functions.R')
   
-  table_name <- stringr::str_c("precursor_", norm)
+  table_name <- stringr::str_c("precursor_norm_", norm)
   
   conn <- RSQLite::dbConnect(RSQLite::SQLite(), params$database_path)
   df <- RSQLite::dbReadTable(conn, table_name)

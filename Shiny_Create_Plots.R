@@ -28,11 +28,11 @@ parameter_create_plots <- function(sesion, input, output, params){
 
 #------------------------------------------------------------------------------------------------------
 #------------------------------------------------------------------------------------------------------
-filter_histogram_plot <- function(sesion, input, output, params){
+filter_histogram_plot <- function(sesion, input, output, params, table_name, plot_title){
   cat(file = stderr(), "Function filter histogram plot", "\n")
   showModal(modalDialog("Creating Histogram...", footer = NULL))
   
-  bg_histogram <- callr::r_bg(func = histogram_plot, args = list("precursor_noise", "Precursor_Start_Histogram", params), stderr = str_c(params$error_path, "//error_histogram.txt"), supervise = TRUE)
+  bg_histogram <- callr::r_bg(func = histogram_plot, args = list(table_name, plot_title, params), stderr = str_c(params$error_path, "//error_histogram.txt"), supervise = TRUE)
   bg_histogram$wait()
   print_stderr("error_histogram.txt")
 

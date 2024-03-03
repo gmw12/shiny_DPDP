@@ -65,7 +65,7 @@ norm_apply <- function(){
     table_data <- "precursor_filter"
     table_norm_data <- "precursor_normdata"
     info_columns <- params$info_col_precursor
-    new_table_name <- str_c("precursor_", norm_type[1])
+    new_table_name <- str_c("precursor_norm_", norm_type[1])
   } 
  
   bg_normapply <- callr::r_bg(func = norm_apply_bg, args = list(table_data, table_norm_data, new_table_name, info_columns, params, norm_type[1]), stderr = str_c(params$error_path, "//error_normapply.txt"), supervise = TRUE)

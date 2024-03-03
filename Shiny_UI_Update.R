@@ -54,6 +54,10 @@ render_parameters_graphs <- function(session, input, output) {
   output$raw_box <- renderImage({
     list(src = str_c(params$qc_path,"Precursor_Start_boxplot.png"), contentType = 'image/png', width = 400, height = 250, alt = "this is alt text")
   }, deleteFile = FALSE)
+  
+  output$start_histogram <- renderImage({
+    list(src = str_c(params$qc_path, "Precursor_Start_Histogram.png"), contentType = 'image/png', width = 600, height = 600, alt = "this is alt text")
+  }, deleteFile = FALSE)
 
 }
 
@@ -63,7 +67,7 @@ render_filter_histogram_graphs <- function(session, input, output) {
   cat(file = stderr(), "Function render_filter_histogram_graphs", "\n")
   
   output$impute_histogram <- renderImage({
-    list(src = str_c(params$qc_path, "Precursor_Start_Histogram.png"), contentType = 'image/png', width = 600, height = 600, alt = "this is alt text")
+    list(src = str_c(params$qc_path, "Precursor_NoiseFiltered_Histogram.png"), contentType = 'image/png', width = 600, height = 600, alt = "this is alt text")
   }, deleteFile = FALSE)
   
   output$impute_total_na <- renderText({str_c("Total missing:  ", params$total_na)})
@@ -86,6 +90,11 @@ ui_render_filter <- function(session, input, output) {
 #-------------------------------------------------------------------------------------------
 render_noise_graphs <- function(session, input, output) {
   cat(file = stderr(), "Function render_filter_graphs", "\n")
+  
+  output$noise_total <- renderText({str_c('Total data points:  ', params$noise_total)})
+  output$noise_count <- renderText({str_c('Noise data points:  ', params$noise_count)})
+  output$noise_percent <- renderText({str_c('Percent noise:  ', round((params$noise_count/params$noise_total*100), digits=2) )})
+  output$noise_inflection <- renderText({str_c('Inflection point:  ', params$noise_inflection)})
   
   output$noise_plot <- renderImage({
     list(src = str_c(params$qc_path,"Inflection_Point.png"), contentType = 'image/png', width = 800, height = 600, alt = "this is alt text")

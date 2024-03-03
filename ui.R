@@ -115,9 +115,11 @@ source("Shiny_Libraries.R")
             fluidRow(
                box(title = "Raw Data", status = "primary", solidHeader = TRUE, collapsible = FALSE, width = 12, height = 750,
                    fluidRow(
-                      column(width = 6, 
+                      column(width = 5, 
                               imageOutput("raw_bar"),
-                              imageOutput("raw_box"))
+                              imageOutput("raw_box")),
+                      column(width = 7,  
+                             imageOutput("start_histogram"))
                    )
                ))),
         
@@ -178,16 +180,12 @@ source("Shiny_Libraries.R")
                          box(title = "Noise Meta Data", status = "primary", solidHeader = TRUE, collapsible = FALSE, width = 12, height = 750,
                              fluidRow(
                                column(width = 12, 
-                                      #span(textOutput("meta_filter_precursor_raw"), style = "color:blue; font-size:16px"),
-                                      #span(textOutput("meta_filter_peptide_raw"), style = "color:blue; font-size:16px"),
-                                      #span(textOutput("meta_filter_protein_raw"), style = "color:blue; font-size:16px"),
-                                      #br(),
-                                      #span(textOutput("impute_total_na"), style = "color:blue; font-size:16px"),
-                                      #span(textOutput("impute_total_misaligned"), style = "color:blue; font-size:16px"),
-                                      #br(),
-                                      #span(textOutput("meta_filter_precursor_filtered"), style = "color:blue; font-size:16px"),
-                                      #span(textOutput("meta_filter_peptide_filtered"), style = "color:blue; font-size:16px"),
-                                      #span(textOutput("meta_filter_protein_filtered"), style = "color:blue; font-size:16px")
+                                      span(textOutput("noise_total"), style = "color:blue; font-size:16px"),
+                                      span(textOutput("noise_count"), style = "color:blue; font-size:16px"),
+                                      span(textOutput("noise_percent"), style = "color:blue; font-size:16px"),
+                                      br(),
+                                      br(),
+                                      span(textOutput("noise_inflection"), style = "color:blue; font-size:16px"),
                                     ))
                          ))
                 )
@@ -273,11 +271,11 @@ source("Shiny_Libraries.R")
                           solidHeader = TRUE, collapsible = FALSE, align = "left", width = 12, height = 230,
                       fluidRow(
                         column(width = 4,
-                          checkboxInput("norm_include", label = "Include only grep for norm (trypsin|keratin)"),
+                          checkboxInput("norm_include", label = "Include only grep for norm (trypsin|keratin|casein)"),
                           textInput("include_norm_grep", label = "Filter Include grep", value = "trypsin|keratin|casein"),
                         ),
                         column(width = 4,
-                          checkboxInput("norm_exclude", label = "Exclude grep from norm (trypsin|keratin)", value = TRUE),
+                          checkboxInput("norm_exclude", label = "Exclude grep from norm (trypsin|keratin|casein)", value = TRUE),
                           textInput("exclude_norm_grep", label = "Filter Exclude grep", value = "trypsin|keratin|casein"),
                         ),
                         column(width = 4,

@@ -57,6 +57,11 @@ noise_inflection_bg <- function(table_name, params){
   
   params$noise_inflection <- round(2^df2$vec[df2$ID == floor(ipede[3])], digits = 2)
   
+  # count data points below inflection 
+  params$noise_count = nrow(df) - floor(ipede[3])
+  params$noise_total = nrow(df)
+  cat(file = stderr(), stringr::str_c("noise data points to be removed = ", params$noise_count, " out of ", nrow(df)), "\n")
+  
   plotdf <- df[seq(1, nrow(df), 10),]
   
   RSQLite::dbWriteTable(conn, "parameters", params, overwrite = TRUE)
@@ -93,7 +98,8 @@ noise_remove <- function(session, input, output, params){
   #reload params, new data added
   params <<- param_load_from_database()
   
-  filter_histogram_plot(session, input, output, params)
+  #create histogram
+  filter_histogram_plot(sesion, input, output, params, "precursor_noise", "Precursor_NoiseFiltered_Histogram")
   
   cat(file = stderr(), "Function - noise_remove...end", "\n")
 }

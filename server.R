@@ -114,7 +114,8 @@ shinyServer(function(session, input, output) {
    # create graphs
    parameter_create_plots(sesion, input, output, params)
    
-   
+   #create histogram and calculate cutoff values
+   filter_histogram_plot(sesion, input, output, params, "precursor_start", "Precursor_Start_Histogram")
 
  })
 
@@ -125,6 +126,7 @@ shinyServer(function(session, input, output) {
     
     #calculate noise inflection and create plot
     noise_inflection(session, input, output, params)
+    
     render_noise_graphs(session, input, output)
     
     cat(file = stderr(), "\n", "noise inflection apply...end", "\n")  
@@ -156,7 +158,7 @@ shinyServer(function(session, input, output) {
     filter_widget_save(session, input, output)
     
     #create histogram and calculate cutoff values
-    filter_histogram_plot(sesion, input, output, params)
+    filter_histogram_plot(sesion, input, output, params, "precursor_noise", "Precursor_NoiseFiltered_Histogram")
     
     cat(file = stderr(), "\n", "filter cutoff...end", "\n")  
   })
