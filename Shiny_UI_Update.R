@@ -93,7 +93,7 @@ render_noise_graphs <- function(session, input, output) {
   
   output$noise_total <- renderText({str_c('Total data points:  ', params$noise_total)})
   output$noise_count <- renderText({str_c('Noise data points:  ', params$noise_count)})
-  output$noise_percent <- renderText({str_c('Percent noise:  ', round((params$noise_count/params$noise_total*100), digits=2) )})
+  output$noise_percent <- renderText({str_c('Percent noise:  ', round((params$noise_count/params$noise_total*100), digits = 2) )})
   output$noise_inflection <- renderText({str_c('Inflection point:  ', params$noise_inflection)})
   
   output$noise_plot <- renderImage({

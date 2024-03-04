@@ -14,6 +14,8 @@ df <- dbReadTable(conn, "missing_values")
 df2 <- dbReadTable(conn, "missing_values_plots")
 df <- dbReadTable(conn, "precursor_impute_sl")
 df <- dbReadTable(conn, "protein_sl")
+df_test <- dbReadTable(conn, "protein_sl_CV")
+df_test <- dbReadTable(conn, "summary_cv")
 
 RSQLite::dbDisconnect(conn)
 

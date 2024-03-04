@@ -223,3 +223,41 @@ missing_percent_plot <- function(params) {
   cat(file = stderr(), "Function missing_percent_plot...end", "\n")
   return("done")
 }
+
+
+
+
+#-----------------------------------------------------------------------------------------
+cv_grouped_plot <- function(params) {
+  cat(file = stderr(), str_c("function cv_grouped_plot...."), "\n")
+  
+  
+  
+  cat(file = stderr(), str_c("function cv_grouped_plot....end"), "\n")
+}
+
+
+
+#-----------------------------------------------------------------------------------------
+cv_grouped_plot_bg <- function(params) {
+  cat(file = stderr(), stringr::str_c("function cv_grouped_plot_bg...."), "\n")
+  
+  file_name <- stringr::str_c(params$qc_path, "CV_barplot.png")
+  
+  conn <- RSQLite::dbConnect(RSQLite::SQLite(), params$database_path)
+  df <- RSQLite::dbReadTable(conn, "summary_cv")
+  RSQLite::dbDisconnect(conn)
+  
+  df <- setNames(data.frame(t(df[,-1])), df[,1])
+  df$Norm <- row.names(df)
+  row.names(df) <- NULL
+  data_plot <- df |> tidyr::pivot_longer(-Norm, names_to = "Sample", values_to = "CV")
+  
+  # Grouped
+  ggplot2::ggplot(data_plot, ggplot2::aes(fill = Sample, y = CV, x = Norm)) + 
+    ggplot2::geom_bar(position = "dodge", stat = "identity")
+  ggplot2::ggsave(file_name, width = 8, height = 4)
+  
+  cat(file = stderr(), stringr::str_c("function cv_grouped_plot_bg....end"), "\n")
+}
+

@@ -13,6 +13,7 @@ source("Shiny_Libraries.R")
       menuItem("Normalize", tabName = "normalize"),
       menuItem("Impute", tabName = "impute"),
       menuItem("Rollup", tabName = "rollup"),
+      menuItem("QC", tabName = "qc"),
       menuItem("Stats"),
       menuItem("Save")
     )
@@ -414,14 +415,25 @@ source("Shiny_Libraries.R")
                        )
                 ),
 
-              ))    
+              )),    
   
       
+      #QC
+      tabItem(tabName = "qc",
+              fluidRow(
+                box(id = "qc_box", title = "QC...", status = "primary",
+                    solidHeader = TRUE, collapsible = FALSE, align = "left", width = 12, height = 750, 
+                    tabBox(id = "qc_box", height = 675, width = 12,
+                      tabPanel("CV",
+                               rHandsontableOutput("qc_cv_table"),
+                               br(),
+                               imageOutput("cv_plot")
+                               ),
+                      tabPanel("Tab2", "second panel")
+                )
+              )))          
       
-      
-      
-      
-          
+
       
     )
   )

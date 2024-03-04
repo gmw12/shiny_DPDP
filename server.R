@@ -259,6 +259,11 @@ shinyServer(function(session, input, output) {
     #start rollup
     rollup_apply(session, input, output)
     
+    #start qc stats
+    qc_stats(params)
+    create_cv_table(session, input, output, params)
+    
+    
   }) 
  
 
