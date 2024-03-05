@@ -159,6 +159,63 @@ render_impute_graphs <- function(session, input, output) {
    
 }
 
+#-------------------------------------------------------------------------------------------
+render_qc_graphs <- function(session, input, output) {
+  cat(file = stderr(), "Function render_impute_graphs", "\n")
+  
+  output$cv_plot <- renderImage({
+    list(src = str_c(params$qc_path,"CV_barplot.png"), contentType = 'image/png', width = 800, height = 400, alt = "this is alt text")
+  }, deleteFile = FALSE)
+  
+  norm_type <- as.list(strsplit(params$norm_type, ",")[[1]])
+  i <- 1
+  
+  plot_list <<- list()
+  output_list <<- list()
+  
+  for (norm in norm_type) {
+    norm <- stringr::str_replace_all(norm, " ", "")
+    plot_name <- str_c(params$qc_path, "protein_", norm, "_barplot.png")
+    output_name <- str_c("qc_norm_comp", i)
+    cat(file = stderr(), str_c("norm = ", norm, "   i=", i, "   plot_name=", plot_name, "   output_name=", output_name), "\n")
+
+    plot_list <<- c(plot_list, plot_name)
+    output_list <<- c(output_list, output_name)
+    
+    i <- i + 1
+  }
+ 
+  cat(file = stderr(), "Function render_impute_graphs..2", "\n")
+  for (i in 1:length(plot_list)) {
+    
+    output_name <- unlist(output_list[i])
+    plot_name <- unlist(plot_list[i])
+    
+    cat(file = stderr(), str_c("i=", i, "   plot_name=", plot_name, "   output_name=", output_name), "\n")
+    
+    output[[output_name]] <- renderImage({
+      list(src = plot_name, contentType = 'image/png', width = 300, height = 300, alt = "this is alt text")
+    }, deleteFile = FALSE)
+    
+  }
+  
+  # for (norm in norm_type) {
+  #   norm <- stringr::str_replace_all(norm, " ", "")
+  #   plot_name <- str_c(params$qc_path, "protein_", norm, "_barplot.png")
+  #   output_name <- str_c("qc_norm_comp", i)
+  #   cat(file = stderr(), str_c("norm = ", norm, "   i=", i, "   plot_name=", plot_name, "   output_name=", output_name), "\n")
+  #   
+  #   output[[output_name]] <- renderImage({
+  #     list(src = plot_name, contentType = 'image/png', width = 300, height = 300, alt = "this is alt text")
+  #   }, deleteFile = FALSE)
+  #   
+  #   i <- i + 1
+  # }
+   
+
+}
+
+
 #-----------------------------------------------------------------------------------
 
 
@@ -283,16 +340,12 @@ norm_widget_save <- function(session, input, output){
 norm_apply_widget_save <- function(session, input, output){
   cat(file = stderr(), "Function - norm_apply_widget_save...", "\n")
   
-  if (params$norm_type == "") {
-    params$norm_type <<- input$norm_type
-  } else {
-    norm_type <- str_c(input$norm_type, ",", params$norm_type)
-    norm_type <- str_replace_all(norm_type, " ", "")
-    norm_type <- as.list(strsplit(norm_type, ",")[[1]])
-    norm_type <- unique(norm_type)
-    params$norm_type <<- toString(norm_type)
-  }
-  
+  norm_type <- str_c(input$norm_type, ",", params$norm_type)
+  norm_type <- str_replace_all(norm_type, " ", "")
+  norm_type <- as.list(strsplit(norm_type, ",")[[1]])
+  norm_type <- unique(norm_type)
+  params$norm_type <<- toString(norm_type)
+
   param_save_to_database()
 }
 

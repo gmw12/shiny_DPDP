@@ -226,18 +226,6 @@ missing_percent_plot <- function(params) {
 
 
 
-
-#-----------------------------------------------------------------------------------------
-cv_grouped_plot <- function(params) {
-  cat(file = stderr(), str_c("function cv_grouped_plot...."), "\n")
-  
-  
-  
-  cat(file = stderr(), str_c("function cv_grouped_plot....end"), "\n")
-}
-
-
-
 #-----------------------------------------------------------------------------------------
 cv_grouped_plot_bg <- function(params) {
   cat(file = stderr(), stringr::str_c("function cv_grouped_plot_bg...."), "\n")

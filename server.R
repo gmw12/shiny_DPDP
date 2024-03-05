@@ -33,7 +33,7 @@ shinyServer(function(session, input, output) {
   #update UI
   ui_render_load_design(session, input, output)
   if (params$data_path != "")  {create_design_table(session, input, output)}
-  
+  if (table_exists("summary_cv"))  {create_cv_table(session, input, output, params)}
   
   #------------------------------------------------------------------------------------------------------  
   #Load design file
@@ -262,7 +262,7 @@ shinyServer(function(session, input, output) {
     #start qc stats
     qc_stats(params)
     create_cv_table(session, input, output, params)
-    
+    render_qc_graphs(session, input, output)
     
   }) 
  

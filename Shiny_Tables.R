@@ -95,7 +95,7 @@ create_cv_table <- function(session, input, output, params){
   bg_cvtable$wait()
   print_stderr("error_cvtable.txt")
   
-  cv_DT <<- bg_cvtable$get_result()
+  cv_DT <- bg_cvtable$get_result()
   output$qc_cv_table <-  renderRHandsontable(cv_DT)
   
   cat(file = stderr(), "Function create_cv_table...end", "\n")
@@ -111,12 +111,11 @@ create_cv_table_bg <- function(params){
   cv_table <- RSQLite::dbReadTable(conn, "summary_cv")
   RSQLite::dbDisconnect(conn)
   
-  data_CV <- rhandsontable::renderRHandsontable({
-    cv_table[,-1] <- trunc(round(cv_table[,-1],0))
-    cv_table <- cv_table |> dplyr::mutate_all(as.character)
-    rhandsontable::rhandsontable(cv_table, readOnly = TRUE, rowHeaders = NULL, digits = 0)
-  })
+  cv_table[,-1] <- round(cv_table[,-1], digits = 1)
+  cv_table <- cv_table |> dplyr::mutate_all(as.character)
   
+  data_CV <- rhandsontable::rhandsontable(cv_table, readOnly = TRUE, rowHeaders = NULL, digits = 0)
+
   cat(file = stderr(), "Function create_cv_table_bg...end", "\n")
   
   return(data_CV)   

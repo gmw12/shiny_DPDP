@@ -111,6 +111,15 @@ param_save_to_database <- function(){
 }
 
 #----------------------------------------------------------------------------------------
+table_exists <- function(table_name){
+  cat(file = stderr(), "Function - table exists", "\n")
+  conn <- dbConnect(RSQLite::SQLite(), params$database_path)
+  tables_list <- dbListTables(conn)
+  RSQLite::dbDisconnect(conn)
+  return(table_name %in% tables_list)
+}
+
+#----------------------------------------------------------------------------------------
 up <- function(packed_string){
   return(strsplit(packed_string, ","))
 }

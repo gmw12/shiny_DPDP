@@ -68,6 +68,19 @@ norm_apply <- function(){
     new_table_name <- str_c("precursor_norm_", norm_type[1])
   } 
  
+  #check if first normalization, if so then add impute only
+  if (length(as.list(strsplit(params$norm_type, ",")[[1]])) == 2) {
+    impute_table_name <- str_c("precursor_norm_", norm_type[2])
+    impute_table_name <- stringr::str_replace_all(impute_table_name, " ", "")
+    cat(file = stderr(), str_c("first pass adding impute only table... ", impute_table_name), "\n")
+
+    bg_normapply_impute <- callr::r_bg(func = norm_apply_bg, args = list(table_data, table_norm_data, impute_table_name, info_columns, params, norm_type[2]), stderr = str_c(params$error_path, "//error_normapplyimpute.txt"), supervise = TRUE)
+    bg_normapply_impute$wait()
+    print_stderr("error_normapplyimpute.txt")
+    cat(file = stderr(), "first pass adding impute only table...end", "\n")
+  }
+  
+  
   bg_normapply <- callr::r_bg(func = norm_apply_bg, args = list(table_data, table_norm_data, new_table_name, info_columns, params, norm_type[1]), stderr = str_c(params$error_path, "//error_normapply.txt"), supervise = TRUE)
   bg_normapply$wait()
   print_stderr("error_normapply.txt")
@@ -81,13 +94,15 @@ norm_apply <- function(){
 
 #--------------------------------------------------------------------------------------
 norm_apply_bg <- function(table_data, table_norm_data, new_table_name, info_columns, params, norm_type) {
-  cat(file = stderr(), "Function - norm_apply_bg...", "\n")
+  cat(file = stderr(), stringr::str_c("Function - norm_apply_bg...", norm_type), "\n")
   
   source('Shiny_Norm_Functions.R')
   
   conn <- RSQLite::dbConnect(RSQLite::SQLite(), params$database_path)
   data_to_norm <- RSQLite::dbReadTable(conn, table_data)
   norm_data <- RSQLite::dbReadTable(conn, table_norm_data)
+  
+  norm_type <- stringr::str_replace_all(norm_type, " ", "")
   
   if (norm_type == "sl") {
     df <- sl_normalize(norm_data, data_to_norm, info_columns)
@@ -115,8 +130,11 @@ norm_apply_bg <- function(table_data, table_norm_data, new_table_name, info_colu
     df <- quantile_normalize(data_to_norm, info_columns)
   }else if (norm_type == "directlfq") {
     df <- directlfq_normalize(data_to_norm, info_columns)
+  }else if (norm_type == "impute") {
+    df <- data_to_norm
   }
   
+  cat(file = stderr(), stringr::str_c("write table... ", new_table_name), "\n")
   RSQLite::dbWriteTable(conn, new_table_name, df, overwrite = TRUE)
   RSQLite::dbDisconnect(conn)
 }

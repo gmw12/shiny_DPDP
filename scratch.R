@@ -247,4 +247,7 @@ ggplot2::ggplot(plotdf, ggplot2::aes(x = ID, y = test)) +
 ggplot2::ggsave(stringr::str_c(params$qc_path, "Inflection_Point.png"), width = 6, height = 8)
 
 
-                   
+conn <- dbConnect(RSQLite::SQLite(), params$database_path)
+tables_list <- dbListTables(conn)
+RSQLite::dbDisconnect(conn)
+"summary_cv" %in% tables_list

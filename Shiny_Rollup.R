@@ -20,7 +20,7 @@ rollup_apply_bg <- function(params) {
   source("Shiny_Rollup_Functions.R") 
   
   norm_type <- as.list(strsplit(params$norm_type, ",")[[1]])
-  
+
   conn <- RSQLite::dbConnect(RSQLite::SQLite(), params$database_path)
   df_design <- RSQLite::dbReadTable(conn, "design")
   

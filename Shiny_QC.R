@@ -17,6 +17,14 @@ qc_stats <- function(params){
   bg_cv_grouped_plot$wait()
   print_stderr("cv_plot.txt")
   
+  #Norm Comparison
+  bg_norm_comp_plot <- callr::r_bg(func = norm_comp_plot_bg, args = list(params), stderr = stringr::str_c(params$error_path, "//norm_comp_plot.txt"), supervise = TRUE)
+  bg_norm_comp_plot$wait()
+  print_stderr("norm_comp_plot.txt")
+  
+  #ADH barplot
+  
+  
   removeModal()
   cat(file = stderr(), "Function - qc_stats...end", "\n")
 }
@@ -81,8 +89,24 @@ qc_stats_bg <- function(params){
 
 
 #----------------------------------------------------------------------------------------- 
+#------------------------------------------------------------------------------------------------
 
+#create bar plots for all norm types
+norm_comp_plot_bg <- function(params){
+  cat(file = stderr(), stringr::str_c("function norm_comp_plot_bg..."), "\n")
+  source("Shiny_Plots.R")
+  
+  norm_type <- as.list(strsplit(params$norm_type, ",")[[1]])
+  
+  for (norm in norm_type) {
+    norm <- stringr::str_replace_all(norm, " ", "")
+    table_name <- stringr::str_c('protein_', norm)
 
+    bar_plot(table_name, table_name, params$qc_path, params) 
+  }
+  
+  cat(file = stderr(), stringr::str_c("function norm_comp_plot_bg...end"), "\n")
+}
 
 
 

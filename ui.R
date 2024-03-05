@@ -429,7 +429,28 @@ source("Shiny_Libraries.R")
                                br(),
                                imageOutput("cv_plot")
                                ),
-                      tabPanel("Tab2", "second panel")
+                      tabPanel("Norm Comparison",
+                               column(width = 3,
+                                      imageOutput("qc_norm_comp1"),
+                                      imageOutput("qc_norm_comp5")),
+                               column(width = 3,
+                                      imageOutput("qc_norm_comp2"),
+                                      imageOutput("qc_norm_comp6")),
+                               column(width = 3,
+                                      imageOutput("qc_norm_comp3"),
+                                      imageOutput("qc_norm_comp7")),
+                               column(width = 3,
+                                      imageOutput("qc_norm_comp4"),
+                                      imageOutput("qc_norm_comp8"))
+                      ),
+                      tabPanel("Protein",
+                               imageOutput("qc_protein_plot"),
+                               br(),
+                               imageOutput("qc_protein_boxplot")
+                               ),
+                      tabPanel("Protein Spike",
+
+                              )
                 )
               )))          
       

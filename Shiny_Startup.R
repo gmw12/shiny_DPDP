@@ -88,8 +88,9 @@ app_startup <- function(session, input, output) {
     render_norm_graphs(session, input, output)
     render_norm_apply_graphs(session, input, output)
     render_filter_histogram_graphs(session, input, output)
-    #create_impute_table(session, input, output)
     render_impute_graphs(session, input, output) 
+    render_qc_graphs(session, input, output) 
+ 
       
     #update Widgets
     update_widgets(session, input, output)
@@ -175,7 +176,7 @@ create_default_params <- function() {
               "include_norm_grep" = "trypsin|keratin|casein", 
               "norm_exclude" = FALSE,
               "exclude_norm_grep" = "trypsin|keratin|casein",
-              "norm_type" = "",
+              "norm_type" = "impute",
               "protein_norm_grep" = "",
               "impute_type" = "duke",
               "bottom_x" = 2,
