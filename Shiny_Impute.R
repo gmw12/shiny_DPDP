@@ -65,9 +65,9 @@ impute_apply_bg2 <- function(norm, params, df_random, df_groups) {
   table_name <- stringr::str_c("precursor_norm_", norm)
   cat(file = stderr(), stringr::str_c("imputing...", table_name), "\n")
   
-  conn <- RSQLite::dbConnect(RSQLite::SQLite(), params$database_path)
-  df <- RSQLite::dbReadTable(conn, table_name)
-  RSQLite::dbDisconnect(conn)
+  conn1 <- RSQLite::dbConnect(RSQLite::SQLite(), params$database_path)
+  df <- RSQLite::dbReadTable(conn1, table_name)
+  RSQLite::dbDisconnect(conn1)
   
   if (params$impute_type == "duke") {
     df_impute <- impute_duke(df, df_random, df_groups, params)
@@ -81,16 +81,16 @@ impute_apply_bg2 <- function(norm, params, df_random, df_groups) {
   if (norm == "sltmm") {
     cat(file = stderr(), "sltmm found, apply tmm norm now ...", "\n")
     info_columns <- ncol(df_impute) - params$sample_number
-    conn <- RSQLite::dbConnect(RSQLite::SQLite(), params$database_path)
-    norm_data <- RSQLite::dbReadTable(conn, "precursor_normdata")
-    RSQLite::dbDisconnect(conn)
+    conn2 <- RSQLite::dbConnect(RSQLite::SQLite(), params$database_path)
+    norm_data <- RSQLite::dbReadTable(conn2, "precursor_normdata")
+    RSQLite::dbDisconnect(conn2)
     df_impute <- tmm_normalize(norm_data, df_impute, info_columns)
   }
   
   new_table_name <- stringr::str_c('precursor_impute_', norm)
-  conn <- RSQLite::dbConnect(RSQLite::SQLite(), params$database_path)
-  RSQLite::dbWriteTable(conn, new_table_name, df_impute, overwrite = TRUE)
-  RSQLite::dbDisconnect(conn)
+  conn3 <- RSQLite::dbConnect(RSQLite::SQLite(), params$database_path)
+  RSQLite::dbWriteTable(conn3, new_table_name, df_impute, overwrite = TRUE)
+  RSQLite::dbDisconnect(conn3)
   
   cat(file = stderr(), "Function - impute_apply_bg2...end", "\n")
 }
