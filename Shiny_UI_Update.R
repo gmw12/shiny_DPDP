@@ -168,37 +168,23 @@ render_qc_graphs <- function(session, input, output) {
   }, deleteFile = FALSE)
   
   norm_type <- as.list(strsplit(params$norm_type, ",")[[1]])
-  i <- 1
-  
-  plot_list <<- list()
-  output_list <<- list()
-  
-  for (norm in norm_type) {
-    norm <- stringr::str_replace_all(norm, " ", "")
-    plot_name <- str_c(params$qc_path, "protein_", norm, "_barplot.png")
-    output_name <- str_c("qc_norm_comp", i)
-    cat(file = stderr(), str_c("norm = ", norm, "   i=", i, "   plot_name=", plot_name, "   output_name=", output_name), "\n")
+  counter <- seq(1:length(norm_type))
 
-    plot_list <<- c(plot_list, plot_name)
-    output_list <<- c(output_list, output_name)
-    
-    i <- i + 1
-  }
- 
-  cat(file = stderr(), "Function render_impute_graphs..2", "\n")
-  for (i in 1:length(plot_list)) {
-    
-    output_name <- unlist(output_list[i])
-    plot_name <- unlist(plot_list[i])
-    
-    cat(file = stderr(), str_c("i=", i, "   plot_name=", plot_name, "   output_name=", output_name), "\n")
-    
-    output[[output_name]] <- renderImage({
-      list(src = plot_name, contentType = 'image/png', width = 300, height = 300, alt = "this is alt text")
-    }, deleteFile = FALSE)
-    
+  image_render_loop = function(){
+    lapply(counter, 
+           function(x) {
+             norm <- norm_type[x]
+             norm <- stringr::str_replace_all(norm, " ", "")
+             plot_name <- str_c(params$qc_path, "protein_", norm, "_barplot.png")
+             output_name <- str_c("qc_norm_comp", x)
+             output[[output_name]] <- renderImage({
+               list(src = plot_name, contentType = 'image/png', width = 300, height = 300, alt = "this is alt text")
+             }, deleteFile = FALSE)
+           })
   }
   
+  image_render_loop()
+    
   # for (norm in norm_type) {
   #   norm <- stringr::str_replace_all(norm, " ", "")
   #   plot_name <- str_c(params$qc_path, "protein_", norm, "_barplot.png")

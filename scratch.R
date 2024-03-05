@@ -251,3 +251,29 @@ conn <- dbConnect(RSQLite::SQLite(), params$database_path)
 tables_list <- dbListTables(conn)
 RSQLite::dbDisconnect(conn)
 "summary_cv" %in% tables_list
+
+
+
+
+imgs_fct = function(){
+  lapply(images, 
+         function(x) {
+           box(
+             width = 12,
+             status = "primary",
+             renderImage({
+               list(src = x, alt = "This is alternate text")}, deleteFile = F)
+           )
+         })
+}
+
+images <- c("test1", "test2")
+
+imgs_fct = function(){
+  lapply(counter, 
+         function(x) {
+           print(x)
+         })
+}
+
+imgs_fct()
