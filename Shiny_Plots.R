@@ -6,9 +6,26 @@ bar_plot <- function(table_name, plot_title, plot_dir, params) {
   cat(file = stderr(), "Function bar_plot", "\n")
   
   conn <- RSQLite::dbConnect(RSQLite::SQLite(), params$database_path)
-  design <- RSQLite::dbReadTable(conn, "design")
   df <- RSQLite::dbReadTable(conn, table_name)
   RSQLite::dbDisconnect(conn)
+  
+  df <- df[(ncol(df) - params$sample_number + 1):ncol(df)]
+  df <- df |>  dplyr::mutate(across(!where(is.numeric), as.numeric))
+  
+  bar_plot2(table_name, plot_title, plot_dir, params, df)
+  
+  cat(file = stderr(), "Function bar_plot...end", "\n")
+  return("done")
+}
+
+
+#Bar plot2-------------------------------------------------
+bar_plot2 <- function(table_name, plot_title, plot_dir, params, df) {
+  cat(file = stderr(), "Function bar_plot2", "\n")
+  
+  conn2 <- RSQLite::dbConnect(RSQLite::SQLite(), params$database_path)
+  design <- RSQLite::dbReadTable(conn2, "design")
+  RSQLite::dbDisconnect(conn2)
   
   df <- df[(ncol(df) - params$sample_number + 1):ncol(df)]
   df <- df |>  dplyr::mutate(across(!where(is.numeric), as.numeric))
@@ -29,13 +46,14 @@ bar_plot <- function(table_name, plot_title, plot_dir, params) {
     #scale_y_discrete(labels = NULL) +
     ggplot2::coord_cartesian(ylim = NULL, expand = TRUE) +
     ggplot2::theme(plot.title = ggplot2::element_text(hjust = 0.5), 
-          axis.text.x = ggplot2::element_text(size = 5, angle = 90,  color = "black"),
-          axis.text.y = ggplot2::element_text(size = 5,  color = "black"),
+                   axis.text.x = ggplot2::element_text(size = 5, angle = 90,  color = "black"),
+                   axis.text.y = ggplot2::element_text(size = 5,  color = "black"),
     ) 
   ggplot2::ggsave(file_name, width = 5, height = 5)
-  cat(file = stderr(), "Function bar_plot...end", "\n")
+  cat(file = stderr(), "Function bar_plot2...end", "\n")
   return("done")
 }
+
 
 #Box plot-------------------------------------------------
 box_plot <- function(table_name, plot_title, plot_dir, params) {
@@ -249,3 +267,74 @@ cv_grouped_plot_bg <- function(params) {
   cat(file = stderr(), stringr::str_c("function cv_grouped_plot_bg....end"), "\n")
 }
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+# #Bar plot-------------------------------------------------
+# bar_plot <- function(table_name, plot_title, plot_dir, params) {
+#   cat(file = stderr(), "Function bar_plot", "\n")
+#   
+#   conn <- RSQLite::dbConnect(RSQLite::SQLite(), params$database_path)
+#   design <- RSQLite::dbReadTable(conn, "design")
+#   df <- RSQLite::dbReadTable(conn, table_name)
+#   RSQLite::dbDisconnect(conn)
+#   
+#   df <- df[(ncol(df) - params$sample_number + 1):ncol(df)]
+#   df <- df |>  dplyr::mutate(across(!where(is.numeric), as.numeric))
+#   
+#   namex <- design$Label
+#   datay <- colSums(df, na.rm = TRUE)
+#   df2 <- data.frame(namex)
+#   df2$Total_Intensity <- datay
+#   colnames(df2) <- c("Sample", "Total_Intensity")
+#   df2$Sample <- factor(df2$Sample, levels = df2$Sample)
+#   file_name <- stringr::str_c(plot_dir, plot_title, "_barplot.png")
+#   ymax <- max(datay)
+#   ggplot2::ggplot(data = df2, ggplot2::aes(x = Sample, y = Total_Intensity)) +
+#     ggplot2::geom_bar(stat = "identity", fill = design$colorlist) + ggplot2::theme_classic() + 
+#     ggplot2::ggtitle(plot_title) + 
+#     ggplot2::xlab(NULL) +
+#     ggplot2::ylab(NULL) +
+#     #scale_y_discrete(labels = NULL) +
+#     ggplot2::coord_cartesian(ylim = NULL, expand = TRUE) +
+#     ggplot2::theme(plot.title = ggplot2::element_text(hjust = 0.5), 
+#                    axis.text.x = ggplot2::element_text(size = 5, angle = 90,  color = "black"),
+#                    axis.text.y = ggplot2::element_text(size = 5,  color = "black"),
+#     ) 
+#   ggplot2::ggsave(file_name, width = 5, height = 5)
+#   cat(file = stderr(), "Function bar_plot...end", "\n")
+#   return("done")
+# }

@@ -444,12 +444,40 @@ source("Shiny_Libraries.R")
                                       imageOutput("qc_norm_comp8"))
                       ),
                       tabPanel("Protein",
-                               imageOutput("qc_protein_plot"),
+                          fluidRow(
+                            column(width = 3,
+                               textInput("qc_plot_accession", label = "Protein Accession", value = "P00330", width = 300)),
+                            column(width = 3,
+                                   selectInput("qc_norm_type", label = "Select normalization strategy", width = 300,
+                                               choices = list("impute" = "impute"), selected = "impute"),
+                                   ),
+                            column(width = 3,
+                               actionButton("qc_protein_plot_apply", label = "Show Plot", width = 300,
+                                            style = "color: #fff; background-color: #337ab7; border-color: #2e6da4"))
+                          ),
+                          fluidRow(
                                br(),
-                               imageOutput("qc_protein_boxplot")
-                               ),
-                      tabPanel("Protein Spike",
+                               column(width = 6, imageOutput("qc_protein_barplot")),
+                          )
+                        ),
 
+                      tabPanel("Protein Spike",
+                               fluidRow(
+                                 column(width = 3,
+                                        textInput("spike_plot_accession", label = "Protein Accession", value = "P02662,P02663", width = 300)),
+                                 column(width = 3,
+                                        selectInput("spike_norm_type", label = "Select normalization strategy", width = 300,
+                                                    choices = list("impute" = "impute"), selected = "impute"),
+                                 ),
+                                 column(width = 3,
+                                        actionButton("qc_spike_plot_apply", label = "Show Plot", width = 300,
+                                                     style = "color: #fff; background-color: #337ab7; border-color: #2e6da4"))
+                               ),
+                               fluidRow(
+                                 rHandsontableOutput("qc_spike_table"),
+                                 br(),
+                                 column(width = 6, imageOutput("spike_protein_barplot")),
+                               )
                               )
                 )
               )))          

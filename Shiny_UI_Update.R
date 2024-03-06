@@ -263,6 +263,11 @@ update_widgets <- function(session, input, output) {
     updateRadioButtons(session, "rollup_method", selected = params$rollup_method)
     updateSelectInput(session, "rollup_topn", selected = params$rollup_topn)
     
+    #QC
+    qc_norm_types <- as.list(strsplit(params$norm_type, ",")[[1]])
+    updateSelectInput(session, "qc_norm_type", choices = qc_norm_types)
+    updateSelectInput(session, "spike_norm_type", choices = qc_norm_types)
+    
   }
   
   

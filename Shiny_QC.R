@@ -3,7 +3,7 @@ cat(file = stderr(), "Shiny_QC.R", "\n")
 
 #----------------------------------------------------------------------------------------- 
 #------------------------------------------------------------------------------------------------
-qc_stats <- function(params){
+qc_stats <- function(session, input, output, params){
   cat(file = stderr(), "Function - qc_stats...", "\n")
   showModal(modalDialog("QC Stats...", footer = NULL))
   
@@ -24,6 +24,11 @@ qc_stats <- function(params){
   
   #ADH barplot
   
+  
+  #force update of widget
+  qc_norm_types <- as.list(strsplit(params$norm_type, ",")[[1]])
+  updateSelectInput(session, "qc_norm_type", choices = qc_norm_types)
+  updateSelectInput(session, "spike_norm_type", choices = qc_norm_types)
   
   removeModal()
   cat(file = stderr(), "Function - qc_stats...end", "\n")
@@ -108,10 +113,129 @@ norm_comp_plot_bg <- function(params){
   cat(file = stderr(), stringr::str_c("function norm_comp_plot_bg...end"), "\n")
 }
 
+#------------------------------------------------------------------------------------------------
+
+#create bar plots for specific protein
+qc_protein_plots <- function(session, input, output, params){
+  cat(file = stderr(), stringr::str_c("function qc_protein_plots..."), "\n")
+  
+  qc_norm_type <- stringr::str_replace_all(input$qc_norm_type, " ", "") 
+  qc_accession <- input$qc_plot_accession
+  
+  cat(file = stderr(), stringr::str_c(qc_norm_type, "   ", qc_accession), "\n")
+  
+  table_name <- str_c("protein_", qc_norm_type)
+  plot_title <- str_c(qc_accession, '_', qc_norm_type)
+  
+  bg_qcprotein <- callr::r_bg(func = qc_protein_plots_bg, args = list(table_name, plot_title, qc_accession, params), stderr = str_c(params$error_path, "//error_qcprotein.txt"), supervise = TRUE)
+  bg_qcprotein$wait()
+  print_stderr("error_qcprotein.txt")
+  
+  plot_path <- stringr::str_c(params$qc_path, plot_title, "_barplot.png")
+  
+  output$qc_protein_barplot <- renderImage({
+    list(src = plot_path, contentType = 'image/png', width = 480, height = 400, alt = "this is alt text")
+  }, deleteFile = FALSE)
+  
+  
+  cat(file = stderr(), stringr::str_c("function qc_protein_plots...end"), "\n")
+}
+#------------------------------------------------------------------------------------------------
+
+#create bar plots for specific protein
+qc_protein_plots_bg <- function(table_name, plot_title, qc_accession, params){
+  cat(file = stderr(), stringr::str_c("function qc_protein_plots_bg..."), "\n")
+  
+  source("Shiny_Plots.R")
+  
+  conn <- RSQLite::dbConnect(RSQLite::SQLite(), params$database_path)
+  df <- RSQLite::dbReadTable(conn, table_name)
+  RSQLite::dbDisconnect(conn)
+  
+  df <- df[df$Accession %in% qc_accession,]
+  
+  bar_plot2(table_name, plot_title, params$qc_path, params, df)
+
+  cat(file = stderr(), stringr::str_c("function qc_protein_plots_bg...end"), "\n")
+}
+
+#-----------------------------------------------------------------------------------------
+#create bar plots for spike protein
+qc_spike_plots <- function(session, input, output, params){
+  cat(file = stderr(), stringr::str_c("function qc_spike_plots..."), "\n")
+  
+  qc_norm_type <- stringr::str_replace_all(input$spike_norm_type, " ", "") 
+  qc_accession <- input$spike_plot_accession
+  
+  table_name <- str_c("protein_", qc_norm_type)
+  plot_title <- str_c('QC_Spike_', qc_norm_type)
+  
+  cat(file = stderr(), stringr::str_c(qc_norm_type, "   ", qc_accession), "\n")
+  
+  bg_qcspike <- callr::r_bg(func = qc_spike_plots_bg, args = list(table_name, plot_title, qc_accession, params), stderr = str_c(params$error_path, "//error_qcspike.txt"), supervise = TRUE)
+  bg_qcspike$wait()
+  print_stderr("error_qcspike.txt")
+
+  plot_path <-  stringr::str_c(params$qc_path, plot_title, "_barplot.png")
+  
+  output$spike_protein_barplot <- renderImage({
+    list(src = plot_path, contentType = 'image/png', width = 800, height = 400, alt = "this is alt text")
+  }, deleteFile = FALSE)
+  
+  spike_DT <- bg_qcspike$get_result()
+  output$qc_spike_table <-  renderRHandsontable(spike_DT)
+  
+  cat(file = stderr(), stringr::str_c("function qc_spike_plots...end"), "\n")
+}
 
 
-
-
-
-
+#-----------------------------------------------------------------------------------------
+#create bar plots for spike protein
+qc_spike_plots_bg <- function(table_name, plot_title, qc_accession, params){
+  cat(file = stderr(), stringr::str_c("function qc_spike_plots_bg..."), "\n")
+  
+  conn <- RSQLite::dbConnect(RSQLite::SQLite(), params$database_path)
+  df_design <- RSQLite::dbReadTable(conn, "design")
+  df <- RSQLite::dbReadTable(conn, table_name)
+  RSQLite::dbDisconnect(conn)
+  
+  qc_spike <- df_design |> dplyr::select(contains(c("Label", "Level")))
+  colnames(qc_spike)[2] <- "SpikeLevel"
+  
+  # qc_accession = 'P02662,P02663'
+  qc_accession <- gsub(" ", "", qc_accession, fixed = TRUE)
+  qc_accession <- unlist(strsplit(as.character(qc_accession), split = ","))
+  
+  spike_protein <- subset(df, Accession %in% qc_accession)  
+  spike_protein <- spike_protein[(ncol(df) - params$sample_number + 1):ncol(df)]
+  qc_spike$Intensity <- colSums(spike_protein)
+  
+  qc_spike_final <- aggregate(qc_spike[,2:3], by = list(Category = qc_spike$SpikeLevel), FUN = mean)
+  qc_spike_final$Category <- NULL
+  qc_spike_final$SpikeLevel <- as.character(qc_spike_final$SpikeLevel)
+  qc_spike_final$PercentofLow <- ""
+  
+  for (i in 2:nrow(qc_spike_final)) {
+    qc_spike_final$PercentofLow[i] <- round((qc_spike_final$Intensity[i]/qc_spike_final$Intensity[1]), 2)
+  }
+  
+  file_name <- stringr::str_c(params$qc_path, plot_title, "_barplot.png")
+  ggplot2::ggplot(qc_spike, ggplot2::aes(fill = Label, y = Intensity, x = SpikeLevel)) + 
+    ggplot2::geom_bar(position = "dodge", stat = "identity") +
+    ggplot2::theme(legend.position = "none") +
+    ggplot2::labs(title = plot_title) +
+    ggplot2::theme(plot.title = ggplot2::element_text(hjust = 0.5)) +
+    ggplot2::scale_x_continuous(breaks = c(0, 0.5, 1, 1.5, 2))
+  ggplot2::ggsave(file_name, width = 8, height = 4)
+  
+  
+  data_spike <- rhandsontable::rhandsontable(qc_spike_final, readOnly = TRUE, rowHeaders = NULL, digits = 0) |> 
+    rhandsontable::hot_col(col = 'SpikeLevel', halign = 'htCenter') |>
+    rhandsontable::hot_col(col = 'PercentofLow', halign = 'htCenter') |>
+    rhandsontable::hot_col(col = 'Intensity', format = "0")
+  
+  cat(file = stderr(), stringr::str_c("function qc_spike_plots_bg...end"), "\n")
+  
+  return(data_spike)
+}
 

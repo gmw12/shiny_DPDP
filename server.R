@@ -260,17 +260,28 @@ shinyServer(function(session, input, output) {
     rollup_apply(session, input, output)
     
     #start qc stats
-    qc_stats(params)
+    qc_stats(session, input, output, params)
     create_cv_table(session, input, output, params)
     render_qc_graphs(session, input, output)
     
   }) 
  
-
- 
   
+  #------------------------------------------------------------------------------------------------------   
+  observeEvent(input$qc_protein_plot_apply, {
+    cat(file = stderr(), "\n", "protein_plot_apply clicked", "\n")
+    
+    qc_protein_plots(session, input, output, params)
+    
+  }) 
   
-  
+  #------------------------------------------------------------------------------------------------------   
+  observeEvent(input$qc_spike_plot_apply, {
+    cat(file = stderr(), "\n", "protein_plot_apply clicked", "\n")
+    
+    qc_spike_plots(session, input, output, params)
+    
+  }) 
   
   
   
