@@ -14,7 +14,8 @@ source("Shiny_Libraries.R")
       menuItem("Impute", tabName = "impute"),
       menuItem("Rollup", tabName = "rollup"),
       menuItem("QC", tabName = "qc"),
-      menuItem("Stats"),
+      menuItem("Stats", tabName = "stats", startExpanded = TRUE,
+               menuItem("help")),
       menuItem("Save")
     )
   )
@@ -480,10 +481,36 @@ source("Shiny_Libraries.R")
                                )
                               )
                 )
-              )))          
+              ))),
+      
+      
+      
+      #Stats
+      tabItem(tabName = "stats",
+              fluidRow(
+                box(id = "stat_box", title = "Stats...", status = "primary",
+                    solidHeader = TRUE, collapsible = FALSE, align = "left", width = 12, height = 750, 
+                    tabBox(id = "stat_design_box", height = 675, width = 12,
+                           
+                    )
+                    
+                  )
+                
+                ))
+      
       
 
+    
       
+      
+      
+      
+      
+      
+      
+      
+      
+        
     )
   )
       
