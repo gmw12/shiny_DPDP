@@ -36,4 +36,73 @@ hide_enable <- function(session, input, output) {
     }
   })
   
+  observe({
+    if (input$checkbox_adjpval) {
+      shinyjs::show("padjust_options") 
+      shinyjs::show("checkbox_filter_adjpval") 
+    }else{
+      shinyjs::hide("padjust_options") 
+      shinyjs::hide("checkbox_filter_adjpval") 
+    }
+  })
+  
+  observe({
+    if (input$peptide_missing_filter) {
+      shinyjs::show("peptide_missing_factor") 
+    }else{
+      shinyjs::hide("peptide_missing_factor") 
+    }
+  })
+  
+  observe({
+    if (input$peptide_cv_filter) {
+      shinyjs::show("peptide_cv_factor") 
+    }else{
+      shinyjs::hide("peptide_cv_factor") 
+    }
+  })
+  
+  observe({
+    if (input$stats_spqc_cv_filter) {
+      shinyjs::show("stats_spqc_cv_filter_factor") 
+    }else{
+      shinyjs::hide("stats_spqc_cv_filter_factor") 
+    }
+  })
+  
+  observe({
+    if (input$stats_comp_cv_filter) {
+      shinyjs::show("stats_comp_cv_filter_factor") 
+    }else{
+      shinyjs::hide("stats_comp_cv_filter_factor") 
+    }
+  })
+  
+  observe({
+    if (input$stats_peptide_minimum) {
+      shinyjs::show("stats_peptide_minimum_factor") 
+    }else{
+      shinyjs::hide("stats_peptide_minimum_factor") 
+    }
+  })
+  
+  
+  observe({
+    if (input$checkbox_report_ptm) {
+      shinyjs::show("peptide_report_grep") 
+    }else{
+      shinyjs::hide("peptide_report_grep") 
+    }
+  })
+  
+  observe({
+    if (input$checkbox_report_accession) {
+      shinyjs::show("report_accession") 
+    }else{
+      shinyjs::hide("report_accession") 
+    }
+  })
+  
+
+  
 }

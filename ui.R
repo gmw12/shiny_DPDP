@@ -1,6 +1,7 @@
 cat(file = stderr(), "ui.R started", "\n")
 
 source("Shiny_Libraries.R")
+source("Shiny_UI.R")
 
   sidebar <- dashboardSidebar(width = 165,
     useShinyjs(),
@@ -16,11 +17,11 @@ source("Shiny_Libraries.R")
       menuItem("QC", tabName = "qc"),
       menuItem("Stats", tabName = "stats", startExpanded = TRUE,
                menuItem("Design", tabName = "stats_design"),
-               menuItem("Setup", tabName = "setup"),
-               menuItem("Graphs", tabName = "graphs"),
-               menuItem("Volcano", tabName = "volcano"),
-               menuItem("Data", tabName = "data"),
-               menuItem("Protein Plots", tabName = "protein_plots")),
+               menuItem("Setup", tabName = "stats_setup"),
+               menuItem("Graphs", tabName = "stats_graphs"),
+               menuItem("Volcano", tabName = "stats_volcano"),
+               menuItem("Data", tabName = "stats_data"),
+               menuItem("Protein Plots", tabName = "stats_protein_plots")),
       menuItem("Save")
     )
   )
@@ -490,7 +491,7 @@ source("Shiny_Libraries.R")
       
       
       
-      #Stats
+      #Stats_Design
       tabItem(tabName = "stats_design",
               fluidRow(
                 box(id = "stats_design_box", title = "Stats Design...", status = "primary",
@@ -498,9 +499,80 @@ source("Shiny_Libraries.R")
                     rHandsontableOutput("stats_design_table2")       
                     )
                   )
+                ),
+      
+      #Stats_Setup
+      tabItem(tabName = "stats_setup",
+              fluidRow(
+                box(id = "stats_setup_box", title = "Stats Setup...", status = "primary",
+                    solidHeader = TRUE, collapsible = FALSE, align = "left", width = 2, height = 750,
+                    selectInput("comp_number", label = "Comp #", width = 150,
+                                choices = list(1,2,3,4,5,6,7,8,9,10,11,12), 
+                                selected = 1),
+                    selectInput("select_final_data_stats", label = "Normalization", width = 150,
+                                choices = list("Choice 1" = 1, "Choice 2" = 2, "Choice 3" = 3), 
+                                selected = 1),
+                    numericInput("pvalue_cutoff", label = "Pvalue Cutoff", value = .05),
+                    checkboxInput("pair_comp", label = "Pairwise Comparisons"),
+                    checkboxInput("checkbox_adjpval", label = "Include adjusted pvalue?"),
+                    hidden(selectInput("padjust_options", label = "p.adjust method", choices = list("holm", "hochberg", "hommel", "bonferroni", "BH", "BY", "fdr"), 
+                                selected = "bonferroni")),
+                    numericInput("foldchange_cutoff", label = "Fold Change cutoff", value = 1.5),
+                    numericInput("missing_factor", label = "Measured % (decimal)", value = 0.6),
+                    pickerInput(inputId = "comp_spqc", label = "SPQC Group?",  choices = "None", 
+                                options = list(`actions-box` = TRUE,size = 10,
+                                               `selected-text-format` = "count > 3"),  multiple = TRUE),
+                    textInput("final_stats_name", label = "Final Stats Excel Name", 
+                              value = str_c("Final_CompHere_stats.xlsx")
+                    )
+                ),
+                
+                box(id = "stats_setup_box2", title = "Stats Setup...", status = "primary",
+                    solidHeader = TRUE, collapsible = FALSE, align = "left", width = 2, height = 750,
+                      tags$b(style = "color:blue", 'Extra Filters'),
+                      checkboxInput("peptide_missing_filter", label = "Refilter peptides by requiring X% measured values in one group?"),
+                      hidden(numericInput("peptide_missing_factor", label = "Peptide X% measured cutoff (decimal)", value = 0.8)),
+                      checkboxInput("peptide_cv_filter", label = "Refilter peptides by requiring X %CV one group?"),
+                      hidden(numericInput("peptide_cv_factor", label = "Peptide X CV% cutoff", value = 100)),
+                      checkboxInput("stats_spqc_cv_filter", label = "Filter by SPQC CV"),
+                      hidden(numericInput("stats_spqc_cv_filter_factor", label = "SPQC %CV Cutoff", value = 50)),
+                      checkboxInput("stats_comp_cv_filter", label = "Require one group CV below cuttoff"),
+                      hidden(numericInput("stats_comp_cv_filter_factor", label = "Comp %CV Cutoff", value = 50)),
+                      
+                      checkboxInput("stats_peptide_minimum", label = "Require minimum # of peptides per protein", value = 0),
+                      hidden(numericInput("stats_peptide_minimum_factor", label = "Peptide Minimum", value = 1)),
+                      hr(),
+                      tags$b(style = "color:blue", 'Extra Stats'),
+                      hidden(checkboxInput("checkbox_filter_adjpval", label = "Filter with adjusted pvalue?")),
+                      checkboxInput("checkbox_cohensd", label = "Include Cohen's D?"),
+                      checkboxInput("checkbox_cohensd_hedges", label = "Use Hedge's Correction (low N)?"),
+                      checkboxInput("checkbox_limmapvalue", label = "Include Limma Pvalue?"),
+                      hr(),
+                      tags$b(style = "color:blue", 'Final Excel Options'),
+                      checkboxInput("checkbox_report_ptm", label = "Report Only PTM?"),
+                      hidden(textInput("peptide_report_grep", label = "Report PTM grep", value = "Enter value here")),
+                      checkboxInput("checkbox_report_accession", label = "Report Specific Accession(s) Only"),
+                      hidden(textInput("report_accession", label = "Protein Accessions for Final Report", value = "Enter value"))
+                ),
+                
+                box(id = "stats_setup_box2", title = "Stats Setup...", status = "primary",
+                    solidHeader = TRUE, collapsible = FALSE, align = "left", width = 8, height = 750,
+                    #create comparisons from loop function
+                    create_comp(1),
+                    create_comp(2),
+                    create_comp(3),
+                    create_comp(4),
+                    create_comp(5),
+                    create_comp(6),
+                    create_comp(7),
+                    create_comp(8),
+                    create_comp(9)
                 )
-      
-      
+                
+                
+                
+              )
+      )
 
     
       
