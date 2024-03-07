@@ -3,21 +3,7 @@ cat(file = stderr(), "Shiny_Hide.R", "\n")
 hide_enable <- function(session, input, output) {
   cat(file = stderr(), "Function - hide_enable", "\n")
   
-  # observe({
-  #   params$ptm <<- input$ptm
-  #   if (input$ptm) {
-  #     shinyjs::show("norm_ptm")
-  #     shinyjs::show("norm_ptm_grep")
-  #     shinyjs::show("impute_ptm")
-  #     shinyjs::show("impute_ptm_grep")
-  #   } else {
-  #     shinyjs::hide("norm_ptm")
-  #     shinyjs::hide("norm_ptm_grep")
-  #     shinyjs::hide("impute_ptm")
-  #     shinyjs::hide("impute_ptm_grep")
-  #   }
-  # })
-  
+
   observe({
     if (input$norm_type == "protein") {
       shinyjs::show("protein_norm_grep")
@@ -103,6 +89,23 @@ hide_enable <- function(session, input, output) {
     }
   })
   
+  observe({
+    for (i in (1:9)) {
+      if (i > input$comp_number) {
+        shinyjs::hide(str_c("comp", i, "_text"))
+        shinyjs::hide(str_c("comp_", i, "N"))
+        shinyjs::hide(str_c("comp_", i, "D"))
+        shinyjs::hide(str_c("comp", i, "_name"))
+      }else{
+        shinyjs::show(str_c("comp", i, "_text"))
+        shinyjs::show(str_c("comp_", i, "N"))
+        shinyjs::show(str_c("comp_", i, "D"))
+        shinyjs::show(str_c("comp", i, "_name")) 
+      }
+      
+    }
+  })
+    
 
   
 }

@@ -22,6 +22,7 @@ shinyServer(function(session, input, output) {
   
   source("Shiny_Source.R")
   hide_enable(session, input, output)
+  set_comp_names(session, input,output)
   
   #app start conditions
   source('Shiny_UI_Update.R')

@@ -507,7 +507,7 @@ source("Shiny_UI.R")
                 box(id = "stats_setup_box", title = "Stats Setup...", status = "primary",
                     solidHeader = TRUE, collapsible = FALSE, align = "left", width = 2, height = 750,
                     selectInput("comp_number", label = "Comp #", width = 150,
-                                choices = list(1,2,3,4,5,6,7,8,9,10,11,12), 
+                                choices = list(1,2,3,4,5,6,7,8,9), 
                                 selected = 1),
                     selectInput("select_final_data_stats", label = "Normalization", width = 150,
                                 choices = list("Choice 1" = 1, "Choice 2" = 2, "Choice 3" = 3), 
@@ -566,7 +566,26 @@ source("Shiny_UI.R")
                     create_comp(6),
                     create_comp(7),
                     create_comp(8),
-                    create_comp(9)
+                    create_comp(9),
+                    fluidRow(align = " center",
+                             hr(),
+                             #tags$head(tags$style("#stat2_N_1{color: blue; font-size: 16px; font-style: bold;}")),
+                             column(width = 3,
+                                actionButton("check_stats", label = "Set Comparisons", width = 200,
+                                          style = "color: #fff; background-color: #337ab7; border-color: #2e6da4"),
+                             ),
+                             column(width = 3,
+                                actionButton("start_stats", label = "Start Anlaysis", width = 200,
+                                          style = "color: #fff; background-color: #337ab7; border-color: #2e6da4"),
+                             ),
+                             column(width = 3,
+                                actionButton("save_stats", label = "Create Excel Output File", width = 200,
+                                          style = "color: #fff; background-color: #337ab7; border-color: #2e6da4"),
+                             ),
+                             column(width = 3,
+                                downloadButton('download_stats_excel')
+                             )
+                    )
                 )
                 
                 
