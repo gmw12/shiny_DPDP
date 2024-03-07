@@ -32,7 +32,10 @@ shinyServer(function(session, input, output) {
   
   #update UI
   ui_render_load_design(session, input, output)
-  if (params$data_path != "")  {create_design_table(session, input, output)}
+  if (params$data_path != "")  {
+    create_design_table(session, input, output)
+    create_stats_design_table(session, input, output)
+    }
   if (table_exists("summary_cv"))  {create_cv_table(session, input, output, params)}
   
   #------------------------------------------------------------------------------------------------------  
@@ -56,6 +59,7 @@ shinyServer(function(session, input, output) {
       
       #create design table, save to database
       create_design_table(session, input, output)
+      create_stats_design_table(session, input, output)
       
       #backup design table
       design_sbf <- parseFilePaths(volumes, input$sfb_design_file)

@@ -5,7 +5,7 @@ source("Shiny_Libraries.R")
   sidebar <- dashboardSidebar(width = 165,
     useShinyjs(),
     sidebarMenu(
-      menuItem("Welcome", tabName = "welcome"),
+      menuItem("Welcome", tabName = "welcome", selected = TRUE),
       menuItem("Load", tabName = "load"),
       menuItem("Parameters", tabName = "parameters"),
       menuItem("Noise", tabName = "noise"),
@@ -15,7 +15,12 @@ source("Shiny_Libraries.R")
       menuItem("Rollup", tabName = "rollup"),
       menuItem("QC", tabName = "qc"),
       menuItem("Stats", tabName = "stats", startExpanded = TRUE,
-               menuItem("help")),
+               menuItem("Design", tabName = "stats_design"),
+               menuItem("Setup", tabName = "setup"),
+               menuItem("Graphs", tabName = "graphs"),
+               menuItem("Volcano", tabName = "volcano"),
+               menuItem("Data", tabName = "data"),
+               menuItem("Protein Plots", tabName = "protein_plots")),
       menuItem("Save")
     )
   )
@@ -79,7 +84,7 @@ source("Shiny_Libraries.R")
           
           column(width = 8,  
             box(title = "Study Design Table", status = "primary", solidHeader = TRUE, collapsible = FALSE, width = 12, height = 725,
-                DT::dataTableOutput("stats_design_table")
+                rHandsontableOutput("stats_design_table")
                 #div(style = 'overflow-x: scroll; overflow-y: scroll;', DT::dataTableOutput("stats_design_table")) #), width = '100%'))
                 
                 ))
@@ -486,17 +491,14 @@ source("Shiny_Libraries.R")
       
       
       #Stats
-      tabItem(tabName = "stats",
+      tabItem(tabName = "stats_design",
               fluidRow(
-                box(id = "stat_box", title = "Stats...", status = "primary",
-                    solidHeader = TRUE, collapsible = FALSE, align = "left", width = 12, height = 750, 
-                    tabBox(id = "stat_design_box", height = 675, width = 12,
-                           
+                box(id = "stats_design_box", title = "Stats Design...", status = "primary",
+                    solidHeader = TRUE, collapsible = FALSE, align = "left", width = 12, height = 750,
+                    rHandsontableOutput("stats_design_table2")       
                     )
-                    
                   )
-                
-                ))
+                )
       
       
 
