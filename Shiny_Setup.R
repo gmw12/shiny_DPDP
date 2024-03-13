@@ -143,7 +143,6 @@ set_sample_groups_bg <- function(session, input, output, params, check_design_so
 
   conn <- RSQLite::dbConnect(RSQLite::SQLite(), params$database_path)
   design <- RSQLite::dbReadTable(conn, "design")
-  RSQLite::dbDisconnect(conn)
   
   #check if using primary group for filter and impute
   cat(file = stderr(), "set_sample_groups ...1", "\n")
@@ -200,7 +199,6 @@ set_sample_groups_bg <- function(session, input, output, params, check_design_so
   params$unique_groups <- toString(unique(design$Group))
   
   cat(file = stderr(), "set_sample_groups ...5", "\n")
-  conn <- RSQLite::dbConnect(RSQLite::SQLite(), params$database_path)
   RSQLite::dbWriteTable(conn, "sample_groups", sample_groups, overwrite = TRUE )
   RSQLite::dbWriteTable(conn, "design", design, overwrite = TRUE)
   RSQLite::dbWriteTable(conn, "parameters", params, overwrite = TRUE)

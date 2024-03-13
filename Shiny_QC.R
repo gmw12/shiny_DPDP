@@ -29,6 +29,8 @@ qc_stats <- function(session, input, output, params){
   qc_norm_types <- as.list(strsplit(params$norm_type, ",")[[1]])
   updateSelectInput(session, "qc_norm_type", choices = qc_norm_types)
   updateSelectInput(session, "spike_norm_type", choices = qc_norm_types)
+  updateSelectInput(session, "stats_norm_type", choices = qc_norm_types)
+  update_stat_choices(session, input, output)
   
   removeModal()
   cat(file = stderr(), "Function - qc_stats...end", "\n")

@@ -267,6 +267,10 @@ update_widgets <- function(session, input, output) {
     qc_norm_types <- as.list(strsplit(params$norm_type, ",")[[1]])
     updateSelectInput(session, "qc_norm_type", choices = qc_norm_types)
     updateSelectInput(session, "spike_norm_type", choices = qc_norm_types)
+    updateSelectInput(session, "stats_norm_type", choices = qc_norm_types)
+    
+    #stats
+    update_stat_choices(session, input, output)
     
   }
   
@@ -365,4 +369,48 @@ rollup_widget_save <- function(session, input, output){
   
   param_save_to_database()
   
+}
+
+#----------------------------------------------------------------------
+update_stat_choices <- function(session, input, output){
+  cat(file = stderr(), "function update_stat_choices...", "\n")
+
+  unique_groups <- params$unique_groups
+  unique_groups <- str_replace_all(unique_groups, " ", "")
+  unique_groups <- as.list(strsplit(unique_groups, ",")[[1]])
+  unique_groups <- unique(unique_groups)
+  
+  updatePickerInput(session, "comp_1N", choices = unique_groups, selected = "-")
+  updatePickerInput(session, "comp_2N", choices = unique_groups, selected = "-")
+  updatePickerInput(session, "comp_3N", choices = unique_groups, selected = "-")
+  updatePickerInput(session, "comp_4N", choices = unique_groups, selected = "-")
+  updatePickerInput(session, "comp_5N", choices = unique_groups, selected = "-")
+  updatePickerInput(session, "comp_6N", choices = unique_groups, selected = "-")
+  updatePickerInput(session, "comp_7N", choices = unique_groups, selected = "-")
+  updatePickerInput(session, "comp_8N", choices = unique_groups, selected = "-")
+  updatePickerInput(session, "comp_9N", choices = unique_groups, selected = "-")
+
+  updatePickerInput(session, "comp_1D", choices = unique_groups, selected = "-")
+  updatePickerInput(session, "comp_2D", choices = unique_groups, selected = "-")
+  updatePickerInput(session, "comp_3D", choices = unique_groups, selected = "-")
+  updatePickerInput(session, "comp_4D", choices = unique_groups, selected = "-")
+  updatePickerInput(session, "comp_5D", choices = unique_groups, selected = "-")
+  updatePickerInput(session, "comp_6D", choices = unique_groups, selected = "-")
+  updatePickerInput(session, "comp_7D", choices = unique_groups, selected = "-")
+  updatePickerInput(session, "comp_8D", choices = unique_groups, selected = "-")
+  updatePickerInput(session, "comp_9D", choices = unique_groups, selected = "-")
+
+  updatePickerInput(session, "comp_spqc", choices = c(unique_groups, "None"), selected = "-")  
+  
+  # updateTextInput(session, "comp1_name", value = dpmsr_set$y$stats$comp1_name)
+  # updateTextInput(session, "comp2_name", value = dpmsr_set$y$stats$comp2_name)
+  # updateTextInput(session, "comp3_name", value = dpmsr_set$y$stats$comp3_name)
+  # updateTextInput(session, "comp4_name", value = dpmsr_set$y$stats$comp4_name)
+  # updateTextInput(session, "comp5_name", value = dpmsr_set$y$stats$comp5_name)
+  # updateTextInput(session, "comp6_name", value = dpmsr_set$y$stats$comp6_name)
+  # updateTextInput(session, "comp7_name", value = dpmsr_set$y$stats$comp7_name)
+  # updateTextInput(session, "comp8_name", value = dpmsr_set$y$stats$comp8_name)
+  # updateTextInput(session, "comp9_name", value = dpmsr_set$y$stats$comp9_name)
+
+  cat(file = stderr(), "function update_stat_choices...end", "\n")
 }
