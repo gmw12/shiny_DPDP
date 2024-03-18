@@ -3,6 +3,42 @@ cat(file = stderr(), "Shiny_MVA.R", "\n")
 #----------------------------------------------------------------------------------------- 
 
 #create data frame for comparisons
+check_comp_names <- function(session, input, output){
+  cat(file = stderr(), "function check_comp_names....", "\n")
+  
+  for (i in 1:input$comp_number) {
+    
+    factorsN <- input[[str_c('comp_',i,'N')]]
+    factorsD <- input[[str_c('comp_',i,'D')]]
+    
+    # set comp group names
+    comp_groups$comp_N[i] <- paste(unique(unlist(str_split(factorsN, "_"))), collapse = "_")
+    comp_groups$comp_D[i] <- paste(unique(unlist(str_split(factorsD, "_"))), collapse = "_")
+    comp_groups$comp_name[i] <- str_c(comp_groups$comp_N[i], "_v_", comp_groups$comp_D[i])
+    
+    if (nchar(comp_groups$comp_name[i]) > 31) {
+      comp_groups$comp_name[i] <- substr(comp_groups$comp_name[i], 1, 31)
+      comp_warning <- TRUE
+      comp_warning_list = c(comp_warning_list,i)
+      cat(file = stderr(), str_c("Comparison ", i," is over 31 characters"), "\n")
+    }else{
+      cat(file = stderr(), str_c("Comparison ", i," name OK"), "\n")
+    }
+    
+    #update screen to display the number of samples in the comparison
+    updatePickerInput(session, inputId = str_c('comp_',i,'N'), label = str_c("Numerator selected -> ", ncol(stats_data_N)) )
+    updatePickerInput(session, inputId = str_c('comp_',i,'D'), label = str_c("Denominator selected -> ", ncol(stats_data_D)) )
+    
+    updateTextInput(session, inputId = str_c("comp",i,"_name"),  value = comp_groups$comp_name[i])
+     
+  }
+  
+  cat(file = stderr(), "function check_comp_names....end", "\n")
+}
+
+#----------------------------------------------------------------------------------------- 
+
+#create data frame for comparisons
 set_stat_groups <- function(session, input, output){
   cat(file = stderr(), "function set_stat_groups....", "\n")
   
