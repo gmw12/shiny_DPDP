@@ -184,7 +184,9 @@ create_default_params <- function() {
               "impute_ptm_grep" = "Phospho",
               "meta_impute_na" = "",
               "rollup_method" = "sum",
-              "rollup_topn" = 3
+              "rollup_topn" = 3,
+              "stat_norm" = "impute",
+              "comp_spqc" =  ""
 
   )
   
