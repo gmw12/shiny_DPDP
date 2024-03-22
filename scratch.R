@@ -16,8 +16,13 @@ df <- dbReadTable(conn, "precursor_impute_sl")
 df <- dbReadTable(conn, "protein_sl")
 df_test <- dbReadTable(conn, "protein_sl_CV")
 df_test <- dbReadTable(conn, "summary_cv")
+stats_comp_df <- dbReadTable(conn, "stats_comp")
+
 
 RSQLite::dbDisconnect(conn)
+
+nchar(stats_comp_df$Name[1])
+str_split(stats_comp_df$Name[1])
 
 df_samples <- df[(ncol(df) - params$sample_number + 1):ncol(df)]
 df2 <- df |>  mutate(across(!where(is.numeric), as.numeric))

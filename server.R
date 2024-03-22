@@ -294,7 +294,7 @@ shinyServer(function(session, input, output) {
     cat(file = stderr(), "check_stats clicked...", "\n")
     showModal(modalDialog("Setting Stat groups...", footer = NULL))  
    
-    try(check_comp_names(session, input, output), silent = TRUE)
+    check_comp_names(session, input, output)
 
     if (is.null(input$comp_spqc)) {
       shinyalert("Oops!", "Please choose and SPQC group!", type = "error")

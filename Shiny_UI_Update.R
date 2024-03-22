@@ -380,37 +380,43 @@ update_stat_choices <- function(session, input, output){
   unique_groups <- as.list(strsplit(unique_groups, ",")[[1]])
   unique_groups <- unique(unique_groups)
   
-  updatePickerInput(session, "comp_1N", choices = unique_groups, selected = "-")
-  updatePickerInput(session, "comp_2N", choices = unique_groups, selected = "-")
-  updatePickerInput(session, "comp_3N", choices = unique_groups, selected = "-")
-  updatePickerInput(session, "comp_4N", choices = unique_groups, selected = "-")
-  updatePickerInput(session, "comp_5N", choices = unique_groups, selected = "-")
-  updatePickerInput(session, "comp_6N", choices = unique_groups, selected = "-")
-  updatePickerInput(session, "comp_7N", choices = unique_groups, selected = "-")
-  updatePickerInput(session, "comp_8N", choices = unique_groups, selected = "-")
-  updatePickerInput(session, "comp_9N", choices = unique_groups, selected = "-")
-
-  updatePickerInput(session, "comp_1D", choices = unique_groups, selected = "-")
-  updatePickerInput(session, "comp_2D", choices = unique_groups, selected = "-")
-  updatePickerInput(session, "comp_3D", choices = unique_groups, selected = "-")
-  updatePickerInput(session, "comp_4D", choices = unique_groups, selected = "-")
-  updatePickerInput(session, "comp_5D", choices = unique_groups, selected = "-")
-  updatePickerInput(session, "comp_6D", choices = unique_groups, selected = "-")
-  updatePickerInput(session, "comp_7D", choices = unique_groups, selected = "-")
-  updatePickerInput(session, "comp_8D", choices = unique_groups, selected = "-")
-  updatePickerInput(session, "comp_9D", choices = unique_groups, selected = "-")
-
-  updatePickerInput(session, "comp_spqc", choices = c(unique_groups, "None"), selected = "-")  
+  spqc_list <- as.list(strsplit(params$comp_spqc, ",")[[1]])
+  updatePickerInput(session, "comp_spqc", choices = unique_groups, selected = spqc_list)
   
-  # updateTextInput(session, "comp1_name", value = dpmsr_set$y$stats$comp1_name)
-  # updateTextInput(session, "comp2_name", value = dpmsr_set$y$stats$comp2_name)
-  # updateTextInput(session, "comp3_name", value = dpmsr_set$y$stats$comp3_name)
-  # updateTextInput(session, "comp4_name", value = dpmsr_set$y$stats$comp4_name)
-  # updateTextInput(session, "comp5_name", value = dpmsr_set$y$stats$comp5_name)
-  # updateTextInput(session, "comp6_name", value = dpmsr_set$y$stats$comp6_name)
-  # updateTextInput(session, "comp7_name", value = dpmsr_set$y$stats$comp7_name)
-  # updateTextInput(session, "comp8_name", value = dpmsr_set$y$stats$comp8_name)
-  # updateTextInput(session, "comp9_name", value = dpmsr_set$y$stats$comp9_name)
-
+  conn <- dbConnect(RSQLite::SQLite(), params$database_path)
+  tables <- dbListTables(conn)
+  
+  if ("stats_comp" %in% tables) {
+    stats_comp <- RSQLite::dbReadTable(conn, "stats_comp")
+    for (i in (1:nrow(stats_comp))) {
+      compN <- str_c("comp_", i, "N")
+      compD <- str_c("comp_", i, "D")
+      updatePickerInput(session, compN, choices = unique_groups, selected = as.list(strsplit(stats_comp$FactorsN[i], ",")[[1]])) 
+      updatePickerInput(session, compD, choices = unique_groups, selected = as.list(strsplit(stats_comp$FactorsD[i], ",")[[1]])) 
+      }
+  } else {
+  
+      updatePickerInput(session, "comp_1N", choices = unique_groups, selected = "-")
+      updatePickerInput(session, "comp_2N", choices = unique_groups, selected = "-")
+      updatePickerInput(session, "comp_3N", choices = unique_groups, selected = "-")
+      updatePickerInput(session, "comp_4N", choices = unique_groups, selected = "-")
+      updatePickerInput(session, "comp_5N", choices = unique_groups, selected = "-")
+      updatePickerInput(session, "comp_6N", choices = unique_groups, selected = "-")
+      updatePickerInput(session, "comp_7N", choices = unique_groups, selected = "-")
+      updatePickerInput(session, "comp_8N", choices = unique_groups, selected = "-")
+      updatePickerInput(session, "comp_9N", choices = unique_groups, selected = "-")
+    
+      updatePickerInput(session, "comp_1D", choices = unique_groups, selected = "-")
+      updatePickerInput(session, "comp_2D", choices = unique_groups, selected = "-")
+      updatePickerInput(session, "comp_3D", choices = unique_groups, selected = "-")
+      updatePickerInput(session, "comp_4D", choices = unique_groups, selected = "-")
+      updatePickerInput(session, "comp_5D", choices = unique_groups, selected = "-")
+      updatePickerInput(session, "comp_6D", choices = unique_groups, selected = "-")
+      updatePickerInput(session, "comp_7D", choices = unique_groups, selected = "-")
+      updatePickerInput(session, "comp_8D", choices = unique_groups, selected = "-")
+      updatePickerInput(session, "comp_9D", choices = unique_groups, selected = "-")
+  }
+  
+  RSQLite::dbDisconnect(conn)
   cat(file = stderr(), "function update_stat_choices...end", "\n")
 }

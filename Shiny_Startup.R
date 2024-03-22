@@ -94,7 +94,7 @@ app_startup <- function(session, input, output) {
       
     #update Widgets
     update_widgets(session, input, output)
-    
+       
   }else{
     loaded_database <- "none"
     loaded_prefix <- "none"
