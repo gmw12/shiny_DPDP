@@ -37,10 +37,18 @@ impute_apply_bg <- function(norm_type, params) {
   
   for (norm in norm_type) {
     cat(file = stderr(), stringr::str_c("impute_apply...", norm), "\n")
+    
+    table_name <- stringr::str_c("precursor_norm_", norm)
+    cat(file = stderr(), stringr::str_c("imputing...", table_name), "\n")
+    
+    conn1 <- RSQLite::dbConnect(RSQLite::SQLite(), params$database_path)
+    df <- RSQLite::dbReadTable(conn1, table_name)
+    RSQLite::dbDisconnect(conn1)
+    
     norm <- stringr::str_replace_all(norm, " ", "")
     bg_name <- stringr::str_c('bg_impute_', norm)
     bg_file <- stringr::str_c(params$error_path, "//error_", bg_name, ".txt")
-    assign(bg_name, callr::r_bg(func = impute_apply_bg2, args = list(norm, params, df_random, df_groups), stderr = bg_file, supervise = TRUE))
+    assign(bg_name, callr::r_bg(func = impute_apply_bg2, args = list(norm, params, df_random, df_groups, df), stderr = bg_file, supervise = TRUE))
   }
 
   for (norm in norm_type) {
@@ -56,18 +64,11 @@ impute_apply_bg <- function(norm_type, params) {
 
 #----------------------------------------------------------------------------------------------------
 
-impute_apply_bg2 <- function(norm, params, df_random, df_groups) {
+impute_apply_bg2 <- function(norm, params, df_random, df_groups, df) {
   cat(file = stderr(), "Function - impute_apply_bg2...", "\n")
   
   source('Shiny_Impute_Functions.R')
   source('Shiny_Norm_Functions.R')
-  
-  table_name <- stringr::str_c("precursor_norm_", norm)
-  cat(file = stderr(), stringr::str_c("imputing...", table_name), "\n")
-  
-  conn1 <- RSQLite::dbConnect(RSQLite::SQLite(), params$database_path)
-  df <- RSQLite::dbReadTable(conn1, table_name)
-  RSQLite::dbDisconnect(conn1)
   
   if (params$impute_type == "duke") {
     df_impute <- impute_duke(df, df_random, df_groups, params)

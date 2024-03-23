@@ -271,6 +271,7 @@ update_widgets <- function(session, input, output) {
     
     #stats
     update_stat_choices(session, input, output)
+    update_stat_comparisons(session, input, output)
     
   }
   
@@ -382,7 +383,20 @@ update_stat_choices <- function(session, input, output){
   
   spqc_list <- as.list(strsplit(params$comp_spqc, ",")[[1]])
   updatePickerInput(session, "comp_spqc", choices = unique_groups, selected = spqc_list)
+  updateSelectInput(session, "comp_number", selected = as.numeric(params$comp_number))
   
+  for (i in (1:9)) {
+    compN <- str_c("comp_", i, "N")
+    compD <- str_c("comp_", i, "D")
+    updatePickerInput(session, compN, choices = unique_groups) 
+    updatePickerInput(session, compD, choices = unique_groups) 
+  }
+  
+  update_stat_comparisons(session, input, output)
+}
+
+#----------------------------------------------------------------------
+update_stat_comparisons <- function(session, input, output){
   conn <- dbConnect(RSQLite::SQLite(), params$database_path)
   tables <- dbListTables(conn)
   
@@ -391,31 +405,23 @@ update_stat_choices <- function(session, input, output){
     for (i in (1:nrow(stats_comp))) {
       compN <- str_c("comp_", i, "N")
       compD <- str_c("comp_", i, "D")
-      updatePickerInput(session, compN, choices = unique_groups, selected = as.list(strsplit(stats_comp$FactorsN[i], ",")[[1]])) 
-      updatePickerInput(session, compD, choices = unique_groups, selected = as.list(strsplit(stats_comp$FactorsD[i], ",")[[1]])) 
-      }
-  } else {
+      updatePickerInput(session, compN, selected = as.list(strsplit(stats_comp$FactorsN[i], ",")[[1]])) 
+      updatePickerInput(session, compD, selected = as.list(strsplit(stats_comp$FactorsD[i], ",")[[1]])) 
+      
+      #update screen to display the number of samples in the comparison
+      updatePickerInput(session, inputId = compN, label = str_c("Numerator selected -> ", stats_comp$N[i]) )
+      updatePickerInput(session, inputId = compD, label = str_c("Denominator selected -> ", stats_comp$D[i]) )
+      updateTextInput(session, inputId = str_c("comp",i,"_name"),  value = stats_comp$Name[i])
+    }
+    for (i in ((nrow(stats_comp)+1):9)) {
+      compN <- str_c("comp_", i, "N")
+      compD <- str_c("comp_", i, "D")
+      updatePickerInput(session, compN, selected = "-") 
+      updatePickerInput(session, compD, selected = "-") 
+    }
+  } 
   
-      updatePickerInput(session, "comp_1N", choices = unique_groups, selected = "-")
-      updatePickerInput(session, "comp_2N", choices = unique_groups, selected = "-")
-      updatePickerInput(session, "comp_3N", choices = unique_groups, selected = "-")
-      updatePickerInput(session, "comp_4N", choices = unique_groups, selected = "-")
-      updatePickerInput(session, "comp_5N", choices = unique_groups, selected = "-")
-      updatePickerInput(session, "comp_6N", choices = unique_groups, selected = "-")
-      updatePickerInput(session, "comp_7N", choices = unique_groups, selected = "-")
-      updatePickerInput(session, "comp_8N", choices = unique_groups, selected = "-")
-      updatePickerInput(session, "comp_9N", choices = unique_groups, selected = "-")
-    
-      updatePickerInput(session, "comp_1D", choices = unique_groups, selected = "-")
-      updatePickerInput(session, "comp_2D", choices = unique_groups, selected = "-")
-      updatePickerInput(session, "comp_3D", choices = unique_groups, selected = "-")
-      updatePickerInput(session, "comp_4D", choices = unique_groups, selected = "-")
-      updatePickerInput(session, "comp_5D", choices = unique_groups, selected = "-")
-      updatePickerInput(session, "comp_6D", choices = unique_groups, selected = "-")
-      updatePickerInput(session, "comp_7D", choices = unique_groups, selected = "-")
-      updatePickerInput(session, "comp_8D", choices = unique_groups, selected = "-")
-      updatePickerInput(session, "comp_9D", choices = unique_groups, selected = "-")
-  }
+  updateTextInput(session, inputId = "final_stats_name", value = str_c("Final_", params$stat_norm, "_stats.xlsx"))
   
   RSQLite::dbDisconnect(conn)
   cat(file = stderr(), "function update_stat_choices...end", "\n")

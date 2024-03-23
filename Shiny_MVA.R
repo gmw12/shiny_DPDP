@@ -8,6 +8,7 @@ check_comp_names <- function(session, input, output){
   table_name <- str_c("protein_", input$stats_norm_type)
   params$stat_norm <<- input$stats_norm_type
   params$comp_spqc <<- toString(input$comp_spqc)
+  params$comp_number <<- input$comp_number
   
   #create df to store comparision info
   stats_comp <- data.frame(matrix(ncol = 6, nrow = 0))
@@ -35,6 +36,8 @@ check_comp_names <- function(session, input, output){
     }
   }
   
+
+  update_stat_comparisons(session, input, output)
   param_save_to_database()
   cat(file = stderr(), "function check_comp_names....end", "\n")
 }

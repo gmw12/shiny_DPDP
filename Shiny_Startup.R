@@ -94,6 +94,9 @@ app_startup <- function(session, input, output) {
       
     #update Widgets
     update_widgets(session, input, output)
+    
+    #observers
+    observe_comp_names(session, input, output)
        
   }else{
     loaded_database <- "none"
@@ -186,7 +189,8 @@ create_default_params <- function() {
               "rollup_method" = "sum",
               "rollup_topn" = 3,
               "stat_norm" = "impute",
-              "comp_spqc" =  ""
+              "comp_spqc" =  "",
+              "comp_number" = 1
 
   )
   

@@ -5,6 +5,8 @@ cat(file = stderr(), "Shiny_Plots.R", "\n")
 bar_plot <- function(table_name, plot_title, plot_dir, params) {
   cat(file = stderr(), "Function bar_plot", "\n")
   
+  source("Shiny_Plots.R")
+  
   conn <- RSQLite::dbConnect(RSQLite::SQLite(), params$database_path)
   df <- RSQLite::dbReadTable(conn, table_name)
   RSQLite::dbDisconnect(conn)
