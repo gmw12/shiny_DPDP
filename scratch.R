@@ -304,3 +304,38 @@ create_comp <- function(i) {
     )
   )
 }
+
+
+create_imputed_column <- function(info_columns, df) {
+  cat(file = stderr(), "function create_imputed_column....", "\n")
+  
+  df_protein_info <- df |> dplyr::select(contains(c("Accession", "Description", "Genes")))
+  df <- df[(info_columns + 1):ncol(df)]
+  
+  df[df > 0] <- 1
+  df[is.na(df)] <- 0
+  
+  df_protein <- cbind(df_protein_info, df)
+  df_protein <- df_protein |> dplyr::group_by(Accession, Description, Genes) |> dplyr::summarise_all(list(sum))
+  df_protein <- data.frame(dplyr::ungroup(df_protein))
+  df_protein <- df_protein[4:ncol(df_protein)]
+
+  reduce_df <- function(df) {
+    
+    df[df == 0] <- "-"
+    df <- df |> dplyr::mutate_all(as.character)
+    
+    while (ncol(df) > 1) {
+      df[,1] <- stringr::str_c(df[,1], ".", df[,2])
+      df[,2] <- NULL
+    }
+    colnames(df) <- "Detected_Imputed"
+    return(df)
+  } 
+  
+  return(list(reduce_df(df), reduce_df(df_protein)))
+}
+
+test <- create_imputed_column(6,df)
+test1 <- test[[1]]
+test2 <- test[[2]]

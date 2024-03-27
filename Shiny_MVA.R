@@ -87,3 +87,36 @@ check_comp_names_bg <- function(params, table_name, comp_number, factorsN, facto
 }
 
 #---------------------------------------------------------------------------------------------------------------------------
+
+#create data frame for comparisons
+stat_calc <- function(session, input, output){
+  cat(file = stderr(), "function stat_calc....", "\n")
+
+  
+  
+  
+  cat(file = stderr(), "function stat_calc....end", "\n")
+}
+
+
+
+#----------------------------------------------------------------------------------------- 
+
+#create data frame for comparisons
+stat_calc_bg <- function(session, input, output){
+  cat(file = stderr(), "function stat_calc_bg....", "\n")
+  
+  
+  
+  
+  cat(file = stderr(), "function stat_calc_bg....end", "\n")
+}
+
+
+
+
+
+
+
+
+
