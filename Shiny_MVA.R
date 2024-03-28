@@ -134,6 +134,7 @@ stat_calc <- function(session, input, output){
 #create data frame for comparisons
 stat_calc_bg <- function(params, comp_number, stats_comp){
   cat(file = stderr(), "function stat_calc_bg....", "\n")
+  source('Shiny_MVA_Functions.R')
   
   conn <- RSQLite::dbConnect(RSQLite::SQLite(), params$database_path)
   
@@ -142,7 +143,8 @@ stat_calc_bg <- function(params, comp_number, stats_comp){
   } else {
     table_name <- stringr::str_c("precursor_impute_", params$stat_norm)
     df <- RSQLite::dbReadTable(conn, table_name)  
-    df <- stat_create_comp_df(df)
+    df_design <- RSQLite::dbReadTable(conn, "design") 
+    df <- stat_create_comp_df(df, stats_comp$FactorsN[comp_number], stats_comp$FactorsD[comp_number], params, df_design)
     
   }
   
