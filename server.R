@@ -294,21 +294,30 @@ shinyServer(function(session, input, output) {
     cat(file = stderr(), "check_stats clicked...", "\n")
     showModal(modalDialog("Setting Stat groups...", footer = NULL))  
    
+    #save parameters
+    stat_widget_save(session, input, output) 
+    
     check_comp_names(session, input, output)
 
     if (is.null(input$comp_spqc)) {
       shinyalert("Oops!", "Please choose and SPQC group!", type = "error")
     }
     
-    #update all of the dropdown stat group choices that are downstream from this point
-    updateTextInput(session, "final_stats_name", value = str_c("Final_", input$select_final_data_stats,  "_stats.xlsx"))
-    
     removeModal()
     cat(file = stderr(), "check_stats clicked...end", "\n")
   })  
   
   
-  
+  #-------------------------------------------------------------------------------------------------------------
+  observeEvent(input$start_stats, {
+    cat(file = stderr(), "start_stats clicked...", "\n")
+    showModal(modalDialog("Calculating stats...", footer = NULL))  
+    
+    stat_calc(session, input, output)
+    
+    removeModal()
+    cat(file = stderr(), "start_stats clicked...end", "\n")
+  })   
   
   
   

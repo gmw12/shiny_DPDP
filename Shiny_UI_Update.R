@@ -272,6 +272,35 @@ update_widgets <- function(session, input, output) {
     #stats
     update_stat_choices(session, input, output)
     update_stat_comparisons(session, input, output)
+    updateSelectInput(session, "stats_norm_type", selected = params$stat_norm)
+    
+    updateNumericInput(session, "pvalue_cutoff", value = params$pvalue_cutoff)
+    updateCheckboxInput(session, "pair_comp", value = params$pair_comp)
+    updateCheckboxInput(session, "checkbox_adjpval", value = params$checkbox_adjpval)
+    updateSelectInput(session, "padjust_options", selected = params$padjust_options)
+    updateNumericInput(session, "foldchange_cutoff", value = 1.5)
+    updateNumericInput(session, "missing_factor", value = params$missing_factor)
+    
+    updateCheckboxInput(session, "peptide_refilter", value = params$peptide_refilter)
+    updateCheckboxInput(session, "peptide_missing_filter", value = params$peptide_missing_filter)
+    updateNumericInput(session, "peptide_missing_factor", value = params$peptide_missing_factor)
+    updateCheckboxInput(session, "peptide_cv_filter", value = params$peptide_cv_filter)
+    updateNumericInput(session, "peptide_cv_factor", value = params$peptide_cv_factor)
+    updateCheckboxInput(session, "stats_spqc_cv_filter", value = params$stats_spqc_cv_filter)
+    updateNumericInput(session, "stats_spqc_cv_filter_factor", value = params$stats_spqc_cv_filter_factor)
+    updateCheckboxInput(session, "stats_comp_cv_filter", value = params$stats_comp_cv_filter)
+    updateNumericInput(session, "stats_comp_cv_filter_factor", value = params$stats_comp_cv_filter_factor)
+    
+    updateCheckboxInput(session, "stats_peptide_minimum", value = params$stats_peptide_minimum)
+    updateNumericInput(session, "stats_peptide_minimum_factor", value = params$stats_peptide_minimum_factor)
+    updateCheckboxInput(session, "checkbox_filter_adjpval", value = params$checkbox_filter_adjpval)
+    updateCheckboxInput(session, "checkbox_cohensd", value = params$checkbox_cohensd)
+    updateCheckboxInput(session, "checkbox_cohensd_hedges", value = params$checkbox_cohensd_hedges)
+    updateCheckboxInput(session, "checkbox_limmapvalue", value = params$checkbox_limmapvalue)
+    updateCheckboxInput(session, "checkbox_report_ptm", value = params$checkbox_report_ptm)
+    updateTextInput(session, "peptide_report_grep", value = params$peptide_report_grep)
+    updateCheckboxInput(session, "checkbox_report_accession", value = params$checkbox_report_accession)
+    updateTextInput(session, "report_accession", value = params$report_accession)
     
   }
   
@@ -372,6 +401,25 @@ rollup_widget_save <- function(session, input, output){
   
 }
 
+#-----------------------------------------------------------------------------------
+stat_widget_save <- function(session, input, output){
+  cat(file = stderr(), "Function - stat_widget_save...", "\n")
+  
+  names <- c("pvalue_cutoff", "pair_comp", "checkbox_adjpval", "foldchange_cutoff", "missing_factor", "peptide_refilter", "peptide_missing_filter", "peptide_missing_factor",
+             "peptide_cv_filter", "peptide_cv_factor", "stats_spqc_cv_filter", "stats_spqc_cv_filter_factor", "stats_comp_cv_filter", "stats_comp_cv_filter_factor",
+             "stats_peptide_minimum", "stats_peptide_minimum_factor", "checkbox_filter_adjpval", "checkbox_cohensd", "checkbox_cohensd_hedges",
+             "checkbox_limmapvalue", "checkbox_report_ptm", "peptide_report_grep", "checkbox_report_accession", "report_accession")
+  
+  for (name in names) {
+    params[[name]] <<- input[[name]]
+  }
+
+  param_save_to_database()
+  
+}
+
+
+
 #----------------------------------------------------------------------
 update_stat_choices <- function(session, input, output){
   cat(file = stderr(), "function update_stat_choices...", "\n")
@@ -397,27 +445,30 @@ update_stat_choices <- function(session, input, output){
 
 #----------------------------------------------------------------------
 update_stat_comparisons <- function(session, input, output){
+
   conn <- dbConnect(RSQLite::SQLite(), params$database_path)
   tables <- dbListTables(conn)
   
   if ("stats_comp" %in% tables) {
     stats_comp <- RSQLite::dbReadTable(conn, "stats_comp")
-    for (i in (1:nrow(stats_comp))) {
-      compN <- str_c("comp_", i, "N")
-      compD <- str_c("comp_", i, "D")
-      updatePickerInput(session, compN, selected = as.list(strsplit(stats_comp$FactorsN[i], ",")[[1]])) 
-      updatePickerInput(session, compD, selected = as.list(strsplit(stats_comp$FactorsD[i], ",")[[1]])) 
-      
-      #update screen to display the number of samples in the comparison
-      updatePickerInput(session, inputId = compN, label = str_c("Numerator selected -> ", stats_comp$N[i]) )
-      updatePickerInput(session, inputId = compD, label = str_c("Denominator selected -> ", stats_comp$D[i]) )
-      updateTextInput(session, inputId = str_c("comp",i,"_name"),  value = stats_comp$Name[i])
-    }
-    for (i in ((nrow(stats_comp)+1):9)) {
-      compN <- str_c("comp_", i, "N")
-      compD <- str_c("comp_", i, "D")
-      updatePickerInput(session, compN, selected = "-") 
-      updatePickerInput(session, compD, selected = "-") 
+    if (nrow(stats_comp > 0)) {
+      for (i in (1:nrow(stats_comp))) {
+        compN <- str_c("comp_", i, "N")
+        compD <- str_c("comp_", i, "D")
+        updatePickerInput(session, compN, selected = as.list(strsplit(stats_comp$FactorsN[i], ",")[[1]])) 
+        updatePickerInput(session, compD, selected = as.list(strsplit(stats_comp$FactorsD[i], ",")[[1]])) 
+        
+        #update screen to display the number of samples in the comparison
+        updatePickerInput(session, inputId = compN, label = str_c("Numerator selected -> ", stats_comp$N[i]) )
+        updatePickerInput(session, inputId = compD, label = str_c("Denominator selected -> ", stats_comp$D[i]) )
+        updateTextInput(session, inputId = str_c("comp",i,"_name"),  value = stats_comp$Name[i])
+      }
+      for (i in ((nrow(stats_comp) + 1):9)) {
+        compN <- str_c("comp_", i, "N")
+        compD <- str_c("comp_", i, "D")
+        updatePickerInput(session, compN, selected = "-") 
+        updatePickerInput(session, compD, selected = "-") 
+      }
     }
   } 
   

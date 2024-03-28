@@ -18,10 +18,13 @@ observe_comp_names <- function(session, input, output){
     
       conn <- dbConnect(RSQLite::SQLite(), params$database_path)
       stats_comp <- RSQLite::dbReadTable(conn, "stats_comp")
-      for (i in (1:nrow(stats_comp))) {
-        stats_comp$Name[i] <-get(str_c("compname",i))
+      if (nrow(stats_comp) > 0) {
+        for (i in (1:nrow(stats_comp))) {
+          stats_comp$Name[i] <- get(str_c("compname",i))
+        }
+        RSQLite::dbWriteTable(conn, "stats_comp", stats_comp, overwrite = TRUE)
       }
-      RSQLite::dbWriteTable(conn, "stats_comp", stats_comp, overwrite = TRUE)
+
       RSQLite::dbDisconnect(conn)
       
       #update_stat_comparisons(session, input, output)

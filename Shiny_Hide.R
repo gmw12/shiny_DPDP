@@ -32,6 +32,20 @@ hide_enable <- function(session, input, output) {
     }
   })
   
+  
+    observe({
+    if (input$peptide_refilter) {
+      shinyjs::show("peptide_missing_filter") 
+      shinyjs::show("peptide_cv_filter") 
+    }else{
+      shinyjs::hide("peptide_missing_filter") 
+      shinyjs::hide("peptide_cv_filter") 
+      shinyjs::hide("peptide_cv_factor") 
+      shinyjs::hide("peptide_missing_factor") 
+    }
+  })
+  
+  
   observe({
     if (input$peptide_missing_filter) {
       shinyjs::show("peptide_missing_factor") 
