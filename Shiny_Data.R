@@ -2,7 +2,7 @@ cat(file = stderr(), "Shiny_Data.R", "\n")
 
 #---------------------------------------------------------------------
 load_data_file <- function(session, input, output){
-  cat(file = stderr(), "\n", "Function load_data_file", "\n")
+  cat(file = stderr(), "Function load_data_file", "\n")
   
   params$data_source <<- "unkown"
   data_sfb <- parseFilePaths(volumes, input$sfb_data_file)
@@ -27,13 +27,13 @@ load_data_file <- function(session, input, output){
   params <<- param_load_from_database()
   
   gc(verbose = getOption("verbose"), reset = FALSE, full = TRUE)
-  cat(file = stderr(), "Function load_data_file...end", "\n")
+  cat(file = stderr(), "Function load_data_file...end", "\n\n")
 }
 
 
 #----------------------------------------------------------------------------------------
 load_unknown_data <- function(data_sfb, params){
-  cat(file = stderr(), "\n",  "Function load_unkown_data...", "\n")
+  cat(file = stderr(), "Function load_unkown_data...", "\n")
   
   df <- data.table::fread(file = data_sfb$datapath, header = TRUE, stringsAsFactors = FALSE, sep = "\t")
   
@@ -62,7 +62,7 @@ load_unknown_data <- function(data_sfb, params){
   RSQLite::dbDisconnect(conn)
   
   gc(verbose = getOption("verbose"), reset = FALSE, full = TRUE)
-  cat(file = stderr(), "function load_unkown_data...end", "\n")
+  cat(file = stderr(), "function load_unkown_data...end", "\n\n")
 }
 
 
@@ -199,7 +199,7 @@ load_PD_data <- function(data_sfb){
 
 #--------------------------------------------------------
 meta_data <- function(table_string){
-  cat(file = stderr(),"\n",  "Function meta_data...", "\n")
+  cat(file = stderr(), "Function meta_data...", "\n")
   
   table_name <- str_c("precursor_", table_string)
   error_file <- str_c("error_", table_string, "meta.txt")
@@ -210,12 +210,12 @@ meta_data <- function(table_string){
   
   params <<- param_load_from_database()
   
-  cat(file = stderr(),"\n",  "Function meta_data...end", "\n")
+  cat(file = stderr(), "Function meta_data...end", "\n\n")
 }
 
 #--------------------------------------------------------
 meta_data_bg <- function(table_name, data_format, params){
-  cat(file = stderr(),"\n",  "Function meta_data bg...", "\n")
+  cat(file = stderr(), "Function meta_data bg...", "\n")
   
   conn <- RSQLite::dbConnect(RSQLite::SQLite(), params$database_path)
   df <- RSQLite::dbReadTable(conn, table_name)
@@ -237,7 +237,7 @@ meta_data_bg <- function(table_name, data_format, params){
   RSQLite::dbWriteTable(conn, "parameters", params, overwrite = TRUE)
   RSQLite::dbDisconnect(conn)
   
-  cat(file = stderr(),"\n",  "Function meta_data bg...end", "\n")
+  cat(file = stderr(), "Function meta_data bg...end", "\n\n")
   
 }
 
@@ -245,7 +245,7 @@ meta_data_bg <- function(table_name, data_format, params){
 
 #--------------------------------------------------------
 impute_meta_data <- function(){
-  cat(file = stderr(),"\n",  "Function impute_meta_data...", "\n")
+  cat(file = stderr(), "Function impute_meta_data...", "\n")
   showModal(modalDialog("Setting imputation parameters, calculating meta data, setting Duke impute intensity table...", footer = NULL))
   
   bg_meta <- callr::r_bg(func = impute_meta_data_bg, args = list("precursor_filter", params), stderr = str_c(params$error_path, "//impute_meta_data.txt"), supervise = TRUE)
@@ -255,12 +255,12 @@ impute_meta_data <- function(){
   params <<- param_load_from_database()
   
   removeModal()
-  cat(file = stderr(),"\n",  "Function impute_meta_data...end", "\n")
+  cat(file = stderr(), "Function impute_meta_data...end", "\n\n")
 }
 
 #--------------------------------------------------------
 impute_meta_data_bg <- function(table_name, params){
-  cat(file = stderr(),"\n",  "Function impute_meta_data bg...", "\n")
+  cat(file = stderr(), "Function impute_meta_data bg...", "\n")
   
   conn <- RSQLite::dbConnect(RSQLite::SQLite(), params$database_path)
   df <- RSQLite::dbReadTable(conn, table_name)
@@ -305,7 +305,7 @@ impute_meta_data_bg <- function(table_name, params){
   RSQLite::dbWriteTable(conn, "parameters", params, overwrite = TRUE)
   RSQLite::dbDisconnect(conn)
   
-  cat(file = stderr(),"\n",  "Function impute_meta_data bg...end", "\n")
+  cat(file = stderr(), "Function impute_meta_data bg...end", "\n\n")
   
 }
 
@@ -399,7 +399,7 @@ protein_to_peptide <- function(){
 
 #----------------------------------------------------------------------------------------
 prepare_data <- function(session, input, output) {  #function(data_type, data_file_path){
-  cat(file = stderr(), "\n", "Function prepare_data...", "\n")
+  cat(file = stderr(), "Function prepare_data...", "\n")
   showModal(modalDialog("Prepare Data...", footer = NULL))
   
   if (params$raw_data_format == "protein_peptide") {
@@ -434,13 +434,13 @@ prepare_data <- function(session, input, output) {  #function(data_type, data_fi
   }
   
   removeModal()
-  cat(file = stderr(), "Function prepare_data...end", "\n")
+  cat(file = stderr(), "Function prepare_data...end", "\n\n")
 }
 
 
 #----------------------------------------------------------------------------------------
 precursor_to_precursor_bg <- function(params){
-  cat(file = stderr(), "\n", "Function precursor_to_precursor_bg", "\n")
+  cat(file = stderr(), "Function precursor_to_precursor_bg", "\n")
   
   conn <- RSQLite::dbConnect(RSQLite::SQLite(), params$database_path)
   df <- RSQLite::dbReadTable(conn, "precursor_raw")
@@ -471,7 +471,7 @@ precursor_to_precursor_bg <- function(params){
   RSQLite::dbWriteTable(conn, "precursor_start", df, overwrite = TRUE)
   RSQLite::dbDisconnect(conn)
   
-  cat(file = stderr(), "precursor_to_precursor_bg complete", "\n")
+  cat(file = stderr(), "precursor_to_precursor_bg complete", "\n\n")
 }
 
 
@@ -649,7 +649,7 @@ isoform_to_isoform <- function(){
 
 #----------------------------------------------------------------------------------------
 order_rename_columns <- function(){
-  cat(file = stderr(), "\n\n", "Function order_rename_columns...", "\n")
+  cat(file = stderr(), "Function order_rename_columns...", "\n")
   showModal(modalDialog("Order and rename Data...", footer = NULL))
   
   if (params$raw_data_format == "precursor") {
@@ -661,7 +661,7 @@ order_rename_columns <- function(){
   }
   
   removeModal()
-  cat(file = stderr(), "order_rename_columns end", "\n")
+  cat(file = stderr(), "order_rename_columns end", "\n\n")
   }
 
 

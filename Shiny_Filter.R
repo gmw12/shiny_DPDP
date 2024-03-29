@@ -11,6 +11,7 @@ filter_data <- function(session, input, output){
     print_stderr("error_filter.txt")
   } 
   
+  cat(file = stderr(), "Function - filter_data...end", "\n\n")
 }
 
 #----------------------------------------------------------------------------------------

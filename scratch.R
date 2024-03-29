@@ -17,7 +17,7 @@ df <- dbReadTable(conn, "protein_sl")
 df_test <- dbReadTable(conn, "protein_sl_CV")
 df_test <- dbReadTable(conn, "summary_cv")
 stats_comp_df <- dbReadTable(conn, "stats_comp")
-
+df_missing <- dbReadTable(conn, "precursor_missing")
 
 RSQLite::dbDisconnect(conn)
 
@@ -336,6 +336,22 @@ create_imputed_df <- function(info_columns, df) {
   return(list(reduce_df(df), reduce_df(df_protein)))
 }
 
-test <- create_imputed_column(6,df)
-test1 <- test[[1]]
-test2 <- test[[2]]
+
+#------------------------------------------------------
+
+str_to_num <- function(df, str_list){
+  
+  col_select <- strsplit(unlist(str_list), ",")
+  col_select <- as.numeric(unlist(col_select))
+  
+  return(df[,col_select])
+}
+
+test <- str_to_num(df_missing, stats_comp_df$N_loc[1])
+
+test <- df_missing[stats_comp_df$N_loc[1]]
+
+testme2 <- strsplit(unlist(stats_comp_df$N_loc[1]), ",")
+testme3 <- as.numeric(unlist(testme2))
+
+test <- df_missing[,testme3]

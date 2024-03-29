@@ -15,7 +15,7 @@ norm_filter <- function() {
     print_stderr("error_normdatabarplot.txt")
   } 
 
-  
+  cat(file = stderr(), "Function - norm_filter...end", "\n\n")
 }
 
 
@@ -88,7 +88,8 @@ norm_apply <- function(){
   bg_normbar <- callr::r_bg(func = bar_plot, args = list(new_table_name, str_c("Precursor_",  norm_type[1]), params$qc_path, params), stderr = str_c(params$error_path, "//error_normbarplot.txt"), supervise = TRUE)
   bg_normbar$wait()
   print_stderr("error_normbarplot.txt")
-   
+  
+  cat(file = stderr(), "Function - norm_apply...end", "\n\n")
 }
 
 

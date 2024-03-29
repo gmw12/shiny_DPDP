@@ -60,10 +60,11 @@ peptide_refilter <- function(df) {
 #-------------------------------------------------------------------------------
 
 create_imputed_df <- function(params) {
-  cat(file = stderr(), "function create_imputed_column....", "\n")
+  cat(file = stderr(), "function create_imputed_df....", "\n")
   
   conn <- RSQLite::dbConnect(RSQLite::SQLite(), params$database_path)
   df <- RSQLite::dbReadTable(conn, "precursor_filter")
+  
   info_columns <- ncol(df) - params$sample_number
   
   df_protein_info <- df |> dplyr::select(contains(c("Accession", "Description", "Genes")))
@@ -77,11 +78,11 @@ create_imputed_df <- function(params) {
   df_protein <- data.frame(dplyr::ungroup(df_protein))
   df_protein <- df_protein[4:ncol(df_protein)]
   
-  RSQLite::dbWriteTable(conn, "Precursor_impute", df, overwrite = TRUE)
-  RSQLite::dbWriteTable(conn, "Protein_impute", df_protein, overwrite = TRUE)
+  RSQLite::dbWriteTable(conn, "precursor_missing", df, overwrite = TRUE)
+  RSQLite::dbWriteTable(conn, "protein_missing", df_protein, overwrite = TRUE)
   RSQLite::dbDisconnect(conn)
   
-  return()
+  cat(file = stderr(), "function create_imputed_df....end", "\n")
 }
 
 #-------------------------------------------------------------------------------

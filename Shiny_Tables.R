@@ -12,7 +12,7 @@ create_design_table <- function(session, input, output){
   design_DT <- bg_designtable$get_result()
   output$stats_design_table <-  renderRHandsontable(design_DT)
   
-  cat(file = stderr(), "Function create_design_table...end", "\n")
+  cat(file = stderr(), "Function create_design_table...end", "\n\n")
 }
 
 #--------------------------------
