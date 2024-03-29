@@ -39,3 +39,66 @@ stat_create_comp_df <- function(df, factorsN, factorsD, params, df_design) {
 
 
 #----------------------------------------------------------------------------------
+
+peptide_refilter <- function(df) {
+  cat(file = stderr(), "Function - peptide_refilter...", "\n")
+
+  if (params$peptide_missing_filter) {
+    
+  }
+  
+  if (params$peptide_cv_filter) {
+    
+  }
+  
+  
+  
+
+  cat(file = stderr(), "Function - peptide_refilter...end", "\n")
+}
+
+#-------------------------------------------------------------------------------
+
+create_imputed_df <- function(params) {
+  cat(file = stderr(), "function create_imputed_column....", "\n")
+  
+  conn <- RSQLite::dbConnect(RSQLite::SQLite(), params$database_path)
+  df <- RSQLite::dbReadTable(conn, "precursor_filter")
+  info_columns <- ncol(df) - params$sample_number
+  
+  df_protein_info <- df |> dplyr::select(contains(c("Accession", "Description", "Genes")))
+  df <- df[(info_columns + 1):ncol(df)]
+  
+  df[df > 0] <- 1
+  df[is.na(df)] <- 0
+  
+  df_protein <- cbind(df_protein_info, df)
+  df_protein <- df_protein |> dplyr::group_by(Accession, Description, Genes) |> dplyr::summarise_all(list(sum))
+  df_protein <- data.frame(dplyr::ungroup(df_protein))
+  df_protein <- df_protein[4:ncol(df_protein)]
+  
+  RSQLite::dbWriteTable(conn, "Precursor_impute", df, overwrite = TRUE)
+  RSQLite::dbWriteTable(conn, "Protein_impute", df_protein, overwrite = TRUE)
+  RSQLite::dbDisconnect(conn)
+  
+  return()
+}
+
+#-------------------------------------------------------------------------------
+reduce_imputed_df <- function(df) {
+  
+  df[df == 0] <- "-"
+  df <- df |> dplyr::mutate_all(as.character)
+  
+  while (ncol(df) > 1) {
+    df[,1] <- stringr::str_c(df[,1], ".", df[,2])
+    df[,2] <- NULL
+  }
+  colnames(df) <- "Detected_Imputed"
+  return(df)
+} 
+
+
+
+
+#-------------------------------------------------------------------------------

@@ -306,7 +306,7 @@ create_comp <- function(i) {
 }
 
 
-create_imputed_column <- function(info_columns, df) {
+create_imputed_df <- function(info_columns, df) {
   cat(file = stderr(), "function create_imputed_column....", "\n")
   
   df_protein_info <- df |> dplyr::select(contains(c("Accession", "Description", "Genes")))

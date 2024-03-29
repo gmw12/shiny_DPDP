@@ -19,6 +19,13 @@ impute_apply <- function(session, input, output) {
     print_stderr(bg_file)
   }
   
+  #create imputed df's for protein and precursor
+  source("Shiny_MVA_Functions.R")
+  bg_impute_df <- callr::r_bg(func = create_imputed_df, args = list(params), stderr = str_c(params$error_path, "//error_impute_df.txt"), supervise = TRUE)
+  bg_impute_df$wait()
+  print_stderr("error_impute_df.txt")
+  
+  
   removeModal()
   cat(file = stderr(), "Function - impute_apply...end", "\n")
 }
