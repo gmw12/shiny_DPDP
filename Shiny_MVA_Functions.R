@@ -40,13 +40,17 @@ stat_create_comp_df <- function(df, factorsN, factorsD, params, df_design) {
 
 #----------------------------------------------------------------------------------
 
-peptide_refilter <- function(df) {
+peptide_refilter <- function(df, params) {
   cat(file = stderr(), "Function - peptide_refilter...", "\n")
 
+  #remove 100% imputed precursors/peptides for this specific comparision
+  
+  
   if (params$peptide_missing_filter) {
     
   }
-  
+ 
+   
   if (params$peptide_cv_filter) {
     
   }
@@ -99,7 +103,19 @@ reduce_imputed_df <- function(df) {
   return(df)
 } 
 
-
+#-------------------------------------------------------------------------------
+add_full_imputed_df <- function(df, params) {
+  
+  conn <- RSQLite::dbConnect(RSQLite::SQLite(), params$database_path)
+  df_missing <- RSQLite::dbReadTable(conn, "precursor_missing")
+  RSQLite::dbDisconnect(conn)
+  
+  df_missing <-  reduce_imputed_df(df_missing)
+  
+  df <- tibble::add_column(df, df_missing, .after = (ncol(df) - params$sample_number + 1))
+  
+  return(df)
+}
 
 
 #-------------------------------------------------------------------------------

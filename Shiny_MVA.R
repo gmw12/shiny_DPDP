@@ -139,15 +139,18 @@ stat_calc_bg <- function(params, comp_number, stats_comp){
   conn <- RSQLite::dbConnect(RSQLite::SQLite(), params$database_path)
   
   if (!params$peptide_refilter) {
-    df <- RSQLite::dbReadTable(conn, stats_comp$Table_Name[comp_number])  
+    df <- RSQLite::dbReadTable(conn, stats_comp$Table_Name[comp_number])
+    #add imputed column
+    df <- add_full_imputed(df, params)
   } else {
     table_name <- stringr::str_c("precursor_impute_", params$stat_norm)
     df <- RSQLite::dbReadTable(conn, table_name)  
     df_design <- RSQLite::dbReadTable(conn, "design") 
+    df_missing <- RSQLite::dbReadTable(conn, "precursor_missing") 
     # reduce precursor df to samples of interest
     df <- stat_create_comp_df(df, stats_comp$FactorsN[comp_number], stats_comp$FactorsD[comp_number], params, df_design)
     #refilter precursors/peptides
-    df <- peptide_refilter(df)
+    df <- peptide_refilter(df, params)
     
     
   }
