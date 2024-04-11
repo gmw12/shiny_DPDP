@@ -57,7 +57,7 @@ rollup_median_polish <- function(peptide_data, info_columns){
   cat(file = stderr(), "rollup_median_polish triggered...", "\n")
   
   #group and sum data (summed samples will be over written below)
-  df <- peptide_data %>% group_by(Accession, Description, Genes) %>% summarise_all(list(sum))
+  df <- peptide_data |> group_by(Accession, Description, Genes) |> summarise_all(list(sum))
   df <- data.frame(ungroup(df))
   
   #select data and log
@@ -115,7 +115,7 @@ rollup_maxlfq <- function(peptide_data, info_columns){
   samples_columns <- ncol(peptide_data) - info_columns
   
   #group and sum data (summed samples will be over written below)
-  df <- peptide_data %>% group_by(Accession, Description, Genes) %>% summarise_all(list(sum))
+  df <- peptide_data |> group_by(Accession, Description, Genes) |> summarise_all(list(sum))
   
   #select data and log
   df_data <- peptide_data[,(info_columns + 1):ncol(peptide_data)]
@@ -170,7 +170,7 @@ rollup_directlfq <- function(peptide_data, info_columns){
   info_columns <<- info_columns
   
   #group and sum data (summed samples will be over written below)
-  df <- peptide_data %>% group_by(Accession, Description, Genes) %>% summarise_all(list(sum))
+  df <- peptide_data |> group_by(Accession, Description, Genes) |> summarise_all(list(sum))
   sample_number <- ncol(peptide_data) - info_columns
   info_column_names <- colnames(peptide_data)[1:info_columns]
   
@@ -204,7 +204,7 @@ rollup_directlfq <- function(peptide_data, info_columns){
   data_out <- Simple_fread((directlfq_protein_file))
   colnames(data_out)[which(names(data_out) == "protein")] <- "Accession"
   
-  data_out <- df[1:(ncol(df) - sample_number)] %>% left_join(data_out, by = "Accession")
+  data_out <- df[1:(ncol(df) - sample_number)] |> left_join(data_out, by = "Accession")
   data_out <- data_out[, !(names(data_out) %in% c("V1"))]
   data_out[data_out == 0] <- NA
   

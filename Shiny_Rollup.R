@@ -98,8 +98,8 @@ collapse_precursor <- function(precursor_data, info_columns = 0, stats = FALSE) 
   
   columns = names(precursor_data)[1:info_columns]
   
-  peptide_data <- precursor_data %>%
-    group_by_at(vars(one_of(columns))) %>%
+  peptide_data <- precursor_data |>
+    group_by_at(vars(one_of(columns))) |>
     summarise_all(list(sum))
   
   peptide_data <- data.frame(ungroup(peptide_data))

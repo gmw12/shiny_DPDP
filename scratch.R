@@ -17,7 +17,7 @@ df <- dbReadTable(conn, "protein_sl")
 df_test <- dbReadTable(conn, "protein_sl_CV")
 df_test <- dbReadTable(conn, "summary_cv")
 stats_comp_df <- dbReadTable(conn, "stats_comp")
-df_missing <- dbReadTable(conn, "precursor_missing")
+df_missing2 <- dbReadTable(conn, "precursor_missing")
 
 RSQLite::dbDisconnect(conn)
 
@@ -355,3 +355,35 @@ testme2 <- strsplit(unlist(stats_comp_df$N_loc[1]), ",")
 testme3 <- as.numeric(unlist(testme2))
 
 test <- df_missing[,testme3]
+
+df_list = list(df_missing, df_missing2)
+test <- df_list[[1]]
+
+test1 <- df_missing[,1:3]
+test2 <- df_missing[,4:6]
+sumtest <- rowSums(test1) + rowSums(test2)
+test3 <- 0
+test3 <- which((rowSums(test1) + rowSums(test2)) == 0)
+test4 <- missing_factor_gw(test1, test2)
+test5 <- which(test4 < 0.3)
+
+test1 <- df[,7:9]
+test2 <- df[,10:12]
+test6 <- percentCV_gw(test1)
+test7 <- percentCV_gw(test2)
+test8 <- pmin(percentCV_gw(test1), percentCV_gw(test2))
+test9 <- which(test8 > 70)
+
+test10 <- unique(sort(c(test9, test5)))
+
+
+test11 <- df[-test9,]
+
+
+t1 <- c(1,2,3)
+t2 <- c(4,5,3)
+t3 <- c(t1,t2)
+t4 <- sort(t3)
+t5 <- unique(t4)
+
+t6 <- reduce_imputed_df(df_missing)

@@ -513,7 +513,7 @@ source("Shiny_UI.R")
                     checkboxInput("peptide_missing_filter", label = "Refilter precursors/peptides by requiring X% measured values in one group?", value = TRUE),
                     numericInput("peptide_missing_factor", label = "Peptide X% measured cutoff (decimal)", value = 0.1),
                     checkboxInput("peptide_cv_filter", label = "Refilter precursors/peptides by requiring X %CV one group?"),
-                    hidden(numericInput("peptide_cv_factor", label = "Peptide X CV% cutoff", value = 100)),
+                    hidden(numericInput("peptide_cv_factor", label = "Peptide X CV% cutoff (decimal)", value = 0.5)),
                     tags$b(style = "color:blue", 'Final Filters'),
                     checkboxInput("stats_spqc_cv_filter", label = "Filter by SPQC CV"),
                     hidden(numericInput("stats_spqc_cv_filter_factor", label = "SPQC %CV Cutoff", value = 50)),

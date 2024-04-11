@@ -46,8 +46,8 @@ cohend_gw <- function(x, y, hedges) {
 
 #missing factor ---------------------------------
 missing_factor_gw <- function(x, y) {
-  x <- x %>% mutate_all(as.numeric)
-  y <- y %>% mutate_all(as.numeric)
+  x <- x |> dplyr::mutate_all(as.numeric)
+  y <- y |> dplyr::mutate_all(as.numeric)
   mf_x <- rowSums(x) / ncol(x)
   mf_y <- rowSums(y) / ncol(y)
   df_mf <- data.frame(cbind(mf_x, mf_y), stringsAsFactors = FALSE)

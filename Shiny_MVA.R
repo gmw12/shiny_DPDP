@@ -121,10 +121,10 @@ stat_calc <- function(session, input, output){
   for (comp_number in 1:nrow(stats_comp)) {
     bg_stat_calc <- callr::r_bg(func = stat_calc_bg, args = list(params, comp_number, stats_comp), stderr = stringr::str_c(params$error_path, "//stat_calc.txt"), supervise = TRUE)
     bg_stat_calc$wait()
-    print_stderr("stat_groups.txt")
+    print_stderr("stat_calc.txt")
   }
   
-  cat(file = stderr(), "function stat_calc....end", "\n")
+  cat(file = stderr(), "function stat_calc....end", "\n\n")
 }
 
 
@@ -147,11 +147,15 @@ stat_calc_bg <- function(params, comp_number, stats_comp){
     df <- RSQLite::dbReadTable(conn, table_name)  
     df_design <- RSQLite::dbReadTable(conn, "design") 
     df_missing <- RSQLite::dbReadTable(conn, "precursor_missing") 
-    # reduce precursor df to samples of interest
-    df <- stat_create_comp_df(df, stats_comp$FactorsN[comp_number], stats_comp$FactorsD[comp_number], params, df_design)
-    #refilter precursors/peptides
-    df <- peptide_refilter(df, params)
     
+    # reduce precursor df to samples of interest
+    df_list <- stat_create_comp_df(df, stats_comp$FactorsN[comp_number], stats_comp$FactorsD[comp_number], params, df_design)
+    
+    # reduce missing df to samples of interest
+    df_missing_list <- stat_create_comp_missing_df(df_missing, stats_comp$FactorsN[comp_number], stats_comp$FactorsD[comp_number], params, df_design)
+    
+    #refilter precursors/peptides
+    df <- peptide_refilter(df_list, df_missing_list, params)
     
   }
   
