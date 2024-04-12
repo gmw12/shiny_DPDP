@@ -160,9 +160,11 @@ stat_calc_bg <- function(params, comp_number, stats_comp){
     #rollup
     df <- peptide_refilter_rollup(df_filter_list, params, df_design)
     
+    #add stats to df
+    df <- stat_add(df, params, comp_number, stats_comp) 
+    
   }
   
-  cat(file = stderr(), "function stat_calc_bg....2", "\n")
   stats_out_name <- stringr::str_c(stats_comp$Table_Name[comp_number], "_final")
   RSQLite::dbWriteTable(conn, stats_out_name, df, overwrite = TRUE)
   RSQLite::dbDisconnect(conn)

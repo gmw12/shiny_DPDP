@@ -34,13 +34,15 @@ stats_comp_df <- dbReadTable(conn, "stats_comp")
 df_missing <- dbReadTable(conn, "precursor_missing")
 df_final <- dbReadTable(conn, "protein_sltmm_CA_v_DN_final")
 
-testme <- dbReadTable(conn, "testme")
+testme <- dbReadTable(conn, "design")
 
 
 RSQLite::dbDisconnect(conn)
 
 
 testme <- read_table("protein_sltmm_CA_v_DN_final")
+test_design <- read_table("design")
+test_sample_groups <- read_table("sample_groups")
 list_tables()
 
 

@@ -7,3 +7,12 @@ str_to_num <- function(df, str_list){
   
   return(df[,col_select])
 }
+
+
+
+str_to_numlist <- function(str_in) {
+  
+  num_out <- strsplit(str_in, ",") |> unlist() |> as.numeric()
+  
+  return(num_out)
+}

@@ -139,10 +139,6 @@ peptide_refilter_rollup <- function(df_filter_list, params, df_design) {
   df <- df_filter_list[[1]]
   df_missing <- df_filter_list[[2]]
   
-  conn <- RSQLite::dbConnect(RSQLite::SQLite(), params$database_path)
-  RSQLite::dbWriteTable(conn, "testme", df_missing, overwrite = TRUE)
-  RSQLite::dbDisconnect(conn)
-  
   #count samples
   sample_count <- ncol(df_missing)
   
@@ -151,13 +147,9 @@ peptide_refilter_rollup <- function(df_filter_list, params, df_design) {
   df_missing <- df_missing |> dplyr::select(contains(c("Accession", "Description", "Genes", df_design$ID))) |> 
     dplyr::mutate(Precursors = 1, .after = Genes)
   
-
-  
   #rollup data and missing
   df <- rollup_selector(df, params, df_design)
   df_missing <- rollup_sum(df_missing)
-  
-
   
   #add missing column to data
   df_missing <- df_missing[, (ncol(df_missing) - sample_count + 1):ncol(df_missing)]
@@ -167,6 +159,60 @@ peptide_refilter_rollup <- function(df_filter_list, params, df_design) {
   cat(file = stderr(), "Function - peptide_refilter_rollup...end", "\n")  
   return(df)
 }
+
+
+#-------------------------------------------------------------------------------
+
+  
+
+stat_add <- function(df, params, comp_number, stats_comp) {
+  cat(file = stderr(), "Function - stat_add...", "\n")
+  
+  source("Shiny_Misc_Functions.R")
+  
+  sample_count <- stats_comp$Total[comp_number]
+  df_info <- df[,1:(ncol(df) - sample_count)]
+  df <- df[,(ncol(df) - sample_count + 1):ncol(df)]
+  
+  df_N <- df[, str_to_numlist(stats_comp$N_loc[comp_number])]
+  df_D <- df[, str_to_numlist(stats_comp$D_loc[comp_number])]
+  df_SPQC <- df[, str_to_numlist(stats_comp$SPQC_loc[comp_number])]
+  
+  stat_df <- df_info[1:1]
+
+  stat_df[ , dpmsr_set$y$stats$groups$cv_N[i]] <- percentCV_gw(comp_N_data)
+  stat_df[ , dpmsr_set$y$stats$groups$cv_D[i]] <- percentCV_gw(comp_D_data)
+  
+  stat_df[ , str_c(dpmsr_set$y$stats$comp_spqc, "_CV")] <- percentCV_gw(spqc_data)
+  stat_df[ ,dpmsr_set$y$stats$groups$fc[i]] <- foldchange_gw(comp_N_data, comp_D_data)
+  stat_df[ ,dpmsr_set$y$stats$groups$fc2[i]] <- foldchange_decimal_gw(comp_N_data, comp_D_data)
+  stat_df[ ,dpmsr_set$y$stats$groups$pval[i]] <- pvalue_gw(comp_N_data, comp_D_data)
+  
+  if (input$checkbox_adjpval) {
+    stat_df[ ,dpmsr_set$y$stats$groups$adjpval[i]] <- p.adjust(stat_df[ ,dpmsr_set$y$stats$groups$pval[i]], method = input$padjust_options) 
+  }
+  
+  if (input$checkbox_cohensd) {
+    stat_df[ ,dpmsr_set$y$stats$groups$cohensd[i]] <- cohend_gw(comp_N_data, comp_D_data, as.logical(input$checkbox_cohensd))
+  }
+  
+  cat(file = stderr(), "stat_calc2...16", "\n")
+  if (input$checkbox_limmapvalue) {
+    stat_df[ ,dpmsr_set$y$stats$groups$limma_pval[i]] <- limma_gw(comp_N_data, comp_D_data)
+  }
+  
+  cat(file = stderr(), "Function - stat_add...end", "\n")  
+  
+} 
+
+
+
+
+
+
+
+
+
 #-------------------------------------------------------------------------------
 
 create_imputed_df <- function(params) {
