@@ -135,7 +135,7 @@ stat_calc <- function(session, input, output){
 stat_calc_bg <- function(params, comp_number, stats_comp){
   cat(file = stderr(), "function stat_calc_bg....", "\n")
   source('Shiny_MVA_Functions.R')
-  
+
   conn <- RSQLite::dbConnect(RSQLite::SQLite(), params$database_path)
   
   if (!params$peptide_refilter) {
@@ -155,14 +155,16 @@ stat_calc_bg <- function(params, comp_number, stats_comp){
     df_missing_list <- stat_create_comp_missing_df(df_missing, stats_comp$FactorsN[comp_number], stats_comp$FactorsD[comp_number], params, df_design)
     
     #refilter precursors/peptides
-    df <- peptide_refilter(df_list, df_missing_list, params)
+    df_filter_list <- peptide_refilter(df_list, df_missing_list, params)
+    
+    #rollup
+    df <- peptide_refilter_rollup(df_filter_list, params, df_design)
     
   }
   
-
-  
-  
-  
+  cat(file = stderr(), "function stat_calc_bg....2", "\n")
+  stats_out_name <- stringr::str_c(stats_comp$Table_Name[comp_number], "_final")
+  RSQLite::dbWriteTable(conn, stats_out_name, df, overwrite = TRUE)
   RSQLite::dbDisconnect(conn)
   
   cat(file = stderr(), "function stat_calc_bg....end", "\n")

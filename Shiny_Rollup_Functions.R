@@ -1,12 +1,29 @@
 cat(file = stderr(), "Shiny_Rollup_Functions.R", "\n")
 
 #--------------------------------------------------------------------------------
+rollup_selector <- function(df, params, df_design){
+  cat(file = stderr(), "function rollup_selector...", "\n")
+  
+  df <- df |> dplyr::select(contains(c("Accession", "Description", "Genes", df_design$ID))) |> 
+    dplyr::mutate(Precursors = 1, .after = Genes)
+  
+  if (params$rollup_method == "sum") {df <-  rollup_sum(df)}
+    else if (params$rollup_method == "median") {df <-  rollup_median(df)}
+    else if (params$rollup_method == "mean") {df <-  rollup_mean(df)}
+    else if (params$rollup_method == "topn") {df <-  rollup_topn(df, params$rollup_topn)}
+  
+  cat(file = stderr(), "function rollup_selector...end", "\n")
+  return(df)
+}
+
+#--------------------------------------------------------------------------------
 rollup_sum <- function(df){
   cat(file = stderr(), "function rollup_sum...", "\n")
   
   protein_df <- df |> dplyr::group_by(Accession, Description, Genes) |> dplyr::summarise_all(list(sum))
   protein_df <- data.frame(dplyr::ungroup(protein_df))
   
+  cat(file = stderr(), "function rollup_sum...end", "\n")
   return(protein_df)
 }
 

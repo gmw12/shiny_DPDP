@@ -119,15 +119,54 @@ peptide_refilter <- function(df_list, df_missing_list, params) {
   df <- df[-filtered_rows,]
   df_missing <- df_missing[-filtered_rows,]
   
-  df_missing <- reduce_imputed_df(df_missing)
-  sample_cols <- ncol(df_N) + ncol(df_D) + ncol(df_SPQC)
-  df <- tibble::add_column(df, df_missing, .after = (ncol(df) - sample_cols + 1))
+  # df_missing <- reduce_imputed_df(df_missing)
+  # sample_cols <- ncol(df_N) + ncol(df_D) + ncol(df_SPQC)
+  # df <- tibble::add_column(df, df_missing, .after = (ncol(df) - sample_cols))
 
-  return(df)
+  return(list(df, df_missing))
   
   cat(file = stderr(), "Function - peptide_refilter...end", "\n")
 }
 
+#-------------------------------------------------------------------------------
+peptide_refilter_rollup <- function(df_filter_list, params, df_design) {
+  cat(file = stderr(), "Function - peptide_refilter_rollup...", "\n")
+  
+  source('Shiny_Rollup_Functions.R')
+  source('Shiny_MVA_Functions.R')
+  
+  #unpack lists to df's
+  df <- df_filter_list[[1]]
+  df_missing <- df_filter_list[[2]]
+  
+  conn <- RSQLite::dbConnect(RSQLite::SQLite(), params$database_path)
+  RSQLite::dbWriteTable(conn, "testme", df_missing, overwrite = TRUE)
+  RSQLite::dbDisconnect(conn)
+  
+  #count samples
+  sample_count <- ncol(df_missing)
+  
+  #need to add back info columns to missing for rollup
+  df_missing <- cbind(df[,1:(ncol(df) - sample_count)], df_missing)
+  df_missing <- df_missing |> dplyr::select(contains(c("Accession", "Description", "Genes", df_design$ID))) |> 
+    dplyr::mutate(Precursors = 1, .after = Genes)
+  
+
+  
+  #rollup data and missing
+  df <- rollup_selector(df, params, df_design)
+  df_missing <- rollup_sum(df_missing)
+  
+
+  
+  #add missing column to data
+  df_missing <- df_missing[, (ncol(df_missing) - sample_count + 1):ncol(df_missing)]
+  df_missing <- reduce_imputed_df(df_missing)
+  df <- tibble::add_column(df, df_missing, .after = (ncol(df) - params$sample_number))
+  
+  cat(file = stderr(), "Function - peptide_refilter_rollup...end", "\n")  
+  return(df)
+}
 #-------------------------------------------------------------------------------
 
 create_imputed_df <- function(params) {
@@ -158,6 +197,7 @@ create_imputed_df <- function(params) {
 
 #-------------------------------------------------------------------------------
 reduce_imputed_df <- function(df) {
+  cat(file = stderr(), "function reduce_imputed_df...", "\n")
   
   df[df == 0] <- "-"
   df <- df |> dplyr::mutate_all(as.character)
@@ -167,6 +207,8 @@ reduce_imputed_df <- function(df) {
     df[,2] <- NULL
   }
   colnames(df) <- "Detected_Imputed"
+  
+  cat(file = stderr(), "function reduce_imputed_df....end", "\n")
   return(df)
 } 
 
@@ -179,7 +221,7 @@ add_full_imputed_df <- function(df, params) {
   
   df_missing <-  reduce_imputed_df(df_missing)
   
-  df <- tibble::add_column(df, df_missing, .after = (ncol(df) - params$sample_number + 1))
+  df <- tibble::add_column(df, df_missing, .after = (ncol(df) - params$sample_number))
   
   return(df)
 }

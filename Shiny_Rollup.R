@@ -33,14 +33,10 @@ rollup_apply_bg <- function(params) {
     table_name_out <- stringr::str_c("protein_", norm)
     
     df <- RSQLite::dbReadTable(conn, table_name)
-    df <- df |> dplyr::select(contains(c("Accession", "Description", "Genes", df_design$ID))) |> 
-      dplyr::mutate(Precursors = 1, .after = Genes)
-    
-    if (params$rollup_method == "sum") {protein_df <-  rollup_sum(df)}
-      else if (params$rollup_method == "median") {protein_df <-  rollup_median(df)}
-      else if (params$rollup_method == "mean") {protein_df <-  rollup_mean(df)}
-      else if (params$rollup_method == "topn") {protein_df <-  rollup_topn(df, params$rollup_topn)}
-    
+
+    #rollup precursor/peptides
+    protein_df <- rollup_selector(df, params, df_design)
+
     RSQLite::dbWriteTable(conn, table_name_out, protein_df, overwrite = TRUE)
   }
   

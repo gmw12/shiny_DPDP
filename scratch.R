@@ -1,4 +1,18 @@
 
+read_table <- function(table_name){
+  conn <- dbConnect(RSQLite::SQLite(), params$database_path) 
+  df <- dbReadTable(conn, table_name)
+  RSQLite::dbDisconnect(conn)
+  return(df)
+}
+
+list_tables <- function(table_name){
+  conn <- dbConnect(RSQLite::SQLite(), params$database_path) 
+  table_list <- dbListTables(conn)
+  RSQLite::dbDisconnect(conn)
+  return(table_list)
+}
+
 conn <- dbConnect(RSQLite::SQLite(), params$database_path)
 dbListTables(conn)
 
@@ -17,9 +31,19 @@ df <- dbReadTable(conn, "protein_sl")
 df_test <- dbReadTable(conn, "protein_sl_CV")
 df_test <- dbReadTable(conn, "summary_cv")
 stats_comp_df <- dbReadTable(conn, "stats_comp")
-df_missing2 <- dbReadTable(conn, "precursor_missing")
+df_missing <- dbReadTable(conn, "precursor_missing")
+df_final <- dbReadTable(conn, "protein_sltmm_CA_v_DN_final")
+
+testme <- dbReadTable(conn, "testme")
+
 
 RSQLite::dbDisconnect(conn)
+
+
+testme <- read_table("protein_sltmm_CA_v_DN_final")
+list_tables()
+
+
 
 nchar(stats_comp_df$Name[1])
 str_split(stats_comp_df$Name[1])
