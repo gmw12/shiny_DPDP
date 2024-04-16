@@ -43,8 +43,9 @@ RSQLite::dbDisconnect(conn)
 testme <- read_table("protein_sltmm_CA_v_DN_final")
 test_design <- read_table("design")
 test_sample_groups <- read_table("sample_groups")
+test_design <- read_table("design")
+test_protein_missing <- read_table("protein_missing")
 list_tables()
-
 
 
 nchar(stats_comp_df$Name[1])

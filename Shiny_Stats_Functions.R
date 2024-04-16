@@ -13,12 +13,6 @@ percentCV_gw <- function(x) {
 
 
 
-
-
-
-
-
-
 #cohensD ---------------------------------
 cohend_gw <- function(x, y, hedges) {
   
@@ -64,8 +58,8 @@ missing_factor_gw <- function(x, y) {
 
 
 #fold change ---------------------------------
-foldchange_gw <- function(x, y) {
-  if (!as.logical(dpmsr_set$x$pair_comp)) {
+foldchange_gw <- function(x, y, params) {
+  if (!as.logical(params$pair_comp)) {
     ave_x = rowMeans(x)
     ave_y = rowMeans(y)
     test = ave_x / ave_y
@@ -77,7 +71,7 @@ foldchange_gw <- function(x, y) {
     }
     test <- rowMeans(indiv_fc)
   }
-  fc <- ifelse ((test >= 1), test,-1 / test)
+  fc <- ifelse((test >= 1), test, -1 / test)
   return(signif(fc, digits = 7))
 }
 
@@ -89,15 +83,15 @@ foldchange_pair_gw <- function(x, y) {
     indiv_fc[i] <- (x[i] / y[i])
   }
   test <- rowMeans(indiv_fc)
-  fc <- ifelse ((test >= 1), test,-1 / test)
+  fc <- ifelse((test >= 1), test,-1 / test)
   return(signif(fc, digits = 7))
 }
 
 
 
 #fold change decimal ---------------------------------
-foldchange_decimal_gw <- function(x, y) {
-  if (!as.logical(dpmsr_set$x$pair_comp)) {
+foldchange_decimal_gw <- function(x, y, params) {
+  if (!as.logical(params$pair_comp)) {
     ave_x = rowMeans(x)
     ave_y = rowMeans(y)
     test = ave_x / ave_y
@@ -130,8 +124,8 @@ foldchange_pair_decimal_gw <- function(x, y) {
 
 
 #t.test ---------------------------------
-ttest_gw <- function(x, y) {
-  if (!as.logical(dpmsr_set$x$pair_comp)) {
+ttest_gw <- function(x, y, params) {
+  if (!as.logical(params$pair_comp)) {
     ttest_pvalue = try(t.test(
       x,
       y,
@@ -150,13 +144,13 @@ ttest_gw <- function(x, y) {
 }
 
 
-pvalue_gw <- function(x, y) {
+pvalue_gw <- function(x, y, params) {
   x <- log2(x)
   y <- log2(y)
   temp_pval <- rep(NA, nrow(x))
   for (i in 1:nrow(x))
   {
-    temp_pval[i] <- ttest_gw(as.numeric(x[i, ]), as.numeric(y[i, ]))
+    temp_pval[i] <- ttest_gw(as.numeric(x[i, ]), as.numeric(y[i, ]), params)
   }
   return(temp_pval)
 }
