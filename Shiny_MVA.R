@@ -141,7 +141,9 @@ stat_calc_bg <- function(params, comp_number, stats_comp){
   if (!params$peptide_refilter) {
     df <- RSQLite::dbReadTable(conn, stats_comp$Table_Name[comp_number])
     #add imputed column
-    df <- add_full_imputed_df(df, params, "protein_missing")
+    df_list <- add_imputed_df(df, params, stats_comp, comp_number, "protein_missing")
+    df <- df_list[[1]]
+    df_missing <- df_list[[2]]
   } else {
     table_name <- stringr::str_c("precursor_impute_", params$stat_norm)
     df <- RSQLite::dbReadTable(conn, table_name)  
@@ -161,12 +163,13 @@ stat_calc_bg <- function(params, comp_number, stats_comp){
     df_rollup_list <- peptide_refilter_rollup(df_filter_list, params, df_design)
     df <- df_rollup_list[[1]]
     df_missing <- df_rollup_list[[2]]
-    
+  }
+  
     #add stats to df
-    df <- stat_add(df, params, comp_number, stats_comp, df_design) 
+    df <- stat_add(df, df_missing, params, comp_number, stats_comp, df_design) 
     
 
-  }
+  
   
   stats_out_name <- stringr::str_c(stats_comp$Table_Name[comp_number], "_final")
   RSQLite::dbWriteTable(conn, stats_out_name, df, overwrite = TRUE)

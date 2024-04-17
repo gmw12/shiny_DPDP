@@ -165,7 +165,7 @@ peptide_refilter_rollup <- function(df_filter_list, params, df_design) {
 
   
 
-stat_add <- function(df, params, comp_number, stats_comp, df_design) {
+stat_add <- function(df, df_missing, params, comp_number, stats_comp, df_design) {
   cat(file = stderr(), "Function - stat_add...", "\n")
   
   source("Shiny_Misc_Functions.R")
@@ -176,16 +176,19 @@ stat_add <- function(df, params, comp_number, stats_comp, df_design) {
   
   #fix sample names
   cat(file = stderr(), "stat_add...1", "\n")
-  sample_names <- c(df_design$Header2[str_to_numlist(stats_comp_df$N_loc[comp_number])],
-                    df_design$Header2[str_to_numlist(stats_comp_df$D_loc[comp_number])],
-                    df_design$Header2[str_to_numlist(stats_comp_df$SPQC_loc[comp_number])])
-  colnames(df_test)[(ncol(df_test) - sample_count + 1):ncol(df_test)] <- sample_names
+  sample_names <- c(df_design$Header2[str_to_numlist(stats_comp$N_loc[comp_number])],
+                    df_design$Header2[str_to_numlist(stats_comp$D_loc[comp_number])],
+                    df_design$Header2[str_to_numlist(stats_comp$SPQC_loc[comp_number])])
+  colnames(df)[(ncol(df) - sample_count + 1):ncol(df)] <- sample_names
   
   cat(file = stderr(), "stat_add...2", "\n")
   df_N <- df_samples[, str_to_numlist(stats_comp$N_loc[comp_number])]
   df_D <- df_samples[, str_to_numlist(stats_comp$D_loc[comp_number])]
   df_SPQC <- df_samples[, str_to_numlist(stats_comp$SPQC_loc[comp_number])]
   
+  df_N_missing <- df_missing[, str_to_numlist(stats_comp$N_loc[comp_number])]
+  df_D_missing <- df_missing[, str_to_numlist(stats_comp$D_loc[comp_number])]
+
   cat(file = stderr(), "stat_add...3", "\n")
   df[[stringr::str_c(stats_comp$FactorsN[comp_number], "_CV")]] <- percentCV_gw(df_N)
   df[[stringr::str_c(stats_comp$FactorsD[comp_number], "_CV")]] <- percentCV_gw(df_D)
@@ -211,14 +214,12 @@ stat_add <- function(df, params, comp_number, stats_comp, df_design) {
   
   cat(file = stderr(), "stat_add...5", "\n")
   
-  df[[stringr::str_c(stats_comp$Name[comp_number], "_mf")]] <- missing_factor_gw(df_N_imputed, df_D_imputed, params)
+  df[[stringr::str_c(stats_comp$Name[comp_number], "_mf")]] <- missing_factor_gw(df_N_missing, df_D_missing)
   
   cat(file = stderr(), "Function - stat_add...end", "\n")  
 
   return(df)  
 } 
-
-
 
 
 #-------------------------------------------------------------------------------
@@ -267,39 +268,25 @@ reduce_imputed_df <- function(df) {
 } 
 
 #-------------------------------------------------------------------------------
-add_full_imputed_df <- function(df, params, table_name) {
-  
+add_imputed_df <- function(df, params, stats_comp, comp_number, table_name) {
+  cat(file = stderr(), "function add_imputed_df...", "\n")
   conn <- RSQLite::dbConnect(RSQLite::SQLite(), params$database_path)
   df_missing <- RSQLite::dbReadTable(conn, table_name)
   RSQLite::dbDisconnect(conn)
   
+  #select samples in comparison
+  df_missing <- df_missing[, c(str_to_numlist(stats_comp$N_loc[comp_number]), str_to_numlist(stats_comp$D_loc[comp_number]), str_to_numlist(stats_comp$SPQC_loc[comp_number]))]
+  
   df_missing <-  reduce_imputed_df(df_missing)
   
   df <- tibble::add_column(df, df_missing, .after = (ncol(df) - params$sample_number))
-  
-  return(df)
+  cat(file = stderr(), "function add_imputed_df...end", "\n")
+  return(list(df, df_missing))
 }
 
 
 #-------------------------------------------------------------------------------
 
 
-#missing factor ---------------------------------
-missing_factor_gw <- function(x, y) {
-  x <- x |> dplyr::mutate_all(as.numeric)
-  y <- y |> dplyr::mutate_all(as.numeric)
-  mf_x <- rowSums(x) / ncol(x)
-  mf_y <- rowSums(y) / ncol(y)
-  df_mf <- data.frame(cbind(mf_x, mf_y), stringsAsFactors = FALSE)
-  df_mf$max <-
-    apply(
-      df_mf,
-      1,
-      FUN = function(x) {
-        max(x, na.rm = TRUE)
-      }
-    )
-  return(signif(df_mf$max, digits = 3))
-}
 
 

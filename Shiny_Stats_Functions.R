@@ -4,10 +4,14 @@ cat(file = stderr(), "Shiny_Stats_Functions.R", "\n")
 
 #Percent CV ---------------------------------
 percentCV_gw <- function(x) {
+  cat(file = stderr(), "function percentCV_gw...", "\n")
+  
   ave <- rowMeans(x)
   n <- ncol(x)
   sd <- apply(x[1:n], 1, sd)
   cv <- (100 * sd / ave)
+  
+  cat(file = stderr(), "function percentCV_gw...end", "\n")
   return(signif(cv, digits = 3))
 }
 
@@ -15,6 +19,7 @@ percentCV_gw <- function(x) {
 
 #cohensD ---------------------------------
 cohend_gw <- function(x, y, hedges) {
+  cat(file = stderr(), "function cohend_gw...", "\n")
   
   cohend <- function(x, y) {
     cohend_est = try(cohen.d(
@@ -35,16 +40,25 @@ cohend_gw <- function(x, y, hedges) {
   y <- data.frame(t(y))
   
   cd <- mapply(function(x,y) cohend(x,y), x, y)
+  
+  cat(file = stderr(), "function cohend_gw...end", "\n")
   return(cd)
 }
 
 #missing factor ---------------------------------
-missing_factor_gw <- function(x, y) {
-  x <- x |> dplyr::mutate_all(as.numeric)
-  y <- y |> dplyr::mutate_all(as.numeric)
-  mf_x <- rowSums(x) / ncol(x)
-  mf_y <- rowSums(y) / ncol(y)
-  df_mf <- data.frame(cbind(mf_x, mf_y), stringsAsFactors = FALSE)
+missing_factor_gw <- function(df_N_missing, df_D_missing) {
+  cat(file = stderr(), "function missing_factor_gw...", "\n")
+  
+  #if protein level set to max of 1
+  df_N_missing[df_N_missing > 1 ] <- 1
+  df_D_missing[df_D_missing > 1 ] <- 1  
+  
+  #calc mf and return highest of sample groups
+  n <- df_N_missing |> dplyr::mutate_all(as.numeric)
+  d <- df_D_missing |> dplyr::mutate_all(as.numeric)
+  mf_n <- rowSums(n) / ncol(n)
+  mf_d <- rowSums(d) / ncol(d)
+  df_mf <- data.frame(cbind(mf_n, mf_d), stringsAsFactors = FALSE)
   df_mf$max <-
     apply(
       df_mf,
@@ -53,12 +67,16 @@ missing_factor_gw <- function(x, y) {
         max(x, na.rm = TRUE)
       }
     )
+  cat(file = stderr(), "function missing_factor_gw...end", "\n")
   return(signif(df_mf$max, digits = 3))
 }
 
 
+
 #fold change ---------------------------------
 foldchange_gw <- function(x, y, params) {
+  cat(file = stderr(), "function foldchange_gw...", "\n")
+  
   if (!as.logical(params$pair_comp)) {
     ave_x = rowMeans(x)
     ave_y = rowMeans(y)
@@ -72,11 +90,14 @@ foldchange_gw <- function(x, y, params) {
     test <- rowMeans(indiv_fc)
   }
   fc <- ifelse((test >= 1), test, -1 / test)
+  
+  cat(file = stderr(), "function foldchange_gw...end", "\n")
   return(signif(fc, digits = 7))
 }
 
 #fold change pair---------------------------------
 foldchange_pair_gw <- function(x, y) {
+  cat(file = stderr(), "function foldchange_pair_gw...", "\n")
   sn <- ncol(x)
   indiv_fc <- x
   for (i in 1:sn) {
@@ -84,6 +105,8 @@ foldchange_pair_gw <- function(x, y) {
   }
   test <- rowMeans(indiv_fc)
   fc <- ifelse((test >= 1), test,-1 / test)
+  
+  cat(file = stderr(), "function foldchange_pair_gw...end", "\n")
   return(signif(fc, digits = 7))
 }
 
@@ -91,6 +114,8 @@ foldchange_pair_gw <- function(x, y) {
 
 #fold change decimal ---------------------------------
 foldchange_decimal_gw <- function(x, y, params) {
+  cat(file = stderr(), "function foldchange_decimal_gw...", "\n")
+  
   if (!as.logical(params$pair_comp)) {
     ave_x = rowMeans(x)
     ave_y = rowMeans(y)
@@ -104,11 +129,15 @@ foldchange_decimal_gw <- function(x, y, params) {
     test <- rowMeans(indiv_fc)
   }
   fc <- test
+  
+  cat(file = stderr(), "function foldchange_decimal_gw...end", "\n")
   return(signif(fc, digits = 7))
 }
 
 #fold change pair decimal---------------------------------
 foldchange_pair_decimal_gw <- function(x, y) {
+  cat(file = stderr(), "function foldchange_pair_decimal_gw...", "\n")
+  
   sn <- ncol(x)
   indiv_fc <- x
   for (i in 1:sn) {
@@ -116,6 +145,8 @@ foldchange_pair_decimal_gw <- function(x, y) {
   }
   test <- rowMeans(indiv_fc)
   fc <- test
+  
+  cat(file = stderr(), "function foldchange_pair_decimal_gw...end", "\n")
   return(signif(fc, digits = 7))
 }
 
@@ -145,6 +176,8 @@ ttest_gw <- function(x, y, params) {
 
 
 pvalue_gw <- function(x, y, params) {
+  cat(file = stderr(), "function pvalue_gw...", "\n")
+  
   x <- log2(x)
   y <- log2(y)
   temp_pval <- rep(NA, nrow(x))
@@ -152,6 +185,8 @@ pvalue_gw <- function(x, y, params) {
   {
     temp_pval[i] <- ttest_gw(as.numeric(x[i, ]), as.numeric(y[i, ]), params)
   }
+  
+  cat(file = stderr(), "function pvalue_gw...end", "\n")
   return(temp_pval)
 }
 
@@ -170,6 +205,8 @@ exactTest_gw <- function(x, y) {
 #y<-comp_D_data
 #comp_name <- comp_groups$comp_name[1]
 limma_gw <- function(x, y) {   #, comp_name, plot_dir) {
+  cat(file = stderr(), "function limma_gw...", "\n")
+  
   xy <- cbind(x, y)
   xy <- log2(xy)
   n <- ncol(x)
@@ -188,6 +225,8 @@ limma_gw <- function(x, y) {   #, comp_name, plot_dir) {
   #try(limma_qq(fit2$t, comp_name, plot_dir), silent = TRUE)
   #try(limma_ma(topfit, comp_name, plot_dir), silent = TRUE)
   #try(limma_volcano(fit2, comp_name, plot_dir), silent = TRUE)
+  
+  cat(file = stderr(), "function limma_gw...end", "\n")
   return(data_out)
 }
 
