@@ -33,7 +33,7 @@ load_parameters <- function(session, input, output){
 
 #---------------------------------------------------------------------
 load_design_file <- function(session, input, output){
-  cat(file = stderr(), "\n", "Function load_design_file", "\n")
+  cat(file = stderr(), "Function load_design_file", "\n")
   
   design_sbf <- parseFilePaths(volumes, input$sfb_design_file)
   params$design_path <<- str_extract(design_sbf$datapath, "^/.*/")
@@ -189,9 +189,9 @@ set_sample_groups_bg <- function(session, input, output, params, check_design_so
   sample_groups$title <- sample_groups[[group_type]]
   
   #organize column headers for final output
-  design$Header1 <- stringr::str_c(design$ID, " ", design$Group)
-  design$Header2 <- stringr::str_c(design$ID, " ", design$Group, " Normalized")
-  design$Header3 <- stringr::str_c(design$ID, " ", design$Group, " Imputed")
+  design$Header1 <- stringr::str_c(design$Group, " ", design$ID)
+  design$Header2 <- stringr::str_c(design$Group, " ", design$ID, " Normalized")
+  design$Header3 <- stringr::str_c(design$Group, " ", design$ID, " Imputed")
   
   cat(file = stderr(), "set_sample_groups ...4", "\n")
   params$sample_number <- sample_number

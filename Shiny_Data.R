@@ -674,7 +674,7 @@ order_rename_columns_bg <- function(table_name, params) {
   design <- RSQLite::dbReadTable(conn, "design")
   
   info_columns <- ncol(df) - params$sample_number
-  annotate_df <- df[, 1:(ncol(df)-params$sample_number)]
+  annotate_df <- df[, 1:(ncol(df) - params$sample_number)]
   df <- df[, (ncol(df) - params$sample_number + 1):ncol(df)]
   df <- df[, (design$Raw_Order)]
   

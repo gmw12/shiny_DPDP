@@ -1,4 +1,4 @@
-cat(file = stderr(), "\n", "Shiny_Source.R", "\n")
+cat(file = stderr(), "Shiny_Source.R", "\n")
 
 
 source("Shiny_Data.R")

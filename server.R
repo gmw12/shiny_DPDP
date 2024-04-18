@@ -127,21 +127,21 @@ shinyServer(function(session, input, output) {
   #------------------------------------------------------------------------------------------------------  
   
   observeEvent(input$noise_inflection_apply, {
-    cat(file = stderr(), "\n", "noise inflection apply clicked", "\n")  
+    cat(file = stderr(), "noise inflection apply clicked", "\n")  
     
     #calculate noise inflection and create plot
     noise_inflection(session, input, output, params)
     
     render_noise_graphs(session, input, output)
     
-    cat(file = stderr(), "\n", "noise inflection apply...end", "\n")  
+    cat(file = stderr(), "noise inflection apply...end", "\n")  
   })
   
   
   #------------------------------------------------------------------------------------------------------  
   
   observeEvent(input$noise_apply, {
-    cat(file = stderr(), "\n", "noise apply clicked", "\n")  
+    cat(file = stderr(), "noise apply clicked", "\n")  
     
     #save noise inputs to params file
     noise_widget_save(session, input, output)
@@ -149,7 +149,7 @@ shinyServer(function(session, input, output) {
     #remove noise from df and save new df
     noise_remove(session, input, output, params)
       
-    cat(file = stderr(), "\n", "noise apply...end", "\n")
+    cat(file = stderr(), "noise apply...end", "\n")
     
   })
   
@@ -157,7 +157,7 @@ shinyServer(function(session, input, output) {
   #------------------------------------------------------------------------------------------------------  
   
   observeEvent(input$filter_cutoff, {
-    cat(file = stderr(), "\n", "filter cutoff clicked", "\n")  
+    cat(file = stderr(), "filter cutoff clicked", "\n")  
     
     #save filter inputs to params file
     filter_widget_save(session, input, output)
@@ -165,13 +165,13 @@ shinyServer(function(session, input, output) {
     #create histogram and calculate cutoff values
     filter_histogram_plot(sesion, input, output, params, "precursor_noise", "Precursor_NoiseFiltered_Histogram")
     
-    cat(file = stderr(), "\n", "filter cutoff...end", "\n")  
+    cat(file = stderr(), "filter cutoff...end", "\n")  
   })
     
 #------------------------------------------------------------------------------------------------------  
  
  observeEvent(input$filter_apply, {
-   cat(file = stderr(), "\n", "filter apply clicked", "\n")
+   cat(file = stderr(), "filter apply clicked", "\n")
 
    showModal(modalDialog("Applying data filters...", footer = NULL))
    
@@ -194,7 +194,7 @@ shinyServer(function(session, input, output) {
 #------------------------------------------------------------------------------------------------------   
 
  observeEvent(input$norm_parameters, {
-   cat(file = stderr(), "\n", "norm parameters clicked", "\n")
+   cat(file = stderr(), "norm parameters clicked", "\n")
    showModal(modalDialog("Setting normalization parameters...", footer = NULL))
    
    norm_widget_save(session, input, output)
@@ -210,7 +210,7 @@ shinyServer(function(session, input, output) {
 #------------------------------------------------------------------------------------------------------  
  
  observeEvent(input$norm_apply, {
-   cat(file = stderr(), "\n", "norm apply clicked", "\n")
+   cat(file = stderr(), "norm apply clicked", "\n")
    showModal(modalDialog("Normalizing data...", footer = NULL))
    
    norm_apply_widget_save(session, input, output)
@@ -226,7 +226,7 @@ shinyServer(function(session, input, output) {
 #------------------------------------------------------------------------------------------------------   
   
  observeEvent(input$impute_parameters, {
-   cat(file = stderr(), "\n", "impute parameters clicked", "\n")
+   cat(file = stderr(), "impute parameters clicked", "\n")
 
    #save inputs
    impute_apply_widget_save(session, input, output)
@@ -247,7 +247,7 @@ shinyServer(function(session, input, output) {
   #------------------------------------------------------------------------------------------------------   
   
   observeEvent(input$impute_apply, {
-    cat(file = stderr(), "\n", "impute_apply clicked", "\n")
+    cat(file = stderr(), "impute_apply clicked", "\n")
     
     impute_apply(session, input, output)
     
@@ -256,7 +256,7 @@ shinyServer(function(session, input, output) {
   #------------------------------------------------------------------------------------------------------   
   
   observeEvent(input$rollup_apply, {
-    cat(file = stderr(), "\n", "rollup_apply clicked", "\n")
+    cat(file = stderr(), "rollup_apply clicked", "\n")
     
     #save parameters
     rollup_widget_save(session, input, output) 
@@ -282,7 +282,7 @@ shinyServer(function(session, input, output) {
   
   #------------------------------------------------------------------------------------------------------   
   observeEvent(input$qc_spike_plot_apply, {
-    cat(file = stderr(), "\n", "protein_plot_apply clicked", "\n")
+    cat(file = stderr(), "protein_plot_apply clicked", "\n")
     
     qc_spike_plots(session, input, output, params)
     

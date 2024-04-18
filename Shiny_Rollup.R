@@ -27,7 +27,7 @@ rollup_apply_bg <- function(params) {
   for (norm in norm_type) {
     norm <- stringr::str_replace_all(norm, " ", "")
     
-    cat(file = stderr(), stringr::str_c("norm = ", norm_type,    ",   rollup_method = ", params$rollup_method), "\n")
+    cat(file = stderr(), stringr::str_c("norm = ", norm,    ",   rollup_method = ", params$rollup_method), "\n")
     
     table_name <- stringr::str_c("precursor_impute_", norm)
     table_name_out <- stringr::str_c("protein_", norm)
