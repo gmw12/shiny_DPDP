@@ -502,7 +502,13 @@ source("Shiny_UI.R")
                     hidden(selectInput("padjust_options", label = "p.adjust method", choices = list("holm", "hochberg", "hommel", "bonferroni", "BH", "BY", "fdr"), 
                                        selected = "bonferroni")),
                     numericInput("foldchange_cutoff", label = "Fold Change cutoff", value = 1.5),
-                    numericInput("missing_factor", label = "Measured % (decimal)", value = 0.6)
+                    numericInput("missing_factor", label = "Measured % (decimal)", value = 0.6),
+                    hr(),
+                    tags$b(style = "color:blue", 'Final Excel Options'),
+                    checkboxInput("checkbox_report_ptm", label = "Report Only PTM?"),
+                    hidden(textInput("peptide_report_grep", label = "Report PTM grep", value = "Enter value here")),
+                    checkboxInput("checkbox_report_accession", label = "Report Specific Accession(s) Only"),
+                    hidden(textInput("report_accession", label = "Protein Accessions for Final Report", value = "Enter value"))
                     
                 ),
                 
@@ -528,12 +534,6 @@ source("Shiny_UI.R")
                     checkboxInput("checkbox_cohensd", label = "Include Cohen's D?"),
                     checkboxInput("checkbox_cohensd_hedges", label = "Use Hedge's Correction (low N)?"),
                     checkboxInput("checkbox_limmapvalue", label = "Include Limma Pvalue?"),
-                    hr(),
-                    tags$b(style = "color:blue", 'Final Excel Options'),
-                    checkboxInput("checkbox_report_ptm", label = "Report Only PTM?"),
-                    hidden(textInput("peptide_report_grep", label = "Report PTM grep", value = "Enter value here")),
-                    checkboxInput("checkbox_report_accession", label = "Report Specific Accession(s) Only"),
-                    hidden(textInput("report_accession", label = "Protein Accessions for Final Report", value = "Enter value"))
                 ),
                 
                 box(id = "stats_design_box", title = "Stats Design...", status = "primary",

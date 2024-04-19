@@ -162,9 +162,6 @@ peptide_refilter_rollup <- function(df_filter_list, params, df_design) {
 
 
 #-------------------------------------------------------------------------------
-
-  
-
 stat_add <- function(df, df_missing, params, comp_number, stats_comp, df_design) {
   cat(file = stderr(), "Function - stat_add...", "\n")
   
@@ -216,7 +213,9 @@ stat_add <- function(df, df_missing, params, comp_number, stats_comp, df_design)
   
   df[[stringr::str_c(stats_comp$Name[comp_number], "_mf")]] <- missing_factor_gw(df_N_missing, df_D_missing)
   
-  cat(file = stderr(), "Function - stat_add...end", "\n")  
+  
+  
+  cat(file = stderr(), "Function - stat_add...end", "\n\n")  
 
   return(df)  
 } 
