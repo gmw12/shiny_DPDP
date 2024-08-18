@@ -132,3 +132,11 @@ print_stderr <- function(file_name){
     cat(file = stderr(), error_list[i], "\n")
   }
 }
+
+#----------------------------------------------------------------------------------------
+print_stderr2 <- function(file_name, params){
+  error_list = readLines(stringr::str_c(params$error_path, "//", file_name))
+  for (i in 1:length(error_list)) {
+    cat(file = stderr(), error_list[i], "\n")
+  }
+}

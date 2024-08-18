@@ -3,6 +3,7 @@ cat(file = stderr(), "Shiny_Data.R", "\n")
 #---------------------------------------------------------------------
 load_data_file <- function(session, input, output){
   cat(file = stderr(), "Function load_data_file", "\n")
+  showModal(modalDialog("Loading data...", footer = NULL))
   
   params$data_source <<- "unkown"
   data_sfb <- parseFilePaths(volumes, input$sfb_data_file)
@@ -28,6 +29,7 @@ load_data_file <- function(session, input, output){
   
   gc(verbose = getOption("verbose"), reset = FALSE, full = TRUE)
   cat(file = stderr(), "Function load_data_file...end", "\n\n")
+  removeModal()
 }
 
 
@@ -200,6 +202,7 @@ load_PD_data <- function(data_sfb){
 #--------------------------------------------------------
 meta_data <- function(table_string){
   cat(file = stderr(), "Function meta_data...", "\n")
+  showModal(modalDialog("Gathering meta data...", footer = NULL))
   
   table_name <- str_c("precursor_", table_string)
   error_file <- str_c("error_", table_string, "meta.txt")
@@ -211,6 +214,7 @@ meta_data <- function(table_string){
   params <<- param_load_from_database()
   
   cat(file = stderr(), "Function meta_data...end", "\n\n")
+  removeModal()
 }
 
 #--------------------------------------------------------
@@ -400,7 +404,7 @@ protein_to_peptide <- function(){
 #----------------------------------------------------------------------------------------
 prepare_data <- function(session, input, output) {  #function(data_type, data_file_path){
   cat(file = stderr(), "Function prepare_data...", "\n")
-  showModal(modalDialog("Prepare Data...", footer = NULL))
+  showModal(modalDialog("Preparing Data...", footer = NULL))
   
   if (params$raw_data_format == "protein_peptide") {
     cat(file = stderr(), "prepare data_type 1", "\n")
@@ -433,14 +437,15 @@ prepare_data <- function(session, input, output) {  #function(data_type, data_fi
     isoform_to_isoform()
   }
   
-  removeModal()
   cat(file = stderr(), "Function prepare_data...end", "\n\n")
+  removeModal()
 }
 
 
 #----------------------------------------------------------------------------------------
 precursor_to_precursor_bg <- function(params){
   cat(file = stderr(), "Function precursor_to_precursor_bg", "\n")
+  source("Shiny_Rollup.R")
   
   conn <- RSQLite::dbConnect(RSQLite::SQLite(), params$database_path)
   df <- RSQLite::dbReadTable(conn, "precursor_raw")
@@ -468,7 +473,11 @@ precursor_to_precursor_bg <- function(params){
   df$Description <- stringr::str_c(df$Description, ", org=", df$Organisms) 
   df$Organisms <- NULL
   
+  #save copy of raw peptide (from precursor start)
+  raw_peptide <- collapse_precursor_raw(df, info_columns = 0, stats = FALSE, params)
+  
   RSQLite::dbWriteTable(conn, "precursor_start", df, overwrite = TRUE)
+  RSQLite::dbWriteTable(conn, "raw_peptide", raw_peptide, overwrite = TRUE)
   RSQLite::dbDisconnect(conn)
   
   cat(file = stderr(), "precursor_to_precursor_bg complete", "\n\n")
@@ -660,8 +669,8 @@ order_rename_columns <- function(){
     params$info_col_precursor <<- bg_order$get_result()
   }
   
-  removeModal()
   cat(file = stderr(), "order_rename_columns end", "\n\n")
+  removeModal()
   }
 
 

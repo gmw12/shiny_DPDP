@@ -4,6 +4,7 @@ cat(file = stderr(), "Shiny_MVA.R", "\n")
 #create data frame for comparisons
 check_comp_names <- function(session, input, output){
   cat(file = stderr(), "function check_comp_names....", "\n")
+  showModal(modalDialog("Setting Stat groups...", footer = NULL))  
   
   table_name <- str_c("protein_", input$stats_norm_type)
   table_name <- gsub(" ", "", table_name, fixed = TRUE) 
@@ -13,7 +14,7 @@ check_comp_names <- function(session, input, output){
   params$comp_number <<- input$comp_number
   
   #create df to store comparision info
-  stats_comp <- data.frame(matrix(ncol = 12, nrow = 0))
+  stats_comp <- data.frame(matrix(ncol = 13, nrow = 0))
 
   conn <- RSQLite::dbConnect(RSQLite::SQLite(), params$database_path)
   RSQLite::dbWriteTable(conn, "stats_comp", stats_comp, overwrite = TRUE)
@@ -41,10 +42,11 @@ check_comp_names <- function(session, input, output){
 
   update_stat_comparisons(session, input, output)
   
-  final_stats_name <- table_name <- gsub(" ", "", str_c("Final_", params$stat_norm,  "_stats.xlsx"), fixed = TRUE)
+  final_stats_name <- table_name <- gsub(" ", "", stringr::str_c("Final_", params$stat_norm,  "_stats.xlsx"), fixed = TRUE)
   updateTextInput(session, "final_stats_name", value = final_stats_name)
   
   cat(file = stderr(), "function check_comp_names....end", "\n")
+  removeModal()
 }
 
 #----------------------------------------------------------------------------------------- 
@@ -93,12 +95,13 @@ check_comp_names_bg <- function(params, table_name, comp_number, factorsN, facto
   comp_D <- paste(unique(unlist(stringr::str_split(factorsD, "_"))), collapse = "_")
   comp_name <- stringr::str_c(comp_N, "_v_", comp_D)
   stats_out_name <- stringr::str_c(table_name, "_", comp_name)
+  final_stats_out_name <- stringr::str_c(table_name, "_", comp_name, "_final")
   
   total_samples <- ncol(stats_data_N) + ncol(stats_data_D) + ncol(stats_data_SPQC)
   new_row <- c(comp_number, toString(factorsN), toString(factorsD), comp_name, ncol(stats_data_N), ncol(stats_data_D), ncol(stats_data_SPQC), 
-               total_samples, toString(samples_N), toString(samples_D), toString(samples_SPQC), stats_out_name)
+               total_samples, toString(samples_N), toString(samples_D), toString(samples_SPQC), stats_out_name, final_stats_out_name)
   stats_comp <- rbind(stats_comp, new_row)
-  col_names <- c("Comp", "FactorsN", "FactorsD", "Name", "N", "D", "SPQC", "Total", "N_loc", "D_loc", "SPQC_loc", "Table_Name")
+  col_names <- c("Comp", "FactorsN", "FactorsD", "Name", "N", "D", "SPQC", "Total", "N_loc", "D_loc", "SPQC_loc", "Table_Name", "Final_Table_Name")
   names(stats_comp) <- col_names
   
   RSQLite::dbWriteTable(conn, "stats_comp", stats_comp, overwrite = TRUE)
@@ -113,7 +116,8 @@ check_comp_names_bg <- function(params, table_name, comp_number, factorsN, facto
 #create data frame for comparisons
 stat_calc <- function(session, input, output){
   cat(file = stderr(), "function stat_calc....", "\n")
-
+  showModal(modalDialog("Calculating stats...", footer = NULL))  
+  
   conn <- RSQLite::dbConnect(RSQLite::SQLite(), params$database_path)
   stats_comp <- RSQLite::dbReadTable(conn, "stats_comp")
   RSQLite::dbDisconnect(conn)
@@ -125,6 +129,7 @@ stat_calc <- function(session, input, output){
   }
   
   cat(file = stderr(), "function stat_calc....end", "\n\n")
+  removeModal()
 }
 
 
@@ -178,11 +183,86 @@ stat_calc_bg <- function(params, comp_number, stats_comp){
   cat(file = stderr(), "function stat_calc_bg....end", "\n")
 }
 
+#-------------------------------------------------------------------------------
+save_stat_options <- function(session, input, output, params) {
+  cat(file = stderr(), "function save_stat_options...", "\n")
+  
+  params$pvalue_cutoff <<- input$pvalue_cutoff
+  params$pair_comp <<- input$pair_comp
+  params$checkbox_adjpval <<- input$checkbox_adjpval
+  params$padjust_options <<- input$padjust_options
+  params$foldchange_cutoff <<- input$foldchange_cutoff
+  params$missing_factor <<- input$missing_factor
+  
+  param_save_to_database()
+  
+}
+
+#---------------------------------------------------------------------------------------------------------------------
+#----------------------------------------------------------------------------------------
+# create final excel documents
+stats_Final_Excel <- function(session, input, output, params) {
+  cat(file = stderr(), "function stats_Final_Excel...", "\n")
+  showModal(modalDialog("Creating/Saving excel file...", footer = NULL))  
+  
+  require(openxlsx)
+  
+  file_dir <- stringr::str_c(params$data_path, input$stats_norm_type) 
+  filename <- string4::str_c(params$data_path, input$stats_norm_type, "//", input$final_stats_name)
+  
+  if (!is_dir(file_dir)) {
+    cat(file = stderr(), str_c("create_dir...", file_dir), "\n")
+    dir_create(file_dir)
+  }
+  
+  bg_excel <- callr::r_bg(func = stats_Final_Excel_bg, args = list(file_dir, filename, params), stderr = stringr::str_c(params$error_path, "//error_finalexcel.txt"), supervise = TRUE)
+  bg_excel$wait()
+  print_stderr("error_finalexcel.txt")
+
+  cat(file = stderr(), "function stats_Final_Excel...end", "\n")
+  removeModal()
+}
 
 
+#----------------------------------------------------------------------------------------
+# create final excel documents
+stats_Final_Excel_bg <- function(file_dir, filename, params) {
+  cat(file = stderr(), "Creating Excel Output File...1", "\n")
+  require(openxlsx)
 
+  conn <- RSQLite::dbConnect(RSQLite::SQLite(), params$database_path)
+  stats_comp <- RSQLite::dbReadTable(conn, "stats_comp")
+  
+  cat(file = stderr(), "Creating Excel Output File...2", "\n")
+  # Excel worksheets for Precursor/Protein
+  if (params$raw_data_format == "precursor" && params$data_output == "Protein") {
+    excel_list <- list('precursor_start', 'raw_peptide', stringr::str_c("precursor_impute_", params$stat_norm), 
+                       stringr::str_c("protein_", params$stat_norm, "_final"))
+    excel_list_name <- list('Raw Precursor Data', 'Raw Peptide Data', 'Imputed Precursor Data', 'Normalized Data')
+  }
+  
+  # add stat comparisons to excel list
+  for (i in 1:nrow(stats_comp))  {
+    excel_list <- c(excel_list, stats_comp$Final_Table_Name[i])
+    excel_list_name <- c(excel_list_name, stats_comp$Name[i])
+  }
+  
+  cat(file = stderr(), "Creating Excel Output File...3", "\n")
+  # build Excel file
+  nextsheet <- 1
+  wb <- createWorkbook()
+  for (i in 1:length(excel_list)) {
+    addWorksheet(wb, excel_list_name[i])
+    table_name <- unlist(excel_list[i])
+    excel_df <- RSQLite::dbReadTable(conn, table_name)
+    writeData(wb, sheet = nextsheet, excel_df)
+    nextsheet <- nextsheet + 1 
+  }  
 
+  RSQLite::dbDisconnect(conn)
 
-
-
+  cat(file = stderr(), "writting excel to disk...", "\n")
+  saveWorkbook(wb, filename, overwrite = TRUE)
+  cat(file = stderr(), stringr::str_c("Creating Excel Output File...", filename), "\n")
+}
 

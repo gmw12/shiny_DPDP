@@ -179,12 +179,13 @@ stat_add <- function(df, df_missing, params, comp_number, stats_comp, df_design)
   colnames(df)[(ncol(df) - sample_count + 1):ncol(df)] <- sample_names
   
   cat(file = stderr(), "stat_add...2", "\n")
-  df_N <- df_samples[, str_to_numlist(stats_comp$N_loc[comp_number])]
-  df_D <- df_samples[, str_to_numlist(stats_comp$D_loc[comp_number])]
-  df_SPQC <- df_samples[, str_to_numlist(stats_comp$SPQC_loc[comp_number])]
   
-  df_N_missing <- df_missing[, str_to_numlist(stats_comp$N_loc[comp_number])]
-  df_D_missing <- df_missing[, str_to_numlist(stats_comp$D_loc[comp_number])]
+  df_N <- df_samples |> dplyr::select(starts_with(stats_comp$FactorsN[comp_number]))
+  df_D <- df_samples |> dplyr::select(starts_with(stats_comp$FactorsD[comp_number]))
+  df_SPQC <- df_samples |> dplyr::select(starts_with(params$comp_spqc))
+  
+  df_N_missing <- df_missing |> dplyr::select(starts_with(stats_comp$FactorsN[comp_number]))
+  df_D_missing <- df_missing |> dplyr::select(starts_with(stats_comp$FactorsD[comp_number]))
 
   cat(file = stderr(), "stat_add...3", "\n")
   df[[stringr::str_c(stats_comp$FactorsN[comp_number], "_CV")]] <- percentCV_gw(df_N)
@@ -198,7 +199,7 @@ stat_add <- function(df, df_missing, params, comp_number, stats_comp, df_design)
   
   cat(file = stderr(), "stat_add...5", "\n")
   if (params$checkbox_adjpval) {
-    df[[stringr::str_c(stats_comp$Name[comp_number], "_adjpval")]] <- p.adjust(df[[stringr::str_c(stats_comp$Name[comp_number], "_pval")]] , method = input$padjust_options) 
+    df[[stringr::str_c(stats_comp$Name[comp_number], "_adjpval")]] <- p.adjust(df[[stringr::str_c(stats_comp$Name[comp_number], "_pval")]] , method = params$padjust_options) 
   }
   
   if (params$checkbox_cohensd) {
@@ -283,8 +284,6 @@ add_imputed_df <- function(df, params, stats_comp, comp_number, table_name) {
   return(list(df, df_missing))
 }
 
-
-#-------------------------------------------------------------------------------
 
 
 

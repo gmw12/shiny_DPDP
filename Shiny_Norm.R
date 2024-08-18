@@ -3,6 +3,7 @@ cat(file = stderr(), "Shiny_Norm.R", "\n")
 
 norm_filter <- function() {
   cat(file = stderr(), "Function - norm_filter...", "\n")
+  showModal(modalDialog("Setting normalization parameters...", footer = NULL))
   
   if (params$raw_data_format == "precursor") {
     cat(file = stderr(), "norm filter precursor...", "\n")
@@ -16,6 +17,7 @@ norm_filter <- function() {
   } 
 
   cat(file = stderr(), "Function - norm_filter...end", "\n\n")
+  removeModal()
 }
 
 
@@ -57,6 +59,7 @@ norm_filter_bg <- function(table_name, new_table_name, params) {
 #--------------------------------------------------------------------------------------
 norm_apply <- function(){
   cat(file = stderr(), "Function - norm_apply...", "\n")
+  showModal(modalDialog("Normalizing data...", footer = NULL))
   
   norm_type <- as.list(strsplit(params$norm_type, ",")[[1]])
   
@@ -90,6 +93,7 @@ norm_apply <- function(){
   print_stderr("error_normbarplot.txt")
   
   cat(file = stderr(), "Function - norm_apply...end", "\n\n")
+  removeModal()
 }
 
 

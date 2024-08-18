@@ -6,6 +6,12 @@ read_table <- function(table_name){
   return(df)
 }
 
+write_table <- function(table_name, df){
+  conn <- dbConnect(RSQLite::SQLite(), params$database_path) 
+  RSQLite::dbWriteTable(conn, table_name, df, overwrite = TRUE)
+  RSQLite::dbDisconnect(conn)
+}
+
 list_tables <- function(table_name){
   conn <- dbConnect(RSQLite::SQLite(), params$database_path) 
   table_list <- dbListTables(conn)
@@ -22,7 +28,7 @@ test_design <- read_table("design")
 test_protein_missing <- read_table("protein_missing")
 
 
-
+test2 <- read_table('protein_sltmm')
 
 
 
@@ -431,3 +437,46 @@ t4 <- sort(t3)
 t5 <- unique(t4)
 
 t6 <- reduce_imputed_df(df_missing)
+
+
+plotdf <- df2[seq(1, nrow(df2), 10),]
+
+ggplot2::ggplot(plotdf, ggplot2::aes(x = ID, y = vec)) +
+  ggplot2::geom_point(ggplot2::aes(colour = "blue") ) +
+  ggplot2::theme_minimal() +
+  ggplot2::theme(legend.position = "none") +
+  ggplot2::geom_vline(xintercept = ipede[3]) +
+  ggplot2::labs(title = stringr::str_c("Dataset Values - Inflection = ", params$noise_inflection), x =
+                  'Count', y = "Intensity") +
+  ggplot2::theme(plot.title = ggplot2::element_text(hjust = 0.5))
+ggplot2::ggsave(stringr::str_c(params$qc_path, "Inflection_Point.png"), width = 8, height = 6)
+
+
+ipese = ese(df2$ID, df2$vec, cc2$index, doparallel = TRUE)
+ipede = bede(df$ID, df$ved, cc$index)
+ipbede2 = bede(df2$ID, df2$vec, cc2$index)
+
+test = nrow(df2)
+df3 = df2[(test/2):(nrow(df2)),]
+cc3 <- check_curve(df3$ID, df3$vec)
+
+df2 <- df[ipede[3]:(nrow(df)),]
+
+cc2 <- check_curve(df2$ID, df2$vec)
+cat(file = stderr(), stringr::str_c("inflection, check_curve = ", cc2$ctype), "\n")
+cat(file = stderr(), stringr::str_c("inflection, index = ", cc2$index), "\n")
+
+ipede3 = ede(df3$ID, df3$vec, cc3$index)
+
+
+test = read_table("precursor_start")
+raw_peptide <- collapse_precursor_raw(test, info_columns = 0, stats = FALSE, params)
+write_table("raw_peptide", raw_peptide)
+
+test1 = read_table("protein_sltmm")
+test2 = read_table("protein_sltmm_cv")
+
+#combine df and cv data
+test <- cbind(test1, test2[,2:ncol(test2)])
+write_table("protein_sltmm_final", test)
+

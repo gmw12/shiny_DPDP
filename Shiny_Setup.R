@@ -34,6 +34,7 @@ load_parameters <- function(session, input, output){
 #---------------------------------------------------------------------
 load_design_file <- function(session, input, output){
   cat(file = stderr(), "Function load_design_file", "\n")
+  showModal(modalDialog("Loading design file...", footer = NULL))
   
   design_sbf <- parseFilePaths(volumes, input$sfb_design_file)
   params$design_path <<- str_extract(design_sbf$datapath, "^/.*/")
@@ -67,6 +68,7 @@ load_design_file <- function(session, input, output){
   param_save_to_database()
   
   cat(file = stderr(), "Function load_design_file...end", "\n")
+  removeModal()
 }
 
 
@@ -97,10 +99,10 @@ set_sample_groups <- function(session, input, output, params){
   bg_samplegroups <- callr::r_bg(set_sample_groups_bg, args = list(session, input, output, params), stderr = str_c(params$error_path, "//error_setsamplegroups.txt"), supervise = TRUE)
   bg_samplegroups$wait()
   print_stderr("error_setsamplegroups.txt")
-  removeModal()
   
   params <<- param_load_from_database()
   cat(file = stderr(), "set_sample_groups...end", "\n")
+  removeModal()
 }
 
 #----------------------------------------------------------------------------------------

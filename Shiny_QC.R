@@ -70,20 +70,24 @@ qc_stats_bg <- function(params){
     stat_df <- df[1:1]
     
     #reduce to data only
-    df <- df[,(ncol(df) - params$sample_number + 1):ncol(df)]
+    df_data <- df[,(ncol(df) - params$sample_number + 1):ncol(df)]
     
     #generate %CV's for each group
     for (i in 1:nrow(df_groups)) 
     {
-      stat_df[ , stringr::str_c(df_groups$Group[i], "_CV")] <- percentCV_gw(df[df_groups$start[i]:df_groups$end[i]])
+      stat_df[ , stringr::str_c(df_groups$Group[i], "_CV")] <- percentCV_gw(df_data[df_groups$start[i]:df_groups$end[i]])
     } 
 
     avg_cv <- colMeans(stat_df[,2:ncol(stat_df)], na.rm = TRUE)
     summary_cv <- cbind(summary_cv, avg_cv)
     colnames(summary_cv)[ncol(summary_cv)] <- norm
     
+    #combine df and cv data
+    df <- cbind(df, stat_df[,2:ncol(stat_df)])
+    
     #save CV data to db
     RSQLite::dbWriteTable(conn, stringr::str_c(table_name, "_cv"), stat_df, overwrite = TRUE)
+    RSQLite::dbWriteTable(conn, stringr::str_c(table_name, "_final"), df, overwrite = TRUE)
   }
 
   RSQLite::dbWriteTable(conn, "summary_cv", summary_cv, overwrite = TRUE)

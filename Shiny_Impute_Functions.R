@@ -1,15 +1,43 @@
 cat(file = stderr(), "Shiny_Impute_Functions.R", "\n")
 
+
 #--------------------------------------------------------------------------------
 # imputation of missing data
 impute_duke <- function(df, df_random, df_groups, params) {
   cat(file = stderr(), "Function - impute_duke...", "\n")
+  source('Shiny_File.R')
   
   df_impute <- df[1:(ncol(df) - params$sample_number)]
   df <- df[(ncol(df) - params$sample_number + 1):ncol(df)]
   df <- log(df,2)
   
   for (i in 1:nrow(df_groups)) {
+    cat(file = stderr(), stringr::str_c("Function - impute_duke...", i), "\n")
+    bg_name <- stringr::str_c('bg_impute_duke_', i)
+    bg_file <- stringr::str_c(params$error_path, "//error_", bg_name, ".txt")
+    assign(bg_name, callr::r_bg(func = impute_duke_bg, args = list(df, df_random, df_groups, params, i), stderr = bg_file, supervise = TRUE))
+  }
+  
+  for (i in 1:nrow(df_groups)) {
+    cat(file = stderr(), stringr::str_c("Function - impute_duke...wait", i), "\n")
+    bg_name <- stringr::str_c('bg_impute_duke_', i)
+    bg_impute <- get(bg_name)
+    bg_impute$wait()
+    df_temp <- bg_impute$get_result()
+    df_impute <- cbind(df_impute, df_temp)
+    print_stderr2(stringr::str_c("error_", bg_name, ".txt"), params)
+  }
+
+  cat(file = stderr(), "Function - impute_duke...end", "\n")
+  
+  return(df_impute)
+}
+
+#--------------------------------------------------------------------------------
+# imputation of missing data
+impute_duke_bg <- function(df, df_random, df_groups, params, i) {
+  cat(file = stderr(), stringr::str_c("Function - impute_duke_bg...", i), "\n")
+  
     # calculate stats for each sample group
     df_temp <- data.frame(df[c(df_groups$start[i]:df_groups$end[i])])
     df_temp_random <- data.frame(df_random[c(df_groups$start[i]:df_groups$end[i])])
@@ -26,8 +54,9 @@ impute_duke <- function(df, df_random, df_groups, params) {
       df_impute_bin <- RSQLite::dbReadTable(conn, df_impute_bin_name)
       RSQLite::dbDisconnect(conn)
       
-      # if the number of missing values <= minimum then will impute based on normal dist of measured values
+
       find_rows <- which(df_temp$missings > 0 & df_temp$missings <= df_temp$max_missing)
+      
       for (j in find_rows) {
         findsd <- df_impute_bin |> dplyr::filter(df_temp$average[j] >= min2, df_temp$average[j] <= max)
         for (k in 1:df_groups$Count[i]) {
@@ -36,17 +65,20 @@ impute_duke <- function(df, df_random, df_groups, params) {
           }
         }
       }
+      
     }
+    
     df_temp <- df_temp[1:df_groups$Count[i]]
     df_temp <- data.frame(2^df_temp)
-    df_impute <- cbind(df_impute, df_temp[1:df_groups$Count[i]])
-  }
+    df_temp <- df_temp[1:df_groups$Count[i]]
   
-   
-    cat(file = stderr(), "Function - impute_duke...end", "\n")
-    
-  return(df_impute)
+    cat(file = stderr(), stringr::str_c("Function - impute_duke_bg...", i, "  end"), "\n")
+  
+  return(df_temp)
 }
+
+
+
 
 #--------------------------------------------------------------------------------
 # imputation of missing data

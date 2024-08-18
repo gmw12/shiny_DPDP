@@ -3,6 +3,7 @@ cat(file = stderr(), "load Shiny_Filter.R", "\n")
 #-------------------------------------------------------------------------------------------#----------------------------------------------------------------------------------------
 filter_data <- function(session, input, output){
   cat(file = stderr(), "Function - filter_data...", "\n")
+  showModal(modalDialog("Applying data filters...", footer = NULL))
 
   if (params$raw_data_format == "precursor") {
     cat(file = stderr(), "preprocess filter precursor...", "\n")
@@ -12,6 +13,7 @@ filter_data <- function(session, input, output){
   } 
   
   cat(file = stderr(), "Function - filter_data...end", "\n\n")
+  removeModal()
 }
 
 #----------------------------------------------------------------------------------------

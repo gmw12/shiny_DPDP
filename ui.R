@@ -500,7 +500,7 @@ source("Shiny_UI.R")
                     checkboxInput("pair_comp", label = "Pairwise Comparisons"),
                     checkboxInput("checkbox_adjpval", label = "Include adjusted pvalue?"),
                     hidden(selectInput("padjust_options", label = "p.adjust method", choices = list("holm", "hochberg", "hommel", "bonferroni", "BH", "BY", "fdr"), 
-                                       selected = "bonferroni")),
+                                       selected = "fdr")),
                     numericInput("foldchange_cutoff", label = "Fold Change cutoff", value = 1.5),
                     numericInput("missing_factor", label = "Measured % (decimal)", value = 0.6),
                     hr(),
@@ -534,6 +534,9 @@ source("Shiny_UI.R")
                     checkboxInput("checkbox_cohensd", label = "Include Cohen's D?"),
                     checkboxInput("checkbox_cohensd_hedges", label = "Use Hedge's Correction (low N)?"),
                     checkboxInput("checkbox_limmapvalue", label = "Include Limma Pvalue?"),
+                    br(),
+                    actionButton("stat_options", label = "Save Stat Options", width = 300,
+                                 style = "color: #fff; background-color: #337ab7; border-color: #2e6da4")
                 ),
                 
                 box(id = "stats_design_box", title = "Stats Design...", status = "primary",

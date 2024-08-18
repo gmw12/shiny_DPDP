@@ -4,6 +4,7 @@ cat(file = stderr(), "Shiny_Tables.R", "\n")
 #load design table
 create_design_table <- function(session, input, output){
   cat(file = stderr(), "Function create_design_table", "\n")
+  showModal(modalDialog("Creating design table...", footer = NULL))
   
   bg_designtable <- callr::r_bg(create_design_table_bg, args = list(params$database_path), stderr = str_c(params$error_path, "//error_designtable.txt"), supervise = TRUE)
   bg_designtable$wait()
@@ -13,6 +14,7 @@ create_design_table <- function(session, input, output){
   output$stats_design_table <-  renderRHandsontable(design_DT)
   
   cat(file = stderr(), "Function create_design_table...end", "\n\n")
+  removeModal()
 }
 
 #--------------------------------
@@ -41,6 +43,7 @@ create_design_table_bg <- function(database_path){
 #load design table
 create_stats_design_table <- function(session, input, output){
   cat(file = stderr(), "Function create_stats_design_table", "\n")
+  showModal(modalDialog("Creating stats design table...", footer = NULL))
   
   bg_designtable <- callr::r_bg(create_stats_design_table_bg, args = list(params$database_path), stderr = str_c(params$error_path, "//error_statsdesigntable.txt"), supervise = TRUE)
   bg_designtable$wait()
@@ -50,6 +53,7 @@ create_stats_design_table <- function(session, input, output){
   output$stats_design_table2 <-  renderRHandsontable(design_DT)
 
   cat(file = stderr(), "Function create_stats_design_table...end", "\n")
+  removeModal()
 }
 
 #--------------------------------

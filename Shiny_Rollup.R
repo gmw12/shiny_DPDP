@@ -69,42 +69,31 @@ stat_prep_rollup <- function(session, input, output){
 }
 
 #--- collapse precursor to peptide-------------------------------------------------------------
-collapse_precursor <- function(precursor_data, info_columns = 0, stats = FALSE) {
+collapse_precursor_raw <- function(precursor_data, info_columns = 0, stats = FALSE, params) {
   cat(file = stderr(), "precursor rollup_sum triggered...", "\n")
-  
-  #precursor_data <- dpmsr_set$data$impute$sltmm
-  #precursor_data <- df_raw
-  #precursor_data <- dpmsr_set$data$data_precursor_start
   
   #drop columns 
   precursor_data$PrecursorId <- NULL
   precursor_data$Detected_Imputed <- NULL
   
   if (info_columns == 0) {
-    info_columns <- ncol(precursor_data) - dpmsr_set$y$sample_number
+    info_columns <- ncol(precursor_data) - params$sample_number
   }
   
   if (stats == TRUE) {
     info_columns = info_columns - 2
   }
-  
-  
+
   #save sample column number to reset info columns below
   sample_columns <- ncol(precursor_data) - info_columns
   
   columns = names(precursor_data)[1:info_columns]
   
   peptide_data <- precursor_data |>
-    group_by_at(vars(one_of(columns))) |>
-    summarise_all(list(sum))
+    dplyr::group_by_at(dplyr::vars(one_of(columns))) |>
+    dplyr::summarise_all(list(sum))
   
-  peptide_data <- data.frame(ungroup(peptide_data))
-  
-  if (nrow(peptide_data) == length(dpmsr_set$data$peptide_missing)) {
-    peptide_data <- add_column(peptide_data, dpmsr_set$data$peptide_missing, .after = "Sequence")
-    #col_pos <- grep("Sequence", colnames(peptide_data)) + 1
-    names(peptide_data)[grep("Sequence", colnames(peptide_data)) + 1] <- "Detected_Imputed"
-  } 
+  peptide_data <- data.frame(dplyr::ungroup(peptide_data))
   
   cat(file = stderr(), "precursor rollup_sum triggered...end", "\n")
   return(peptide_data)

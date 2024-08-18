@@ -19,6 +19,7 @@ if (!exists('params')) {
 
 shinyServer(function(session, input, output) {
   cat(file = stderr(), "\n\n", "Shiny Server started ...1", "\n")
+  showModal(modalDialog("Loading app...", footer = NULL))
   
   source("Shiny_Source.R")
   hide_enable(session, input, output)
@@ -38,6 +39,7 @@ shinyServer(function(session, input, output) {
     create_stats_design_table(session, input, output)
     }
   if (table_exists("summary_cv"))  {create_cv_table(session, input, output, params)}
+  removeModal()
   
   #------------------------------------------------------------------------------------------------------  
   #Load design file
@@ -46,8 +48,6 @@ shinyServer(function(session, input, output) {
     cat(file = stderr(), "\n\n", "sfb_design_file button clicked...", "\n")
     
     if (is.list(input$sfb_design_file)) {
-      
-      showModal(modalDialog("Loading design file, creating database...", footer = NULL))
       
       #load design from excel, create database
       load_design_file(session, input, output)
@@ -66,7 +66,6 @@ shinyServer(function(session, input, output) {
       design_sbf <- parseFilePaths(volumes, input$sfb_design_file)
       save_data(design_sbf$datapath)
       
-      removeModal()
     }
 
   })
@@ -80,7 +79,6 @@ shinyServer(function(session, input, output) {
     cat(file = stderr(), "\n\n","sfb_data_file button clicked...", "\n")
     
     if (is.list(input$sfb_data_file)) {
-      showModal(modalDialog("Loading data...", footer = NULL))
       
       #read data files
       load_data_file(session, input, output)
@@ -90,7 +88,6 @@ shinyServer(function(session, input, output) {
       ui_render_load_data(session, input, output)
       ui_render_load_design(session, input, output)
       
-      removeModal()
     }
 
   }) 
@@ -142,7 +139,7 @@ shinyServer(function(session, input, output) {
   
   observeEvent(input$noise_apply, {
     cat(file = stderr(), "noise apply clicked", "\n")  
-    
+
     #save noise inputs to params file
     noise_widget_save(session, input, output)
     
@@ -150,7 +147,6 @@ shinyServer(function(session, input, output) {
     noise_remove(session, input, output, params)
       
     cat(file = stderr(), "noise apply...end", "\n")
-    
   })
   
   
@@ -172,8 +168,6 @@ shinyServer(function(session, input, output) {
  
  observeEvent(input$filter_apply, {
    cat(file = stderr(), "filter apply clicked", "\n")
-
-   showModal(modalDialog("Applying data filters...", footer = NULL))
    
    #save filter inputs to params file
    filter_widget_save(session, input, output)
@@ -187,7 +181,7 @@ shinyServer(function(session, input, output) {
    #gather meta data for filtered dataframe
    meta_data("filter")
    
-   removeModal()
+   cat(file = stderr(), "filter apply clicked...end", "\n")
  })
  
   
@@ -195,7 +189,6 @@ shinyServer(function(session, input, output) {
 
  observeEvent(input$norm_parameters, {
    cat(file = stderr(), "norm parameters clicked", "\n")
-   showModal(modalDialog("Setting normalization parameters...", footer = NULL))
    
    norm_widget_save(session, input, output)
    
@@ -203,15 +196,13 @@ shinyServer(function(session, input, output) {
    
    render_norm_graphs(session, input, output)
 
-   removeModal()
-   
+   cat(file = stderr(), "norm parameters clicked...end", "\n")
  })
  
 #------------------------------------------------------------------------------------------------------  
  
  observeEvent(input$norm_apply, {
    cat(file = stderr(), "norm apply clicked", "\n")
-   showModal(modalDialog("Normalizing data...", footer = NULL))
    
    norm_apply_widget_save(session, input, output)
    
@@ -219,7 +210,7 @@ shinyServer(function(session, input, output) {
    
    render_norm_apply_graphs(session, input, output)
    
-   removeModal()
+   cat(file = stderr(), "norm apply clicked...end", "\n")
  })
 
    
@@ -242,6 +233,7 @@ shinyServer(function(session, input, output) {
    impute_create_plots(session, input, output, params)
    render_impute_graphs(session, input, output)
    
+   cat(file = stderr(), "impute parameters clicked...end", "\n")
  })
  
   #------------------------------------------------------------------------------------------------------   
@@ -251,6 +243,7 @@ shinyServer(function(session, input, output) {
     
     impute_apply(session, input, output)
     
+    cat(file = stderr(), "impute_apply clicked...end", "\n")
   })
  
   #------------------------------------------------------------------------------------------------------   
@@ -269,6 +262,7 @@ shinyServer(function(session, input, output) {
     create_cv_table(session, input, output, params)
     render_qc_graphs(session, input, output)
     
+    at(file = stderr(), "rollup_apply clicked...end", "\n")
   }) 
  
   
@@ -278,6 +272,7 @@ shinyServer(function(session, input, output) {
     
     qc_protein_plots(session, input, output, params)
     
+    cat(file = stderr(), "\n", "protein_plot_apply clicked...end", "\n")
   }) 
   
   #------------------------------------------------------------------------------------------------------   
@@ -286,14 +281,22 @@ shinyServer(function(session, input, output) {
     
     qc_spike_plots(session, input, output, params)
     
+    cat(file = stderr(), "protein_plot_apply clicked...end", "\n")
   }) 
   
+  #------------------------------------------------------------------------------------------------------   
+  observeEvent(input$stat_options, {
+    cat(file = stderr(), "stat_options clicked", "\n")
+    
+    save_stat_options(session, input, output, params)
+    
+    cat(file = stderr(), "stat_options clicked... end", "\n")
+  }) 
   
   #-------------------------------------------------------------------------------------------------------------
   observeEvent(input$check_stats, {
     cat(file = stderr(), "check_stats clicked...", "\n")
-    showModal(modalDialog("Setting Stat groups...", footer = NULL))  
-   
+    
     #save parameters
     stat_widget_save(session, input, output) 
     
@@ -302,8 +305,7 @@ shinyServer(function(session, input, output) {
     if (is.null(input$comp_spqc)) {
       shinyalert("Oops!", "Please choose and SPQC group!", type = "error")
     }
-    
-    removeModal()
+
     cat(file = stderr(), "check_stats clicked...end", "\n")
   })  
   
@@ -311,15 +313,21 @@ shinyServer(function(session, input, output) {
   #-------------------------------------------------------------------------------------------------------------
   observeEvent(input$start_stats, {
     cat(file = stderr(), "start_stats clicked...", "\n")
-    showModal(modalDialog("Calculating stats...", footer = NULL))  
     
     stat_calc(session, input, output)
-    
-    removeModal()
+
     cat(file = stderr(), "start_stats clicked...end", "\n")
   })   
   
   
+  #-------------------------------------------------------------------------------------------------------------
+  observeEvent(input$save_stats, {
+    cat(file = stderr(), "save_stats clicked...", "\n")
+    
+    stats_Final_Excel(session, input, output, params)
+    
+    cat(file = stderr(), "save_stats clicked...end", "\n")
+  })   
   
   
   

@@ -4,6 +4,7 @@ cat(file = stderr(), "Shiny_Impute.R", "\n")
 impute_apply <- function(session, input, output) {
   cat(file = stderr(), "Function - impute_apply...", "\n")
   showModal(modalDialog("Apply Imputation...", footer = NULL))
+  start <- Sys.time()
   
   norm_type <- as.list(strsplit(params$norm_type, ",")[[1]])
   
@@ -27,7 +28,7 @@ impute_apply <- function(session, input, output) {
   
   
   removeModal()
-  cat(file = stderr(), "Function - impute_apply...end", "\n\n")
+  cat(file = stderr(), stringr::str_c("Function - impute_apply...end (completed in ", Sys.time() - start, ")") , "\n\n")
 }
 
 #----------------------------------------------------------------------------------------------------
@@ -36,6 +37,7 @@ impute_apply_bg <- function(norm_type, params) {
   cat(file = stderr(), "Function - impute_apply_bg...", "\n")
 
   source("Shiny_Impute.R")
+  source("Shiny_File.R")
 
   conn <- RSQLite::dbConnect(RSQLite::SQLite(), params$database_path)
   df_random <- RSQLite::dbReadTable(conn, "random")
@@ -63,6 +65,7 @@ impute_apply_bg <- function(norm_type, params) {
     bg_name <- stringr::str_c('bg_impute_', norm)
     bg_impute <- get(bg_name)
     bg_impute$wait()
+    print_stderr2(stringr::str_c("error_", bg_name, ".txt"), params)
   }
   
   cat(file = stderr(), "Function - impute_apply_bg...end", "\n")
