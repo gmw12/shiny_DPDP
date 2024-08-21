@@ -140,3 +140,24 @@ print_stderr2 <- function(file_name, params){
     cat(file = stderr(), error_list[i], "\n")
   }
 }
+
+
+read_table <- function(table_name){
+  conn <- RSQLite::dbConnect(RSQLite::SQLite(), params$database_path) 
+  df <- RSQLite::dbReadTable(conn, table_name)
+  RSQLite::dbDisconnect(conn)
+  return(df)
+}
+
+write_table <- function(table_name, df, params){
+  conn <- RSQLite::dbConnect(RSQLite::SQLite(), params$database_path) 
+  RSQLite::dbWriteTable(conn, table_name, df, overwrite = TRUE)
+  RSQLite::dbDisconnect(conn)
+}
+
+list_tables <- function(table_name){
+  conn <- RSQLite::dbConnect(RSQLite::SQLite(), params$database_path) 
+  table_list <- RSQLite::dbListTables(conn)
+  RSQLite::dbDisconnect(conn)
+  return(table_list)
+}

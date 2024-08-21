@@ -89,6 +89,7 @@ app_startup <- function(session, input, output) {
     render_norm_apply_graphs(session, input, output)
     render_filter_histogram_graphs(session, input, output)
     render_impute_graphs(session, input, output) 
+    #create_impute_table(session, input, output) 
     render_qc_graphs(session, input, output) 
  
       

@@ -6,7 +6,7 @@ read_table <- function(table_name){
   return(df)
 }
 
-write_table <- function(table_name, df){
+write_table <- function(table_name, df, params){
   conn <- dbConnect(RSQLite::SQLite(), params$database_path) 
   RSQLite::dbWriteTable(conn, table_name, df, overwrite = TRUE)
   RSQLite::dbDisconnect(conn)
@@ -21,7 +21,8 @@ list_tables <- function(table_name){
 
 list_tables()
 
-testme <- read_table("protein_sltmm_CA_v_DN_final")
+testme <- read_table("precursor_norm_sltmm")
+testme2 <- read_table("temp_df_impute")
 test_design <- read_table("design")
 test_sample_groups <- read_table("sample_groups")
 test_design <- read_table("design")

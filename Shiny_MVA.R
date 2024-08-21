@@ -208,7 +208,7 @@ stats_Final_Excel <- function(session, input, output, params) {
   require(openxlsx)
   
   file_dir <- stringr::str_c(params$data_path, input$stats_norm_type) 
-  filename <- string4::str_c(params$data_path, input$stats_norm_type, "//", input$final_stats_name)
+  filename <- stringr::str_c(params$data_path, input$stats_norm_type, "//", input$final_stats_name)
   
   if (!is_dir(file_dir)) {
     cat(file = stderr(), str_c("create_dir...", file_dir), "\n")

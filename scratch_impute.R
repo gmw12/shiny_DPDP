@@ -269,3 +269,49 @@ for (i in 1:col_max) {
 }
 end <- Sys.time() - start
 end
+
+#-----------------------------------
+df <- read_table("temp_df")
+df_random <- read_table("temp_df_random")
+df_bottomx_data <- read_table("temp_df_bottomx_data")
+
+#calc 100 bins for Bottom X%
+data_dist <- as.vector(t(df_bottomx_data))
+data_dist <- data_dist[!is.na(data_dist)]
+data_dist <- data_dist[data_dist > 0]
+data_dist <- data.frame(data_dist)
+data_dist$bin <- dplyr::ntile(data_dist, 100)  
+bottomx_min <- min(data_dist[data_dist$bin == 1,]$data_dist)
+bottomx_max <- max(data_dist[data_dist$bin == as.numeric(params$bottom_x),]$data_dist)
+
+test <- apply(is.na(df), 2, which)
+test <- test[lapply(test,length) > 0]
+
+find_na <- data.frame(which(is.na(df), arr.ind = TRUE))
+
+#--
+start = Sys.time()
+cl <- makeCluster(cores - 2)
+registerDoParallel(cl)
+
+parallel_result <- foreach(j = 1:nrow(find_na), .combine = c) %dopar% {
+  r <- find_na$row[j]
+  c <- find_na$col[j]
+  bottomx_min + (abs(as.numeric(df_random[r,c])) * (bottomx_max - bottomx_min))
+}
+
+stopCluster(cl) 
+end = Sys.time() - start
+end
+#--
+
+
+find_na$result <- parallel_result
+col_max <- max(find_na$col)
+for (c in 1:col_max) {
+  swap_row <- find_na$row[find_na$col == c]
+  swap_result <- find_na$result[find_na$col == c]
+  df[swap_row, c] <- swap_result
+}
+
+

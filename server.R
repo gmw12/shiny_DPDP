@@ -262,7 +262,7 @@ shinyServer(function(session, input, output) {
     create_cv_table(session, input, output, params)
     render_qc_graphs(session, input, output)
     
-    at(file = stderr(), "rollup_apply clicked...end", "\n")
+    cat(file = stderr(), "rollup_apply clicked...end", "\n")
   }) 
  
   

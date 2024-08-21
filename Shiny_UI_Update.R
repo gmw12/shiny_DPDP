@@ -3,7 +3,7 @@ cat(file = stderr(), "load Shiny_UI_Update.R", "\n")
 #-------------------------------------------------------------------------------------------
 ui_render_load_design <- function(session, input, output) {
   cat(file = stderr(), "Function ui_render_load_design", "\n")
-  showModal(modalDialog("Render design...", footer = NULL))
+  #showModal(modalDialog("Render design...", footer = NULL))
   
   output$data_source <- renderText({str_c("Source:  ", params$data_source)})
   output$data_format <- renderText({str_c("Input format:  ", params$raw_data_format)})
@@ -18,18 +18,18 @@ ui_render_load_design <- function(session, input, output) {
   
   output$design_file_name <- renderText({params$design_file})
   
-  removeModal()
+  #removeModal()
 
   }
 
 #-------------------------------------------------------------------------------------------
 ui_render_load_data <- function(session, input, output) {
   cat(file = stderr(), "Function ui_render_load_data", "\n")
-  showModal(modalDialog("Render data...", footer = NULL))
+  #showModal(modalDialog("Render data...", footer = NULL))
   
   output$data_file_name <- renderText({params$data_file})
   
-  removeModal()
+  #removeModal()
 }
 
 
@@ -95,7 +95,7 @@ ui_render_filter <- function(session, input, output) {
 #-------------------------------------------------------------------------------------------
 render_noise_graphs <- function(session, input, output) {
   cat(file = stderr(), "Function render_filter_graphs", "\n")
-  showModal(modalDialog("Rendering noise graph...", footer = NULL))
+  #showModal(modalDialog("Rendering noise graph...", footer = NULL))
   
   output$noise_total <- renderText({str_c('Total data points:  ', params$noise_total)})
   output$noise_count <- renderText({str_c('Noise data points:  ', params$noise_count)})
@@ -107,7 +107,7 @@ render_noise_graphs <- function(session, input, output) {
   }, deleteFile = FALSE)
  
   cat(file = stderr(), "Function render_filter_graphs...end", "\n")
-  removeModal() 
+  #removeModal() 
 }
 
 
@@ -129,24 +129,26 @@ render_filter_graphs <- function(session, input, output) {
     list(src = str_c(params$qc_path,"Precursor_Filter_barplot.png"), contentType = 'image/png', width = 480, height = 400, alt = "this is alt text")
   }, deleteFile = FALSE)
   
+  cat(file = stderr(), "Function render_filter_graphs...end", "\n")
 }
 
 #-------------------------------------------------------------------------------------------
 render_norm_graphs <- function(session, input, output) {
   cat(file = stderr(), "Function render_norm_graphs", "\n")
-  showModal(modalDialog("Rendering norm graphs...", footer = NULL))
+  #showModal(modalDialog("Rendering norm graphs...", footer = NULL))
 
   output$norm_normdata_bar <- renderImage({
     list(src = str_c(params$qc_path,"Precursor_NormData_barplot.png"), contentType = 'image/png', width = 480, height = 400, alt = "this is alt text")
   }, deleteFile = FALSE)
   
-  removeModal()
+  #removeModal()
+  cat(file = stderr(), "Function render_norm_graphs...end", "\n")
 }
 
 #-------------------------------------------------------------------------------------------
 render_norm_apply_graphs <- function(session, input, output) {
   cat(file = stderr(), "Function render_norm_apply_graphs", "\n")
-  showModal(modalDialog("Render Norm Graphs...", footer = NULL))
+  #showModal(modalDialog("Render Norm Graphs...", footer = NULL))
   
   norm_type <- as.list(strsplit(params$norm_type, ",")[[1]])
   
@@ -154,7 +156,8 @@ render_norm_apply_graphs <- function(session, input, output) {
     list(src = str_c(params$qc_path, "Precursor_", norm_type[1],"_barplot.png"), contentType = 'image/png', width = 480, height = 400, alt = "this is alt text")
   }, deleteFile = FALSE)
   
-  removeModal()
+  #removeModal()
+  cat(file = stderr(), "Function render_norm_apply_graphs...end", "\n")
 }
 
 #-------------------------------------------------------------------------------------------
@@ -168,12 +171,13 @@ render_impute_graphs <- function(session, input, output) {
   output$missing_percent_plot <- renderImage({
     list(src = str_c(params$qc_path,"missing_percent_plot.png"), contentType = 'image/png', width = 420, height = 480, alt = "this is alt text")
   }, deleteFile = FALSE)
-   
+  
+  cat(file = stderr(), "Function render_impute_graphs...end", "\n")  
 }
 
 #-------------------------------------------------------------------------------------------
 render_qc_graphs <- function(session, input, output) {
-  cat(file = stderr(), "Function render_impute_graphs", "\n")
+  cat(file = stderr(), "Function render_qc_graphs", "\n")
   
   output$cv_plot <- renderImage({
     list(src = str_c(params$qc_path,"CV_barplot.png"), contentType = 'image/png', width = 800, height = 400, alt = "this is alt text")
@@ -182,7 +186,7 @@ render_qc_graphs <- function(session, input, output) {
   norm_type <- as.list(strsplit(params$norm_type, ",")[[1]])
   counter <- seq(1:length(norm_type))
 
-  image_render_loop = function(){
+  image_render_loop <- function(){
     lapply(counter, 
            function(x) {
              norm <- norm_type[x]
@@ -210,7 +214,7 @@ render_qc_graphs <- function(session, input, output) {
   #   i <- i + 1
   # }
    
-
+  cat(file = stderr(), "Function render_qc_graphs...end", "\n")
 }
 
 

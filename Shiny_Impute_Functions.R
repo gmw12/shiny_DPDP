@@ -5,39 +5,33 @@ cat(file = stderr(), "Shiny_Impute_Functions.R", "\n")
 # imputation of missing data
 impute_duke <- function(df, df_random, df_groups, params) {
   cat(file = stderr(), "Function - impute_duke...", "\n")
+
   source('Shiny_File.R')
   
+  
+  #write_table("temp_df", df, params)
+  #write_table("temp_df_random", df_random, params)
+  #write_table("temp_df_groups", df_groups, params)
+  
+  #df <- read_table("temp_df")
+  #df_random <- read_table("temp_df_random")
+  #df_groups <- read_table("temp_df_groups")
+  
+  
+
+  require(foreach)
+  require(doParallel)
+  cores <- detectCores()
+
+  
+  #save info columns for final df
   df_impute <- df[1:(ncol(df) - params$sample_number)]
+  
+  #reduce to samples only
   df <- df[(ncol(df) - params$sample_number + 1):ncol(df)]
   df <- log(df,2)
   
   for (i in 1:nrow(df_groups)) {
-    cat(file = stderr(), stringr::str_c("Function - impute_duke...", i), "\n")
-    bg_name <- stringr::str_c('bg_impute_duke_', i)
-    bg_file <- stringr::str_c(params$error_path, "//error_", bg_name, ".txt")
-    assign(bg_name, callr::r_bg(func = impute_duke_bg, args = list(df, df_random, df_groups, params, i), stderr = bg_file, supervise = TRUE))
-  }
-  
-  for (i in 1:nrow(df_groups)) {
-    cat(file = stderr(), stringr::str_c("Function - impute_duke...wait", i), "\n")
-    bg_name <- stringr::str_c('bg_impute_duke_', i)
-    bg_impute <- get(bg_name)
-    bg_impute$wait()
-    df_temp <- bg_impute$get_result()
-    df_impute <- cbind(df_impute, df_temp)
-    print_stderr2(stringr::str_c("error_", bg_name, ".txt"), params)
-  }
-
-  cat(file = stderr(), "Function - impute_duke...end", "\n")
-  
-  return(df_impute)
-}
-
-#--------------------------------------------------------------------------------
-# imputation of missing data
-impute_duke_bg <- function(df, df_random, df_groups, params, i) {
-  cat(file = stderr(), stringr::str_c("Function - impute_duke_bg...", i), "\n")
-  
     # calculate stats for each sample group
     df_temp <- data.frame(df[c(df_groups$start[i]:df_groups$end[i])])
     df_temp_random <- data.frame(df_random[c(df_groups$start[i]:df_groups$end[i])])
@@ -54,16 +48,31 @@ impute_duke_bg <- function(df, df_random, df_groups, params, i) {
       df_impute_bin <- RSQLite::dbReadTable(conn, df_impute_bin_name)
       RSQLite::dbDisconnect(conn)
       
-
-      find_rows <- which(df_temp$missings > 0 & df_temp$missings <= df_temp$max_missing)
       
-      for (j in find_rows) {
-        findsd <- df_impute_bin |> dplyr::filter(df_temp$average[j] >= min2, df_temp$average[j] <= max)
-        for (k in 1:df_groups$Count[i]) {
-          if (is.na(df_temp[j,k])) {
-            df_temp[j,k] = df_temp$average[j] + (df_temp_random[j,k] * findsd$sd[1])
-          }
-        }
+      find_rows <- which((df_temp$missings > 0 & df_temp$missings <= df_temp$max_missing))
+      find_na <- data.frame(which(is.na(df_temp[,1:df_groups$Count[i]]), arr.ind = TRUE))
+      find_final <- dplyr::filter(find_na, row %in% find_rows)
+      
+      #--
+      cl <- makeCluster(cores - 2)
+      registerDoParallel(cl)
+      
+      parallel_result <- foreach(j = 1:nrow(find_final), .combine = c) %dopar% {
+        r <- find_final$row[j]
+        c <- find_final$col[j]
+        findsd <- df_impute_bin |> dplyr::filter(df_temp$average[r] >= min2, df_temp$average[r] <= max)
+        df_temp$average[r] + (df_temp_random[r,c] * findsd$sd[1])
+      }
+
+      stopCluster(cl) 
+      #--
+      
+      find_final$result <- parallel_result
+      col_max <- max(find_final$col)
+      for (c in 1:col_max) {
+        swap_row <- find_final$row[find_final$col == c]
+        swap_result <- find_final$result[find_final$col == c]
+        df_temp[swap_row, c] <- swap_result
       }
       
     }
@@ -71,19 +80,32 @@ impute_duke_bg <- function(df, df_random, df_groups, params, i) {
     df_temp <- df_temp[1:df_groups$Count[i]]
     df_temp <- data.frame(2^df_temp)
     df_temp <- df_temp[1:df_groups$Count[i]]
+    
+    df_impute <- cbind(df_impute, df_temp)
+    
+    
+  }
   
-    cat(file = stderr(), stringr::str_c("Function - impute_duke_bg...", i, "  end"), "\n")
+ 
+  cat(file = stderr(), "Function - impute_duke...end", "\n")
   
-  return(df_temp)
+  
+  #write_table("temp_df_impute", df_impute, params)
+  
+  return(df_impute)
 }
-
-
 
 
 #--------------------------------------------------------------------------------
 # imputation of missing data
 impute_bottomx <- function(df, df_random, params){
   cat(file = stderr(), "apply_bottomx function...", "\n")
+  
+  source("Shiny_File.R")
+  
+  require(foreach)
+  require(doParallel)
+  cores <- detectCores()
   
   df_impute <- df[1:(ncol(df) - params$sample_number)]
   
@@ -113,17 +135,30 @@ impute_bottomx <- function(df, df_random, params){
   bottomx_min <- min(data_dist[data_dist$bin == 1,]$data_dist)
   bottomx_max <- max(data_dist[data_dist$bin == as.numeric(params$bottom_x),]$data_dist)
   
-  test <- apply(is.na(df), 2, which)
-  test <- test[lapply(test,length) > 0]
+  find_na <- data.frame(which(is.na(df), arr.ind = TRUE))
   
-  for (n in names(test)) {
-    for (r in (test[[n]])) {
-      c <- which(colnames(df) == n )
-      # uses stored random numbers from -1 to 1
-      df[r,c] <- bottomx_min + (abs(as.numeric(df_random[r,c])) * (bottomx_max - bottomx_min))
-    }
+  #--
+  cl <- makeCluster(cores - 2)
+  registerDoParallel(cl)
+  
+  parallel_result <- foreach(j = 1:nrow(find_na), .combine = c) %dopar% {
+    r <- find_na$row[j]
+    c <- find_na$col[j]
+    bottomx_min + (abs(as.numeric(df_random[r,c])) * (bottomx_max - bottomx_min))
   }
   
+  stopCluster(cl) 
+  #--
+  
+  
+  find_na$result <- parallel_result
+  col_max <- max(find_na$col)
+  for (c in 1:col_max) {
+    swap_row <- find_na$row[find_na$col == c]
+    swap_result <- find_na$result[find_na$col == c]
+    df[swap_row, c] <- swap_result
+  }
+
   df <- data.frame(2^df)
   df_impute <- cbind(df_impute, df)
   
