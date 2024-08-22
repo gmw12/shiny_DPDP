@@ -609,8 +609,13 @@ source("Shiny_UI.R")
                     solidHeader = TRUE, collapsible = FALSE, align = "left", width = 4, height = 750,
                     
                     fluidRow(
+                      column(width = 2, offset = 0,
+                             pickerInput(inputId = "plot_type1", label = "Plot type",  choices = c("Bar", "Box", "PCA_2D", "PCA_3d", "Cluster", "Heatmap"), 
+                                         selected = "Bar", options = list(`actions-box` = TRUE, size = 100,
+                                                                          `selected-text-format` = "count > 5"),  multiple = FALSE)
+                      ),
                       column(width = 6, offset = 0,
-                             pickerInput(inputId = "stats_plot_comp", label = "Comparison(s) to plot",  choices = "None", 
+                             pickerInput(inputId = "stats_plot_comp1", label = "Comparison(s) to plot",  choices = "None", 
                                          options = list(`actions-box` = TRUE, size = 100,
                                                         `selected-text-format` = "count > 5"),  multiple = TRUE)
                       ),
@@ -623,33 +628,15 @@ source("Shiny_UI.R")
                       )
                     ),
                     
-                    fluidRow(
-                      column(width = 4, offset = 0,
-                             pickerInput(inputId = "plot_type1", label = "Plot type",  choices = c("Bar", "Box", "PCA_2D", "PCA_3d", "Cluster", "Heatmap"), 
-                                         options = list(`actions-box` = TRUE, size = 100,
-                                                        `selected-text-format` = "count > 5"),  multiple = FALSE)
-                      ),
-                      column(width = 2, offset = 0, 
-                             dropdownButton(
-                                textInput("stats_cluster_title", label = "plot title", value = "cluster", width = 200),
-                                sliderInput("stats_cluster_label_size", label = h5("Label Size"), min = 1, 
-                                            max = 50, value = 11),
-                                sliderInput("stats_cluster_title_size", label = h5("Title Size"), min = 10, 
-                                            max = 50, value = 20),
-                                colourpicker::colourInput("cluster_high_color", "Select High Color", "#FF3366"),
-                                colourpicker::colourInput("cluster_low_color", "Select Low Color", "#009933"),
-                                circle = TRUE, status = "danger", icon = icon("cogs"), width = "300px", size = "sm",
-                                tooltip = tooltipOptions(title = "Click to see inputs !")
-                      )
-                      )
-                    )
+                    create_stats_bar_ui()
+  
                 ),
                 
                 box(id = "stats_plot_box2", title = "Plot 2...", status = "primary",
                     solidHeader = TRUE, collapsible = FALSE, align = "left", width = 4, height = 750,
                     fluidRow(
                       column(width = 6, offset = 0,
-                             pickerInput(inputId = "stats_plot_comp", label = "Comparison(s) to plot",  choices = "None", 
+                             pickerInput(inputId = "stats_plot_comp2", label = "Comparison(s) to plot",  choices = "None", 
                                          options = list(`actions-box` = TRUE, size = 100,
                                                         `selected-text-format` = "count > 5"),  multiple = TRUE)
                       ),
@@ -675,7 +662,7 @@ source("Shiny_UI.R")
                     solidHeader = TRUE, collapsible = FALSE, align = "left", width = 4, height = 750,
                     fluidRow(
                       column(width = 6, offset = 0,
-                             pickerInput(inputId = "stats_plot_comp", label = "Comparison(s) to plot",  choices = "None", 
+                             pickerInput(inputId = "stats_plot_comp3", label = "Comparison(s) to plot",  choices = "None", 
                                          options = list(`actions-box` = TRUE, size = 100,
                                                         `selected-text-format` = "count > 5"),  multiple = TRUE)
                       ),

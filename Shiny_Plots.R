@@ -1,5 +1,149 @@
 cat(file = stderr(), "Shiny_Plots.R", "\n")
 
+#---------------------------------------------------------------------
+create_plot_master <- function(session, input, output, params, plot_number) {
+  
+  showModal(modalDialog("Function create_plot_master...", footer = NULL))  
+  source("Shiny_File.R")
+  
+  #confirm data exists in database
+  data_name <- stringr::str_c("protein_", input$stats_norm_type)
+  if (data_name %in% list_tables()) {
+    cat(file = stderr(), stringr::str_c(data_name, " is in database"), "\n") 
+    
+    #load data
+    conn <- RSQLite::dbConnect(RSQLite::SQLite(), params$database_path)
+    df <- RSQLite::dbReadTable(conn, data_name)
+    design <- RSQLite::dbReadTable(conn, "design")
+    stats_comp <- RSQLite::dbReadTable(conn, "stats_comp")
+    RSQLite::dbDisconnect(conn)
+    
+    #reduce to samples
+    df <- df[(ncol(df) - params$sample_number + 1):ncol(df)]
+      
+    comp_string <- input$stats_plot_comp1
+    
+    cat(file = stderr(), "Stats Plots...1" , "\n")
+    for (i in 1:length(comp_string)) {
+      comp_number <- which(stats_comp$Name == comp_string[i])
+      if (i == 1) {
+        comp_cols <- c(stats_comp$N_loc[comp_number], stats_comp$D_loc[comp_number] )
+      }else{
+        comp_cols <- c(comp_cols, stats_comp$N_loc[comp_number], stats_comp$D_loc[comp_number] )
+      }
+    }
+    
+    #add spqc to plots
+    cat(file = stderr(), "Stats Plots...2" , "\n")
+    if (input$stats_plot_spqc) {
+      comp_cols <- c(comp_cols, stats_comp$SPQC_loc[1])
+    }
+
+    #convert to string to list of cols    
+    comp_cols <- strsplit(comp_cols, ",") |> unlist() |> as.numeric()
+    
+    
+    cat(file = stderr(), "Stats Plots...3" , "\n")
+    comp_cols <- sort(unique(unlist(comp_cols)), decreasing = FALSE)
+    df <- df[,comp_cols]
+    
+    #from protein normalization there will be standard deviation of 0 for the normalized protein - this will crash some of the pca/cluster/heatmap calcs
+    df <- df[apply(df, 1, var) != 0, ]
+    
+    namex <- design$Label[comp_cols]
+    color_list <- design$colorlist[comp_cols]
+    if (params$primary_group == "Primary") {
+      groupx <- design$PrimaryGroup[comp_cols]
+    }else{
+      groupx <- design$Group[comp_cols]
+    }
+    
+    cat(file = stderr(), "Stats Plots...3" , "\n")
+    interactive_barplot(session, input, output, df, namex, color_list, "stats_barplot", input$stats_plot_comp)  
+    
+    removeModal()
+  }
+}
+
+
+
+#----------------------------------------------------------
+
+interactive_barplot <- function(session, input, output, df, namex, color_list, output_name, comp_name)
+{
+  cat(file = stderr(), "Function interactive_barplot...", "\n")
+  # df <<- df
+  # namex <<- namex 
+  # color_list <<- color_list
+  # output_name <<- output_name
+  # comp_name <<- comp_name
+  # cat(file=stderr(), "interactive_barplot" , "\n")
+  
+  datay <- colSums(df, na.rm = TRUE)
+  df2 <- data.frame(namex)
+  df2$Total_Intensity <- datay
+  colnames(df2) <- c("Sample", "Total_Intensity")
+  df2$Sample <- factor(df2$Sample, levels = df2$Sample)
+  ymax <- max(datay)
+  
+  cat(file = stderr(), "interactive_barplot...1", "\n")
+  create_stats_barplot <- reactive({
+    ggplot(data = df2, aes(x = Sample, y = Total_Intensity)) +
+      geom_bar(stat = "identity", fill = color_list) + theme_classic() + 
+      ggtitle(input[[str_c(output_name, "_title")]]) + 
+      ylab(input[[str_c(output_name, "_y_axis_label")]]) +
+      xlab(NULL) +
+      #scale_y_discrete(labels = NULL) +
+      coord_cartesian(ylim = NULL, expand = TRUE) +
+      theme(plot.title = element_text(hjust = 0.5, size = input[[str_c(output_name, "_title_size")]]), 
+            axis.title = element_text(size = input[[str_c(output_name, "_label_size")]], color = "black"),
+            axis.text.x = element_text(size = input[[str_c(output_name, "_label_size")]], angle = 90,  color = "black"),
+            axis.text.y = element_text(size = input[[str_c(output_name, "_label_size")]],  color = "black"),
+      ) 
+  })
+  
+  output[[output_name]] <- renderPlot({
+    req(create_stats_barplot())
+    create_stats_barplot()
+  })
+  
+  cat(file = stderr(), "interactive_barplot...2", "\n")
+  output[[str_c("download_", output_name)]] <- downloadHandler(
+    filename = function(){
+      str_c("Stats_Barplot_", comp_name,  ".png", collapse = " ")
+    },
+    content = function(file){
+      req(create_stats_barplot())
+      ggsave(file, plot = create_stats_barplot(), device = 'png')
+    }
+  )
+  cat(file=stderr(), "Function interactive_barplot...end", "\n")
+}
+
+#------------------------------------------------------------------------------------------------------------------------
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 #Bar plot-------------------------------------------------
 bar_plot <- function(table_name, plot_title, plot_dir, params) {

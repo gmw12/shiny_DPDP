@@ -218,9 +218,7 @@ render_qc_graphs <- function(session, input, output) {
 }
 
 
-#-----------------------------------------------------------------------------------
-
-
+#-------------------------------------
 update_widgets <- function(session, input, output) {
   cat(file = stderr(), "Function - update_widgets", "\n")
   
@@ -318,6 +316,23 @@ update_widgets <- function(session, input, output) {
     updateCheckboxInput(session, "checkbox_report_accession", value = params$checkbox_report_accession)
     updateTextInput(session, "report_accession", value = params$report_accession)
     
+    #stats graphs
+    update_widgets_stats(session, input, output)
+      
+    
+  }
+}
+
+#-----------------------------------------------------------------------------------
+
+update_widgets_stats <- function(session, input, output){
+  cat(file = stderr(), "Function - update_widget_stats...", "\n")
+  #stats graphs
+  if ("stats_comp" %in% list_tables()) {
+    stats_comp <- read_table("stats_comp")
+    updatePickerInput(session, "stats_plot_comp1", choices = stats_comp$Name, selected = stats_comp$Name[1])
+    updatePickerInput(session, "stats_plot_comp2", choices = stats_comp$Name, selected = stats_comp$Name[1])
+    updatePickerInput(session, "stats_plot_comp3", choices = stats_comp$Name, selected = stats_comp$Name[1])
   }
   
   

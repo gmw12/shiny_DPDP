@@ -25,6 +25,7 @@ testme <- read_table("precursor_norm_sltmm")
 testme2 <- read_table("temp_df_impute")
 test_design <- read_table("design")
 test_sample_groups <- read_table("sample_groups")
+test_stats_comp <- read_table("stats_comp")
 test_design <- read_table("design")
 test_protein_missing <- read_table("protein_missing")
 

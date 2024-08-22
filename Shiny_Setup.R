@@ -148,9 +148,9 @@ set_sample_groups_bg <- function(session, input, output, params, check_design_so
   
   #check if using primary group for filter and impute
   cat(file = stderr(), "set_sample_groups ...1", "\n")
+  design$PrimaryGroup <- sapply(design$Group, function(string) stringr::str_split(string, "_")[[1]][1])
   if (params$primary_group == "Primary") {
     group_type <- "PrimaryGroup"
-    design$PrimaryGroup <- sapply(design$Group, function(string) stringr::str_split(string, "_")[[1]][1])
   }else{
     group_type <- "Group"
   }
@@ -189,7 +189,7 @@ set_sample_groups_bg <- function(session, input, output, params, check_design_so
   sample_groups$colorlist <- color_choices[1:group_number]
   design$colorlist <- with(sample_groups, colorlist[match(design[[group_type]], sample_groups[[group_type]])])
   sample_groups$title <- sample_groups[[group_type]]
-  
+
   #organize column headers for final output
   design$Header1 <- stringr::str_c(design$Group, " ", design$ID)
   design$Header2 <- stringr::str_c(design$Group, " ", design$ID, " Normalized")
