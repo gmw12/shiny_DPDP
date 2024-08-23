@@ -610,7 +610,7 @@ source("Shiny_UI.R")
                     
                     fluidRow(
                       column(width = 2, offset = 0,
-                             pickerInput(inputId = "plot_type1", label = "Plot type",  choices = c("Bar", "Box", "PCA_2D", "PCA_3d", "Cluster", "Heatmap"), 
+                             pickerInput(inputId = "plot_type1", label = "Plot type",  choices = c("Bar", "Box", "PCA_2D", "PCA_3D", "Cluster", "Heatmap"), 
                                          selected = "Bar", options = list(`actions-box` = TRUE, size = 100,
                                                                           `selected-text-format` = "count > 5"),  multiple = FALSE)
                       ),
@@ -619,16 +619,14 @@ source("Shiny_UI.R")
                                          options = list(`actions-box` = TRUE, size = 100,
                                                         `selected-text-format` = "count > 5"),  multiple = TRUE)
                       ),
-                      column(width = 3, offset = 0,
-                             checkboxInput("stats_plot_spqc", label = "Add SPQC?")
-                      ),
-                      column(width = 2, offset = 0,
+                      column(width = 2, offset = 0, 
+                             br(),
                              actionButton("create_stats_plots1", label = "Create Plot", width = 100,
-                                          style = " color: #fff; background-color: #337ab7; border-color: #2e6da4")
+                                          style = "color: #fff; background-color: #337ab7; border-color: #2e6da4")
                       )
                     ),
-                    
-                    create_stats_bar_ui()
+
+                    uiOutput("stats_plots1")
   
                 ),
                 

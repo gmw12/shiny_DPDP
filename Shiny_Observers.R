@@ -31,8 +31,30 @@ observe_comp_names <- function(session, input, output){
         }
         RSQLite::dbDisconnect(conn)
       }
+      update_widgets_stats(session, input, output)
       #update_stat_comparisons(session, input, output)
   
   })
 
+}
+
+
+
+#-------------------------------------------------------------------------------------------------------------
+observe_plot_type <- function(session, input, output){
+
+  observe({
+    cat(file = stderr(), "Observe plot_type1...", "\n")
+  
+    if (input$plot_type1 == "PCA_2D") {
+  
+      output$stats_plots1 <- renderUI({
+        create_stats_pca2d_ui()
+      })
+  
+    }
+  
+    cat(file = stderr(), "Observe plot_type1...end", "\n")
+  })
+  
 }
