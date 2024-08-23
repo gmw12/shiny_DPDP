@@ -41,3 +41,11 @@ library(gplots)
 library(rgl)
 library(colourpicker)
 library(randomcoloR)
+
+
+#not updated on CRAN anymore
+test_pca3d <- require(pca3d)
+if (!test_pca3d) {
+  cat(file = stderr(), "Package pca3d not found, adding from project directory", "\n")
+  library("pca3d", lib.loc = '/home/dpmsr/R/shiny_DPDP/Packages/')
+}
