@@ -40,9 +40,9 @@ interactive_barplot <- function(session, input, output, df, namex, color_list, o
   })
   
   cat(file = stderr(), "interactive_barplot...2", "\n")
-  output[[str_c("download_", output_name)]] <- downloadHandler(
+  output[[str_c(plot_number, "_download_", output_name)]] <- downloadHandler(
     filename = function(){
-      str_c("Stats_Barplot_", comp_name,  ".png", collapse = " ")
+      str_c(plot_number, "_Stats_Barplot_", comp_name,  ".png", collapse = " ")
     },
     content = function(file){
       req(create_stats_barplot())
@@ -55,7 +55,7 @@ interactive_barplot <- function(session, input, output, df, namex, color_list, o
 #------------------------------------------------------------------------------------------------------------------------
 
 
-interactive_boxplot <- function(session, input, output, df, namex, color_list, comp_string)
+interactive_boxplot <- function(session, input, output, df, namex, color_list, comp_string, plot_number)
 {
   cat(file = stderr(), "interactive_boxplot" , "\n")
   
@@ -68,24 +68,24 @@ interactive_boxplot <- function(session, input, output, df, namex, color_list, c
       ggplot2::geom_boxplot(notch = TRUE, outlier.colour = "red", outlier.shape = 1,
                             outlier.size = 1, fill = rev(color_list)) + ggplot2::theme_classic() + 
       ggplot2::coord_flip() +
-      ggplot2::xlab(input$stats_boxplot_x_axis_label) +
-      ggplot2::ggtitle(input$stats_boxplot_title) + 
-      ggplot2::theme(plot.title = ggplot2::element_text(hjust = 0.5, size = input$stats_boxplot_title_size), 
-                     axis.title = ggplot2::element_text(size = input$stats_boxplot_label_size, color = "black"),
-                     axis.text.x = ggplot2::element_text(size = input$stats_boxplot_label_size, angle = 90,  color = "black"),
-                     axis.text.y = ggplot2::element_text(size = input$stats_boxplot_label_size,  color = "black"),
+      ggplot2::xlab(input[[str_c(plot_number, "stats_boxplot_x_axis_label")]]) +
+      ggplot2::ggtitle(input[[str_c(plot_number, "_stats_boxplot_title")]]) + 
+      ggplot2::theme(plot.title = ggplot2::element_text(hjust = 0.5, size = input[[str_c(plot_number, "_stats_boxplot_title_size")]]), 
+                     axis.title = ggplot2::element_text(size = input[[str_c(plot_number, "_stats_boxplot_label_size")]], color = "black"),
+                     axis.text.x = ggplot2::element_text(size = input[[str_c(plot_number, "_stats_boxplot_label_size")]], angle = 90,  color = "black"),
+                     axis.text.y = ggplot2::element_text(size = input[[str_c(plot_number, "_stats_boxplot_label_size")]],  color = "black"),
       ) 
   })
   
-  output$stats_boxplot <- renderPlot({
+  output[[str_c(plot_number, "_stats_boxplot")]] <- renderPlot({
     req(create_stats_boxplot())
     #callr::r_bg(create_stats_boxplot, args = list(df3=df3), supervise = TRUE)
     create_stats_boxplot()
   })
   
-  output$download_stats_boxplot <- downloadHandler(
+  output[[str_c(plot_number, "_download_stats_boxplot")]]  <- downloadHandler(
     filename = function(){
-      str_c("stats_Boxplot_", comp_string, ".png", collapse = " ")
+      str_c(plot_number, "_stats_Boxplot_", comp_string, ".png", collapse = " ")
     },
     content = function(file){
       req(create_stats_boxplot())
@@ -97,7 +97,7 @@ interactive_boxplot <- function(session, input, output, df, namex, color_list, c
 #------------------------------------------------------------------------------------------------------------------------
 #------------------------------------------------------------------------------------------------------------------------
 
-interactive_pca2d <- function(session, input, output, df, namex, color_list, groupx, comp_name)
+interactive_pca2d <- function(session, input, output, df, namex, color_list, groupx, comp_name, plot_number)
 {
   #test_df <<- df
   #test_groupx <<- groupx
@@ -125,37 +125,37 @@ interactive_pca2d <- function(session, input, output, df, namex, color_list, gro
   
   cat(file = stderr(), "interactive_pca2d...3" , "\n")
   
-  hover_data <- data.frame(cbind(namex, df_out[[input$stats_pca2d_x]], df_out[[input$stats_pca2d_y]]), stringsAsFactors = FALSE  )
+  hover_data <- data.frame(cbind(namex, df_out[[ input[[str_c(plot_number, "_stats_pca2d_x")]] ]], df_out[[input[[str_c(plot_number, "_stats_pca2d_y")]]]]), stringsAsFactors = FALSE  )
   colnames(hover_data) <- c("Sample", "get(input$stats_pca2d_x)", "get(input$stats_pca2d_y)")
-  hover_data$`get(input$stats_pca2d_x)` <- as.numeric(hover_data$`get(input$stats_pca2d_x)`)
-  hover_data$`get(input$stats_pca2d_y)` <- as.numeric(hover_data$`get(input$stats_pca2d_y)`)
+  hover_data$`get(input[[str_c(plot_number, "_stats_pca2d_x")]])` <- as.numeric(hover_data$`get(input[[str_c(plot_number, "_stats_pca2d_x")]])`)
+  hover_data$`get(input[[str_c(plot_number, "_stats_pca2d_y")]])` <- as.numeric(hover_data$`get(input[[str_c(plot_number, "_stats_pca2d_y")]])`)
   
   #hover_data_test <<- hover_data
   cat(file = stderr(), "interactive_pca2d...4" , "\n")
   create_stats_pca2d <- reactive({
-    ggplot(df_out, aes(x = get(input$stats_pca2d_x), y = get(input$stats_pca2d_y), color = x_gr )) +
-      geom_point(alpha = 0.8, size = input$stats_pca2d_dot_size) +
+    ggplot(df_out, aes(x = get(input[[str_c(plot_number, "_stats_pca2d_x")]]), y = get(input[[str_c(plot_number, "_stats_pca2d_y")]]), color = x_gr )) +
+      geom_point(alpha = 0.8, size = input[[str_c(plot_number, "_stats_pca2d_dot_size")]] ) +
       theme(legend.title = element_blank()) +
-      ggtitle(input$stats_pca2d_title) + 
-      ylab(input$stats_pca2d_y) +
-      xlab(input$stats_pca2d_x) +
+      ggtitle(input[[str_c(plot_number, "_stats_pca2d_title")]]) + 
+      ylab(input[[str_c(plot_number, "_stats_pca2d_y")]]) +
+      xlab(input[[str_c(plot_number, "_stats_pca2d_x")]]) +
       scale_color_manual(values = rev(unique(color_list))) +
-      theme(plot.title = element_text(hjust = 0.5, size = input$stats_pca2d_title_size), 
-            axis.title = element_text(size = input$stats_pca2d_label_size, color = "black"),
-            axis.text.x = element_text(size = input$stats_pca2d_label_size, angle = 90,  color = "black"),
-            axis.text.y = element_text(size = input$stats_pca2d_label_size,  color = "black"),
+      theme(plot.title = element_text(hjust = 0.5, size = input[[str_c(plot_number, "_stats_pca2d_title_size")]]), 
+            axis.title = element_text(size = input[[str_c(plot_number, "_stats_pca2d_label_size")]], color = "black"),
+            axis.text.x = element_text(size =  input[[str_c(plot_number, "_stats_pca2d_label_size")]], angle = 90,  color = "black"),
+            axis.text.y = element_text(size =  input[[str_c(plot_number, "_stats_pca2d_label_size")]],  color = "black"),
       ) 
   })
   
   cat(file = stderr(), "interactive_pca2d...5" , "\n")
-  output$stats_pca2d <- renderPlot({
+  output[[str_c(plot_number, "_stats_pca2d")]] <- renderPlot({
     req(create_stats_pca2d())
     create_stats_pca2d()
   })
   
-  output$download_stats_pca2d <- downloadHandler(
+  output[[str_c(plot_number, "_download_stats_pca2d")]] <- downloadHandler(
     filename = function(){
-      str_c("stats_pca2d_", comp_name, ".png", collapse = " ")
+      str_c(plot_number, "_stats_pca2d_", comp_name, ".png", collapse = " ")
     },
     content = function(file){
       req(create_stats_pca2d())

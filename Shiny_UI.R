@@ -58,128 +58,128 @@ create_stats_bar_ui <- function(plot_number) {
              style = "position:relative",
              plotOutput(str_c(plot_number, "_stats_barplot"), width = 800, height = 550)
            ),
-           downloadButton('download_stats_barplot')
+           downloadButton(str_c(plot_number, '_download_stats_barplot'))
     )  
   )  
   
 }
 
 #-------------------------------------------------------------------------
-create_stats_box_ui <- function() {
+create_stats_box_ui <- function(plot_number) {
   fluidRow(
     column(width = 6, offset = 0,
            dropdownButton(
-             textInput("stats_boxplot_y_axis_label", label = "y axis label", value = "Intensity", width = 200),
-             textInput("stats_boxplot_title", label = "plot title", value = "Total Summed Intensity", width = 200),
-             sliderInput("stats_boxplot_label_size", label = h5("Label Size"), min = 1, 
+             textInput(str_c(plot_number, "_stats_boxplot_y_axis_label"), label = "y axis label", value = "Intensity", width = 200),
+             textInput(str_c(plot_number, "_stats_boxplot_title"), label = "plot title", value = "Total Summed Intensity", width = 200),
+             sliderInput(str_c(plot_number, "_stats_boxplot_label_size"), label = h5("Label Size"), min = 1, 
                          max = 50, value = 11),
-             sliderInput("stats_boxplot_title_size", label = h5("Title Size"), min = 10, 
+             sliderInput(str_c(plot_number, "_stats_boxplot_title_size"), label = h5("Title Size"), min = 10, 
                          max = 50, value = 20),
              circle = TRUE, status = "danger", icon = icon("cogs"), width = "300px", size = "sm",
              tooltip = tooltipOptions(title = "Click to see inputs !")
            ),
            div(
              style = "position:relative",
-             plotOutput("stats_boxplot", width = 800, height = 550)
+             plotOutput(str_c(plot_number, "_stats_boxplot"), width = 800, height = 550)
            ),
-           downloadButton('download_stats_boxplot')
+           downloadButton(str_c(plot_number, '_download_stats_boxplot'))
     )  
   )  
   
 }
 
 #-------------------------------------------------------------------------
-create_stats_pca2d_ui <- function() {
+create_stats_pca2d_ui <- function(plot_number) {
   fluidRow(
     column(width = 6, offset = 0,
            dropdownButton(
-             selectInput("stats_pca2d_x", label = "pca xaxis", choices = list("PC1", "PC2", "PC3", "PC4", "PC5"), 
+             selectInput(str_c(plot_number, "_stats_pca2d_x"), label = "pca xaxis", choices = list("PC1", "PC2", "PC3", "PC4", "PC5"), 
                          selected = "PC1"),
-             selectInput("stats_pca2d_y", label = "pca yaxis", choices = list("PC1", "PC2", "PC3", "PC4", "PC5"), 
+             selectInput(str_c(plot_number, "_stats_pca2d_y"), label = "pca yaxis", choices = list("PC1", "PC2", "PC3", "PC4", "PC5"), 
                          selected = "PC2"),
-             textInput("stats_pca2d_title", label = "plot title", value = "pca2d", width = 200),
-             sliderInput("stats_pca2d_label_size", label = h5("Label Size"), min = 1, 
+             textInput(str_c(plot_number, "_stats_pca2d_title"), label = "plot title", value = "pca2d", width = 200),
+             sliderInput(str_c(plot_number, "_stats_pca2d_label_size"), label = h5("Label Size"), min = 1, 
                          max = 50, value = 11),
-             sliderInput("stats_pca2d_title_size", label = h5("Title Size"), min = 10, 
+             sliderInput(str_c(plot_number, "_stats_pca2d_title_size"), label = h5("Title Size"), min = 10, 
                          max = 50, value = 20),
-             sliderInput("stats_pca2d_dot_size", label = h5("Point Size"), min = 1, 
+             sliderInput(str_c(plot_number, "_stats_pca2d_dot_size"), label = h5("Point Size"), min = 1, 
                          max = 20, value = 4),
              circle = TRUE, status = "danger", icon = icon("cogs"), width = "300px", size = "sm",
              tooltip = tooltipOptions(title = "Click to see inputs !")
            ),
            div(
              style = "position:relative",
-             plotOutput("stats_pca2d", width = 800, height = 550,
+             plotOutput(str_c(plot_number, "_stats_pca2d"), width = 800, height = 550,
                         hover = hoverOpts("plot_pca2d_hover", delay = 100, delayType = "debounce")),
              uiOutput("hover_pca2d_info")
            ),
-           downloadButton('download_stats_pca2d')
+           downloadButton(str_c(plot_number, '_download_stats_pca2d'))
     )  
   )  
   
 }
 
 #-------------------------------------------------------------------------
-create_stats_pca3d_ui <- function() {
+create_stats_pca3d_ui <- function(plot_number) {
   fluidRow(
     column(width = 6, offset = 0,
            dropdownButton(
-             textInput("stats_pca3d_title", label = "plot title", value = "pca3d", width = 200),
-             sliderInput("stats_pca3d_label_size", label = h5("Label Size"), min = 1, 
+             textInput(str_c(plot_number, "_stats_pca3d_title"), label = "plot title", value = "pca3d", width = 200),
+             sliderInput(str_c(plot_number, "_stats_pca3d_label_size"), label = h5("Label Size"), min = 1, 
                          max = 50, value = 11),
-             sliderInput("stats_pca3d_title_size", label = h5("Title Size"), min = 10, 
+             sliderInput(str_c(plot_number, "_stats_pca3d_title_size"), label = h5("Title Size"), min = 10, 
                          max = 50, value = 20),
-             sliderInput("stats_pca3d_dot_size", label = h5("Point Size"), min = 1, 
+             sliderInput(str_c(plot_number, "_stats_pca3d_dot_size"), label = h5("Point Size"), min = 1, 
                          max = 10, value = 2),
              circle = TRUE, status = "danger", icon = icon("cogs"), width = "300px", size = "sm",
              tooltip = tooltipOptions(title = "Click to see inputs !")
            ),
            div(
              style = "position:relative",
-             rglwidgetOutput("stats_pca3d", width = 800, height = 550)
+             rglwidgetOutput(str_c(plot_number, "_stats_pca3d"), width = 800, height = 550)
            ),
-           downloadButton('download_stats_pca3d')
+           downloadButton(str_c(plot_number, '_download_stats_pca3d'))
     )  
   )  
   
 }
 #-------------------------------------------------------------------------
-create_stats_cluster_ui <- function() {
+create_stats_cluster_ui <- function(plot_number) {
   fluidRow(
     column(width = 6, offset = 0,
            dropdownButton(
-             textInput("stats_cluster_title", label = "plot title", value = "cluster", width = 200),
-             sliderInput("stats_cluster_label_size", label = h5("Label Size"), min = 1, 
+             textInput(str_c(plot_number, "_stats_cluster_title"), label = "plot title", value = "cluster", width = 200),
+             sliderInput(str_c(plot_number, "_stats_cluster_label_size"), label = h5("Label Size"), min = 1, 
                          max = 50, value = 11),
-             sliderInput("stats_cluster_title_size", label = h5("Title Size"), min = 10, 
+             sliderInput(str_c(plot_number, "_stats_cluster_title_size"), label = h5("Title Size"), min = 10, 
                          max = 50, value = 20),
-             colourpicker::colourInput("cluster_high_color", "Select High Color", "#FF3366"),
-             colourpicker::colourInput("cluster_low_color", "Select Low Color", "#009933"),
+             colourpicker::colourInput(str_c(plot_number, "_cluster_high_color"), "Select High Color", "#FF3366"),
+             colourpicker::colourInput(str_c(plot_number, "_cluster_low_color"), "Select Low Color", "#009933"),
              circle = TRUE, status = "danger", icon = icon("cogs"), width = "300px", size = "sm",
              tooltip = tooltipOptions(title = "Click to see inputs !")
            ),
            div(
              style = "position:relative",
-             plotOutput("stats_cluster", width = 800, height = 550)
+             plotOutput(str_c(plot_number, "_stats_cluster"), width = 800, height = 550)
            ),
-           downloadButton('download_stats_cluster')
+           downloadButton(str_c(plot_number, '_download_stats_cluster'))
     )  
   )  
   
 }
-create_stats_heatmap_ui <- function() {
+create_stats_heatmap_ui <- function(plot_number) {
   fluidRow(
     column(width = 6, offset = 0,
            dropdownButton(
-             textInput("stats_heatmap_title", label = "plot title", value = "heatmap", width = 200),
+             textInput(str_c(plot_number, "_stats_heatmap_title"), label = "plot title", value = "heatmap", width = 200),
              circle = TRUE, status = "danger", icon = icon("cogs"), width = "300px", size = "sm",
              tooltip = tooltipOptions(title = "Click to see inputs !")
            ),
            div(
              style = "position:relative",
-             plotOutput("stats_heatmap", width = 800, height = 550)
+             plotOutput(str_c(plot_number, "_stats_heatmap"), width = 800, height = 550)
            ),
-           downloadButton('download_stats_heatmap')
+           downloadButton(str_c(plot_number, '_download_stats_heatmap'))
     )  
   )  
   

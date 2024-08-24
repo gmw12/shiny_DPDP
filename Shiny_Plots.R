@@ -1,7 +1,7 @@
 cat(file = stderr(), "Shiny_Plots.R", "\n")
 
 #---------------------------------------------------------------------
-create_plot1 <- function(session, input, output, params, plot_number) {
+create_plot <- function(session, input, output, params, plot_number) {
   cat(file = stderr(), "Function create_plot1...", "\n")
   
   showModal(modalDialog("Create_plot1...", footer = NULL))  
@@ -23,7 +23,7 @@ create_plot1 <- function(session, input, output, params, plot_number) {
     #reduce to samples
     df <- df[(ncol(df) - params$sample_number + 1):ncol(df)]
       
-    comp_string <- input$stats_plot_comp1
+    comp_string <- input[[str_c("stats_plot_comp", plot_number)]]
     
     cat(file = stderr(), "Function create_plot1...1" , "\n")
     for (i in 1:length(comp_string)) {
@@ -43,17 +43,13 @@ create_plot1 <- function(session, input, output, params, plot_number) {
       }
     }
     
-    #add spqc to plots
-    #cat(file = stderr(), "Stats Plots...2" , "\n")
-    #if (input$stats_plot_spqc) {
-     # comp_cols <- c(comp_cols, stats_comp$SPQC_loc[1])
-    #}
+    cat(file = stderr(), "Function create_plot1...2" , "\n")
 
     #convert to string to list of cols    
     comp_cols <- strsplit(comp_cols, ",") |> unlist() |> as.numeric()
     
     
-    cat(file = stderr(), "Function create_plot1...2" , "\n")
+    cat(file = stderr(), "Function create_plot1...3" , "\n")
     comp_cols <- sort(unique(unlist(comp_cols)), decreasing = FALSE)
     df <- df[,comp_cols]
     
@@ -68,30 +64,30 @@ create_plot1 <- function(session, input, output, params, plot_number) {
       groupx <- design$Group[comp_cols]
     }
     
-    cat(file = stderr(), "Function create_plot1...3" , "\n")
+    cat(file = stderr(), "Function create_plot1...4" , "\n")
     
     if (input$plot_type1 == "Bar") {
       interactive_barplot(session, input, output, df, namex, color_list, "stats_barplot", input$stats_plot_comp, plot_number)   
     }
     
     if (input$plot_type1 == "Box") {
-      interactive_boxplot(session, input, output, df, namex, color_list, input$stats_plot_comp) 
+      interactive_boxplot(session, input, output, df, namex, color_list, input$stats_plot_comp, plot_number)  
     }
 
     if (input$plot_type1 == "PCA_2D") {
-        interactive_pca2d(session, input, output, df, namex, color_list, groupx, input$stats_plot_comp)
+        interactive_pca2d(session, input, output, df, namex, color_list, groupx, input$stats_plot_comp, plot_number)  
     }   
     
     if (input$plot_type1 == "PCA_3D") {
-      interactive_pca3d(session, input, output, df, namex, color_list, groupx, input$stats_plot_comp) 
+      interactive_pca3d(session, input, output, df, namex, color_list, groupx, input$stats_plot_comp, plot_number)  
     }    
     
     if (input$plot_type1 == "Cluster") {
-      interactive_cluster(session, input, output, df, namex, input$stats_plot_comp)
+      interactive_cluster(session, input, output, df, namex, input$stats_plot_comp, plot_number)  
     }    
     
     if (input$plot_type1 == "Heatmap") {
-      interactive_heatmap(session, input, output, df, namex, groupx, input$stats_plot_comp, params)
+      interactive_heatmap(session, input, output, df, namex, groupx, input$stats_plot_comp, params, plot_number)  
     }    
     
     
