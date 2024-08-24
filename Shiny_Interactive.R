@@ -200,7 +200,7 @@ interactive_pca2d <- function(session, input, output, df, namex, color_list, gro
 #------------------------------------------------------------------------------------------------------------------------
 #------------------------------------------------------------------------------------------------------------------------
 
-interactive_pca3d <- function(session, input, output, df, namex, color_list, groupx, comp_name)
+interactive_pca3d <- function(session, input, output, df, namex, color_list, groupx, comp_name, plot_number)
 {
   cat(file = stderr(), "interactive_pca3d" , "\n")
   x_transpose <- t(df)
@@ -220,20 +220,21 @@ interactive_pca3d <- function(session, input, output, df, namex, color_list, gro
           new = FALSE,
           legend = "right",
           palette = rev(unique(color_list)), 
-          radius = input$stats_pca3d_dot_size,
-          title = input$stats_pca3d_title)
+          radius = input[[str_c(plot_number, "_stats_pca3d_dot_size")]],
+          title = input[[str_c(plot_number, "_stats_pca3d_title")]]
+    )
   })
   
-  output$stats_pca3d <- renderRglwidget({
+  output[[str_c(plot_number, "_stats_pca3d")]] <- renderRglwidget({
     try(rgl.close())
     req(create_stats_pca3d())
     create_stats_pca3d()
     rglwidget()
   })
   
-  output$download_stats_pca3d <- downloadHandler(
+  output[[str_c(plot_number, "_download_stats_pca3d")]] <- downloadHandler(
     filename = function(){
-      str_c("stats_pca3d_", comp_name, ".png", collapse = " ")
+      str_c(plot_number, "_stats_pca3d_", comp_name, ".png", collapse = " ")
     },
     content = function(file){
       req(create_stats_pca3d())
@@ -246,7 +247,7 @@ interactive_pca3d <- function(session, input, output, df, namex, color_list, gro
 #------------------------------------------------------------------------------------------------------------------------
 #------------------------------------------------------------------------------------------------------------------------
 
-interactive_cluster <- function(session, input, output, df, namex, comp_name)
+interactive_cluster <- function(session, input, output, df, namex, comp_name, plot_number)
 {
   cat(file = stderr(), "interactive_cluster" , "\n")
   require('factoextra')
@@ -263,21 +264,21 @@ interactive_cluster <- function(session, input, output, df, namex, comp_name)
   
   create_stats_cluster <- reactive({
     distance <- get_dist(df, method = "euclidean")
-    fviz_dist(distance,  show_labels = TRUE, gradient = list(low = input$cluster_low_color, mid = "white", high = input$cluster_high_color)) +
-      ggtitle(input$stats_cluster_title) +
-      theme(plot.title = element_text(hjust = 0.5, size = input$stats_cluster_title_size), 
-            axis.text.x = element_text(size = input$stats_cluster_label_size, angle = 90,  color = "black"),
-            axis.text.y = element_text(size = input$stats_cluster_label_size,  color = "black"))
+    fviz_dist(distance,  show_labels = TRUE, gradient = list(low = input[[str_c(plot_number, "_cluster_low_color")]], mid = "white", high = input[[str_c(plot_number, "_cluster_high_color")]] )) +
+      ggtitle(input[[str_c(plot_number, "_stats_cluster_title")]]) +
+      theme(plot.title = element_text(hjust = 0.5, size = input[[str_c(plot_number, "_stats_cluster_title_size")]] ), 
+            axis.text.x = element_text(size = input[[str_c(plot_number, "_stats_cluster_label_size")]], angle = 90,  color = "black"),
+            axis.text.y = element_text(size = input[[str_c(plot_number, "_stats_cluster_label_size")]],  color = "black"))
   })
   
-  output$stats_cluster <- renderPlot({
+  output[[str_c(plot_number, "_stats_cluster")]] <- renderPlot({
     req(create_stats_cluster())
     create_stats_cluster()
   })
   
-  output$download_stats_cluster <- downloadHandler(
+  output[[str_c(plot_number, "_download_stats_cluster")]] <- downloadHandler(
     filename = function(){
-      str_c("stats_cluster_", comp_name, ".png", collapse = " ")
+      str_c(plot_number, "_stats_cluster_", comp_name, ".png", collapse = " ")
     },
     content = function(file){
       req(create_stats_cluster())
@@ -298,7 +299,7 @@ interactive_heatmap <- function(session, input, output, df, namex, groupx, comp_
   if (site_user == "dpmsr") {
     heatmap_filename <- "erasemyheatmap.png"
   }else{
-    heatmap_filename <- str_c(dpmsr_set$file$data_dir, "/erasemyheatmap.png")
+    heatmap_filename <- str_c(params$data_path, "/erasemyheatmap.png")
   }
   
   #if norm by protein one protein will have 0 stdev - which will crash the calc...
@@ -324,26 +325,26 @@ interactive_heatmap <- function(session, input, output, df, namex, groupx, comp_
   
   create_stats_heatmap <- reactive({
     heatmap.2(df, Rowv = as.dendrogram(hr), Colv = as.dendrogram(hc), col = mycol, labCol = groupx, 
-              scale = "row", density.info = "none", trace = "none", RowSideColors = mycolhc, main = input$stats_heatmap_title,
+              scale = "row", density.info = "none", trace = "none", RowSideColors = mycolhc, main = input[[str_c(plot_number, "_stats_heatmap_title")]],
               margins = c(10,10))
     #heatmap_filename <- str_c(dpmsr_set$file$output_dir, dpmsr_set$data$stats$final_comp, "//", "erasemyheatmap.png")
-    png(filename = heatmap_filename, units = "px", width = 1776, height = 1776)  
+    png(filename = str_c(plot_number, "_", heatmap_filename), units = "px", width = 1776, height = 1776)  
     heatmap.2(df, Rowv = as.dendrogram(hr), Colv = as.dendrogram(hc), col = mycol, labCol = groupx, 
-              scale = "row", density.info = "none", trace = "none", RowSideColors = mycolhc, main = input$stats_heatmap_title,
+              scale = "row", density.info = "none", trace = "none", RowSideColors = mycolhc, main = input[[str_c(plot_number, "_stats_heatmap_title")]],
               margins = c(20,20))
     dev.off()
   })
   
   cat(file = stderr(), "interactive_heatmap...2" , "\n")
   
-  output$stats_heatmap <- renderPlot({
+  output[[str_c(plot_number, "_stats_heatmap")]] <- renderPlot({
     req(create_stats_heatmap())
     create_stats_heatmap()
   })
   
-  output$download_stats_heatmap <- downloadHandler(
+  output[[str_c(plot_number, "_download_stats_heatmap")]] <- downloadHandler(
     filename = function(){
-      str_c("stats_heatmap_", comp_name, ".png", collapse = " ")
+      str_c(plot_number, "_stats_heatmap_", comp_name, ".png", collapse = " ")
     },
     content = function(file){
       #heatmap_filename <- str_c(dpmsr_set$file$output_dir, dpmsr_set$data$stats$final_comp, "//", "erasemyheatmap.png")
