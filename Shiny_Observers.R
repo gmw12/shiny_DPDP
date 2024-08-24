@@ -41,20 +41,115 @@ observe_comp_names <- function(session, input, output){
 
 
 #-------------------------------------------------------------------------------------------------------------
-observe_plot_type <- function(session, input, output){
+observe_plot_type1 <- function(session, input, output){
 
   observe({
     cat(file = stderr(), "Observe plot_type1...", "\n")
   
-    if (input$plot_type1 == "PCA_2D") {
+    if (input$plot_type1 == "Bar") {
   
       output$stats_plots1 <- renderUI({
-        create_stats_pca2d_ui()
+        create_stats_bar_ui(1)
       })
   
     }
   
+    if (input$plot_type1 == "Box") {
+      
+      output$stats_plots1 <- renderUI({
+        create_stats_box_ui()
+      })
+      
+    }
+    if (input$plot_type1 == "PCA_2D") {
+      
+      output$stats_plots1 <- renderUI({
+        create_stats_pca2d_ui()
+      })
+      
+    }
+    
+    if (input$plot_type1 == "PCA_3D") {
+      
+      output$stats_plots1 <- renderUI({
+        create_stats_pca3d_ui()
+      })
+      
+    }
+    
+    if (input$plot_type1 == "Cluster") {
+      
+      output$stats_plots1 <- renderUI({
+        create_stats_cluster_ui()
+      })
+      
+    }
+    
+    if (input$plot_type1 == "Heatmap") {
+      
+      output$stats_plots1 <- renderUI({
+        create_stats_heatmap_ui()
+      })
+      
+    }
     cat(file = stderr(), "Observe plot_type1...end", "\n")
   })
   
+}
+
+#-------------------------------
+observe_plot_type2 <- function(session, input, output){
+
+  observe({
+    cat(file = stderr(), "Observe plot_type2...", "\n")
+    
+    if (input$plot_type2 == "Bar") {
+      
+      output$stats_plots2 <- renderUI({
+        create_stats_bar_ui(2)
+      })
+      
+    }
+    
+    if (input$plot_type2 == "Box") {
+      
+      output$stats_plots2 <- renderUI({
+        create_stats_box_ui()
+      })
+      
+    }
+    if (input$plot_type2 == "PCA_2D") {
+      
+      output$stats_plots2 <- renderUI({
+        create_stats_pca2d_ui()
+      })
+      
+    }
+    
+    if (input$plot_type2 == "PCA_3D") {
+      
+      output$stats_plots2 <- renderUI({
+        create_stats_pca3d_ui()
+      })
+      
+    }
+    
+    if (input$plot_type2 == "Cluster") {
+      
+      output$stats_plots2 <- renderUI({
+        create_stats_cluster_ui()
+      })
+      
+    }
+    
+    if (input$plot_type2 == "Heatmap") {
+      
+      output$stats_plots2 <- renderUI({
+        create_stats_heatmap_ui()
+      })
+      
+    }
+    cat(file = stderr(), "Observe plot_type2...end", "\n")
+  })
+
 }

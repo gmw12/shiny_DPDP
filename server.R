@@ -335,12 +335,20 @@ shinyServer(function(session, input, output) {
   observeEvent(input$create_stats_plots1, {
     cat(file = stderr(), "create_stats_plots1 clicked...", "\n")
     
-    create_plot1(session, input, output, params, 1) 
+    create_plot1(session, input, output, params, plot_number = 1) 
     
     cat(file = stderr(), "create_stats_plots1...end", "\n")
   })   
   
   
+  #-------------------------------------------------------------------------------------------------------------
+  observeEvent(input$create_stats_plots2, {
+    cat(file = stderr(), "create_stats_plots2 clicked...", "\n")
+    
+    create_plot1(session, input, output, params, plot_number = 2) 
+    
+    cat(file = stderr(), "create_stats_plots2...end", "\n")
+  })     
 
   
   

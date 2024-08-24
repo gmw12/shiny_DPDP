@@ -606,10 +606,10 @@ source("Shiny_UI.R")
       tabItem(tabName = "stats_plots",
               fluidRow(
                 box(id = "stats_plot_box1", title = "Plot 1...", status = "primary",
-                    solidHeader = TRUE, collapsible = FALSE, align = "left", width = 4, height = 750,
+                    solidHeader = TRUE, collapsible = FALSE, align = "left", width = 6, height = 750,
                     
                     fluidRow(
-                      column(width = 2, offset = 0,
+                      column(width = 3, offset = 0,
                              pickerInput(inputId = "plot_type1", label = "Plot type",  choices = c("Bar", "Box", "PCA_2D", "PCA_3D", "Cluster", "Heatmap"), 
                                          selected = "Bar", options = list(`actions-box` = TRUE, size = 100,
                                                                           `selected-text-format` = "count > 5"),  multiple = FALSE)
@@ -631,62 +631,32 @@ source("Shiny_UI.R")
                 ),
                 
                 box(id = "stats_plot_box2", title = "Plot 2...", status = "primary",
-                    solidHeader = TRUE, collapsible = FALSE, align = "left", width = 4, height = 750,
+                    solidHeader = TRUE, collapsible = FALSE, align = "left", width = 6, height = 750,
+                    
                     fluidRow(
+                      column(width = 3, offset = 0,
+                             pickerInput(inputId = "plot_type2", label = "Plot type",  choices = c("Bar", "Box", "PCA_2D", "PCA_3D", "Cluster", "Heatmap"), 
+                                         selected = "Bar", options = list(`actions-box` = TRUE, size = 100,
+                                                                          `selected-text-format` = "count > 5"),  multiple = FALSE)
+                      ),
                       column(width = 6, offset = 0,
                              pickerInput(inputId = "stats_plot_comp2", label = "Comparison(s) to plot",  choices = "None", 
                                          options = list(`actions-box` = TRUE, size = 100,
                                                         `selected-text-format` = "count > 5"),  multiple = TRUE)
                       ),
-                      column(width = 3, offset = 0,
-                             checkboxInput("stats_plot_spqc", label = "Add SPQC?")
-                      ),
-                      column(width = 2, offset = 0,
+                      column(width = 2, offset = 0, 
+                             br(),
                              actionButton("create_stats_plots2", label = "Create Plot", width = 100,
-                                          style = " color: #fff; background-color: #337ab7; border-color: #2e6da4")
+                                          style = "color: #fff; background-color: #337ab7; border-color: #2e6da4")
                       )
                     ),
                     
-                    fluidRow(
-                      column(width = 6, offset = 0,
-                             pickerInput(inputId = "plot_type1", label = "Plot type",  choices = c("Bar", "Box", "PCA_2D", "PCA_3d", "Cluster", "Heatmap"), 
-                                         options = list(`actions-box` = TRUE, size = 100,
-                                                        `selected-text-format` = "count > 5"),  multiple = FALSE)
-                      )
-                    )
-                ),
-                
-                box(id = "stats_plot_box3", title = "Plot 3...", status = "primary",
-                    solidHeader = TRUE, collapsible = FALSE, align = "left", width = 4, height = 750,
-                    fluidRow(
-                      column(width = 6, offset = 0,
-                             pickerInput(inputId = "stats_plot_comp3", label = "Comparison(s) to plot",  choices = "None", 
-                                         options = list(`actions-box` = TRUE, size = 100,
-                                                        `selected-text-format` = "count > 5"),  multiple = TRUE)
-                      ),
-                      column(width = 3, offset = 0,
-                             checkboxInput("stats_plot_spqc", label = "Add SPQC?")
-                      ),
-                      column(width = 2, offset = 0,
-                             actionButton("create_stats_plots3", label = "Create Plot", width = 100,
-                                          style = " color: #fff; background-color: #337ab7; border-color: #2e6da4")
-                      )
-                    ),
+                    uiOutput("stats_plots2")
                     
-                    fluidRow(
-                      column(width = 6, offset = 0,
-                             pickerInput(inputId = "plot_type1", label = "Plot type",  choices = c("Bar", "Box", "PCA_2D", "PCA_3d", "Cluster", "Heatmap"), 
-                                         options = list(`actions-box` = TRUE, size = 100,
-                                                        `selected-text-format` = "count > 5"),  multiple = FALSE)
-                      )
-                    )
                 )
-                
-                
-                
-              )
-      )   
-      
+                    
+                )
+      )
       
       
       

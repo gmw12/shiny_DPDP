@@ -1,7 +1,7 @@
 cat(file = stderr(), "Shiny_Interactive.R", "\n")
 #----------------------------------------------------------
 
-interactive_barplot <- function(session, input, output, df, namex, color_list, output_name, comp_name)
+interactive_barplot <- function(session, input, output, df, namex, color_list, output_name, comp_name, plot_number)
 {
   cat(file = stderr(), "Function interactive_barplot...", "\n")
   # df <<- df
@@ -22,19 +22,19 @@ interactive_barplot <- function(session, input, output, df, namex, color_list, o
   create_stats_barplot <- reactive({
     ggplot(data = df2, aes(x = Sample, y = Total_Intensity)) +
       geom_bar(stat = "identity", fill = color_list) + theme_classic() + 
-      ggtitle(input[[str_c(output_name, "_title")]]) + 
-      ylab(input[[str_c(output_name, "_y_axis_label")]]) +
+      ggtitle(input[[str_c(plot_number, "_",output_name, "_title")]]) + 
+      ylab(input[[str_c(plot_number, "_",output_name, "_y_axis_label")]]) +
       xlab(NULL) +
       #scale_y_discrete(labels = NULL) +
       coord_cartesian(ylim = NULL, expand = TRUE) +
       theme(plot.title = element_text(hjust = 0.5, size = input[[str_c(output_name, "_title_size")]]), 
-            axis.title = element_text(size = input[[str_c(output_name, "_label_size")]], color = "black"),
-            axis.text.x = element_text(size = input[[str_c(output_name, "_label_size")]], angle = 90,  color = "black"),
-            axis.text.y = element_text(size = input[[str_c(output_name, "_label_size")]],  color = "black"),
+            axis.title = element_text(size = input[[str_c(plot_number, "_",output_name, "_label_size")]], color = "black"),
+            axis.text.x = element_text(size = input[[str_c(plot_number, "_",output_name, "_label_size")]], angle = 90,  color = "black"),
+            axis.text.y = element_text(size = input[[str_c(plot_number, "_",output_name, "_label_size")]],  color = "black"),
       ) 
   })
   
-  output[[output_name]] <- renderPlot({
+  output[[str_c(plot_number, "_",output_name)]] <- renderPlot({
     req(create_stats_barplot())
     create_stats_barplot()
   })
@@ -248,11 +248,13 @@ interactive_pca3d <- function(session, input, output, df, namex, color_list, gro
 
 interactive_cluster <- function(session, input, output, df, namex, comp_name)
 {
-  cat(file=stderr(), "interactive_cluster" , "\n")
+  cat(file = stderr(), "interactive_cluster" , "\n")
+  require('factoextra')
+  
   colnames(df) <- namex
   
   df <- t(df)
-  df <-data.frame(df)
+  df <- data.frame(df)
   #row.names(df) <- NULL
   #df <- na.omit(df)
   df[] <- lapply(df, as.numeric)
@@ -260,12 +262,12 @@ interactive_cluster <- function(session, input, output, df, namex, comp_name)
   
   
   create_stats_cluster <- reactive({
-    distance <- get_dist(df, method="euclidean")
+    distance <- get_dist(df, method = "euclidean")
     fviz_dist(distance,  show_labels = TRUE, gradient = list(low = input$cluster_low_color, mid = "white", high = input$cluster_high_color)) +
       ggtitle(input$stats_cluster_title) +
-      theme(plot.title = element_text(hjust = 0.5, size=input$stats_cluster_title_size), 
-            axis.text.x = element_text(size=input$stats_cluster_label_size, angle = 90,  color="black"),
-            axis.text.y = element_text(size=input$stats_cluster_label_size,  color="black"))
+      theme(plot.title = element_text(hjust = 0.5, size = input$stats_cluster_title_size), 
+            axis.text.x = element_text(size = input$stats_cluster_label_size, angle = 90,  color = "black"),
+            axis.text.y = element_text(size = input$stats_cluster_label_size,  color = "black"))
   })
   
   output$stats_cluster <- renderPlot({
@@ -290,48 +292,49 @@ interactive_cluster <- function(session, input, output, df, namex, comp_name)
 #------------------------------------------------------------------------------------------------------------------------
 #------------------------------------------------------------------------------------------------------------------------
 
-interactive_heatmap <- function(session, input, output, df, namex, groupx, comp_name)
+interactive_heatmap <- function(session, input, output, df, namex, groupx, comp_name, params)
 {
-  cat(file=stderr(), "interactive_heatmap" , "\n")
-  if (site_user == "dpmsr"){
+  cat(file = stderr(), "interactive_heatmap..." , "\n")
+  if (site_user == "dpmsr") {
     heatmap_filename <- "erasemyheatmap.png"
   }else{
     heatmap_filename <- str_c(dpmsr_set$file$data_dir, "/erasemyheatmap.png")
   }
   
   #if norm by protein one protein will have 0 stdev - which will crash the calc...
-  if (input$select_final_data_stats == "protein"){
+  if (params$data_output == "Protein") {
     df$stdev <-  apply(df[1:ncol(df)], 1, sd) 
     df <- df[df$stdev > 0.1,]
-    df <- df[,1:ncol(df)-1] 
+    df <- df[,1:ncol(df) - 1] 
   }
   
+  cat(file = stderr(), "interactive_heatmap...1" , "\n")
   colnames(df) <- namex
   df <- log2(df)
   df <- data.matrix(df)
   
   ## Row- and column-wise clustering 
-  hr <- hclust(as.dist(1-cor(t(df), method="pearson")), method="complete")
-  hc <- hclust(as.dist(1-cor(df, method="spearman")), method="complete") 
+  hr <- hclust(as.dist(1 - cor(t(df), method = "pearson")), method = "complete")
+  hc <- hclust(as.dist(1 - cor(df, method = "spearman")), method = "complete") 
   ## Tree cutting
-  mycl <- cutree(hr, h=max(hr$height)/1.5); mycolhc <- rainbow(length(unique(mycl)), start=0.1, end=0.9); mycolhc <- mycolhc[as.vector(mycl)] 
+  mycl <- cutree(hr, h = max(hr$height)/1.5); mycolhc <- rainbow(length(unique(mycl)), start = 0.1, end = 0.9); mycolhc <- mycolhc[as.vector(mycl)] 
   ## Plot heatmap 
   mycol <- redgreen(75)
   
   
   create_stats_heatmap <- reactive({
-    heatmap.2(df, Rowv=as.dendrogram(hr), Colv=as.dendrogram(hc), col=mycol, labCol=groupx, 
-              scale="row", density.info="none", trace="none", RowSideColors=mycolhc, main = input$stats_heatmap_title,
+    heatmap.2(df, Rowv = as.dendrogram(hr), Colv = as.dendrogram(hc), col = mycol, labCol = groupx, 
+              scale = "row", density.info = "none", trace = "none", RowSideColors = mycolhc, main = input$stats_heatmap_title,
               margins = c(10,10))
     #heatmap_filename <- str_c(dpmsr_set$file$output_dir, dpmsr_set$data$stats$final_comp, "//", "erasemyheatmap.png")
-    png(filename=heatmap_filename, units="px", width = 1776, height = 1776)  
-    heatmap.2(df, Rowv=as.dendrogram(hr), Colv=as.dendrogram(hc), col=mycol, labCol=groupx, 
-              scale="row", density.info="none", trace="none", RowSideColors=mycolhc, main = input$stats_heatmap_title,
+    png(filename = heatmap_filename, units = "px", width = 1776, height = 1776)  
+    heatmap.2(df, Rowv = as.dendrogram(hr), Colv = as.dendrogram(hc), col = mycol, labCol = groupx, 
+              scale = "row", density.info = "none", trace = "none", RowSideColors = mycolhc, main = input$stats_heatmap_title,
               margins = c(20,20))
     dev.off()
   })
   
-  
+  cat(file = stderr(), "interactive_heatmap...2" , "\n")
   
   output$stats_heatmap <- renderPlot({
     req(create_stats_heatmap())
@@ -348,9 +351,9 @@ interactive_heatmap <- function(session, input, output, df, namex, groupx, comp_
     }
   )
   
-  cat(file=stderr(), str_c("heatmap file exists? ", heatmap_filename, "   ", file.exists(heatmap_filename)), "\n")
+  cat(file = stderr(), str_c("heatmap file exists? ", heatmap_filename, "   ", file.exists(heatmap_filename)), "\n")
   try(file_delete(heatmap_filename), silent = TRUE)
-  cat(file=stderr(), str_c("deleting temp heatmap file ", file.exists(heatmap_filename)), "\n")
+  cat(file = stderr(), str_c("deleting temp heatmap file ", file.exists(heatmap_filename)), "\n")
   
 }
 

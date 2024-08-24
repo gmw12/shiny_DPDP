@@ -333,7 +333,6 @@ update_widgets_stats <- function(session, input, output){
     stats_comp_choices <- c(stats_comp$Name, params$comp_spqc)
     updatePickerInput(session, "stats_plot_comp1", choices = stats_comp_choices)
     updatePickerInput(session, "stats_plot_comp2", choices = stats_comp_choices)
-    updatePickerInput(session, "stats_plot_comp3", choices = stats_comp_choices)
   }
   
   

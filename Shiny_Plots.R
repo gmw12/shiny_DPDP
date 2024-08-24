@@ -2,8 +2,9 @@ cat(file = stderr(), "Shiny_Plots.R", "\n")
 
 #---------------------------------------------------------------------
 create_plot1 <- function(session, input, output, params, plot_number) {
+  cat(file = stderr(), "Function create_plot1...", "\n")
   
-  showModal(modalDialog("Function create_plot1...", footer = NULL))  
+  showModal(modalDialog("Create_plot1...", footer = NULL))  
   source("Shiny_File.R")
   source("Shiny_Interactive.R")
   
@@ -70,20 +71,10 @@ create_plot1 <- function(session, input, output, params, plot_number) {
     cat(file = stderr(), "Function create_plot1...3" , "\n")
     
     if (input$plot_type1 == "Bar") {
-      
-      output$stats_plots1 <- renderUI({
-        create_stats_bar_ui()
-      })
-      
-      interactive_barplot(session, input, output, df, namex, color_list, "stats_barplot", input$stats_plot_comp)   
+      interactive_barplot(session, input, output, df, namex, color_list, "stats_barplot", input$stats_plot_comp, plot_number)   
     }
     
     if (input$plot_type1 == "Box") {
-
-      output$stats_plots1 <- renderUI({
-        create_stats_box_ui()
-      })
-      
       interactive_boxplot(session, input, output, df, namex, color_list, input$stats_plot_comp) 
     }
 
@@ -92,14 +83,16 @@ create_plot1 <- function(session, input, output, params, plot_number) {
     }   
     
     if (input$plot_type1 == "PCA_3D") {
-      
-      output$stats_plots1 <- renderUI({
-        create_stats_pca3d_ui()
-      })
-      
       interactive_pca3d(session, input, output, df, namex, color_list, groupx, input$stats_plot_comp) 
     }    
     
+    if (input$plot_type1 == "Cluster") {
+      interactive_cluster(session, input, output, df, namex, input$stats_plot_comp)
+    }    
+    
+    if (input$plot_type1 == "Heatmap") {
+      interactive_heatmap(session, input, output, df, namex, groupx, input$stats_plot_comp, params)
+    }    
     
     
     removeModal()

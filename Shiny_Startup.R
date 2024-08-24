@@ -98,7 +98,8 @@ app_startup <- function(session, input, output) {
     
     #observers
     observe_comp_names(session, input, output)
-    observe_plot_type(session, input, output)   
+    observe_plot_type1(session, input, output)   
+    observe_plot_type2(session, input, output)  
     
   }else{
     loaded_database <- "none"
