@@ -56,7 +56,7 @@ create_stats_bar_ui <- function(plot_number) {
            ),
            div(
              style = "position:relative",
-             plotOutput(str_c(plot_number, "_stats_barplot"), width = 800, height = 550)
+             plotOutput(str_c(plot_number, "_stats_barplot"), width = 600, height = 400)
            ),
            downloadButton(str_c(plot_number, '_download_stats_barplot'))
     )  
@@ -80,7 +80,7 @@ create_stats_box_ui <- function(plot_number) {
            ),
            div(
              style = "position:relative",
-             plotOutput(str_c(plot_number, "_stats_boxplot"), width = 800, height = 550)
+             plotOutput(str_c(plot_number, "_stats_boxplot"), width = 600, height = 400)
            ),
            downloadButton(str_c(plot_number, '_download_stats_boxplot'))
     )  

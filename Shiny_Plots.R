@@ -4,7 +4,7 @@ cat(file = stderr(), "Shiny_Plots.R", "\n")
 create_plot <- function(session, input, output, params, plot_number) {
   cat(file = stderr(), "Function create_plot1...", "\n")
   
-  showModal(modalDialog("Create_plot1...", footer = NULL))  
+  showModal(modalDialog("Creating plot...", footer = NULL))  
   source("Shiny_File.R")
   source("Shiny_Interactive.R")
   

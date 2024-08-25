@@ -49,7 +49,7 @@ observe_plot_type1 <- function(session, input, output){
     if (input$plot_type1 == "Bar") {
   
       output$stats_plots1 <- renderUI({
-        create_stats_bar_ui(1)
+        create_stats_bar_ui(plot_number=1)
       })
   
     }
@@ -57,14 +57,14 @@ observe_plot_type1 <- function(session, input, output){
     if (input$plot_type1 == "Box") {
       
       output$stats_plots1 <- renderUI({
-        create_stats_box_ui()
+        create_stats_box_ui(plot_number=1)
       })
       
     }
     if (input$plot_type1 == "PCA_2D") {
       
       output$stats_plots1 <- renderUI({
-        create_stats_pca2d_ui()
+        create_stats_pca2d_ui(plot_number=1)
       })
       
     }
@@ -72,7 +72,7 @@ observe_plot_type1 <- function(session, input, output){
     if (input$plot_type1 == "PCA_3D") {
       
       output$stats_plots1 <- renderUI({
-        create_stats_pca3d_ui()
+        create_stats_pca3d_ui(plot_number=1)
       })
       
     }
@@ -80,7 +80,7 @@ observe_plot_type1 <- function(session, input, output){
     if (input$plot_type1 == "Cluster") {
       
       output$stats_plots1 <- renderUI({
-        create_stats_cluster_ui()
+        create_stats_cluster_ui(plot_number=1)
       })
       
     }
@@ -88,7 +88,7 @@ observe_plot_type1 <- function(session, input, output){
     if (input$plot_type1 == "Heatmap") {
       
       output$stats_plots1 <- renderUI({
-        create_stats_heatmap_ui()
+        create_stats_heatmap_ui(plot_number=1)
       })
       
     }
@@ -106,7 +106,7 @@ observe_plot_type2 <- function(session, input, output){
     if (input$plot_type2 == "Bar") {
       
       output$stats_plots2 <- renderUI({
-        create_stats_bar_ui(2)
+        create_stats_bar_ui(plot_number=2)
       })
       
     }
@@ -114,14 +114,14 @@ observe_plot_type2 <- function(session, input, output){
     if (input$plot_type2 == "Box") {
       
       output$stats_plots2 <- renderUI({
-        create_stats_box_ui()
+        create_stats_box_ui(plot_number=2)
       })
       
     }
     if (input$plot_type2 == "PCA_2D") {
       
       output$stats_plots2 <- renderUI({
-        create_stats_pca2d_ui()
+        create_stats_pca2d_ui(plot_number=2)
       })
       
     }
@@ -129,7 +129,7 @@ observe_plot_type2 <- function(session, input, output){
     if (input$plot_type2 == "PCA_3D") {
       
       output$stats_plots2 <- renderUI({
-        create_stats_pca3d_ui()
+        create_stats_pca3d_ui(plot_number=2)
       })
       
     }
@@ -137,7 +137,7 @@ observe_plot_type2 <- function(session, input, output){
     if (input$plot_type2 == "Cluster") {
       
       output$stats_plots2 <- renderUI({
-        create_stats_cluster_ui()
+        create_stats_cluster_ui(plot_number=2)
       })
       
     }
@@ -145,7 +145,7 @@ observe_plot_type2 <- function(session, input, output){
     if (input$plot_type2 == "Heatmap") {
       
       output$stats_plots2 <- renderUI({
-        create_stats_heatmap_ui()
+        create_stats_heatmap_ui(plot_number=2)
       })
       
     }

@@ -68,7 +68,7 @@ interactive_boxplot <- function(session, input, output, df, namex, color_list, c
       ggplot2::geom_boxplot(notch = TRUE, outlier.colour = "red", outlier.shape = 1,
                             outlier.size = 1, fill = rev(color_list)) + ggplot2::theme_classic() + 
       ggplot2::coord_flip() +
-      ggplot2::xlab(input[[str_c(plot_number, "stats_boxplot_x_axis_label")]]) +
+      ggplot2::xlab(input[[str_c(plot_number, "_stats_boxplot_x_axis_label")]]) +
       ggplot2::ggtitle(input[[str_c(plot_number, "_stats_boxplot_title")]]) + 
       ggplot2::theme(plot.title = ggplot2::element_text(hjust = 0.5, size = input[[str_c(plot_number, "_stats_boxplot_title_size")]]), 
                      axis.title = ggplot2::element_text(size = input[[str_c(plot_number, "_stats_boxplot_label_size")]], color = "black"),
@@ -125,20 +125,23 @@ interactive_pca2d <- function(session, input, output, df, namex, color_list, gro
   
   cat(file = stderr(), "interactive_pca2d...3" , "\n")
   
-  hover_data <- data.frame(cbind(namex, df_out[[ input[[str_c(plot_number, "_stats_pca2d_x")]] ]], df_out[[input[[str_c(plot_number, "_stats_pca2d_y")]]]]), stringsAsFactors = FALSE  )
-  colnames(hover_data) <- c("Sample", "get(input$stats_pca2d_x)", "get(input$stats_pca2d_y)")
-  hover_data$`get(input[[str_c(plot_number, "_stats_pca2d_x")]])` <- as.numeric(hover_data$`get(input[[str_c(plot_number, "_stats_pca2d_x")]])`)
-  hover_data$`get(input[[str_c(plot_number, "_stats_pca2d_y")]])` <- as.numeric(hover_data$`get(input[[str_c(plot_number, "_stats_pca2d_y")]])`)
+  pca_y <- input[[str_c(plot_number, "_stats_pca2d_x")]]
+  pca_x <- input[[str_c(plot_number, "_stats_pca2d_y")]]
+  
+  hover_data <- data.frame(cbind(namex, df_out[[pca_x]], df_out[[pca_y]]), stringsAsFactors = FALSE  )
+  colnames(hover_data) <- c("Sample", "get(pca_x)", "get(pca_y)")
+  hover_data$`get(pca_x)` <- as.numeric(hover_data$`get(pca_x)`)
+  hover_data$`get(pca_y)` <- as.numeric(hover_data$`get(pca_y)`)
   
   #hover_data_test <<- hover_data
   cat(file = stderr(), "interactive_pca2d...4" , "\n")
   create_stats_pca2d <- reactive({
-    ggplot(df_out, aes(x = get(input[[str_c(plot_number, "_stats_pca2d_x")]]), y = get(input[[str_c(plot_number, "_stats_pca2d_y")]]), color = x_gr )) +
+    ggplot(df_out, aes(x = get(pca_x), y = get(pca_y), color = x_gr )) +
       geom_point(alpha = 0.8, size = input[[str_c(plot_number, "_stats_pca2d_dot_size")]] ) +
       theme(legend.title = element_blank()) +
       ggtitle(input[[str_c(plot_number, "_stats_pca2d_title")]]) + 
-      ylab(input[[str_c(plot_number, "_stats_pca2d_y")]]) +
-      xlab(input[[str_c(plot_number, "_stats_pca2d_x")]]) +
+      ylab(pca_y) +
+      xlab(pca_x) +
       scale_color_manual(values = rev(unique(color_list))) +
       theme(plot.title = element_text(hjust = 0.5, size = input[[str_c(plot_number, "_stats_pca2d_title_size")]]), 
             axis.title = element_text(size = input[[str_c(plot_number, "_stats_pca2d_label_size")]], color = "black"),
@@ -165,7 +168,7 @@ interactive_pca2d <- function(session, input, output, df, namex, color_list, gro
   
   cat(file = stderr(), "interactive_pca2d...6" , "\n")
   output$hover_pca2d_info <- renderUI({
-    hover <- input$plot_pca2d_hover
+    hover <- input[[str_c(plot_number, "_plot_pca2d_hover")]]
     point <- nearPoints(hover_data, hover, threshold = 5, maxpoints = 1, addDist = TRUE)
     if (nrow(point) == 0) return(NULL)
     
@@ -293,7 +296,7 @@ interactive_cluster <- function(session, input, output, df, namex, comp_name, pl
 #------------------------------------------------------------------------------------------------------------------------
 #------------------------------------------------------------------------------------------------------------------------
 
-interactive_heatmap <- function(session, input, output, df, namex, groupx, comp_name, params)
+interactive_heatmap <- function(session, input, output, df, namex, groupx, comp_name, params, plot_number)
 {
   cat(file = stderr(), "interactive_heatmap..." , "\n")
   if (site_user == "dpmsr") {
