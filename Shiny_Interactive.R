@@ -22,25 +22,25 @@ interactive_barplot <- function(session, input, output, df, namex, color_list, o
   create_stats_barplot <- reactive({
     ggplot(data = df2, aes(x = Sample, y = Total_Intensity)) +
       geom_bar(stat = "identity", fill = color_list) + theme_classic() + 
-      ggtitle(input[[str_c(plot_number, "_",output_name, "_title")]]) + 
-      ylab(input[[str_c(plot_number, "_",output_name, "_y_axis_label")]]) +
+      ggtitle(input[[stringr::str_c(plot_number, "_",output_name, "_title")]]) + 
+      ylab(input[[stringr::str_c(plot_number, "_",output_name, "_y_axis_label")]]) +
       xlab(NULL) +
       #scale_y_discrete(labels = NULL) +
       coord_cartesian(ylim = NULL, expand = TRUE) +
-      theme(plot.title = element_text(hjust = 0.5, size = input[[str_c(output_name, "_title_size")]]), 
-            axis.title = element_text(size = input[[str_c(plot_number, "_",output_name, "_label_size")]], color = "black"),
-            axis.text.x = element_text(size = input[[str_c(plot_number, "_",output_name, "_label_size")]], angle = 90,  color = "black"),
-            axis.text.y = element_text(size = input[[str_c(plot_number, "_",output_name, "_label_size")]],  color = "black"),
+      theme(plot.title = element_text(hjust = 0.5, size = input[[stringr::str_c(output_name, "_title_size")]]), 
+            axis.title = element_text(size = input[[stringr::str_c(plot_number, "_",output_name, "_label_size")]], color = "black"),
+            axis.text.x = element_text(size = input[[stringr::str_c(plot_number, "_",output_name, "_label_size")]], angle = 90,  color = "black"),
+            axis.text.y = element_text(size = input[[stringr::str_c(plot_number, "_",output_name, "_label_size")]],  color = "black"),
       ) 
   })
   
-  output[[str_c(plot_number, "_",output_name)]] <- renderPlot({
+  output[[stringr::str_c(plot_number, "_",output_name)]] <- renderPlot({
     req(create_stats_barplot())
     create_stats_barplot()
   })
   
   cat(file = stderr(), "interactive_barplot...2", "\n")
-  output[[str_c(plot_number, "_download_", output_name)]] <- downloadHandler(
+  output[[stringr::str_c(plot_number, "_download_", output_name)]] <- downloadHandler(
     filename = function(){
       str_c(plot_number, "_Stats_Barplot_", comp_name,  ".png", collapse = " ")
     },
@@ -68,22 +68,22 @@ interactive_boxplot <- function(session, input, output, df, namex, color_list, c
       ggplot2::geom_boxplot(notch = TRUE, outlier.colour = "red", outlier.shape = 1,
                             outlier.size = 1, fill = rev(color_list)) + ggplot2::theme_classic() + 
       ggplot2::coord_flip() +
-      ggplot2::xlab(input[[str_c(plot_number, "_stats_boxplot_x_axis_label")]]) +
-      ggplot2::ggtitle(input[[str_c(plot_number, "_stats_boxplot_title")]]) + 
-      ggplot2::theme(plot.title = ggplot2::element_text(hjust = 0.5, size = input[[str_c(plot_number, "_stats_boxplot_title_size")]]), 
-                     axis.title = ggplot2::element_text(size = input[[str_c(plot_number, "_stats_boxplot_label_size")]], color = "black"),
-                     axis.text.x = ggplot2::element_text(size = input[[str_c(plot_number, "_stats_boxplot_label_size")]], angle = 90,  color = "black"),
-                     axis.text.y = ggplot2::element_text(size = input[[str_c(plot_number, "_stats_boxplot_label_size")]],  color = "black"),
+      ggplot2::xlab(input[[stringr::str_c(plot_number, "_stats_boxplot_x_axis_label")]]) +
+      ggplot2::ggtitle(input[[stringr::str_c(plot_number, "_stats_boxplot_title")]]) + 
+      ggplot2::theme(plot.title = ggplot2::element_text(hjust = 0.5, size = input[[stringr::str_c(plot_number, "_stats_boxplot_title_size")]]), 
+                     axis.title = ggplot2::element_text(size = input[[stringr::str_c(plot_number, "_stats_boxplot_label_size")]], color = "black"),
+                     axis.text.x = ggplot2::element_text(size = input[[stringr::str_c(plot_number, "_stats_boxplot_label_size")]], angle = 90,  color = "black"),
+                     axis.text.y = ggplot2::element_text(size = input[[stringr::str_c(plot_number, "_stats_boxplot_label_size")]],  color = "black"),
       ) 
   })
   
-  output[[str_c(plot_number, "_stats_boxplot")]] <- renderPlot({
+  output[[stringr::str_c(plot_number, "_stats_boxplot")]] <- renderPlot({
     req(create_stats_boxplot())
     #callr::r_bg(create_stats_boxplot, args = list(df3=df3), supervise = TRUE)
     create_stats_boxplot()
   })
   
-  output[[str_c(plot_number, "_download_stats_boxplot")]]  <- downloadHandler(
+  output[[stringr::str_c(plot_number, "_download_stats_boxplot")]]  <- downloadHandler(
     filename = function(){
       str_c(plot_number, "_stats_Boxplot_", comp_string, ".png", collapse = " ")
     },
@@ -125,8 +125,8 @@ interactive_pca2d <- function(session, input, output, df, namex, color_list, gro
   
   cat(file = stderr(), "interactive_pca2d...3" , "\n")
   
-  pca_y <- input[[str_c(plot_number, "_stats_pca2d_x")]]
-  pca_x <- input[[str_c(plot_number, "_stats_pca2d_y")]]
+  pca_y <- input[[stringr::str_c(plot_number, "_stats_pca2d_x")]]
+  pca_x <- input[[stringr::str_c(plot_number, "_stats_pca2d_y")]]
   
   test_py <<- pca_y
   test_px <<- pca_x
@@ -142,26 +142,26 @@ interactive_pca2d <- function(session, input, output, df, namex, color_list, gro
   cat(file = stderr(), "interactive_pca2d...4" , "\n")
   create_stats_pca2d <- reactive({
     ggplot(df_out, aes(x = get(pca_x), y = get(pca_y), color = x_gr )) +
-      geom_point(alpha = 0.8, size = input[[str_c(plot_number, "_stats_pca2d_dot_size")]] ) +
+      geom_point(alpha = 0.8, size = input[[stringr::str_c(plot_number, "_stats_pca2d_dot_size")]] ) +
       theme(legend.title = element_blank()) +
-      ggtitle(input[[str_c(plot_number, "_stats_pca2d_title")]]) + 
+      ggtitle(input[[stringr::str_c(plot_number, "_stats_pca2d_title")]]) + 
       ylab(pca_y) +
       xlab(pca_x) +
       scale_color_manual(values = rev(unique(color_list))) +
-      theme(plot.title = element_text(hjust = 0.5, size = input[[str_c(plot_number, "_stats_pca2d_title_size")]]), 
-            axis.title = element_text(size = input[[str_c(plot_number, "_stats_pca2d_label_size")]], color = "black"),
-            axis.text.x = element_text(size =  input[[str_c(plot_number, "_stats_pca2d_label_size")]], angle = 90,  color = "black"),
-            axis.text.y = element_text(size =  input[[str_c(plot_number, "_stats_pca2d_label_size")]],  color = "black"),
+      theme(plot.title = element_text(hjust = 0.5, size = input[[stringr::str_c(plot_number, "_stats_pca2d_title_size")]]), 
+            axis.title = element_text(size = input[[stringr::str_c(plot_number, "_stats_pca2d_label_size")]], color = "black"),
+            axis.text.x = element_text(size =  input[[stringr::str_c(plot_number, "_stats_pca2d_label_size")]], angle = 90,  color = "black"),
+            axis.text.y = element_text(size =  input[[stringr::str_c(plot_number, "_stats_pca2d_label_size")]],  color = "black"),
       ) 
   })
   
   cat(file = stderr(), "interactive_pca2d...5" , "\n")
-  output[[str_c(plot_number, "_stats_pca2d")]] <- renderPlot({
+  output[[stringr::str_c(plot_number, "_stats_pca2d")]] <- renderPlot({
     req(create_stats_pca2d())
     create_stats_pca2d()
   })
   
-  output[[str_c(plot_number, "_download_stats_pca2d")]] <- downloadHandler(
+  output[[stringr::str_c(plot_number, "_download_stats_pca2d")]] <- downloadHandler(
     filename = function(){
       str_c(plot_number, "_stats_pca2d_", comp_name, ".png", collapse = " ")
     },
@@ -172,8 +172,8 @@ interactive_pca2d <- function(session, input, output, df, namex, color_list, gro
   )
   
   cat(file = stderr(), "interactive_pca2d...6" , "\n")
-  output[[str_c(plot_number, "_hover_pca2d_info")]] <- renderUI({
-    hover <- input[[str_c(plot_number, "_plot_pca2d_hover")]]
+  output[[stringr::str_c(plot_number, "_hover_pca2d_info")]] <- renderUI({
+    hover <- input[[stringr::str_c(plot_number, "_plot_pca2d_hover")]]
     point <- nearPoints(hover_data, hover, threshold = 5, maxpoints = 1, addDist = TRUE)
     if (nrow(point) == 0) return(NULL)
     
@@ -228,19 +228,19 @@ interactive_pca3d <- function(session, input, output, df, namex, color_list, gro
           new = FALSE,
           legend = "right",
           palette = rev(unique(color_list)), 
-          radius = input[[str_c(plot_number, "_stats_pca3d_dot_size")]],
-          title = input[[str_c(plot_number, "_stats_pca3d_title")]]
+          radius = input[[stringr::str_c(plot_number, "_stats_pca3d_dot_size")]],
+          title = input[[stringr::str_c(plot_number, "_stats_pca3d_title")]]
     )
   })
   
-  output[[str_c(plot_number, "_stats_pca3d")]] <- renderRglwidget({
+  output[[stringr::str_c(plot_number, "_stats_pca3d")]] <- renderRglwidget({
     try(rgl.close())
     req(create_stats_pca3d())
     create_stats_pca3d()
     rglwidget()
   })
   
-  output[[str_c(plot_number, "_download_stats_pca3d")]] <- downloadHandler(
+  output[[stringr::str_c(plot_number, "_download_stats_pca3d")]] <- downloadHandler(
     filename = function(){
       str_c(plot_number, "_stats_pca3d_", comp_name, ".png", collapse = " ")
     },
@@ -272,19 +272,19 @@ interactive_cluster <- function(session, input, output, df, namex, comp_name, pl
   
   create_stats_cluster <- reactive({
     distance <- get_dist(df, method = "euclidean")
-    fviz_dist(distance,  show_labels = TRUE, gradient = list(low = input[[str_c(plot_number, "_cluster_low_color")]], mid = "white", high = input[[str_c(plot_number, "_cluster_high_color")]] )) +
-      ggtitle(input[[str_c(plot_number, "_stats_cluster_title")]]) +
-      theme(plot.title = element_text(hjust = 0.5, size = input[[str_c(plot_number, "_stats_cluster_title_size")]] ), 
-            axis.text.x = element_text(size = input[[str_c(plot_number, "_stats_cluster_label_size")]], angle = 90,  color = "black"),
-            axis.text.y = element_text(size = input[[str_c(plot_number, "_stats_cluster_label_size")]],  color = "black"))
+    fviz_dist(distance,  show_labels = TRUE, gradient = list(low = input[[stringr::str_c(plot_number, "_cluster_low_color")]], mid = "white", high = input[[stringr::str_c(plot_number, "_cluster_high_color")]] )) +
+      ggtitle(input[[stringr::str_c(plot_number, "_stats_cluster_title")]]) +
+      theme(plot.title = element_text(hjust = 0.5, size = input[[stringr::str_c(plot_number, "_stats_cluster_title_size")]] ), 
+            axis.text.x = element_text(size = input[[stringr::str_c(plot_number, "_stats_cluster_label_size")]], angle = 90,  color = "black"),
+            axis.text.y = element_text(size = input[[stringr::str_c(plot_number, "_stats_cluster_label_size")]],  color = "black"))
   })
   
-  output[[str_c(plot_number, "_stats_cluster")]] <- renderPlot({
+  output[[stringr::str_c(plot_number, "_stats_cluster")]] <- renderPlot({
     req(create_stats_cluster())
     create_stats_cluster()
   })
   
-  output[[str_c(plot_number, "_download_stats_cluster")]] <- downloadHandler(
+  output[[stringr::str_c(plot_number, "_download_stats_cluster")]] <- downloadHandler(
     filename = function(){
       str_c(plot_number, "_stats_cluster_", comp_name, ".png", collapse = " ")
     },
@@ -333,24 +333,24 @@ interactive_heatmap <- function(session, input, output, df, namex, groupx, comp_
   
   create_stats_heatmap <- reactive({
     heatmap.2(df, Rowv = as.dendrogram(hr), Colv = as.dendrogram(hc), col = mycol, labCol = groupx, 
-              scale = "row", density.info = "none", trace = "none", RowSideColors = mycolhc, main = input[[str_c(plot_number, "_stats_heatmap_title")]],
+              scale = "row", density.info = "none", trace = "none", RowSideColors = mycolhc, main = input[[stringr::str_c(plot_number, "_stats_heatmap_title")]],
               margins = c(10,10))
     #heatmap_filename <- str_c(dpmsr_set$file$output_dir, dpmsr_set$data$stats$final_comp, "//", "erasemyheatmap.png")
     png(filename = str_c(plot_number, "_", heatmap_filename), units = "px", width = 1776, height = 1776)  
     heatmap.2(df, Rowv = as.dendrogram(hr), Colv = as.dendrogram(hc), col = mycol, labCol = groupx, 
-              scale = "row", density.info = "none", trace = "none", RowSideColors = mycolhc, main = input[[str_c(plot_number, "_stats_heatmap_title")]],
+              scale = "row", density.info = "none", trace = "none", RowSideColors = mycolhc, main = input[[stringr::str_c(plot_number, "_stats_heatmap_title")]],
               margins = c(20,20))
     dev.off()
   })
   
   cat(file = stderr(), "interactive_heatmap...2" , "\n")
   
-  output[[str_c(plot_number, "_stats_heatmap")]] <- renderPlot({
+  output[[stringr::str_c(plot_number, "_stats_heatmap")]] <- renderPlot({
     req(create_stats_heatmap())
     create_stats_heatmap()
   })
   
-  output[[str_c(plot_number, "_download_stats_heatmap")]] <- downloadHandler(
+  output[[stringr::str_c(plot_number, "_download_stats_heatmap")]] <- downloadHandler(
     filename = function(){
       str_c(plot_number, "_stats_heatmap_", comp_name, ".png", collapse = " ")
     },
@@ -459,28 +459,24 @@ interactive_go_volcano <- function(session, input, output)
 #------------------------------------------------------------------------------------------------------------------------
 #------------------------------------------------------------------------------------------------------------------------
 
-interactive_stats_volcano <- function(session, input, output, i)
+interactive_stats_volcano <- function(session, input, output, df, stat_plot_comp, plot_number)
 {
-  cat(file=stderr(), "interactive_stats_volcano" , "\n")
-  
-  df <- dpmsr_set$data$stats[[dpmsr_set$y$stats$groups$comp_name[i]]]
+  cat(file=stderr(), stringr::str_c("interactive_stats_volcano...      ", stat_plot_comp, "   ", plot_number), "\n")
+    
+  testdf <<- df
+  test_stat_plot_comp <<- stat_plot_comp
+  test_plot_number <<- plot_number
+  test_input <<- input
   
   if (is.grouped_df(df)){df <- ungroup(df)}
   
-  if(input$stats_spqc_cv_filter){
-    df <- subset(df, df[ , dpmsr_set$y$stats$groups$mf[i]] >= input$missing_factor )
-  }
-  
-  df_fc <- df %>% dplyr::select(contains(dpmsr_set$y$stats$groups$fc[i]))
+  df_fc <- df %>% dplyr::select(contains(stringr::str_c(stat_plot_comp, "_fc")))
   
   if (!input$checkbox_filter_adjpval) {
-    df_pval <- df %>% dplyr::select(contains(dpmsr_set$y$stats$groups$pval[i]))
+    df_pval <- df[[stringr::str_c(stat_plot_comp, "_pval")]]
   }else{
-    df_pval <- df %>% dplyr::select(contains(dpmsr_set$y$stats$groups$adjpval[i]))
+    df_pval <- df[[stringr::str_c(stat_plot_comp, "_adjpval")]]
   }
-  
-  #df_fc <- df %>% dplyr::select(contains(dpmsr_set$y$stats$groups$fc[1]))
-  #df_pval <- df %>% dplyr::select(contains(dpmsr_set$y$stats$groups$pval[1]))
   
   df <- cbind(df$Stats, df$Accession, df$Description, df_fc, df_pval)
   colnames(df) <- c("Stats", "Accession", "Description", "fc", "fc2", "pval")
@@ -489,18 +485,22 @@ interactive_stats_volcano <- function(session, input, output, i)
   df$log_pvalue <- -log(as.numeric(df$pval), 10)
   df$log_fc <- log(as.numeric(df$fc2), 2)
   
+  cat(file=stderr(), "Interactive stats volcano...1" , "\n")
   #volcano_df <<- df
   
-  if(input$stats_volcano_fixed_axis){
-    xmax <- input$stats_volcano_x_axis
-    ymax <- input$stats_volcano_y_axis
+  testme <<- input[[stringr::str_c(plot_number, "_stats_volcano_fixed_axis")]]
+  
+  if(input[[stringr::str_c(plot_number, "_stats_volcano_fixed_axis")]]){
+    xmax <- input[[stringr::str_c(plot_number, "_stats_volcano_x_axis")]]
+    ymax <- input[[stringr::str_c(plot_number, "_sstats_volcano_y_axis")]]
   }else{
     xmax <- max(df$log_fc) 
     ymax <- max(df$log_pvalue)
   }
   
-  if (input$volcano_highlight != ""){
-    highlight_list <- gsub(", ", "," ,input$volcano_highlight)
+  cat(file=stderr(), "Interactive stats volcano...1b" , "\n")
+  if (input[[stringr::str_c(plot_number, "_volcano_highlight")]] != ""){
+    highlight_list <- gsub(", ", "," ,input[[stringr::str_c(plot_number, "_volcano_highlight")]])
     highlight_list <- str_split(highlight_list, ",")
     highlight_list <- paste(tolower(unlist(highlight_list)), collapse = "|")
     h_list <<- highlight_list
@@ -513,48 +513,51 @@ interactive_stats_volcano <- function(session, input, output, i)
     highlight_df <- df %>% filter(str_detect(Description, "You will find nothing now"))
   }
   
-  if (input$stats_volcano_highlight_signif & input$stats_volcano_highlight_up){
+  cat(file=stderr(), "Interactive stats volcano...2" , "\n")
+  if (input[[stringr::str_c(plot_number, "_stats_volcano_highlight_signif")]] & input[[stringr::str_c(plot_number, "_stats_volcano_highlight_up")]]){
     highlight_stat_up <- df[df$Stats=="Up",]
   }else{
     highlight_stat_up <- df %>% filter(str_detect(Description, "You will find nothing now"))
   }
   
-  if (input$stats_volcano_highlight_signif & input$stats_volcano_highlight_down){
+  if (input[[stringr::str_c(plot_number, "_stats_volcano_highlight_signif")]] & input[[stringr::str_c(plot_number, "_stats_volcano_highlight_down")]]){
     highlight_stat_down <- df[df$Stats=="Down",]
   }else{
     highlight_stat_down <- df %>% filter(str_detect(Description, "You will find nothing now"))
   }
   
+  cat(file=stderr(), "Interactive stats volcano...3" , "\n")
   volcano_stats_plot <- reactive({
     ggplot(df, aes(x = log_fc, y = log_pvalue)) +
       theme_minimal() +
-      geom_point(alpha=0.4, size=input[[str_c("volcano",i,"_stats_plot_dot_size")]], color = input[[str_c("volcano",i,"_stats_dot_color")]] ) +
-      xlab(input[[str_c("volcano",i,"_stats_plot_x_axis_label")]]) + 
-      ylab(input[[str_c("volcano",i,"_stats_plot_y_axis_label")]]) +
-      scale_colour_gradient(low = input[[str_c("volcano", i, "_stats_dot_color")]], high = input[[str_c("volcano", i, "_stats_dot_color")]] ) +
-      ggtitle(input[[str_c("volcano",i,"_stats_plot_title")]])+    
+      geom_point(alpha=0.4, size=input[[stringr::str_c(plot_number, "_volcano_stats_plot_dot_size")]], color = input[[stringr::str_c(plot_number, "_volcano_stats_dot_color")]] ) +
+      xlab(input[[stringr::str_c(plot_number, "_volcano_stats_plot_x_axis_label")]]) + 
+      ylab(input[[stringr::str_c(plot_number, "_volcano_stats_plot_y_axis_label")]]) +
+      scale_colour_gradient(low = input[[stringr::str_c(plot_number, "_volcano_stats_dot_color")]], high = input[[stringr::str_c(plot_number, "_volcano_stats_dot_color")]] ) +
+      ggtitle(input[[stringr::str_c(plot_number, "_volcano_stats_plot_title")]])+    
       xlim(-xmax, xmax) +
       ylim(0, ymax) +
-      theme(plot.title = element_text(size=input[[str_c("volcano",i,"_stats_plot_title_size")]], hjust = 0.5),
-            axis.title = element_text(size=input[[str_c("volcano",i,"_stats_plot_label_size")]], color="black"),
+      theme(plot.title = element_text(size=input[[stringr::str_c(plot_number, "_volcano_stats_plot_title_size")]], hjust = 0.5),
+            axis.title = element_text(size=input[[stringr::str_c(plot_number, "_volcano_stats_plot_label_size")]], color="black"),
             axis.text.x = element_text(size=10, color="black"),
             axis.text.y = element_text(size=10,  color="black"),
             legend.position = "none")+
       geom_vline(aes(xintercept = log(input$foldchange_cutoff, 2)),  linetype = "dotted", color = "black")  + 
       geom_vline(aes(xintercept = -log(input$foldchange_cutoff, 2)),  linetype = "dotted", color = "black")  + 
       geom_hline(aes(yintercept = -log(input$pvalue_cutoff, 10)),  linetype = "dotted", color = "black") +
-      geom_point(data=highlight_df, aes(x=log_fc, y=log_pvalue), color=input$volcano_highlight_color, size=input$volcano_highlight_dot_size, 
-                 alpha=input$volcano_highlight_alpha) +
-      geom_point(data=highlight_stat_up, aes(x=log_fc, y=log_pvalue), color=input$volcano_highlight_color_up, size=input$volcano_highlight_dot_size, 
-                 alpha=input$volcano_highlight_alpha) +
-      geom_point(data=highlight_stat_down, aes(x=log_fc, y=log_pvalue), color=input$volcano_highlight_color_down, size=input$volcano_highlight_dot_size, 
-                 alpha=input$volcano_highlight_alpha)
+      geom_point(data=highlight_df, aes(x=log_fc, y=log_pvalue), color=input[[stringr::str_c(plot_number, "_volcano_highlight_color")]], size=input[[stringr::str_c(plot_number, "_volcano_highlight_dot_size")]], 
+                 alpha=input[[stringr::str_c(plot_number, "_volcano_highlight_alpha")]]) +
+      geom_point(data=highlight_stat_up, aes(x=log_fc, y=log_pvalue), color=input[[stringr::str_c(plot_number, "_volcano_highlight_color_up")]], size=input[[stringr::str_c(plot_number, "_volcano_highlight_dot_size")]], 
+                 alpha=input[[stringr::str_c(plot_number, "_volcano_highlight_alpha")]])  +
+      geom_point(data=highlight_stat_down, aes(x=log_fc, y=log_pvalue), color=input[[stringr::str_c(plot_number, "_volcano_highlight_color_down")]], size=input[[stringr::str_c(plot_number, "_volcano_highlight_dot_size")]], 
+                 alpha=input[[stringr::str_c(plot_number, "_volcano_highlight_alpha")]])
   })
   
-  plot_name <- str_c("volcano", i, "_stats_plot")
-  download_name <- str_c("download_stats_volcano", i)
-  hover_name <- str_c("volcano", i, "_stats_hover_info")
-  hover_stats_name <- str_c("volcano", i, "_stats_hover")
+  cat(file=stderr(), "Interactive stats volcano...4" , "\n")
+  plot_name <- stringr::str_c(plot_number, "_volcano_stats_plot")
+  download_name <- stringr::str_c(plot_number, "_download_stats_volcano")
+  hover_name <- stringr::str_c(plot_number, "_volcano_stats_hover_info")
+  hover_stats_name <- stringr::str_c(plot_number, "_volcano_stats_hover")
   
   output[[plot_name]]<- renderPlot({
     req(volcano_stats_plot())
@@ -563,7 +566,7 @@ interactive_stats_volcano <- function(session, input, output, i)
   
   output[[download_name]] <- downloadHandler(
     filename = function(){
-      str_c("Volcano_", dpmsr_set$y$stats$groups$comp_name[i], ".png", collapse = " ")
+      stringr::str_c(plot_number, "_Volcano_", stat_plot_comp, ".png", collapse = " ")
     },
     content = function(file){
       req(volcano_stats_plot())
@@ -571,6 +574,7 @@ interactive_stats_volcano <- function(session, input, output, i)
     }
   )
   
+  cat(file=stderr(), "Interactive stats volcano...5" , "\n")
   output[[hover_name]] <- renderUI({
     hover <- input[[hover_stats_name]]
     point <- nearPoints(df, hover, threshold = 5, maxpoints = 1, addDist = TRUE)
@@ -601,6 +605,9 @@ interactive_stats_volcano <- function(session, input, output, i)
                     "<b> pvalue: </b>", point$pval, "<br/>")))
     )
   })
+  
+  cat(file=stderr(), "Interactive stats volcano...end" , "\n")
+  
 }
 
 

@@ -170,10 +170,10 @@ stat_calc_bg <- function(params, comp_number, stats_comp){
     df_missing <- df_rollup_list[[2]]
   }
   
-    #add stats to df
-    df <- stat_add(df, df_missing, params, comp_number, stats_comp, df_design) 
-    
-
+  #add stats to df
+  df <- stat_add(df, df_missing, params, comp_number, stats_comp, df_design) 
+  
+  
   
   
   stats_out_name <- stringr::str_c(stats_comp$Table_Name[comp_number], "_final")

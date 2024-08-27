@@ -610,7 +610,7 @@ source("Shiny_UI.R")
                     
                     fluidRow(
                       column(width = 3, offset = 0,
-                             pickerInput(inputId = "plot_type1", label = "Plot type",  choices = c("Bar", "Box", "PCA_2D", "PCA_3D", "Cluster", "Heatmap"), 
+                             pickerInput(inputId = "plot_type1", label = "Plot type",  choices = c("Bar", "Box", "PCA_2D", "PCA_3D", "Cluster", "Heatmap", "Volcano"), 
                                          selected = "Bar", options = list(`actions-box` = TRUE, size = 100,
                                                                           `selected-text-format` = "count > 5"),  multiple = FALSE)
                       ),
@@ -635,7 +635,7 @@ source("Shiny_UI.R")
                     
                     fluidRow(
                       column(width = 3, offset = 0,
-                             pickerInput(inputId = "plot_type2", label = "Plot type",  choices = c("Bar", "Box", "PCA_2D", "PCA_3D", "Cluster", "Heatmap"), 
+                             pickerInput(inputId = "plot_type2", label = "Plot type",  choices = c("Bar", "Box", "PCA_2D", "PCA_3D", "Cluster", "Heatmap", "Volcano"), 
                                          selected = "Bar", options = list(`actions-box` = TRUE, size = 100,
                                                                           `selected-text-format` = "count > 5"),  multiple = FALSE)
                       ),

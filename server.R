@@ -335,7 +335,11 @@ shinyServer(function(session, input, output) {
   observeEvent(input$create_stats_plots1, {
     cat(file = stderr(), "create_stats_plots1 clicked...", "\n")
     
-    create_plot(session, input, output, params, plot_number = 1) 
+    if (input$plot_type1 == "Volcano") {
+      create_volcano(session, input, output, params, plot_number = 1) 
+    }else{
+      create_plot(session, input, output, params, plot_number = 1) 
+    }
     
     cat(file = stderr(), "create_stats_plots1...end", "\n")
   })   
@@ -345,7 +349,11 @@ shinyServer(function(session, input, output) {
   observeEvent(input$create_stats_plots2, {
     cat(file = stderr(), "create_stats_plots2 clicked...", "\n")
     
-    create_plot(session, input, output, params, plot_number = 2) 
+    if (input$plot_type2 == "Volcano") {
+      create_volcano(session, input, output, params, plot_number = 2) 
+    }else{
+      create_plot(session, input, output, params, plot_number = 2) 
+    } 
     
     cat(file = stderr(), "create_stats_plots2...end", "\n")
   })     

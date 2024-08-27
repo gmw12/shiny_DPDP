@@ -154,7 +154,7 @@ peptide_refilter_rollup <- function(df_filter_list, params, df_design) {
   #add missing column to data
   df_missing <- df_missing[, (ncol(df_missing) - sample_count + 1):ncol(df_missing)]
   df_missing_summary <- reduce_imputed_df(df_missing)
-  df <- tibble::add_column(df, df_missing_summary, .after = (ncol(df) - params$sample_number))
+  df <- tibble::add_column(df, df_missing_summary, .after = (ncol(df) - sample_count))
   
   cat(file = stderr(), "Function - peptide_refilter_rollup...end", "\n")  
   return(list(df, df_missing))
@@ -214,7 +214,46 @@ stat_add <- function(df, df_missing, params, comp_number, stats_comp, df_design)
   
   df[[stringr::str_c(stats_comp$Name[comp_number], "_mf")]] <- missing_factor_gw(df_N_missing, df_D_missing)
   
+  # Final filters
+  #missing filter, always on...
+  filtered_mf <- which(df[[stringr::str_c(stats_comp$Name[comp_number], "_mf")]] < params$missing_factor)  
+  df <- df[-(filtered_mf),]
   
+  if(params$stats_spqc_cv_filter) {
+    filtered_spqc <- which(df[[stringr::str_c(params$comp_spqc, "_CV")]] > params$stats_spqc_cv_filter_factor)  
+    df <- df[-(filtered_spqc),]
+    }
+  
+  if(params$stats_comp_cv_filter) {
+    filtered_onegroup <- which(df[[stringr::str_c(stats_comp$FactorsN[comp_number], "_CV")]] > params$stats_comp_cv_filter_factor & 
+                                 df[[stringr::str_c(stats_comp$FactorsD[comp_number], "_CV")]] > params$stats_comp_cv_filter_factor)  
+    df <- df[-(filtered_onegroup),]
+    }
+  
+  if(params$stats_peptide_minimum) {
+    filtered_min_peptide <- which(df$Precursors < params$stats_peptide_minimum_factor)
+    df <- df[-(filtered_min_peptide),]
+    }
+  
+  #label up/down
+  df$Stats <- ""
+  if(params$checkbox_filter_adjpval){
+    filtered_up <- which(df[[stringr::str_c(stats_comp$Name[comp_number], "_FC")]] >= params$foldchange_cutoff & 
+                           df[[stringr::str_c(stats_comp$Name[comp_number], "_adjpval")]] <= params$pvalue_cutoff) 
+    filtered_down <- which(df[[stringr::str_c(stats_comp$Name[comp_number], "_FC")]] <= -params$foldchange_cutoff & 
+                             df[[stringr::str_c(stats_comp$Name[comp_number], "_adjpval")]] <= params$pvalue_cutoff) 
+  }else{
+    filtered_up <- which(df[[stringr::str_c(stats_comp$Name[comp_number], "_FC")]] >= params$foldchange_cutoff & 
+                           df[[stringr::str_c(stats_comp$Name[comp_number], "_pval")]] <= params$pvalue_cutoff) 
+    filtered_down <- which(df[[stringr::str_c(stats_comp$Name[comp_number], "_FC")]] <= -params$foldchange_cutoff & 
+                           df[[stringr::str_c(stats_comp$Name[comp_number], "_pval")]] <= params$pvalue_cutoff) 
+  }
+  
+  df$Stats[filtered_up] <- "Up"
+  df$Stats[filtered_down] <- "Down"
+  
+  df <- sort_by(df, df$Stats)
+  df <- df[order(df$Stats, -df[[stringr::str_c(stats_comp$Name[comp_number], "_pval")]], decreasing = TRUE), ]
   
   cat(file = stderr(), "Function - stat_add...end", "\n\n")  
 

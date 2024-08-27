@@ -21,6 +21,7 @@ list_tables <- function(table_name){
 
 list_tables()
 
+
 testme <- read_table("precursor_norm_sltmm")
 testme2 <- read_table("temp_df_impute")
 test_design <- read_table("design")
@@ -29,15 +30,15 @@ test_stats_comp <- read_table("stats_comp")
 test_design <- read_table("design")
 test_protein_missing <- read_table("protein_missing")
 
+stats_comp <- read_table("stats_comp")
+sample_groups <- read_table("sample_groups")
 
-test2 <- read_table('protein_sltmm')
+test2 <- read_table('precursor_impute_sltmm')
+test3 <- read_table('protein_sltmm')
+test4 <- read_table('protein_sltmm_final')
+df <- read_table('protein_sltmm_Caskin1_Test_v_Caskin1_Ctrl_final')
 
-
-
-
-
-
-
+#------------
 
 
 

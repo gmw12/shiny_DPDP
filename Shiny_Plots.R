@@ -2,7 +2,7 @@ cat(file = stderr(), "Shiny_Plots.R", "\n")
 
 #---------------------------------------------------------------------
 create_plot <- function(session, input, output, params, plot_number) {
-  cat(file = stderr(), "Function create_plot1...", "\n")
+  cat(file = stderr(), stringr::str_c("Function create_plot...", "    plot_number=", plot_number), "\n")
   
   showModal(modalDialog("Creating plot...", footer = NULL))  
   source("Shiny_File.R")
@@ -25,7 +25,7 @@ create_plot <- function(session, input, output, params, plot_number) {
       
     comp_string <- input[[str_c("stats_plot_comp", plot_number)]]
     
-    cat(file = stderr(), "Function create_plot1...1" , "\n")
+    cat(file = stderr(), stringr::str_c("Function create_plot...1", "    ", comp_string), "\n")
     for (i in 1:length(comp_string)) {
       if (comp_string[i] != params$comp_spqc) {
         comp_number <- which(stats_comp$Name == comp_string[i])
@@ -43,13 +43,13 @@ create_plot <- function(session, input, output, params, plot_number) {
       }
     }
     
-    cat(file = stderr(), "Function create_plot1...2" , "\n")
+    cat(file = stderr(), "Function create_plot...2" , "\n")
 
     #convert to string to list of cols    
     comp_cols <- strsplit(comp_cols, ",") |> unlist() |> as.numeric()
     
     
-    cat(file = stderr(), "Function create_plot1...3" , "\n")
+    cat(file = stderr(), "Function create_plot...3" , "\n")
     comp_cols <- sort(unique(unlist(comp_cols)), decreasing = FALSE)
     df <- df[,comp_cols]
     
@@ -64,39 +64,78 @@ create_plot <- function(session, input, output, params, plot_number) {
       groupx <- design$Group[comp_cols]
     }
     
-    cat(file = stderr(), "Function create_plot1...4" , "\n")
+    if (plot_number ==1) {
+      plot_type <- input$plot_type1
+    }else{
+      plot_type <- input$plot_type2
+    }
     
-    if (input$plot_type1 == "Bar") {
+    cat(file = stderr(), stringr::str_c("Function create_plot...4", "    plot type = ", plot_type), "\n")
+    
+    if (plot_type == "Bar") {
       interactive_barplot(session, input, output, df, namex, color_list, "stats_barplot", input$stats_plot_comp, plot_number)   
     }
     
-    if (input$plot_type1 == "Box") {
+    if (plot_type == "Box") {
       interactive_boxplot(session, input, output, df, namex, color_list, input$stats_plot_comp, plot_number)  
     }
 
-    if (input$plot_type1 == "PCA_2D") {
+    if (plot_type == "PCA_2D") {
         interactive_pca2d(session, input, output, df, namex, color_list, groupx, input$stats_plot_comp, plot_number)  
     }   
     
-    if (input$plot_type1 == "PCA_3D") {
+    if (plot_type == "PCA_3D") {
       interactive_pca3d(session, input, output, df, namex, color_list, groupx, input$stats_plot_comp, plot_number)  
     }    
     
-    if (input$plot_type1 == "Cluster") {
+    if (plot_type == "Cluster") {
       interactive_cluster(session, input, output, df, namex, input$stats_plot_comp, plot_number)  
     }    
     
-    if (input$plot_type1 == "Heatmap") {
+    if (plot_type == "Heatmap") {
       interactive_heatmap(session, input, output, df, namex, groupx, input$stats_plot_comp, params, plot_number)  
     }    
     
     
     removeModal()
-    cat(file = stderr(), "Function create_plot1...end" , "\n")
+    cat(file = stderr(), "Function create_plot...end" , "\n")
   }
 }
 
+#---------------------------------------------
 
+#---------------------------------------------------------------------
+create_volcano <- function(session, input, output, params, plot_number) {
+  cat(file = stderr(), "Function create_volcano...", "\n")
+  
+  showModal(modalDialog("Creating volcano...", footer = NULL))  
+  source("Shiny_File.R")
+  source("Shiny_Interactive.R")
+  
+  if (plot_number == 1) {
+    stat_plot_comp <- input$stats_plot_comp1
+  }else{
+    stat_plot_comp <- input$stats_plot_comp2
+  }
+  
+  #confirm data exists in database
+  data_name <- stringr::str_c("protein_", input$stats_norm_type, "_", stat_plot_comp, "_final")
+  if (data_name %in% list_tables()) {
+    cat(file = stderr(), stringr::str_c(data_name, " is in database"), "\n") 
+    
+    #load data
+    conn <- RSQLite::dbConnect(RSQLite::SQLite(), params$database_path)
+    df <- RSQLite::dbReadTable(conn, data_name)
+    design <- RSQLite::dbReadTable(conn, "design")
+    stats_comp <- RSQLite::dbReadTable(conn, "stats_comp")
+    RSQLite::dbDisconnect(conn)
+    
+    interactive_stats_volcano(session, input, output, df, stat_plot_comp, plot_number)   
+
+    removeModal()
+    cat(file = stderr(), "Function create_volcano...end" , "\n")
+  }
+}
 
 
 
