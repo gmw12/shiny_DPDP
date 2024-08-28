@@ -53,7 +53,7 @@ render_parameters_graphs <- function(session, input, output) {
   cat(file = stderr(), "Function render_graphs", "\n")
   
   output$raw_bar <- renderImage({
-    list(src = str_c(params$qc_path,"Precursor_Start_barplot.png"), contentType = 'image/png', width = 400, height = 400, alt = "this is alt text")
+    list(src = str_c(params$qc_path,"Precursor_Start_barplot.png"), contentType = 'image/png', width = 300, height = 300, alt = "this is alt text")
   }, deleteFile = FALSE)
   
   output$raw_box <- renderImage({
@@ -61,7 +61,7 @@ render_parameters_graphs <- function(session, input, output) {
   }, deleteFile = FALSE)
   
   output$start_histogram <- renderImage({
-    list(src = str_c(params$qc_path, "Precursor_Start_Histogram.png"), contentType = 'image/png', width = 600, height = 600, alt = "this is alt text")
+    list(src = str_c(params$qc_path, "Precursor_Start_Histogram.png"), contentType = 'image/png', width = 500, height = 500, alt = "this is alt text")
   }, deleteFile = FALSE)
 
 }

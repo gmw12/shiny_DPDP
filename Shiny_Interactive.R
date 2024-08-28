@@ -366,94 +366,7 @@ interactive_heatmap <- function(session, input, output, df, namex, groupx, comp_
   
 }
 
-#------------------------------------------------------------------------------------------------------------------------
 
-interactive_go_volcano <- function(session, input, output)
-{
-  cat(file=stderr(), "interactive_go_volcano" , "\n")
-  volcano_data <- create_go_volcano(session, input, output)
-  
-  # testdf <- data.frame(cbind(dpmsr_set$data$stats$final$Accession, dpmsr_set$data$stats$final$Description))
-  # colnames(testdf) <- c("Accession", "Description")
-  # volcano_data <- merge(x=volcano_data, y=testdf, by.x="Accession", by.y="Accession")
-  
-  
-  volcano_go_plot <- reactive({
-    ggplot(volcano_data, aes(x = log_fc, y = log_pvalue)) +
-      theme_minimal() +
-      geom_point(alpha=0.4, size=input$plot_dot_size, color = input$volcano_dot_color) +
-      xlab(input$plot_x_axis_label) + ylab(input$plot_y_axis_label) +
-      scale_colour_gradient(low = input$volcano_dot_color, high = input$volcano_dot_color) +
-      ggtitle(input$plot_title)+    
-      xlim(-max(volcano_data$log_fc), max(volcano_data$log_fc)) +
-      theme(plot.title = element_text(size=input$plot_title_size, hjust = 0.5),
-            axis.title = element_text(size=input$plot_label_size, color="black"),
-            axis.text.x = element_text(size=10, color="black"),
-            axis.text.y = element_text(size=10,  color="black"),
-            legend.position = "none")
-  })
-  
-  output$volcano_go_plot <- renderPlot({
-    req(volcano_go_plot())
-    volcano_go_plot()
-  })
-  
-  output$download_go_volcano <- downloadHandler(
-    filename = function(){
-      str_c("GoVolcano_", input$select_data_comp_go, "_", input$go_volcano_id, "_", 
-            input$select_ont_go, ".png", collapse = " ")
-    },
-    content = function(file){
-      req(volcano_go_plot())
-      ggsave(file, plot = volcano_go_plot(), device = 'png')
-    }
-  )
-  
-  
-  output$hover_info <- renderUI({
-    hover <- input$plot_hover
-    point <- nearPoints(volcano_data, hover, threshold = 5, maxpoints = 1, addDist = TRUE)
-    if (nrow(point) == 0) return(NULL)
-    
-    # calculate point position INSIDE the image as percent of total dimensions
-    # from left (horizontal) and from top (vertical)
-    left_pct <- (hover$x - hover$domain$left) / (hover$domain$right - hover$domain$left)
-    top_pct <- (hover$domain$top - hover$y) / (hover$domain$top - hover$domain$bottom)
-    
-    # calculate distance from left and bottom side of the picture in pixels
-    # left_px <- hover$range$left + left_pct * (hover$range$right - hover$range$left)
-    # top_px <- hover$range$top + top_pct * (hover$range$bottom - hover$range$top)
-    left_px <- left_pct * (hover$range$right - hover$range$left)
-    top_px <- top_pct * (hover$range$bottom - hover$range$top)
-    
-    #cat(file=stderr(), str_c("hoverrr=", hover$range$right, "   hoverrl=", hover$range$left, "  left_pct=", left_pct), "\n")
-    #cat(file=stderr(), str_c("hoverrb=", hover$range$bottom, "   hoverrt=", hover$range$top, "  top_pct=", top_pct), "\n")
-    #cat(file=stderr(), str_c("leftpx=", left_px, "   toppx=", top_px), "\n", "\n"  )
-    
-    # create style property fot tooltip
-    # background color is set so tooltip is a bit transparent
-    # z-index is set so we are sure are tooltip will be on top
-    
-    if(top_pct > 0.3){
-      top_custom <- 10
-    }else{
-      top_custom <- 200
-    }
-    
-    style <- paste0("position:absolute; z-index:100; background-color: rgba(245, 245, 245, 0.85); ",
-                    "left:", 10, "px; top:", top_custom, "px;")
-    # actual tooltip created as wellPanel
-    wellPanel(
-      style = style,
-      p(HTML(paste0("<b> Accession: </b>", point$Accession, "<br/>",
-                    "<b> Description: </b>", point$Description, "<br/>",
-                    "<b> FC: </b>", point$foldchange, "<br/>",
-                    "<b> pvalue: </b>", point$pvalue, "<br/>")))
-    )
-  })
-  
-  return(volcano_data)
-}
 
 
 #------------------------------------------------------------------------------------------------------------------------
@@ -940,7 +853,94 @@ interactive_grouped_barplot <- function(session, input, output, comp_string, df,
 
 
 
+#------------------------------------------------------------------------------------------------------------------------
 
+interactive_go_volcano <- function(session, input, output)
+{
+  cat(file=stderr(), "interactive_go_volcano" , "\n")
+  volcano_data <- create_go_volcano(session, input, output)
+  
+  # testdf <- data.frame(cbind(dpmsr_set$data$stats$final$Accession, dpmsr_set$data$stats$final$Description))
+  # colnames(testdf) <- c("Accession", "Description")
+  # volcano_data <- merge(x=volcano_data, y=testdf, by.x="Accession", by.y="Accession")
+  
+  
+  volcano_go_plot <- reactive({
+    ggplot(volcano_data, aes(x = log_fc, y = log_pvalue)) +
+      theme_minimal() +
+      geom_point(alpha=0.4, size=input$plot_dot_size, color = input$volcano_dot_color) +
+      xlab(input$plot_x_axis_label) + ylab(input$plot_y_axis_label) +
+      scale_colour_gradient(low = input$volcano_dot_color, high = input$volcano_dot_color) +
+      ggtitle(input$plot_title)+    
+      xlim(-max(volcano_data$log_fc), max(volcano_data$log_fc)) +
+      theme(plot.title = element_text(size=input$plot_title_size, hjust = 0.5),
+            axis.title = element_text(size=input$plot_label_size, color="black"),
+            axis.text.x = element_text(size=10, color="black"),
+            axis.text.y = element_text(size=10,  color="black"),
+            legend.position = "none")
+  })
+  
+  output$volcano_go_plot <- renderPlot({
+    req(volcano_go_plot())
+    volcano_go_plot()
+  })
+  
+  output$download_go_volcano <- downloadHandler(
+    filename = function(){
+      str_c("GoVolcano_", input$select_data_comp_go, "_", input$go_volcano_id, "_", 
+            input$select_ont_go, ".png", collapse = " ")
+    },
+    content = function(file){
+      req(volcano_go_plot())
+      ggsave(file, plot = volcano_go_plot(), device = 'png')
+    }
+  )
+  
+  
+  output$hover_info <- renderUI({
+    hover <- input$plot_hover
+    point <- nearPoints(volcano_data, hover, threshold = 5, maxpoints = 1, addDist = TRUE)
+    if (nrow(point) == 0) return(NULL)
+    
+    # calculate point position INSIDE the image as percent of total dimensions
+    # from left (horizontal) and from top (vertical)
+    left_pct <- (hover$x - hover$domain$left) / (hover$domain$right - hover$domain$left)
+    top_pct <- (hover$domain$top - hover$y) / (hover$domain$top - hover$domain$bottom)
+    
+    # calculate distance from left and bottom side of the picture in pixels
+    # left_px <- hover$range$left + left_pct * (hover$range$right - hover$range$left)
+    # top_px <- hover$range$top + top_pct * (hover$range$bottom - hover$range$top)
+    left_px <- left_pct * (hover$range$right - hover$range$left)
+    top_px <- top_pct * (hover$range$bottom - hover$range$top)
+    
+    #cat(file=stderr(), str_c("hoverrr=", hover$range$right, "   hoverrl=", hover$range$left, "  left_pct=", left_pct), "\n")
+    #cat(file=stderr(), str_c("hoverrb=", hover$range$bottom, "   hoverrt=", hover$range$top, "  top_pct=", top_pct), "\n")
+    #cat(file=stderr(), str_c("leftpx=", left_px, "   toppx=", top_px), "\n", "\n"  )
+    
+    # create style property fot tooltip
+    # background color is set so tooltip is a bit transparent
+    # z-index is set so we are sure are tooltip will be on top
+    
+    if(top_pct > 0.3){
+      top_custom <- 10
+    }else{
+      top_custom <- 200
+    }
+    
+    style <- paste0("position:absolute; z-index:100; background-color: rgba(245, 245, 245, 0.85); ",
+                    "left:", 10, "px; top:", top_custom, "px;")
+    # actual tooltip created as wellPanel
+    wellPanel(
+      style = style,
+      p(HTML(paste0("<b> Accession: </b>", point$Accession, "<br/>",
+                    "<b> Description: </b>", point$Description, "<br/>",
+                    "<b> FC: </b>", point$foldchange, "<br/>",
+                    "<b> pvalue: </b>", point$pvalue, "<br/>")))
+    )
+  })
+  
+  return(volcano_data)
+}
 
 
 

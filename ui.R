@@ -19,7 +19,6 @@ source("Shiny_UI.R")
                menuItem("Setup", tabName = "stats_setup"),
                menuItem("Comparisons", tabName = "stats_compare"),
                menuItem("Graphs", tabName = "stats_plots"),
-               menuItem("Volcano", tabName = "stats_volcano"),
                menuItem("Data", tabName = "stats_data"),
                menuItem("Protein Plots", tabName = "stats_protein_plots")),
       menuItem("Save")
