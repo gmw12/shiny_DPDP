@@ -219,7 +219,7 @@ render_qc_graphs <- function(session, input, output) {
 
 
 #-------------------------------------
-update_widgets <- function(session, input, output) {
+update_widgets <- function(session, input, output, params) {
   cat(file = stderr(), "Function - update_widgets", "\n")
   
   if (exists("params")) {
@@ -317,7 +317,7 @@ update_widgets <- function(session, input, output) {
     updateTextInput(session, "report_accession", value = params$report_accession)
     
     #stats graphs
-    update_widgets_stats(session, input, output)
+    update_widgets_stats(session, input, output, params)
       
     
   }
@@ -325,10 +325,10 @@ update_widgets <- function(session, input, output) {
 
 #-----------------------------------------------------------------------------------
 
-update_widgets_stats <- function(session, input, output){
+update_widgets_stats <- function(session, input, output, params){
   cat(file = stderr(), "Function - update_widget_stats...", "\n")
   #stats graphs
-  if ("stats_comp" %in% list_tables()) {
+  if ("stats_comp" %in% list_tables(params)) {
     stats_comp <- read_table("stats_comp")
     stats_comp_choices <- c(stats_comp$Name, params$comp_spqc)
     updatePickerInput(session, "stats_plot_comp1", choices = stats_comp_choices)

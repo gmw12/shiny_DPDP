@@ -155,7 +155,7 @@ write_table <- function(table_name, df, params){
   RSQLite::dbDisconnect(conn)
 }
 
-list_tables <- function(table_name){
+list_tables <- function(params){
   conn <- RSQLite::dbConnect(RSQLite::SQLite(), params$database_path) 
   table_list <- RSQLite::dbListTables(conn)
   RSQLite::dbDisconnect(conn)

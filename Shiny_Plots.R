@@ -5,12 +5,64 @@ create_plot <- function(session, input, output, params, plot_number) {
   cat(file = stderr(), stringr::str_c("Function create_plot...", "    plot_number=", plot_number), "\n")
   
   showModal(modalDialog("Creating plot...", footer = NULL))  
+  
+  comp_string <- input[[str_c("stats_plot_comp", plot_number)]]
+  
+  bg_create_plot <- callr::r_bg(func = create_plot_bg, args = list(comp_string, input$stats_norm_type, params, plot_number), stderr = str_c(params$error_path, "//error_create_plot.txt"), supervise = TRUE)
+  bg_create_plot$wait()
+  print_stderr("error_create_plot.txt")
+  
+  create_plot_list <- bg_create_plot$get_result()
+  df <- create_plot_list[[1]]
+  namex <- create_plot_list[[2]]
+  color_list <- create_plot_list[[3]]
+  groupx <- create_plot_list[[4]]
+  
+  if (plot_number ==1 ) {
+    plot_type <- input$plot_type1
+  }else{
+    plot_type <- input$plot_type2
+  }
+
+  
+  if (plot_type == "Bar") {
+    interactive_barplot(session, input, output, df, namex, color_list, "stats_barplot", input$stats_plot_comp, plot_number)   
+  }
+  
+  if (plot_type == "Box") {
+    interactive_boxplot(session, input, output, df, namex, color_list, input$stats_plot_comp, plot_number)  
+  }
+  
+  if (plot_type == "PCA_2D") {
+    interactive_pca2d(session, input, output, df, namex, color_list, groupx, input$stats_plot_comp, plot_number)  
+  }   
+  
+  if (plot_type == "PCA_3D") {
+    interactive_pca3d(session, input, output, df, namex, color_list, groupx, input$stats_plot_comp, plot_number)  
+  }    
+  
+  if (plot_type == "Cluster") {
+    interactive_cluster(session, input, output, df, namex, input$stats_plot_comp, plot_number)  
+  }    
+  
+  if (plot_type == "Heatmap") {
+    interactive_heatmap(session, input, output, df, namex, groupx, input$stats_plot_comp, params, plot_number)  
+  }    
+  
+  cat(file = stderr(), stringr::str_c("Function create_plot...end", "    plot_number=", plot_number), "\n")
+  removeModal()
+}
+
+#---------------------------------------------------------------------
+create_plot_bg <- function(comp_string, input_stats_norm_type, params, plot_number) {
+  cat(file = stderr(), stringr::str_c("Function create_plot_bg...", "    plot_number=", plot_number), "\n")
+  
   source("Shiny_File.R")
   source("Shiny_Interactive.R")
   
   #confirm data exists in database
-  data_name <- stringr::str_c("protein_", input$stats_norm_type)
-  if (data_name %in% list_tables()) {
+  data_name <- stringr::str_c("protein_", input_stats_norm_type)
+  if (data_name %in% list_tables(params)) {
     cat(file = stderr(), stringr::str_c(data_name, " is in database"), "\n") 
     
     #load data
@@ -22,10 +74,8 @@ create_plot <- function(session, input, output, params, plot_number) {
     
     #reduce to samples
     df <- df[(ncol(df) - params$sample_number + 1):ncol(df)]
-      
-    comp_string <- input[[str_c("stats_plot_comp", plot_number)]]
     
-    cat(file = stderr(), stringr::str_c("Function create_plot...1", "    ", comp_string), "\n")
+    cat(file = stderr(), stringr::str_c("Function create_plot_bg...1", "    ", comp_string), "\n")
     for (i in 1:length(comp_string)) {
       if (comp_string[i] != params$comp_spqc) {
         comp_number <- which(stats_comp$Name == comp_string[i])
@@ -43,13 +93,13 @@ create_plot <- function(session, input, output, params, plot_number) {
       }
     }
     
-    cat(file = stderr(), "Function create_plot...2" , "\n")
+    cat(file = stderr(), "Function create_plot_bg...2" , "\n")
 
     #convert to string to list of cols    
     comp_cols <- strsplit(comp_cols, ",") |> unlist() |> as.numeric()
     
     
-    cat(file = stderr(), "Function create_plot...3" , "\n")
+    cat(file = stderr(), "Function create_plot_bg...3" , "\n")
     comp_cols <- sort(unique(unlist(comp_cols)), decreasing = FALSE)
     df <- df[,comp_cols]
     
@@ -64,41 +114,10 @@ create_plot <- function(session, input, output, params, plot_number) {
       groupx <- design$Group[comp_cols]
     }
     
-    if (plot_number ==1) {
-      plot_type <- input$plot_type1
-    }else{
-      plot_type <- input$plot_type2
-    }
+    return(list(df, namex, color_list, groupx))
     
-    cat(file = stderr(), stringr::str_c("Function create_plot...4", "    plot type = ", plot_type), "\n")
-    
-    if (plot_type == "Bar") {
-      interactive_barplot(session, input, output, df, namex, color_list, "stats_barplot", input$stats_plot_comp, plot_number)   
-    }
-    
-    if (plot_type == "Box") {
-      interactive_boxplot(session, input, output, df, namex, color_list, input$stats_plot_comp, plot_number)  
-    }
 
-    if (plot_type == "PCA_2D") {
-        interactive_pca2d(session, input, output, df, namex, color_list, groupx, input$stats_plot_comp, plot_number)  
-    }   
-    
-    if (plot_type == "PCA_3D") {
-      interactive_pca3d(session, input, output, df, namex, color_list, groupx, input$stats_plot_comp, plot_number)  
-    }    
-    
-    if (plot_type == "Cluster") {
-      interactive_cluster(session, input, output, df, namex, input$stats_plot_comp, plot_number)  
-    }    
-    
-    if (plot_type == "Heatmap") {
-      interactive_heatmap(session, input, output, df, namex, groupx, input$stats_plot_comp, params, plot_number)  
-    }    
-    
-    
-    removeModal()
-    cat(file = stderr(), "Function create_plot...end" , "\n")
+    cat(file = stderr(), "Function create_plot_bg...end" , "\n")
   }
 }
 
@@ -113,14 +132,56 @@ create_volcano <- function(session, input, output, params, plot_number) {
   source("Shiny_Interactive.R")
   
   if (plot_number == 1) {
-    stat_plot_comp <- input$stats_plot_comp1
+    stats_plot_comp <- input$stats_plot_comp1
   }else{
-    stat_plot_comp <- input$stats_plot_comp2
+    stats_plot_comp <- input$stats_plot_comp2
   }
   
+  stats_volcano_fixed_axis <- input[[stringr::str_c(plot_number, "_stats_volcano_fixed_axis")]]
+  stats_volcano_x_axis <- input[[stringr::str_c(plot_number, "_stats_volcano_x_axis")]]
+  stats_volcano_y_axis <- input[[stringr::str_c(plot_number, "_stats_volcano_y_axis")]]
+  volcano_highlight <- input[[stringr::str_c(plot_number, "_volcano_highlight")]]
+  stats_volcano_highlight_up <- input[[stringr::str_c(plot_number, "_stats_volcano_highlight_up")]]
+  stats_volcano_highlight_down <- input[[stringr::str_c(plot_number, "_stats_volcano_highlight_down")]]
+  
+  arg_list <- list(stats_plot_comp, input$stats_norm_type, input$checkbox_filter_adjpval, stats_volcano_fixed_axis, 
+                stats_volcano_x_axis, stats_volcano_y_axis, volcano_highlight,
+                stats_volcano_highlight_up, stats_volcano_highlight_down, params, plot_number )
+  
+  cat(file = stderr(), "Function create_volcano...1", "\n")
+  bg_create_volcano <- callr::r_bg(func = create_volcano_bg, args = arg_list, stderr = str_c(params$error_path, "//error_create_volcano.txt"), supervise = TRUE)
+  bg_create_volcano$wait()
+  print_stderr("error_create_volcano.txt")
+  
+  cat(file = stderr(), "Function create_volcano...2", "\n")
+  create_volcano_list <- bg_create_volcano$get_result()
+  df <- create_volcano_list[[1]]
+  xmax <- create_volcano_list[[2]]
+  ymax <- create_volcano_list[[3]]
+  highlight_list <- create_volcano_list[[4]]
+  highlight_df <- create_volcano_list[[5]]
+  highlight_stat_up <- create_volcano_list[[6]] 
+  highlight_stat_down <- create_volcano_list[[7]]
+  
+  cat(file = stderr(), "Function create_volcano...3", "\n")
+  interactive_stats_volcano(session, input, output, df, xmax, ymax, highlight_list, highlight_df, highlight_stat_up, 
+                            highlight_stat_down, stats_plot_comp, plot_number)   
+
+  removeModal()
+  cat(file = stderr(), "Function create_volcano...end" , "\n")
+
+}
+
+#---------------------------------------------------------------------
+create_volcano_bg <- function(stats_plot_comp, input_stats_norm_type, input_checkbox_filter_adjpval, stats_volcano_fixed_axis, 
+                              stats_volcano_x_axis, stats_volcano_y_axis, 
+                              volcano_highlight, stats_volcano_highlight_up, stats_volcano_highlight_down, params, plot_number) {
+  cat(file = stderr(), "Function create_volcano_bg...", "\n")
+  source('Shiny_File.R')
+  
   #confirm data exists in database
-  data_name <- stringr::str_c("protein_", input$stats_norm_type, "_", stat_plot_comp, "_final")
-  if (data_name %in% list_tables()) {
+  data_name <- stringr::str_c("protein_", input_stats_norm_type, "_", stats_plot_comp, "_final")
+  if (data_name %in% list_tables(params)) {
     cat(file = stderr(), stringr::str_c(data_name, " is in database"), "\n") 
     
     #load data
@@ -129,16 +190,65 @@ create_volcano <- function(session, input, output, params, plot_number) {
     design <- RSQLite::dbReadTable(conn, "design")
     stats_comp <- RSQLite::dbReadTable(conn, "stats_comp")
     RSQLite::dbDisconnect(conn)
-    
-    interactive_stats_volcano(session, input, output, df, stat_plot_comp, plot_number)   
-
-    removeModal()
-    cat(file = stderr(), "Function create_volcano...end" , "\n")
   }
+  
+  if (dplyr::is.grouped_df(df)){df <- ungroup(df)}
+  
+  df_fc <- df |> dplyr::select(contains(stringr::str_c(stats_plot_comp, "_fc")))
+  
+  if (!input_checkbox_filter_adjpval) {
+    df_pval <- df[[stringr::str_c(stats_plot_comp, "_pval")]]
+  }else{
+    df_pval <- df[[stringr::str_c(stats_plot_comp, "_adjpval")]]
+  }
+  
+  df <- cbind(df$Stats, df$Accession, df$Description, df_fc, df_pval)
+  colnames(df) <- c("Stats", "Accession", "Description", "fc", "fc2", "pval")
+  df$Accession <- as.character(df$Accession)
+  df$Description <- as.character(df$Description)
+  df$log_pvalue <- -log(as.numeric(df$pval), 10)
+  df$log_fc <- log(as.numeric(df$fc2), 2)
+  
+  cat(file = stderr(), "Function create_volcano_bg...1", "\n")
+  #volcano_df <<- df
+  
+  if(stats_volcano_fixed_axis){
+    xmax <- stats_volcano_x_axis
+    ymax <- stats_volcano_y_axis
+  }else{
+    xmax <- max(df$log_fc) 
+    ymax <- max(df$log_pvalue)
+  }
+  
+  if (volcano_highlight != ""){
+    highlight_list <- gsub(", ", "," , volcano_highlight)
+    highlight_list <- stringr::str_split(highlight_list, ",")
+    highlight_list <- paste(tolower(unlist(highlight_list)), collapse = "|")
+    h_list <<- highlight_list
+    highlight_df <- df
+    highlight_df$Description <- tolower(highlight_df$Description)
+    highlight_df <- highlight_df |> dplyr::filter(stringr::str_detect(Description, highlight_list))
+  }else{
+    highlight_list <- ""
+    highlight_df <- df |> dplyr::filter(stringr::str_detect(Description, "You will find nothing now"))
+  }
+  
+  cat(file = stderr(), "Function create_volcano_bg...2", "\n")
+  if (stats_volcano_highlight_up){
+    highlight_stat_up <- df[df$Stats=="Up",]
+  }else{
+    highlight_stat_up <- df |> dplyr::filter(stringr::str_detect(Description, "You will find nothing now"))
+  }
+  
+  if (stats_volcano_highlight_down){
+    highlight_stat_down <- df[df$Stats=="Down",]
+  }else{
+    highlight_stat_down <- df |> dplyr::filter(stringr::str_detect(Description, "You will find nothing now"))
+  }
+  
+  return(list(df, xmax, ymax, highlight_list, highlight_df, highlight_stat_up, highlight_stat_down ))
+  cat(file = stderr(), "Function create_volcano_bg...end" , "\n")
 }
-
-
-
 
 
 #Bar plot-------------------------------------------------

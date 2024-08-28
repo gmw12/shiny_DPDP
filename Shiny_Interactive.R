@@ -42,7 +42,7 @@ interactive_barplot <- function(session, input, output, df, namex, color_list, o
   cat(file = stderr(), "interactive_barplot...2", "\n")
   output[[stringr::str_c(plot_number, "_download_", output_name)]] <- downloadHandler(
     filename = function(){
-      str_c(plot_number, "_Stats_Barplot_", comp_name,  ".png", collapse = " ")
+      stringr::str_c(plot_number, "_Stats_Barplot_", comp_name,  ".png", collapse = " ")
     },
     content = function(file){
       req(create_stats_barplot())
@@ -85,7 +85,7 @@ interactive_boxplot <- function(session, input, output, df, namex, color_list, c
   
   output[[stringr::str_c(plot_number, "_download_stats_boxplot")]]  <- downloadHandler(
     filename = function(){
-      str_c(plot_number, "_stats_Boxplot_", comp_string, ".png", collapse = " ")
+      stringr::str_c(plot_number, "_stats_Boxplot_", comp_string, ".png", collapse = " ")
     },
     content = function(file){
       req(create_stats_boxplot())
@@ -163,7 +163,7 @@ interactive_pca2d <- function(session, input, output, df, namex, color_list, gro
   
   output[[stringr::str_c(plot_number, "_download_stats_pca2d")]] <- downloadHandler(
     filename = function(){
-      str_c(plot_number, "_stats_pca2d_", comp_name, ".png", collapse = " ")
+      stringr::str_c(plot_number, "_stats_pca2d_", comp_name, ".png", collapse = " ")
     },
     content = function(file){
       req(create_stats_pca2d())
@@ -234,7 +234,8 @@ interactive_pca3d <- function(session, input, output, df, namex, color_list, gro
   })
   
   output[[stringr::str_c(plot_number, "_stats_pca3d")]] <- renderRglwidget({
-    try(rgl.close())
+    #try(rgl.close())
+    try(rgl::close3d)
     req(create_stats_pca3d())
     create_stats_pca3d()
     rglwidget()
@@ -242,7 +243,7 @@ interactive_pca3d <- function(session, input, output, df, namex, color_list, gro
   
   output[[stringr::str_c(plot_number, "_download_stats_pca3d")]] <- downloadHandler(
     filename = function(){
-      str_c(plot_number, "_stats_pca3d_", comp_name, ".png", collapse = " ")
+      stringr::str_c(plot_number, "_stats_pca3d_", comp_name, ".png", collapse = " ")
     },
     content = function(file){
       req(create_stats_pca3d())
@@ -286,7 +287,7 @@ interactive_cluster <- function(session, input, output, df, namex, comp_name, pl
   
   output[[stringr::str_c(plot_number, "_download_stats_cluster")]] <- downloadHandler(
     filename = function(){
-      str_c(plot_number, "_stats_cluster_", comp_name, ".png", collapse = " ")
+      stringr::str_c(plot_number, "_stats_cluster_", comp_name, ".png", collapse = " ")
     },
     content = function(file){
       req(create_stats_cluster())
@@ -307,7 +308,7 @@ interactive_heatmap <- function(session, input, output, df, namex, groupx, comp_
   if (site_user == "dpmsr") {
     heatmap_filename <- "erasemyheatmap.png"
   }else{
-    heatmap_filename <- str_c(params$data_path, "/erasemyheatmap.png")
+    heatmap_filename <- stringr::str_c(params$data_path, "/erasemyheatmap.png")
   }
   
   #if norm by protein one protein will have 0 stdev - which will crash the calc...
@@ -335,8 +336,8 @@ interactive_heatmap <- function(session, input, output, df, namex, groupx, comp_
     heatmap.2(df, Rowv = as.dendrogram(hr), Colv = as.dendrogram(hc), col = mycol, labCol = groupx, 
               scale = "row", density.info = "none", trace = "none", RowSideColors = mycolhc, main = input[[stringr::str_c(plot_number, "_stats_heatmap_title")]],
               margins = c(10,10))
-    #heatmap_filename <- str_c(dpmsr_set$file$output_dir, dpmsr_set$data$stats$final_comp, "//", "erasemyheatmap.png")
-    png(filename = str_c(plot_number, "_", heatmap_filename), units = "px", width = 1776, height = 1776)  
+    #heatmap_filename <- stringr::str_c(dpmsr_set$file$output_dir, dpmsr_set$data$stats$final_comp, "//", "erasemyheatmap.png")
+    png(filename = stringr::str_c(plot_number, "_", heatmap_filename), units = "px", width = 1776, height = 1776)  
     heatmap.2(df, Rowv = as.dendrogram(hr), Colv = as.dendrogram(hc), col = mycol, labCol = groupx, 
               scale = "row", density.info = "none", trace = "none", RowSideColors = mycolhc, main = input[[stringr::str_c(plot_number, "_stats_heatmap_title")]],
               margins = c(20,20))
@@ -352,17 +353,17 @@ interactive_heatmap <- function(session, input, output, df, namex, groupx, comp_
   
   output[[stringr::str_c(plot_number, "_download_stats_heatmap")]] <- downloadHandler(
     filename = function(){
-      str_c(plot_number, "_stats_heatmap_", comp_name, ".png", collapse = " ")
+      stringr::str_c(plot_number, "_stats_heatmap_", comp_name, ".png", collapse = " ")
     },
     content = function(file){
-      #heatmap_filename <- str_c(dpmsr_set$file$output_dir, dpmsr_set$data$stats$final_comp, "//", "erasemyheatmap.png")
+      #heatmap_filename <- stringr::str_c(dpmsr_set$file$output_dir, dpmsr_set$data$stats$final_comp, "//", "erasemyheatmap.png")
       file.copy(heatmap_filename, file)
     }
   )
   
-  cat(file = stderr(), str_c("heatmap file exists? ", heatmap_filename, "   ", file.exists(heatmap_filename)), "\n")
+  cat(file = stderr(), stringr::str_c("heatmap file exists? ", heatmap_filename, "   ", file.exists(heatmap_filename)), "\n")
   try(file_delete(heatmap_filename), silent = TRUE)
-  cat(file = stderr(), str_c("deleting temp heatmap file ", file.exists(heatmap_filename)), "\n")
+  cat(file = stderr(), stringr::str_c("deleting temp heatmap file ", file.exists(heatmap_filename)), "\n")
   
 }
 
@@ -372,72 +373,9 @@ interactive_heatmap <- function(session, input, output, df, namex, groupx, comp_
 #------------------------------------------------------------------------------------------------------------------------
 #------------------------------------------------------------------------------------------------------------------------
 
-interactive_stats_volcano <- function(session, input, output, df, stat_plot_comp, plot_number)
-{
-  cat(file=stderr(), stringr::str_c("interactive_stats_volcano...      ", stat_plot_comp, "   ", plot_number), "\n")
-    
-  testdf <<- df
-  test_stat_plot_comp <<- stat_plot_comp
-  test_plot_number <<- plot_number
-  test_input <<- input
-  
-  if (is.grouped_df(df)){df <- ungroup(df)}
-  
-  df_fc <- df %>% dplyr::select(contains(stringr::str_c(stat_plot_comp, "_fc")))
-  
-  if (!input$checkbox_filter_adjpval) {
-    df_pval <- df[[stringr::str_c(stat_plot_comp, "_pval")]]
-  }else{
-    df_pval <- df[[stringr::str_c(stat_plot_comp, "_adjpval")]]
-  }
-  
-  df <- cbind(df$Stats, df$Accession, df$Description, df_fc, df_pval)
-  colnames(df) <- c("Stats", "Accession", "Description", "fc", "fc2", "pval")
-  df$Accession <- as.character(df$Accession)
-  df$Description <- as.character(df$Description)
-  df$log_pvalue <- -log(as.numeric(df$pval), 10)
-  df$log_fc <- log(as.numeric(df$fc2), 2)
-  
-  cat(file=stderr(), "Interactive stats volcano...1" , "\n")
-  #volcano_df <<- df
-  
-  testme <<- input[[stringr::str_c(plot_number, "_stats_volcano_fixed_axis")]]
-  
-  if(input[[stringr::str_c(plot_number, "_stats_volcano_fixed_axis")]]){
-    xmax <- input[[stringr::str_c(plot_number, "_stats_volcano_x_axis")]]
-    ymax <- input[[stringr::str_c(plot_number, "_sstats_volcano_y_axis")]]
-  }else{
-    xmax <- max(df$log_fc) 
-    ymax <- max(df$log_pvalue)
-  }
-  
-  cat(file=stderr(), "Interactive stats volcano...1b" , "\n")
-  if (input[[stringr::str_c(plot_number, "_volcano_highlight")]] != ""){
-    highlight_list <- gsub(", ", "," ,input[[stringr::str_c(plot_number, "_volcano_highlight")]])
-    highlight_list <- str_split(highlight_list, ",")
-    highlight_list <- paste(tolower(unlist(highlight_list)), collapse = "|")
-    h_list <<- highlight_list
-    highlight_df <- df
-    highlight_df$Description <- tolower(highlight_df$Description)
-    #test1 <<- highlight_df
-    highlight_df <- highlight_df %>% filter(str_detect(Description, highlight_list))
-    #test2 <<- highlight_df
-  }else{
-    highlight_df <- df %>% filter(str_detect(Description, "You will find nothing now"))
-  }
-  
-  cat(file=stderr(), "Interactive stats volcano...2" , "\n")
-  if (input[[stringr::str_c(plot_number, "_stats_volcano_highlight_up")]]){
-    highlight_stat_up <- df[df$Stats=="Up",]
-  }else{
-    highlight_stat_up <- df %>% filter(str_detect(Description, "You will find nothing now"))
-  }
-  
-  if (input[[stringr::str_c(plot_number, "_stats_volcano_highlight_down")]]){
-    highlight_stat_down <- df[df$Stats=="Down",]
-  }else{
-    highlight_stat_down <- df %>% filter(str_detect(Description, "You will find nothing now"))
-  }
+interactive_stats_volcano <- function(session, input, output, df, xmax, ymax, highlight_list, highlight_df, highlight_stat_up, 
+                                       highlight_stat_down, stats_plot_comp, plot_number) {
+  cat(file=stderr(), stringr::str_c("interactive_stats_volcano...      ", stats_plot_comp, "   ", plot_number), "\n")
   
   cat(file=stderr(), "Interactive stats volcano...3" , "\n")
   volcano_stats_plot <- reactive({
@@ -479,7 +417,7 @@ interactive_stats_volcano <- function(session, input, output, df, stat_plot_comp
   
   output[[download_name]] <- downloadHandler(
     filename = function(){
-      stringr::str_c(plot_number, "_Volcano_", stat_plot_comp, ".png", collapse = " ")
+      stringr::str_c(plot_number, "_Volcano_", stats_plot_comp, ".png", collapse = " ")
     },
     content = function(file){
       req(volcano_stats_plot())
@@ -498,8 +436,8 @@ interactive_stats_volcano <- function(session, input, output, df, stat_plot_comp
     left_px <- left_pct * (hover$range$right - hover$range$left)
     top_px <- top_pct * (hover$range$bottom - hover$range$top)
     
-    #cat(file=stderr(), str_c("top_pct = ", top_pct), "\n")
-    #cat(file=stderr(), str_c("top_px = ", top_px), "\n")
+    #cat(file=stderr(),stringr::str_c("top_pct = ", top_pct), "\n")
+    #cat(file=stderr(), stringr::str_c("top_px = ", top_px), "\n")
     
     if(top_pct > 0.3){
       top_custom <- 10
@@ -530,10 +468,10 @@ interactive_stats_volcano <- function(session, input, output, df, stat_plot_comp
 
 interactive_grouped_peptide_barplot <- function(session, input, output, comp_string, df, info_columns, comp_name, peptide_pos_lookup, color_list)
 {
-  cat(file=stderr(), str_c("interactive_grouped_peptide_barplot, comp_name=", comp_string), "\n")
+  cat(file=stderr(), stringr::str_c("interactive_grouped_peptide_barplot, comp_name=", comp_string), "\n")
   comp_number <- which(dpmsr_set$y$stats$groups$comp_name == comp_string)
-  cat(file=stderr(), str_c("comp_number = ", comp_number) , "\n")
-  cat(file=stderr(), str_c("comp_string = ", comp_string) , "\n")
+  cat(file=stderr(), stringr::str_c("comp_number = ", comp_number) , "\n")
+  cat(file=stderr(), stringr::str_c("comp_string = ", comp_string) , "\n")
   
   #test_comp_string <<- comp_string 
   #test_df <<- df
@@ -549,9 +487,9 @@ interactive_grouped_peptide_barplot <- function(session, input, output, comp_str
   #comp_name  <- test_comp_name
   
   if(input$stats_use_zscore){  
-    updateTextInput(session, "stats_onepeptide_grouped_barplot_title", value = str_c(as.character(input$stats_onepeptide_accession), " - Average Peptide Zscore" )  )
+    updateTextInput(session, "stats_onepeptide_grouped_barplot_title", value = stringr::str_c(as.character(input$stats_onepeptide_accession), " - Average Peptide Zscore" )  )
   }else{
-    updateTextInput(session, "stats_onepeptide_grouped_barplot_title", value = str_c(as.character(input$stats_onepeptide_accession), " - Average Peptide Intensity" )  )
+    updateTextInput(session, "stats_onepeptide_grouped_barplot_title", value = stringr::str_c(as.character(input$stats_onepeptide_accession), " - Average Peptide Intensity" )  )
   }
   
   cat(file=stderr(), "Interactive group barplot...1" , "\n")
@@ -604,7 +542,7 @@ interactive_grouped_peptide_barplot <- function(session, input, output, comp_str
   
   cat(file=stderr(), "Interactive group barplot...6" , "\n")
   new_df <- merge(stats_data_all, peptide_pos_lookup, by="Sequence")
-  new_df$Position <- str_c(new_df$Start, "-", new_df$Stop)
+  new_df$Position <- stringr::str_c(new_df$Start, "-", new_df$Stop)
   
   new_df$Name <- NULL
   new_df$Accession <- NULL
@@ -629,7 +567,7 @@ interactive_grouped_peptide_barplot <- function(session, input, output, comp_str
   new_df2_sort2 <- unique(new_df2$Comp)
   new_df2$Comp <- factor(new_df2$Comp, levels = new_df2_sort2)
   cat(file=stderr(), "Interactive group barplot...8" , "\n")
-  new_df2$Label <- str_c(new_df2$Position, "\n", new_df2$Sequence, "\n", new_df2$Modifications)
+  new_df2$Label <- stringr::str_c(new_df2$Position, "\n", new_df2$Sequence, "\n", new_df2$Modifications)
   new_df2$Label  <- stringr::str_replace_all(new_df2$Label , "Carbamidomethyl", "Carb")
   new_df2$Label  <- stringr::str_replace_all(new_df2$Label , "Oxidation", "Ox")
   new_df2$Label  <- stringr::str_replace_all(new_df2$Label , "Phospho", "Phos")
@@ -680,7 +618,7 @@ interactive_grouped_peptide_barplot <- function(session, input, output, comp_str
   
   output$download_stats_onepeptide_grouped_barplot <- downloadHandler(
     filename = function(){
-      str_c("Grouped_Barplot_", as.character(input$stats_onepeptide_accession), "_", comp_string,  ".png", collapse = " ")
+      stringr::str_c("Grouped_Barplot_", as.character(input$stats_onepeptide_accession), "_", comp_string,  ".png", collapse = " ")
     },
     content = function(file){
       req(create_stats_barplot())
@@ -702,8 +640,8 @@ interactive_grouped_barplot <- function(session, input, output, comp_string, df,
 {
   cat(file=stderr(), "interactive_grouped_barplot" , "\n")
   comp_number <- which(dpmsr_set$y$stats$groups$comp_name == comp_string)
-  cat(file=stderr(), str_c("comp_number = ", comp_number) , "\n")
-  cat(file=stderr(), str_c("comp_string = ", comp_string) , "\n")
+  cat(file=stderr(), stringr::str_c("comp_number = ", comp_number) , "\n")
+  cat(file=stderr(), stringr::str_c("comp_string = ", comp_string) , "\n")
   
   #test_comp_string <<- comp_string 
   #test_df <<- df
@@ -717,9 +655,9 @@ interactive_grouped_barplot <- function(session, input, output, comp_string, df,
   #comp_name  <- test_comp_name
   
   if(input$stats_use_zscore){  
-    updateTextInput(session, "stats_oneprotein_grouped_barplot_title", value = str_c(as.character(input$stats_oneprotein_accession), " - Average Peptide Zscore" )  )
+    updateTextInput(session, "stats_oneprotein_grouped_barplot_title", value = stringr::str_c(as.character(input$stats_oneprotein_accession), " - Average Peptide Zscore" )  )
   }else{
-    updateTextInput(session, "stats_oneprotein_grouped_barplot_title", value = str_c(as.character(input$stats_oneprotein_accession), " - Average Peptide Intensity" )  )
+    updateTextInput(session, "stats_oneprotein_grouped_barplot_title", value = stringr::str_c(as.character(input$stats_oneprotein_accession), " - Average Peptide Intensity" )  )
   }
   
   cat(file=stderr(), "Interactive group barplot...1" , "\n")
@@ -775,7 +713,7 @@ interactive_grouped_barplot <- function(session, input, output, comp_string, df,
   
   cat(file=stderr(), "Interactive group barplot...6" , "\n")
   new_df <- merge(stats_data_all, peptide_pos_lookup, by="Sequence")
-  new_df$Position <- str_c(new_df$Start, "-", new_df$Stop)
+  new_df$Position <- stringr::str_c(new_df$Start, "-", new_df$Stop)
   
   new_df$Name <- NULL
   new_df$Accession <- NULL
@@ -838,7 +776,7 @@ interactive_grouped_barplot <- function(session, input, output, comp_string, df,
   
   output$download_stats_oneprotein_grouped_barplot <- downloadHandler(
     filename = function(){
-      str_c("Grouped_Barplot_", as.character(input$stats_oneprotein_accession), "_", comp_name,  ".png", collapse = " ")
+      stringr::str_c("Grouped_Barplot_", as.character(input$stats_oneprotein_accession), "_", comp_name,  ".png", collapse = " ")
     },
     content = function(file){
       req(create_stats_barplot())
@@ -887,7 +825,7 @@ interactive_go_volcano <- function(session, input, output)
   
   output$download_go_volcano <- downloadHandler(
     filename = function(){
-      str_c("GoVolcano_", input$select_data_comp_go, "_", input$go_volcano_id, "_", 
+      stringr::str_c("GoVolcano_", input$select_data_comp_go, "_", input$go_volcano_id, "_", 
             input$select_ont_go, ".png", collapse = " ")
     },
     content = function(file){
@@ -913,9 +851,9 @@ interactive_go_volcano <- function(session, input, output)
     left_px <- left_pct * (hover$range$right - hover$range$left)
     top_px <- top_pct * (hover$range$bottom - hover$range$top)
     
-    #cat(file=stderr(), str_c("hoverrr=", hover$range$right, "   hoverrl=", hover$range$left, "  left_pct=", left_pct), "\n")
-    #cat(file=stderr(), str_c("hoverrb=", hover$range$bottom, "   hoverrt=", hover$range$top, "  top_pct=", top_pct), "\n")
-    #cat(file=stderr(), str_c("leftpx=", left_px, "   toppx=", top_px), "\n", "\n"  )
+    #cat(file=stderr(), stringr::str_c("hoverrr=", hover$range$right, "   hoverrl=", hover$range$left, "  left_pct=", left_pct), "\n")
+    #cat(file=stderr(), stringr::str_c("hoverrb=", hover$range$bottom, "   hoverrt=", hover$range$top, "  top_pct=", top_pct), "\n")
+    #cat(file=stderr(), stringr::str_c("leftpx=", left_px, "   toppx=", top_px), "\n", "\n"  )
     
     # create style property fot tooltip
     # background color is set so tooltip is a bit transparent

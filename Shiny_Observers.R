@@ -31,7 +31,7 @@ observe_comp_names <- function(session, input, output){
         }
         RSQLite::dbDisconnect(conn)
       }
-      update_widgets_stats(session, input, output)
+      update_widgets_stats(session, input, output, params)
       #update_stat_comparisons(session, input, output)
   
   })

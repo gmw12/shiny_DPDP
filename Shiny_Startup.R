@@ -94,7 +94,7 @@ app_startup <- function(session, input, output) {
  
       
     #update Widgets
-    update_widgets(session, input, output)
+    update_widgets(session, input, output, params)
     
     #observers
     observe_comp_names(session, input, output)
