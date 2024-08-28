@@ -83,6 +83,7 @@ observe_plot_type1 <- function(session, input, output){
     }
     
     if (input$plot_type1 == "Volcano") {
+      
       output$stats_plots1 <- renderUI({
         create_stats_volcano_ui(plot_number=1)
       })
@@ -148,6 +149,14 @@ observe_plot_type2 <- function(session, input, output){
     if (input$plot_type2 == "Volcano") {
       output$stats_plots2 <- renderUI({
         create_stats_volcano_ui(plot_number=2)
+      })
+      
+      output$create_stats_volcano_ui_1 <- renderUI({
+        create_stats_volcano_ui_part1(plot_number=2)
+      })
+      
+      output$create_stats_volcano_ui_2 <- renderUI({
+        create_stats_volcano_ui_part2(plot_number=2)
       })
     }
       

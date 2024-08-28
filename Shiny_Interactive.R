@@ -427,13 +427,13 @@ interactive_stats_volcano <- function(session, input, output, df, stat_plot_comp
   }
   
   cat(file=stderr(), "Interactive stats volcano...2" , "\n")
-  if (input[[stringr::str_c(plot_number, "_stats_volcano_highlight_signif")]] & input[[stringr::str_c(plot_number, "_stats_volcano_highlight_up")]]){
+  if (input[[stringr::str_c(plot_number, "_stats_volcano_highlight_up")]]){
     highlight_stat_up <- df[df$Stats=="Up",]
   }else{
     highlight_stat_up <- df %>% filter(str_detect(Description, "You will find nothing now"))
   }
   
-  if (input[[stringr::str_c(plot_number, "_stats_volcano_highlight_signif")]] & input[[stringr::str_c(plot_number, "_stats_volcano_highlight_down")]]){
+  if (input[[stringr::str_c(plot_number, "_stats_volcano_highlight_down")]]){
     highlight_stat_down <- df[df$Stats=="Down",]
   }else{
     highlight_stat_down <- df %>% filter(str_detect(Description, "You will find nothing now"))

@@ -199,7 +199,7 @@ create_stats_volcano_ui <- function(plot_number){
 #---------------------------------------------------------------------------
 create_stats_volcano_ui_part1 <- function(plot_number){
   fluidRow(
-    column(width = 6, offset = 0,
+    column(width = 3, offset = 0,
            dropdownButton(
              column(width = 6, offset = 0,
                textInput(str_c(plot_number, "_volcano_stats_plot_title"), label = "plot title", 
@@ -207,6 +207,8 @@ create_stats_volcano_ui_part1 <- function(plot_number){
                textInput(str_c(plot_number, "_volcano_stats_plot_y_axis_label"), label = "y axis label", value = "-log_pvalue", width = 200),
                textInput(str_c(plot_number, "_volcano_stats_plot_x_axis_label"), label = "x axis label", value = "log_FC", width = 200),
                colourpicker::colourInput(str_c(plot_number, "_volcano_stats_dot_color"), "Select Color", "blue"),
+             ),
+             column(width = 6, offset = 0 ,
                sliderInput(str_c(plot_number, "_volcano_stats_plot_dot_size"), label = h5("Point Size"), min = 1, 
                            max = 10, value = 2),
                sliderInput(str_c(plot_number, "_volcano_stats_plot_label_size"), label = h5("Label Size"), min = 1, 
@@ -214,34 +216,35 @@ create_stats_volcano_ui_part1 <- function(plot_number){
                sliderInput(str_c(plot_number, "_volcano_stats_plot_title_size"), label = h5("Title Size"), min = 10, 
                            max = 50, value = 20)
              ),
+               circle = TRUE, status = "danger", icon = icon("cogs"), width = "600px", size = "sm",
+               tooltip = tooltipOptions(title = "Click to see inputs !")
+             ),
+            dropdownButton(
              column(width=6, offset = 0,
-               textInput(str_c(plot_number, "_volcano_highlight"), label = "Highlight search term (description)"),
                h3('Highlight Proteins'),
-               h5('Enter list of strings to search in protein descriptions.'),
-               h5('Beware of extra trailing spaces'),
-               h5('Search is NOT case sensitive'),
+               h5('Enter list of strings to search in protein descriptions. Not case sensitive. Beware of trailing spaces.'),
+               textInput(str_c(plot_number, "_volcano_highlight"), label = "Highlight search term (description)"),
                colourpicker::colourInput(str_c(plot_number, "_volcano_highlight_color"), "Description Highlight Color", "red"),
                checkboxInput(str_c(plot_number, "_stats_volcano_highlight_up"), label = "Highlight stat signif up?", value = TRUE),
                checkboxInput(str_c(plot_number, "_stats_volcano_highlight_down"), label = "Highlight stat signif down?", value = TRUE),
                colourpicker::colourInput(str_c(plot_number, "_volcano_highlight_color_up"), "Stat 'Down' Color", "red"),
                colourpicker::colourInput(str_c(plot_number, "_volcano_highlight_color_down"), "Stat 'Up' Color", "red"),
+             ),
+             column(width = 6, offset = 0,
+
                sliderInput(str_c(plot_number, "_volcano_highlight_dot_size"), label = h5("Point Size"), min = 1, 
                            max = 10, value = 3),
                sliderInput(str_c(plot_number, "_volcano_highlight_alpha"), label = h5("Transparency"), min = 0.1, 
                            max = 1, value = 0.5),
                checkboxInput(str_c(plot_number, "_stats_volcano_fixed_axis"), label = "Fix x and y axis for all plots?"),
-               checkboxInput(str_c(plot_number, "_stats_volcano_highlight_signif"), label = "Highlight statistically signifigant?"),
                numericInput(str_c(plot_number, "_stats_volcano_y_axis"), label = "y axis", value = 10),
                numericInput(str_c(plot_number, "_stats_volcano_x_axis"), label = "x axis", value = 5)
              ),
-             circle = TRUE, status = "danger", icon = icon("cogs"), width = "300px", size = "sm",
+             circle = TRUE, status = "danger", icon = icon("cogs"), width = "600px", size = "sm",
              tooltip = tooltipOptions(title = "Click to see inputs !")
            )
     )
   )
-  
-  
-  
 
 }
 

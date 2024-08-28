@@ -336,7 +336,11 @@ shinyServer(function(session, input, output) {
     cat(file = stderr(), "create_stats_plots1 clicked...", "\n")
     
     if (input$plot_type1 == "Volcano") {
-      create_volcano(session, input, output, params, plot_number = 1) 
+      if (length(input$stats_plot_comp1) == 1)  {
+        if(input$stats_plot_comp1 != params$comp_spqc) {
+          create_volcano(session, input, output, params, plot_number = 1)
+        }
+      }
     }else{
       create_plot(session, input, output, params, plot_number = 1) 
     }
@@ -350,10 +354,14 @@ shinyServer(function(session, input, output) {
     cat(file = stderr(), "create_stats_plots2 clicked...", "\n")
     
     if (input$plot_type2 == "Volcano") {
-      create_volcano(session, input, output, params, plot_number = 2) 
+      if (length(input$stats_plot_comp2) == 1)  {
+        if(input$stats_plot_comp2 != params$comp_spqc) {
+          create_volcano(session, input, output, params, plot_number = 2)
+        }
+      }
     }else{
       create_plot(session, input, output, params, plot_number = 2) 
-    } 
+    }
     
     cat(file = stderr(), "create_stats_plots2...end", "\n")
   })     
