@@ -324,6 +324,51 @@ add_imputed_df <- function(df, params, stats_comp, comp_number, table_name) {
 }
 
 
+# data table filter ------------------------------------------------------
 
+stats_data_table_filter <- function(df, sample_number, start_sample_col, input_stats_add_filters, input_stats_data_topn,
+                                    input_stats_data_accession, input_stats_data_description) {
+  cat(file = stderr(), "Function stats_data_table_filter...", "\n")
+  
+  if (dplyr::is.grouped_df(df)) {df <- ungroup(df)}
+  
+  if (input_stats_add_filters) {
+    df <- dfr |> dplyr::filter(df$Stats == "Up" | df$Stats == "Down")
+  }
+  
+  cat(file = stderr(), "stats_data_table_filter... 1", "\n")
+  
+  if (input_stats_data_topn != 0 ) {
+    df$sum <- rowSums(df[start_sample_col:(start_sample_col + sample_number)])
+    df <- df[order(-df$sum),]                      
+    df <- df[1:input_stats_data_topn,]
+    df$sum <- NULL
+  }
+  
+  cat(file = stderr(), "stats_data_table_filter... 2", "\n")
+  
+  if (input_stats_data_accession != "0" ) {
+    df <- df[grep(as.character(input_stats_data_accession), df$Accession), ]
+  }
+  
+  if (input_stats_data_description != "0") {
+    df <- df[grep(as.character(input_stats_data_description), df$Description), ]
+  }
+  
+  df_colnames <- colnames(filter_df)
+  df_colnames <- gsub("_v_", " v ", df_colnames)
+  df_colnames <- gsub("_FC", " FC", df_colnames)
+  df_colnames <- gsub("_CV", " CV", df_colnames)
+  df_colnames <- gsub("_MF", " MF", df_colnames)
+  df_colnames <- gsub("_pval", " pval", df_colnames)
+  df_colnames <- gsub("_limmapval", " Limma pval", df_colnames)
+  df_colnames <- gsub("_cohensd", " CohensD", df_colnames)
+  df_colnames <- gsub("_adjpval", " adjpval", df_colnames)
+  df_colnames <- gsub("_", ".", df_colnames)
+  colnames(df) <-  df_colnames
+  
+  cat(file = stderr(), "Function stats_data_table_filter...end", "\n")
+  return(df)
+}
 
 

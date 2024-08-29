@@ -367,6 +367,167 @@ shinyServer(function(session, input, output) {
   })     
 
   
+  #------------------------------------------------------------------------------------------------------------- 
+  observeEvent(input$stats_data_show, { 
+    cat(file = stderr(), "stats_data_show clicked..." , "\n")
+    
+    create_stats_data_table(session, input, output, params)
+    
+    
+    cat(file = stderr(), "stats_data_show clicked...end" , "\n")
+  })
+  
+  
+  
+  #-------------------------------------------------------------------------------------------------------------  
+  
+  observeEvent(input$stats_data_show_backup, { 
+    showModal(modalDialog("Getting data...", footer = NULL))  
+    cat(file = stderr(), "stats data show triggered..." , "\n")
+    
+
+
+      
+      output$stats_data_final <-  DT::renderDataTable(stats_DT, selection = 'single' )
+      #save data
+      dpmsr_set$data$stats_DT <<- filter_df
+      
+      
+      # get selections from data table for protein or peptide formats
+      if (dpmsr_set$x$final_data_output == "Protein") {
+        output$stats_data_final_protein <- renderPrint(stats_DT$x$data$Accession[as.numeric(unlist(input$stats_data_final_rows_selected)[1])] )
+        observe({
+          updateTextInput(session, "stats_oneprotein_accession", 
+                          value = stats_DT$x$data$Accession[as.numeric(unlist(input$stats_data_final_rows_selected)[1])]  )
+          updateSelectInput(session, "stats_oneprotein_plot_comp", selected = input$stats_select_data_comp)
+          dpmsr_set$y$stats$accession_stat <<- stats_DT$x$data$Accession[as.numeric(unlist(input$stats_data_final_rows_selected)[1])] 
+        })
+      }else{
+        output$stats_data_final_protein <- renderPrint(str_c(
+          stats_DT$x$data$Accession[as.numeric(unlist(input$stats_data_final_rows_selected)[1])], "  ", 
+          stats_DT$x$data$Sequence[as.numeric(unlist(input$stats_data_final_rows_selected)[1])], "  ", 
+          stats_DT$x$data$Modification[as.numeric(unlist(input$stats_data_final_rows_selected)[1])] 
+        ))
+        
+        observe({
+          updateTextInput(session, "stats_onepeptide_accession", 
+                          value = stats_DT$x$data$Accession[as.numeric(unlist(input$stats_data_final_rows_selected)[1])]  )
+          updateTextInput(session, "stats_onepeptide_sequence", 
+                          value = stats_DT$x$data$Sequence[as.numeric(unlist(input$stats_data_final_rows_selected)[1])] ) 
+          updateTextInput(session, "stats_onepeptide_modification", 
+                          value = stats_DT$x$data$Modification[as.numeric(unlist(input$stats_data_final_rows_selected)[1])] ) 
+          updateSelectInput(session, "stats_onepeptide_plot_comp", selected = input$stats_select_data_comp)
+          dpmsr_set$y$stats$accession_stat <<- stats_DT$x$data$Accession[as.numeric(unlist(input$stats_data_final_rows_selected)[1])] 
+          dpmsr_set$y$stats$sequence_stat <<- stats_DT$x$data$Sequence[as.numeric(unlist(input$stats_data_final_rows_selected)[1])] 
+          dpmsr_set$y$stats$modification_stat <<- stats_DT$x$data$Modifications[as.numeric(unlist(input$stats_data_final_rows_selected)[1])]
+          #protein plot is still used for peptide output
+          updateTextInput(session, "stats_oneprotein_accession", 
+                          value = stats_DT$x$data$Accession[as.numeric(unlist(input$stats_data_final_rows_selected)[1])]  )
+          updateSelectInput(session, "stats_oneprotein_plot_comp", selected = input$stats_select_data_comp)
+        })
+      }  
+
+    
+    removeModal()
+  })  
+  
+  
+  
+  #-------------------------------------------------------------------------------------------------------------      
+  #-------------------------------------------------------------------------------------------------------------  
+  
+  observeEvent(input$stats_data_update, {
+    
+    if (length(dpmsr_set$y$stats$accession_stat) != 0) {  
+      
+      if(dpmsr_set$x$final_data_output == "Protein"){  
+        cat(file = stderr(), str_c("accesion to mark as not stat signifigant...   ", dpmsr_set$y$stats$accession_stat) , "\n") 
+        row_number <- which(dpmsr_set$data$stats[[input$stats_select_data_comp]]$Accession == dpmsr_set$y$stats$accession_stat)
+        cat(file = stderr(), str_c("row to mark as not stat signifigant...   ", row_number) , "\n") 
+        dpmsr_set$data$stats[[input$stats_select_data_comp]]$Stats[row_number] <<- ""
+      }else{
+        cat(file = stderr(), str_c("peptide to mark as not stat signifigant...   ", dpmsr_set$y$stats$sequence_stat) , "\n") 
+        row_number <- which(dpmsr_set$data$stats[[input$stats_select_data_comp]]$Sequence   == dpmsr_set$y$stats$sequence_stat &
+                              dpmsr_set$data$stats[[input$stats_select_data_comp]]$Modifications   == dpmsr_set$y$stats$modification_stat)
+        cat(file = stderr(), str_c("row to mark as not stat signifigant...   ", row_number) , "\n") 
+        dpmsr_set$data$stats[[input$stats_select_data_comp]]$Stats[row_number] <<- ""
+      }
+    }else{
+      
+      shinyalert("Oops!", "Cannot update stat", type = "error")
+      
+    }
+    
+  })
+  
+  
+  
+  
+  
+  
+  #-------------------------------------------------------------------------------------------------------------      
+  #-------------------------------------------------------------------------------------------------------------  
+  observeEvent(input$stats_data_save, { 
+    
+    showModal(modalDialog("Saving Data...", footer = NULL))  
+    cat(file = stderr(), "stats saving datatable to excel..." , "\n") 
+    #Convert to R object
+    #x <- hot_to_r(isolate(input$stats_data_final))
+    #x <- stats_data_table_filter(session, input, output)
+    filename <- str_c(dpmsr_set$file$output_dir, input$select_final_data_stats, "//", input$stats_data_filename)
+    file_dir <- str_c(dpmsr_set$file$output_dir, input$select_final_data_stats) 
+    
+    if(!is_dir(file_dir)) {
+      cat(file = stderr(), str_c("create_dir...", file_dir), "\n")
+      dir_create(file_dir)
+    }
+    
+    cat(file = stderr(), str_c("filename = ", filename) , "\n")
+    Simple_Excel(dpmsr_set$data$stats_DT, "data", filename)
+    removeModal()
+    
+  })
+  
+  
+  #-------------------------------------------------------------------------------------------------------------    
+  output$download_stats_data_save <- downloadHandler(
+    file = function(){
+      input$stats_data_filename
+    },
+    content = function(file){
+      fullname <- str_c(dpmsr_set$file$output_dir, input$select_final_data_stats, "//", input$stats_data_filename)
+      cat(file = stderr(), str_c("download_stats_data fullname = ", fullname), "\n")
+      file.copy(fullname, file)
+    }
+  )
+  #-------------------------------------------------------------------------------------------------------------
+  #-------------------------------------------------------------------------------------------------------------
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
   
   
   

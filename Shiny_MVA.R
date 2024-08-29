@@ -266,3 +266,58 @@ stats_Final_Excel_bg <- function(file_dir, filename, params) {
   cat(file = stderr(), stringr::str_c("Creating Excel Output File...", filename), "\n")
 }
 
+#----------------------------------------------------------------------------------------
+create_stats_data_table <- function(session, input, output, params) {
+  cat(file = stderr(), "Function create_stats_data_table...", "\n")
+  showModal(modalDialog("Creating stats data table...", footer = NULL))  
+
+  arg_list <- list(input$stats_norm_type, input$stats_select_data_comp, inputstats_add_filters, input$stats_data_topn, input$stats_data_accession, input$stats_data_description, params)
+  
+  bg_create_stats_data_table <- callr::r_bg(func = create_stats_data_table_bg, args = arg_list, stderr = str_c(params$error_path, "//error_create_stats_data_table.txt"), supervise = TRUE)
+  bg_create_stats_data_table$wait()
+  print_stderr("error_create_stats_data_table.txt")
+  
+  stats_DT <- bg_create_stats_data_table$get_result()
+  output$stats_data_final <-  DT::renderDataTable(stats_DT, selection = 'single' )
+  
+  removeModal() 
+  cat(file = stderr(), "Function create_stats_data_table...end", "\n") 
+}
+
+#----------------------------------------------------------------------------------------
+create_stats_data_table_bg <- function(input_stats_norm_type, input_stats_select_data_comp, input_stats_add_filters, input_stats_data_topn, input_stats_data_accession,
+                                       input_stats_data_description, params) {
+  cat(file = stderr(), "Function create_stats_data_table_bg...", "\n")
+  source('Shiny_File.R')
+  source('Shiny_Tables.R')
+  
+  #confirm data exists in database
+  data_name <- stringr::str_c("protein_", input_stats_norm_type, "_", input_stats_select_data_comp, "_final")
+  if (data_name %in% list_tables(params)) {
+    cat(file = stderr(), stringr::str_c(data_name, " is in database"), "\n") 
+    
+    #load data
+    conn <- RSQLite::dbConnect(RSQLite::SQLite(), params$database_path)
+    df <- RSQLite::dbReadTable(conn, data_name)
+    design <- RSQLite::dbReadTable(conn, "design")
+    stats_comp <- RSQLite::dbReadTable(conn, "stats_comp")
+    RSQLite::dbDisconnect(conn)
+  }
+  
+  comp_number <- which(stats_comp$Name == input_stats_select_data_comp)
+  sample_number <- stats_comp$N[comp_number] + stats_comp$D[comp_number]
+  start_sample_col <- min(grep(stats_comp$FactorsN[comp_number], names(df)), grep(stats_comp$FactorsD[comp_number], names(df)))
+  
+  #filter data for display
+  df <- stats_data_table_filter(df, sample_number, start_sample_col, input_stats_add_filters, input_stats_data_topn, input_stats_data_accession, input_stats_data_description)
+  
+  if (params$data_output == "Protein") {
+    stats_DT <- protein_table(df)
+  }else{
+    stats_DT <- peptide_table(df)
+  }
+  
+  return(stats_DT)
+  
+  cat(file = stderr(), "Function create_stats_data_table_bg...end", "\n") 
+}
