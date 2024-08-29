@@ -329,10 +329,12 @@ update_widgets_stats <- function(session, input, output, params){
   cat(file = stderr(), "Function - update_widget_stats...", "\n")
   #stats graphs
   if ("stats_comp" %in% list_tables(params)) {
-    stats_comp <- read_table("stats_comp")
-    stats_comp_choices <- c(stats_comp$Name, params$comp_spqc)
-    updatePickerInput(session, "stats_plot_comp1", choices = stats_comp_choices)
-    updatePickerInput(session, "stats_plot_comp2", choices = stats_comp_choices)
+    stats_comp <- read_table("stats_comp", params)
+    stats_comp_choices <- c(stats_comp$Name)
+    stats_comp_choices_spqc <- c(stats_comp$Name, params$comp_spqc)
+    updatePickerInput(session, "stats_plot_comp1", choices = stats_comp_choices_spqc)
+    updatePickerInput(session, "stats_plot_comp2", choices = stats_comp_choices_spqc)
+    updateSelectInput(session, "stats_select_data_comp", choices = stats_comp_choices)
   }
   
   

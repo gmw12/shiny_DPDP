@@ -210,7 +210,7 @@ stats_Final_Excel <- function(session, input, output, params) {
   file_dir <- stringr::str_c(params$data_path, input$stats_norm_type) 
   filename <- stringr::str_c(params$data_path, input$stats_norm_type, "//", input$final_stats_name)
   
-  if (!is_dir(file_dir)) {
+  if (!fs::is_dir(file_dir)) {
     cat(file = stderr(), str_c("create_dir...", file_dir), "\n")
     dir_create(file_dir)
   }
@@ -271,7 +271,7 @@ create_stats_data_table <- function(session, input, output, params) {
   cat(file = stderr(), "Function create_stats_data_table...", "\n")
   showModal(modalDialog("Creating stats data table...", footer = NULL))  
 
-  arg_list <- list(input$stats_norm_type, input$stats_select_data_comp, inputstats_add_filters, input$stats_data_topn, input$stats_data_accession, input$stats_data_description, params)
+  arg_list <- list(input$stats_norm_type, input$stats_select_data_comp, input$stats_add_filters, input$stats_data_topn, input$stats_data_accession, input$stats_data_description, params)
   
   bg_create_stats_data_table <- callr::r_bg(func = create_stats_data_table_bg, args = arg_list, stderr = str_c(params$error_path, "//error_create_stats_data_table.txt"), supervise = TRUE)
   bg_create_stats_data_table$wait()
@@ -279,6 +279,17 @@ create_stats_data_table <- function(session, input, output, params) {
   
   stats_DT <- bg_create_stats_data_table$get_result()
   output$stats_data_final <-  DT::renderDataTable(stats_DT, selection = 'single' )
+  
+  output$download_stats_data_save <- downloadHandler(
+    file = function(){
+      input$stats_data_filename
+    },
+    content = function(file){
+      fullname <- stringr::str_c(params$data_path, input$stats_norm_type, "//", input$stats_data_filename)
+      cat(file = stderr(), stringr::str_c("download_stats_data fullname = ", fullname), "\n")
+      file.copy(fullname, file)
+    }
+  )
   
   removeModal() 
   cat(file = stderr(), "Function create_stats_data_table...end", "\n") 
@@ -290,6 +301,7 @@ create_stats_data_table_bg <- function(input_stats_norm_type, input_stats_select
   cat(file = stderr(), "Function create_stats_data_table_bg...", "\n")
   source('Shiny_File.R')
   source('Shiny_Tables.R')
+  source('Shiny_MVA_Functions.R')
   
   #confirm data exists in database
   data_name <- stringr::str_c("protein_", input_stats_norm_type, "_", input_stats_select_data_comp, "_final")
@@ -299,13 +311,12 @@ create_stats_data_table_bg <- function(input_stats_norm_type, input_stats_select
     #load data
     conn <- RSQLite::dbConnect(RSQLite::SQLite(), params$database_path)
     df <- RSQLite::dbReadTable(conn, data_name)
-    design <- RSQLite::dbReadTable(conn, "design")
     stats_comp <- RSQLite::dbReadTable(conn, "stats_comp")
     RSQLite::dbDisconnect(conn)
   }
   
   comp_number <- which(stats_comp$Name == input_stats_select_data_comp)
-  sample_number <- stats_comp$N[comp_number] + stats_comp$D[comp_number]
+  sample_number <- as.integer(stats_comp$N[comp_number]) + as.integer(stats_comp$D[comp_number])
   start_sample_col <- min(grep(stats_comp$FactorsN[comp_number], names(df)), grep(stats_comp$FactorsD[comp_number], names(df)))
   
   #filter data for display
@@ -317,7 +328,45 @@ create_stats_data_table_bg <- function(input_stats_norm_type, input_stats_select
     stats_DT <- peptide_table(df)
   }
   
+  write_table("stats_DT", stats_DT$x$data, params)
+  
   return(stats_DT)
   
   cat(file = stderr(), "Function create_stats_data_table_bg...end", "\n") 
+}
+
+#-------------------------------------------------------------------------------------------------------------  
+stats_data_save_excel <- function(session, input, output, params) {
+  cat(file = stderr(), "Function stats_data_save_excel...", "\n")
+  showModal(modalDialog("Saving data table to excel...", footer = NULL))  
+
+  arg_list <- list(input$stats_norm_type,  input$stats_data_filename, params)
+
+  bg_stats_data_save_excel <- callr::r_bg(func = stats_data_save_excel_bg , args = arg_list, stderr = str_c(params$error_path, "//error_stats_data_save_excel.txt"), supervise = TRUE)
+  bg_stats_data_save_excel$wait()
+  print_stderr("error_stats_data_save_excel.txt")
+  
+  cat(file = stderr(), "Function stats_data_save_excel...end", "\n")
+  removeModal()
+  
+}
+#-------------------------------------------------------------------------------------------------------------  
+stats_data_save_excel_bg <- function(input_stats_norm_type,  input_stats_data_filename, params) {
+  cat(file = stderr(), "Function stats_data_save_excel_bg...", "\n")
+  source('Shiny_File.R')
+  
+  filename <- stringr::str_c(params$data_path, input_stats_norm_type, "//", input_stats_data_filename)
+  file_dir <- stringr::str_c(params$data_path, input_stats_norm_type) 
+  
+  if(!fs::is_dir(file_dir)) {
+    cat(file = stderr(), stringr::str_c("create_dir...", file_dir), "\n")
+    dir_create(file_dir)
+  }
+  
+  cat(file = stderr(), stringr::str_c("filename = ", filename) , "\n")
+  
+  stats_DT <- read_table("stats_DT", params)
+  Simple_Excel(stats_DT, "data", filename)
+  
+  cat(file = stderr(), "Function stats_data_save_excel_bg...end", "\n")
 }

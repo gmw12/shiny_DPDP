@@ -160,7 +160,8 @@ create_cv_table_bg <- function(params){
 
 protein_table <- function(df){
   cat(file = stderr(), "Function protein_table...", "\n")
-  
+  require('DT')
+
   pval_cols <- colnames(df |> dplyr::select(contains("pval") ) )
   pval_col_numbers <- list(match(pval_cols, names(df)))
   pval_col_numbers <- unlist(pval_col_numbers)
@@ -206,9 +207,9 @@ protein_table <- function(df){
                                ordering = TRUE,
                                orderClasses = TRUE,
                                fixedColumns = list(leftColumns = 1),
-                               pageLength = 100, lengthMenu = c(10,50,100,200)),
+                               pageLength = 20, lengthMenu = c(10,50,100,200)),
                              #buttons=c('copy', 'csv', 'excelHtml5', 'pdf')),
-                             callback = JS('table.page(3).draw(false);'
+                             callback = DT::JS('table.page(3).draw(false);'
                              ))
   
   stats_DT <- stats_DT %>%  formatRound(columns = c(sample_col_numbers + 1), digits = 0)
@@ -226,6 +227,7 @@ protein_table <- function(df){
 
 
 peptide_table <- function(session, input, output, filter_df){
+  require('DT')
   
   pval_cols <- colnames(filter_df %>% dplyr::select(contains("pval") ) )
   pval_col_numbers <- list(match(pval_cols, names(filter_df)))
@@ -288,7 +290,6 @@ peptide_table <- function(session, input, output, filter_df){
                              ))
   
   stats_DT <- stats_DT %>%  formatRound(columns=c(sample_col_numbers), digits=0)
-  #stats_DT <- stats_DT %>%  formatRound(columns=c(pval_col_numbers), digits=2)
   
   return(stats_DT)   
   

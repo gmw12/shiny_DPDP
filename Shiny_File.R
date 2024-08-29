@@ -6,6 +6,14 @@ Simple_fread <- function(file) {
   data.table::fread(file = file, header = TRUE, stringsAsFactors = FALSE, sep = "\t")
 } 
 
+#----------------------------------------------
+Simple_Excel <- function(df, sheetname, filename) {
+  cat(file=stderr(), stringr::str_c("Simple_Excel -> ", filename), "\n")
+  wb <- openxlsx::createWorkbook()
+  openxlsx::addWorksheet(wb, sheetname)
+  openxlsx::writeData(wb, sheet=1, df)  
+  openxlsx::saveWorkbook(wb, filename, overwrite = TRUE)
+}
 
 #----------------------------------------------------------------------------------------
 file_set <- function(){
@@ -37,7 +45,7 @@ file_set <- function(){
 #----------------------------------------------------------------------------------------
 create_dir <- function(name){
   cat(file = stderr(), "Function create_dir...", "\n")
-  if (is_dir(name)) {
+  if (fs::is_dir(name)) {
     #added file delete, dir delete not working on customer shiny server
     cat(file = stderr(), "dir exists, deleting...", "\n")
     do.call(file.remove, list(list.files(name, full.names = TRUE)))
@@ -142,7 +150,7 @@ print_stderr2 <- function(file_name, params){
 }
 
 
-read_table <- function(table_name){
+read_table <- function(table_name, params){
   conn <- RSQLite::dbConnect(RSQLite::SQLite(), params$database_path) 
   df <- RSQLite::dbReadTable(conn, table_name)
   RSQLite::dbDisconnect(conn)

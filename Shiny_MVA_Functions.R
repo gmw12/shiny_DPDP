@@ -333,7 +333,7 @@ stats_data_table_filter <- function(df, sample_number, start_sample_col, input_s
   if (dplyr::is.grouped_df(df)) {df <- ungroup(df)}
   
   if (input_stats_add_filters) {
-    df <- dfr |> dplyr::filter(df$Stats == "Up" | df$Stats == "Down")
+    df <- df |> dplyr::filter(df$Stats == "Up" | df$Stats == "Down")
   }
   
   cat(file = stderr(), "stats_data_table_filter... 1", "\n")
@@ -355,7 +355,7 @@ stats_data_table_filter <- function(df, sample_number, start_sample_col, input_s
     df <- df[grep(as.character(input_stats_data_description), df$Description), ]
   }
   
-  df_colnames <- colnames(filter_df)
+  df_colnames <- colnames(df)
   df_colnames <- gsub("_v_", " v ", df_colnames)
   df_colnames <- gsub("_FC", " FC", df_colnames)
   df_colnames <- gsub("_CV", " CV", df_colnames)

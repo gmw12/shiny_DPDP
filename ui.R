@@ -661,7 +661,15 @@ source("Shiny_UI.R")
       tabItem(tabName = "stats_data",
               fluidRow( 
                 box(id = "stats_data_parameters", title = "Data Parameters...", status = "primary",
-                    solidHeader = TRUE, collapsible = FALSE, align = "left", width = 12, height = 150,
+                    solidHeader = TRUE, collapsible = FALSE, align = "left", width = 12, height = 125,
+                  column(width =3, offset =0,
+                         selectInput("stats_select_data_comp", label = "comparison", 
+                                     choices = list("Choice 1" = 1, "Choice 2" = 2, "Choice 3" = 3), 
+                                     selected = 1),
+                  ),
+                  column(width =1, offset =0,
+                        checkboxInput("stats_add_filters", label="Apply stat filters (from setup)?", value = 0)
+                  ),
                   column(width =1, offset =0,  
                          numericInput("stats_data_topn", label="TopN", value = 0, width = 100)
                   ),
@@ -671,29 +679,25 @@ source("Shiny_UI.R")
                   column(width =1, offset =0,
                          textInput("stats_data_description", label="Description", value = "0", width = 200)
                   ),
-                  column(width =3, offset =0,
-                         selectInput("stats_select_data_comp", label = "comparison", 
-                                     choices = list("Choice 1" = 1, "Choice 2" = 2, "Choice 3" = 3), 
-                                     selected = 1)
-                  ),
-                  column(width =2, offset =0,
-                         checkboxInput("stats_add_filters", label="Apply stat filters (from setup)?", value = 0)
-                  ),
+
                   column(width =1, offset =0,
-                         actionButton("stats_data_show", label = "Filter Data", width = 100,
+                         br(),
+                         actionButton("stats_data_show", label = "Create Table", width = 100,
                                       style="color: #fff; background-color: #337ab7; border-color: #2e6da4")
                   ),
                   column(width =2, offset =0,
                          textInput("stats_data_filename", label="File Name", value = "my_data.xlsx", width = 250)
                   ),
                   column(width =1, offset =0,
+                         br(),
                          actionButton("stats_data_save", label = "Save Data", width = 100,
                                       style="color: #fff; background-color: #337ab7; border-color: #2e6da4"),
-                         br(),
+                  ),
+                  column(width = 1, offset = 0,
                          br(),
                          downloadButton('download_stats_data_save')
                   )
-                )
+                  )
               ),
               
               fluidRow(
@@ -702,7 +706,7 @@ source("Shiny_UI.R")
               
               fluidRow(
                 box(id = "stats_data_table", title = "Data Table...", status = "primary",
-                    solidHeader = TRUE, collapsible = FALSE, align = "left", width = 12, height = 600,
+                    solidHeader = TRUE, collapsible = FALSE, align = "left", width = 12, height = 750,
                   column(width =12, offset =0,
                          hr(),
                          tags$head(tags$style("#stats_data_final{color: blue;

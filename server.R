@@ -377,6 +377,14 @@ shinyServer(function(session, input, output) {
     cat(file = stderr(), "stats_data_show clicked...end" , "\n")
   })
   
+  #-------------------------------------------------------------------------------------------------------------  
+  observeEvent(input$stats_data_save, { 
+    cat(file = stderr(), "stats_data_save clicked..." , "\n")
+    
+    stats_data_save_excel(session, input, output, params)
+    
+    cat(file = stderr(), "stats_data_save clicked...end" , "\n")
+  })
   
   
   #-------------------------------------------------------------------------------------------------------------  
@@ -384,8 +392,6 @@ shinyServer(function(session, input, output) {
   observeEvent(input$stats_data_show_backup, { 
     showModal(modalDialog("Getting data...", footer = NULL))  
     cat(file = stderr(), "stats data show triggered..." , "\n")
-    
-
 
       
       output$stats_data_final <-  DT::renderDataTable(stats_DT, selection = 'single' )
@@ -427,7 +433,6 @@ shinyServer(function(session, input, output) {
         })
       }  
 
-    
     removeModal()
   })  
   
@@ -464,80 +469,14 @@ shinyServer(function(session, input, output) {
   
   
   
+
   
-  #-------------------------------------------------------------------------------------------------------------      
-  #-------------------------------------------------------------------------------------------------------------  
-  observeEvent(input$stats_data_save, { 
+  
+  
+  
     
-    showModal(modalDialog("Saving Data...", footer = NULL))  
-    cat(file = stderr(), "stats saving datatable to excel..." , "\n") 
-    #Convert to R object
-    #x <- hot_to_r(isolate(input$stats_data_final))
-    #x <- stats_data_table_filter(session, input, output)
-    filename <- str_c(dpmsr_set$file$output_dir, input$select_final_data_stats, "//", input$stats_data_filename)
-    file_dir <- str_c(dpmsr_set$file$output_dir, input$select_final_data_stats) 
-    
-    if(!is_dir(file_dir)) {
-      cat(file = stderr(), str_c("create_dir...", file_dir), "\n")
-      dir_create(file_dir)
-    }
-    
-    cat(file = stderr(), str_c("filename = ", filename) , "\n")
-    Simple_Excel(dpmsr_set$data$stats_DT, "data", filename)
-    removeModal()
-    
-  })
-  
-  
-  #-------------------------------------------------------------------------------------------------------------    
-  output$download_stats_data_save <- downloadHandler(
-    file = function(){
-      input$stats_data_filename
-    },
-    content = function(file){
-      fullname <- str_c(dpmsr_set$file$output_dir, input$select_final_data_stats, "//", input$stats_data_filename)
-      cat(file = stderr(), str_c("download_stats_data fullname = ", fullname), "\n")
-      file.copy(fullname, file)
-    }
-  )
-  #-------------------------------------------------------------------------------------------------------------
-  #-------------------------------------------------------------------------------------------------------------
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
- 
-  #------------------------------------------------------------------------------------------------------   
+#-------------------------------------------------------------------------------------------------------------      
+#------------------------------------------------------------------------------------------------------   
  observeEvent(input$clean_environment, {
    cat(file = stderr(), "load clean environment", "\n")
    try(rm(list = ls(envir = .GlobalEnv), pos = .GlobalEnv, inherits = FALSE))
