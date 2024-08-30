@@ -339,7 +339,7 @@ stats_data_table_filter <- function(df, sample_number, start_sample_col, input_s
   cat(file = stderr(), "stats_data_table_filter... 1", "\n")
   
   if (input_stats_data_topn != 0 ) {
-    df$sum <- rowSums(df[start_sample_col:(start_sample_col + sample_number)])
+    df$sum <- rowSums(df[start_sample_col:(start_sample_col + sample_number -1)])
     df <- df[order(-df$sum),]                      
     df <- df[1:input_stats_data_topn,]
     df$sum <- NULL
@@ -370,5 +370,129 @@ stats_data_table_filter <- function(df, sample_number, start_sample_col, input_s
   cat(file = stderr(), "Function stats_data_table_filter...end", "\n")
   return(df)
 }
+
+# one protein data ------------------------------------------------------
+
+oneprotein_data <- function(df, input_stats_oneprotein_plot_comp, input_stats_oneprotein_accession, input_stats_oneprotein_plot_spqc, input_stats_use_zscore) {
+  cat(file = stderr(), "Function oneprotein_data..." , "\n")
+  
+  #subset data
+  df <- df[grep(as.character(input_stats_oneprotein_accession), df$Accession), ]
+
+  if (dpmsr_set$x$final_data_output == "Peptide") {
+    df_peptide <- dpmsr_set$data$stats[[comp_string]]
+    df_peptide <- df_peptide[1:(dpmsr_set$y$info_columns_final + sample_number + dpmsr_set$y$stats$comp_spqc_number)]
+  }else{
+    df_peptide <- dpmsr_set$data$stats$peptide[[comp_string]]
+  }
+  
+  df_peptide <- subset(df_peptide, Accession %in% as.character(comp_accession)  )
+  peptide_info_columns <- ncol(df_peptide) - sample_number - dpmsr_set$y$stats$comp_spqc_number
+  
+  #add spqc to plots
+  cat(file = stderr(), "One Protein stats and plots...3" , "\n")
+  if (input_stats_oneprotein_plot_spqc) {
+    df <- df[(dpmsr_set$y$info_columns_final + 1):(dpmsr_set$y$info_columns_final + sample_number + dpmsr_set$y$stats$comp_spqc_number)]
+  }else{
+    df <- df[(dpmsr_set$y$info_columns_final + 1):(dpmsr_set$y$info_columns_final + sample_number)]
+  }
+  
+  comp_rows <- c(dpmsr_set$y$stats$groups$sample_numbers_N[comp_number],dpmsr_set$y$stats$groups$sample_numbers_D[comp_number] )
+  #add spqc to plots
+  if (input_stats_oneprotein_plot_spqc) {
+    comp_rows <- c(comp_rows, dpmsr_set$y$stats$comp_spqc_sample_numbers)
+  }
+  
+  #test_df_peptide <<- df_peptide
+  
+  cat(file = stderr(), "One Protein stats and plots...4" , "\n")
+  comp_rows <- unlist(comp_rows)
+  namex <- dpmsr_set$design$Label[comp_rows]
+  color_list <- dpmsr_set$design$colorlist[comp_rows]
+  groupx <- dpmsr_set$design$Group[comp_rows]
+  
+  cat(file = stderr(), "One Protein stats and plots...5" , "\n")
+  if (dpmsr_set$x$final_data_output != "Peptide") {
+    colnames(df_peptide)[(peptide_info_columns + 1):ncol(df_peptide)] <- 
+      c(dpmsr_set$design$Header1[unlist(dpmsr_set$y$stats$groups$sample_numbers_N[comp_number])],
+        dpmsr_set$design$Header1[unlist(dpmsr_set$y$stats$groups$sample_numbers_D[comp_number])],
+        dpmsr_set$design$Header1[unlist(dpmsr_set$y$stats$comp_spqc_sample_numbers)] )
+  } 
+  
+  #sort peptides by intensity, keep highest abundant peptide
+  cat(file = stderr(), "One Protein stats and plots...6" , "\n")
+  df_peptide$sum <- rowSums(df_peptide[(peptide_info_columns + 1):(peptide_info_columns + sample_number + 1)])
+  df_peptide <- df_peptide[order(df_peptide$sum), ]
+  df_peptide$sum <- NULL
+  df_peptide <- df_peptide[!duplicated(df_peptide$Sequence),]
+  
+  #test_df_peptide <<- df_peptide
+  
+  if (input_stats_use_zscore) {df_peptide <- peptide_zscore(df_peptide, peptide_info_columns)}
+  
+  cat(file = stderr(), "One Protein stats and plots...end" , "\n")
+  
+  df_list <- list("df" = df, "df_peptide" = df_peptide, "namex" = namex, "color_list" = color_list, "comp_string" = comp_string, "peptide_info_columns" = peptide_info_columns)
+  #test_df_list_one_protein <<- df_list
+  return(df_list)
+  cat(file = stderr(), "Function oneprotein_data...end" , "\n")
+}
+
+
+
+# one peptide data ------------------------------------------------------
+onepeptide_data <- function(session, input, output) {
+  
+  cat(file = stderr(), "One Peptide stats and plots..." , "\n")
+  
+  comp_string <- input$stats_onepeptide_plot_comp
+  comp_number <- which(dpmsr_set$y$stats$groups$comp_name == comp_string)
+  
+  cat(file = stderr(), "One Peptide stats and plots...1" , "\n")
+  df <- dpmsr_set$data$stats[[comp_string]]
+  df <- df[grep(as.character(input$stats_onepeptide_accession), df$Accession), ]
+  sample_number <- dpmsr_set$y$stats$groups$N_count[comp_number] + dpmsr_set$y$stats$groups$D_count[comp_number]
+  df_peptide <- df
+  info_columns <- dpmsr_set$y$info_columns_final
+  df_peptide_stats <- df_peptide[(info_columns + sample_number + dpmsr_set$y$stats$comp_spqc_number + 1):ncol(df_peptide)]
+  
+  #continue filtering of df, used for first plot of a single peptide
+  cat(file = stderr(), "One Peptide stats and plots...2" , "\n")
+  df <- subset(df, Sequence %in% as.character(input$stats_onepeptide_sequence)  )
+  grep_mod <- stringr::str_replace_all(input$stats_onepeptide_modification, "\\[", "\\\\[")
+  grep_mod <- stringr::str_replace_all(grep_mod, "\\]", "\\\\]")
+  grep_mod <- stringr::str_replace_all(grep_mod,"\\(", "\\\\(")
+  grep_mod <- stringr::str_replace_all(grep_mod,"\\)", "\\\\)")
+  df <- df %>% filter(stringr::str_detect(Modifications, grep_mod) )
+  
+  #add spqc to plots
+  cat(file = stderr(), "One Peptide stats and plots...3" , "\n")
+  if (input$stats_onepeptide_plot_spqc) {
+    df_peptide <- df_peptide[1:(info_columns + sample_number + dpmsr_set$y$stats$comp_spqc_number)]
+    df <- df[(info_columns + 1):(info_columns + sample_number + dpmsr_set$y$stats$comp_spqc_number)]
+    comp_rows <- c(dpmsr_set$y$stats$groups$sample_numbers_N[comp_number],dpmsr_set$y$stats$groups$sample_numbers_D[comp_number], 
+                   dpmsr_set$y$stats$comp_spqc_sample_numbers )
+  }else{
+    df_peptide <- df_peptide[1:(info_columns + sample_number)]
+    df <- df[(info_columns + 1):(info_columns + sample_number)]
+    comp_rows <- c(dpmsr_set$y$stats$groups$sample_numbers_N[comp_number],dpmsr_set$y$stats$groups$sample_numbers_D[comp_number] )
+  }
+  
+  cat(file = stderr(), "One Peptide stats and plots...4" , "\n")
+  comp_rows <- unlist(comp_rows)
+  namex <- dpmsr_set$design$Label[comp_rows]
+  color_list <- dpmsr_set$design$colorlist[comp_rows]
+  groupx <- dpmsr_set$design$Group[comp_rows]
+  
+  
+  if (input$stats_onepeptide_use_zscore) {df_peptide <- peptide_zscore(df_peptide, info_columns)}
+  
+  df_list <- list("df" = df, "df_peptide" = df_peptide, "df_peptide_stats" = df_peptide_stats, "info_columns" = info_columns, "namex" = namex, "color_list" = color_list, "comp_string" = comp_string)
+  #test_df_list <<- df_list
+  
+  cat(file = stderr(), "One Peptide stats and plots...end" , "\n")
+  return(df_list)
+}
+
 
 

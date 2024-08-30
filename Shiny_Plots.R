@@ -6,6 +6,8 @@ create_plot <- function(session, input, output, params, plot_number) {
   
   showModal(modalDialog("Creating plot...", footer = NULL))  
   
+  source('Shiny_Interactive.R')
+  
   comp_string <- input[[str_c("stats_plot_comp", plot_number)]]
   
   bg_create_plot <- callr::r_bg(func = create_plot_bg, args = list(comp_string, input$stats_norm_type, params, plot_number), stderr = str_c(params$error_path, "//error_create_plot.txt"), supervise = TRUE)

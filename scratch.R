@@ -22,27 +22,36 @@ list_tables <- function(table_name){
 list_tables()
 
 
-testme <- read_table("precursor_norm_sltmm")
-testme2 <- read_table("temp_df_impute")
-test_design <- read_table("design")
-test_sample_groups <- read_table("sample_groups")
-test_stats_comp <- read_table("stats_comp")
-test_design <- read_table("design")
-test_protein_missing <- read_table("protein_missing")
+testme <- read_table("precursor_norm_sltmm", params)
+testme2 <- read_table("temp_df_impute", params)
+test_design <- read_table("design", params)
+test_sample_groups <- read_table("sample_groups", params)
+test_stats_comp <- read_table("stats_comp", params)
+test_design <- read_table("design", params)
+test_protein_missing <- read_table("protein_missing", params)
 
-stats_comp <- read_table("stats_comp")
-sample_groups <- read_table("sample_groups")
+stats_comp <- read_table("stats_comp", params)
+sample_groups <- read_table("sample_groups", params)
 
-test2 <- read_table('precursor_impute_sltmm')
-test3 <- read_table('protein_sltmm')
-test4 <- read_table('protein_sltmm_final')
-df <- read_table('protein_sltmm_Caskin1_Test_v_Caskin1_Ctrl_final')
+test2 <- read_table('precursor_impute_sltmm', params)
+test3 <- read_table('protein_sltmm', params)
+test4 <- read_table('protein_sltmm_final', params)
+df <- read_table('protein_sltmm_Caskin1_Test_v_Caskin1_Ctrl_final', params)
 
 #------------
+sample_cols <- c(colnames(df |> dplyr::select(contains("Normalized"))),
+                 colnames(df |> dplyr::select(contains("Imputed"))) )
 
+df_new <- df %>% mutate(across(6:(6+4), round, 0))
 
+pval_cols <- which(stringr::str_detect(colnames(df), "pval"))
+df <- df |> dplyr::mutate(dplyr::across(pval_cols, round, 7))
 
+df <- df(pval_cols), round, 7))
+df <- df |> mutate_at(pval_cols, funs(round(., 1)))
 
+which(colnames(df) contains('Accession'))
+which(str_detect(colnames(df), "SPQC"))
 
 conn <- dbConnect(RSQLite::SQLite(), params$database_path)
 dbListTables(conn)
@@ -482,4 +491,58 @@ test2 = read_table("protein_sltmm_cv")
 #combine df and cv data
 test <- cbind(test1, test2[,2:ncol(test2)])
 write_table("protein_sltmm_final", test)
+
+#-------------------------------------
+
+# Server.R
+shinyServer(function(input, output, session) {
+  output$sampletable <- DT::renderDataTable({
+    sampletable
+  }, server = TRUE, selection = 'single')
+  
+  output$selectedrow <- DT::renderDataTable({
+    selectedrowindex <<-
+      input$sampletable_rows_selected[length(input$sampletable_rows_selected)]
+    selectedrowindex <<- as.numeric(selectedrowindex)
+    selectedrow <- (sampletable[selectedrowindex, ])
+    selectedrow
+  })
+  
+  output$plots <- renderPlot({
+    variable <- sampletable[selectedrowindex, 1]
+    #write your plot function
+    
+    
+  })
+  
+  
+})
+
+#ui.R
+shinyUI(navbarPage(
+  "Single Row Selection",
+  
+  
+  
+  tabPanel(
+    "Row selection example",
+    sidebarLayout(
+      sidebarPanel("Parameters"),
+      mainPanel(
+        DT::dataTableOutput("selectedrow"),
+        DT::dataTableOutput("sampletable")
+        
+      )
+    )
+    
+  )
+  
+))
+
+# global.R
+
+library(DT)
+library(shiny)
+selectedrowindex = 0
+
 

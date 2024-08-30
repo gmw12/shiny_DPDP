@@ -155,10 +155,84 @@ create_cv_table_bg <- function(params){
   return(data_CV)   
 }
 
-
 #------------------------------------------------------------------------------------------------------------------
 
-protein_table <- function(df){
+protein_table <- function(df, start_sample_col, sample_number, spqc_number){
+  cat(file = stderr(), "Function protein_table...", "\n")
+  require('DT')
+  
+  pval_cols <- which(stringr::str_detect(colnames(df), "pval"))
+  cv_cols <- which(stringr::str_detect(colnames(df), "CV"))
+  fc_cols <- which(stringr::str_detect(colnames(df), "FC"))
+  mf_cols <- which(stringr::str_detect(colnames(df), "mf"))
+  stat_col <- ncol(df) - 1
+  
+  df <- df |> dplyr::mutate(dplyr::across(start_sample_col:(start_sample_col + sample_number + spqc_number - 1), round, 1))
+  df <- df |> dplyr::mutate(dplyr::across(pval_cols, round, 7))
+  df <- df |> dplyr::mutate(dplyr::across(cv_cols, round, 2))
+  df <- df |> dplyr::mutate(dplyr::across(fc_cols, round, 2))
+  
+  options <- list(
+    selection = 'single',
+    #dom = 'Bfrtipl',
+    autoWidth = TRUE,
+    scrollX = TRUE,
+    scrollY = 500,
+    scrollCollapse = TRUE,
+    columnDefs = list(
+      list(
+        targets = c(0),
+        visibile = TRUE,
+        "width" = '30',
+        className = 'dt-center'
+      ),
+      list(
+        targets = c(2),
+        visible = TRUE,
+        "width" = '20',
+        className = 'dt-center'
+      ),
+      list(
+        targets = c(1),
+        width = '250',
+        render = JS(
+          "function(data, type, row, meta) {",
+          "return type === 'display' && data.length > 35 ?",
+          "'<span title=\"' + data + '\">' + data.substr(0, 35) + '...</span>' : data;",
+          "}"
+        )
+      ),
+      list(
+        targets = c(3),
+        width = '100',
+        render = JS(
+          "function(data, type, row, meta) {",
+          "return type === 'display' && data.length > 20 ?",
+          "'<span title=\"' + data + '\">' + data.substr(0, 20) + '...</span>' : data;",
+          "}"
+        )
+      )
+    ),
+    ordering = TRUE,
+    orderClasses = TRUE,
+    fixedColumns = list(leftColumns = 1),
+    pageLength = 10,
+    lengthMenu = c(10, 50, 100, 200)
+    #formatRound(columns = c(sample_col_numbers + 1), digits = 0)
+    
+  )
+  
+  cat(file = stderr(), "Function protein_table...end", "\n")
+  return(list(df, options))   
+}
+
+
+
+
+#--------------------------------
+#------------------------------------------------------------------------------------------------------------------
+
+protein_table_backup <- function(df){
   cat(file = stderr(), "Function protein_table...", "\n")
   require('DT')
 
@@ -175,9 +249,11 @@ protein_table <- function(df){
   
   stats_DT <-  DT::datatable(df,
                              rownames = FALSE,
+                             selection = 'single',
                              extensions = c("FixedColumns"), #, "Buttons"),
                              #editable = list(target='cell', disable = list(columns=c(0:(stat_col-1))) ) ,
                              options=list(
+                               selection = 'single',
                                #dom = 'Bfrtipl',
                                autoWidth = TRUE,
                                scrollX = TRUE,
@@ -207,7 +283,7 @@ protein_table <- function(df){
                                ordering = TRUE,
                                orderClasses = TRUE,
                                fixedColumns = list(leftColumns = 1),
-                               pageLength = 20, lengthMenu = c(10,50,100,200)),
+                               pageLength = 10, lengthMenu = c(10,50,100,200)),
                              #buttons=c('copy', 'csv', 'excelHtml5', 'pdf')),
                              callback = DT::JS('table.page(3).draw(false);'
                              ))

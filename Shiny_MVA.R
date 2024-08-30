@@ -173,9 +173,6 @@ stat_calc_bg <- function(params, comp_number, stats_comp){
   #add stats to df
   df <- stat_add(df, df_missing, params, comp_number, stats_comp, df_design) 
   
-  
-  
-  
   stats_out_name <- stringr::str_c(stats_comp$Table_Name[comp_number], "_final")
   RSQLite::dbWriteTable(conn, stats_out_name, df, overwrite = TRUE)
   RSQLite::dbDisconnect(conn)
@@ -277,9 +274,26 @@ create_stats_data_table <- function(session, input, output, params) {
   bg_create_stats_data_table$wait()
   print_stderr("error_create_stats_data_table.txt")
   
-  stats_DT <- bg_create_stats_data_table$get_result()
-  output$stats_data_final <-  DT::renderDataTable(stats_DT, selection = 'single' )
+  DT_list <- bg_create_stats_data_table$get_result()
+  df_DT <- DT_list[[1]]
+  options_DT <- DT_list[[2]]
   
+  output$stats_data_final <-  DT::renderDataTable(df_DT, rownames = FALSE, extensions = c("FixedColumns"), 
+                                                  selection = 'single', options=options_DT,
+                                                  callback = DT::JS('table.page(3).draw(false);')
+                                                  )
+  
+  if (params$data_output == "Protein") {
+    output$stats_data_final_protein <- renderPrint(df_DT$Accession[as.numeric(unlist(input$stats_data_final_rows_selected)[1])] )
+    observe({
+      updateTextInput(session, "stats_oneprotein_accession", 
+                      value = df_DT$Accession[as.numeric(unlist(input$stats_data_final_rows_selected)[1])]  )
+      updateSelectInput(session, "stats_oneprotein_plot_comp", selected = input$stats_select_data_comp)
+      accession_stat <<- df_DT$Accession[as.numeric(unlist(input$stats_data_final_rows_selected)[1])] 
+    })
+  }
+  
+  cat(file = stderr(), "Function create_stats_data_table...1", "\n")
   output$download_stats_data_save <- downloadHandler(
     file = function(){
       input$stats_data_filename
@@ -291,51 +305,13 @@ create_stats_data_table <- function(session, input, output, params) {
     }
   )
   
-  # get selections from data table for protein or peptide formats
-  if (params$data_output == "Protein") {
-    output$stats_data_final_protein <- renderPrint(stats_DT$x$data$Accession[as.numeric(unlist(input$stats_data_final_rows_selected)[1])] )
-    observe({
-      updateTextInput(session, "stats_oneprotein_accession", 
-                      value = stats_DT$x$data$Accession[as.numeric(unlist(input$stats_data_final_rows_selected)[1])]  )
-      updateSelectInput(session, "stats_oneprotein_plot_comp", selected = input$stats_select_data_comp)
-      params$accession_stat <<- stats_DT$x$data$Accession[as.numeric(unlist(input$stats_data_final_rows_selected)[1])] 
-    })
-  }else{
-    output$stats_data_final_protein <- renderPrint(str_c(
-      stats_DT$x$data$Accession[as.numeric(unlist(input$stats_data_final_rows_selected)[1])], "  ", 
-      stats_DT$x$data$Sequence[as.numeric(unlist(input$stats_data_final_rows_selected)[1])], "  ", 
-      stats_DT$x$data$Modification[as.numeric(unlist(input$stats_data_final_rows_selected)[1])] 
-    ))
-    
-    observe({
-      updateTextInput(session, "stats_onepeptide_accession", 
-                      value = stats_DT$x$data$Accession[as.numeric(unlist(input$stats_data_final_rows_selected)[1])]  )
-      updateTextInput(session, "stats_onepeptide_sequence", 
-                      value = stats_DT$x$data$Sequence[as.numeric(unlist(input$stats_data_final_rows_selected)[1])] ) 
-      updateTextInput(session, "stats_onepeptide_modification", 
-                      value = stats_DT$x$data$Modification[as.numeric(unlist(input$stats_data_final_rows_selected)[1])] ) 
-      updateSelectInput(session, "stats_onepeptide_plot_comp", selected = input$stats_select_data_comp)
-      params$accession_stat <<- stats_DT$x$data$Accession[as.numeric(unlist(input$stats_data_final_rows_selected)[1])] 
-      params$sequence_stat <<- stats_DT$x$data$Sequence[as.numeric(unlist(input$stats_data_final_rows_selected)[1])] 
-      params$modification_stat <<- stats_DT$x$data$Modifications[as.numeric(unlist(input$stats_data_final_rows_selected)[1])]
-      #protein plot is still used for peptide output
-      updateTextInput(session, "stats_oneprotein_accession", 
-                      value = stats_DT$x$data$Accession[as.numeric(unlist(input$stats_data_final_rows_selected)[1])]  )
-      updateSelectInput(session, "stats_oneprotein_plot_comp", selected = input$stats_select_data_comp)
-    })
-  } 
-  
-  
-  
-  
-  
   removeModal() 
   cat(file = stderr(), "Function create_stats_data_table...end", "\n") 
 }
 
 #----------------------------------------------------------------------------------------
-create_stats_data_table_bg <- function(input_stats_norm_type, input_stats_select_data_comp, input_stats_add_filters, input_stats_data_topn, input_stats_data_accession,
-                                       input_stats_data_description, params) {
+create_stats_data_table_bg <- function(input_stats_norm_type, input_stats_select_data_comp, input_stats_add_filters, input_stats_data_topn,
+                                       input_stats_data_accession, input_stats_data_description, params) {
   cat(file = stderr(), "Function create_stats_data_table_bg...", "\n")
   source('Shiny_File.R')
   source('Shiny_Tables.R')
@@ -356,17 +332,18 @@ create_stats_data_table_bg <- function(input_stats_norm_type, input_stats_select
   comp_number <- which(stats_comp$Name == input_stats_select_data_comp)
   sample_number <- as.integer(stats_comp$N[comp_number]) + as.integer(stats_comp$D[comp_number])
   start_sample_col <- min(grep(stats_comp$FactorsN[comp_number], names(df)), grep(stats_comp$FactorsD[comp_number], names(df)))
+  spqc_number <- as.integer(stats_comp$SPQC[comp_number])
   
   #filter data for display
   df <- stats_data_table_filter(df, sample_number, start_sample_col, input_stats_add_filters, input_stats_data_topn, input_stats_data_accession, input_stats_data_description)
   
   if (params$data_output == "Protein") {
-    stats_DT <- protein_table(df)
+    stats_DT <- protein_table(df, start_sample_col, sample_number, spqc_number)
   }else{
-    stats_DT <- peptide_table(df)
+    stats_DT <- peptide_table(df, start_sample_col, sample_number, spqc_number)
   }
   
-  write_table("stats_DT", stats_DT$x$data, params)
+  write_table("stats_DT", stats_DT[[1]], params)
   
   return(stats_DT)
   
@@ -410,15 +387,52 @@ stats_data_save_excel_bg <- function(input_stats_norm_type,  input_stats_data_fi
   
 }
   
-  
-  
-  
-  #-------------------------------------------------------------------------------------------------------------  
+#-------------------------------------------------------------------------------------------------------------  
+stats_table_select <- function(session, input, output, input_stats_data_final_rows_selected, stats_DT, params) {
+  cat(file = stderr(), "Function stats_table_select...", "\n")
+
+  # get selections from data table for protein or peptide formats
+  if (params$data_output == "Protein") {
+    output$stats_data_final_protein <- renderPrint(stats_DT$x$data$Accession[as.numeric(unlist(input_stats_data_final_rows_selected)[1])] )
+    observe({
+      updateTextInput(session, "stats_oneprotein_accession", 
+                      value = stats_DT$x$data$Accession[as.numeric(unlist(input_stats_data_final_rows_selected)[1])]  )
+      updateSelectInput(session, "stats_oneprotein_plot_comp", selected = input$stats_select_data_comp)
+      accession_stat <<- stats_DT$x$data$Accession[as.numeric(unlist(input_stats_data_final_rows_selected)[1])] 
+    })
+  }else{
+    output$stats_data_final_protein <- renderPrint(str_c(
+      stats_DT$x$data$Accession[as.numeric(unlist(input$stats_data_final_rows_selected)[1])], "  ", 
+      stats_DT$x$data$Sequence[as.numeric(unlist(input$stats_data_final_rows_selected)[1])], "  ", 
+      stats_DT$x$data$Modification[as.numeric(unlist(input$stats_data_final_rows_selected)[1])] 
+    ))
+    
+    cat(file = stderr(), "Function create_stats_data_table...3", "\n")
+    observe({
+      updateTextInput(session, "stats_onepeptide_accession", 
+                      value = stats_DT$x$data$Accession[as.numeric(unlist(input$stats_data_final_rows_selected)[1])]  )
+      updateTextInput(session, "stats_onepeptide_sequence", 
+                      value = stats_DT$x$data$Sequence[as.numeric(unlist(input$stats_data_final_rows_selected)[1])] ) 
+      updateTextInput(session, "stats_onepeptide_modification", 
+                      value = stats_DT$x$data$Modification[as.numeric(unlist(input$stats_data_final_rows_selected)[1])] ) 
+      updateSelectInput(session, "stats_onepeptide_plot_comp", selected = input$stats_select_data_comp)
+      params$accession_stat <<- stats_DT$x$data$Accession[as.numeric(unlist(input$stats_data_final_rows_selected)[1])] 
+      params$sequence_stat <<- stats_DT$x$data$Sequence[as.numeric(unlist(input$stats_data_final_rows_selected)[1])] 
+      params$modification_stat <<- stats_DT$x$data$Modifications[as.numeric(unlist(input$stats_data_final_rows_selected)[1])]
+      #protein plot is still used for peptide output
+      updateTextInput(session, "stats_oneprotein_accession", 
+                      value = stats_DT$x$data$Accession[as.numeric(unlist(input$stats_data_final_rows_selected)[1])]  )
+      updateSelectInput(session, "stats_oneprotein_plot_comp", selected = input$stats_select_data_comp)
+    })
+  } 
+}
+
+#-------------------------------------------------------------------------------------------------------------  
   create_stats_oneprotein_plots <- function(session, input, output, params) {
     cat(file = stderr(), "Function create_stats_oneprotein_plots...", "\n")
     showModal(modalDialog("Createing stats oneprotein plots...", footer = NULL))  
     
-    arg_list <- list(input$stats_norm_type,  input$stats_data_filename, params)
+    arg_list <- list(input$stats_norm_type, input$stats_oneprotein_plot_comp, params)
     
     create_stats_oneprotein_plots <- callr::r_bg(func = create_stats_oneprotein_plots_bg , args = arg_list, stderr = str_c(params$error_path, "//error_create_stats_oneprotein_plots.txt"), supervise = TRUE)
     create_stats_oneprotein_plots$wait()
@@ -431,17 +445,31 @@ stats_data_save_excel_bg <- function(input_stats_norm_type,  input_stats_data_fi
   
   
   #------------------------------------------------------------------------------------------------------------------
-  create_stats_oneprotein_plots_bg <- function(params) {
+  create_stats_oneprotein_plots_bg <- function(input_stats_norm_type, input_stats_oneprotein_plot_comp, params) {
     cat(file = stderr(), "Function create_stats_oneprotein_plots_bg...", "\n")
-
-    comp_number <- try(which(dpmsr_set$data$stats[[input$stats_oneprotein_plot_comp]] == input$stats_oneprotein_accession), silent = TRUE)
+    source('Shiny_File.R')
     
-    if (length(comp_number) != 0) {  
+    #confirm data exists in database
+    data_name <- stringr::str_c("protein_", input_stats_norm_type, "_", input_stats_oneprotein_plot_comp, "_final")
+    if (data_name %in% list_tables(params)) {
+      cat(file = stderr(), stringr::str_c(data_name, " is in database"), "\n") 
       
-      # do not run peptide section if TMT SPQC Norm
-      if (!dpmsr_set$x$tmt_spqc_norm) {
-        
-        df_list <- oneprotein_data(session, input, output)
+      #load data
+      conn <- RSQLite::dbConnect(RSQLite::SQLite(), params$database_path)
+      df <- RSQLite::dbReadTable(conn, data_name)
+      stats_comp <- RSQLite::dbReadTable(conn, "stats_comp")
+      RSQLite::dbDisconnect(conn)
+    }
+
+    comp_number <- which(stats_comp$Name == input_stats_oneprotein_plot_comp)
+    sample_number <- as.integer(stats_comp$N[comp_number]) + as.integer(stats_comp$D[comp_number])
+    start_sample_col <- min(grep(stats_comp$FactorsN[comp_number], names(df)), grep(stats_comp$FactorsD[comp_number], names(df)))
+    spqc_number <- as.integer(stats_comp$SPQC[comp_number])
+
+    #get data
+    df_list <- oneprotein_data(df, input_stats_oneprotein_plot_comp, input_stats_oneprotein_accession, input_stats_oneprotein_plot_spqc, input_stats_use_zscore)
+    
+    
         #
         #test_df_list <<- df_list
         
@@ -519,18 +547,7 @@ stats_data_save_excel_bg <- function(input_stats_norm_type,  input_stats_data_fi
         oneprotein_peptide_DT <- oneprotein_peptide_DT %>%  formatRound(columns = c(sample_col_numbers), digits = 2)
         
         output$oneprotein_peptide_table <-  DT::renderDataTable({oneprotein_peptide_DT })
-      }else {
-        
-        df_list <- TMT_IRS_protein_data(session, input, output)
-        for (j in names(df_list)) {assign(j, df_list[[j]]) }
-        
-        interactive_barplot(session, input, output, df, namex, color_list, "stats_oneprotein_barplot", input$stats_oneprotein_plot_comp)
-        
-      } #end of TMT SPQC if 
-      
-    }else{
-      shinyalert("Oops!", "No Accession...", type = "error")
-    }
+
     removeModal()
     cat(file = stderr(), "Function create_stats_oneprotein_plots_bg...end", "\n")
   }

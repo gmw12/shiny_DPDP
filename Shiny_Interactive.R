@@ -128,16 +128,10 @@ interactive_pca2d <- function(session, input, output, df, namex, color_list, gro
   pca_y <- input[[stringr::str_c(plot_number, "_stats_pca2d_x")]]
   pca_x <- input[[stringr::str_c(plot_number, "_stats_pca2d_y")]]
   
-  test_py <<- pca_y
-  test_px <<- pca_x
-  
-  
   hover_data <- data.frame(cbind(namex, df_out[[pca_x]], df_out[[pca_y]]), stringsAsFactors = FALSE  )
   colnames(hover_data) <- c("Sample", "get(pca_x)", "get(pca_y)")
   hover_data$`get(pca_x)` <- as.numeric(hover_data$`get(pca_x)`)
   hover_data$`get(pca_y)` <- as.numeric(hover_data$`get(pca_y)`)
-  
-  hover_data_test <<- hover_data
   
   cat(file = stderr(), "interactive_pca2d...4" , "\n")
   create_stats_pca2d <- reactive({

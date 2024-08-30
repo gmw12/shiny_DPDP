@@ -740,9 +740,11 @@ source("Shiny_UI.R")
                                         selected = 1)
                      ),
                      column(width =1, offset =0,
+                            br(),
                             checkboxInput("stats_oneprotein_plot_spqc", label = "Add SPQC?")
                      ),
                      column(width =1, offset =0,
+                            br(),
                             checkboxInput("stats_use_zscore", label = "Use zscore?")
                      ),
                      column(width =1, offset =0,

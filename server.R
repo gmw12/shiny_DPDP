@@ -373,7 +373,6 @@ shinyServer(function(session, input, output) {
     
     create_stats_data_table(session, input, output, params)
     
-    
     cat(file = stderr(), "stats_data_show clicked...end" , "\n")
   })
   
