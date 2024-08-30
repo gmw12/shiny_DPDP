@@ -393,12 +393,7 @@ shinyServer(function(session, input, output) {
     showModal(modalDialog("Getting data...", footer = NULL))  
     cat(file = stderr(), "stats data show triggered..." , "\n")
 
-      
-      output$stats_data_final <-  DT::renderDataTable(stats_DT, selection = 'single' )
-      #save data
-      dpmsr_set$data$stats_DT <<- filter_df
-      
-      
+
       # get selections from data table for protein or peptide formats
       if (dpmsr_set$x$final_data_output == "Protein") {
         output$stats_data_final_protein <- renderPrint(stats_DT$x$data$Accession[as.numeric(unlist(input$stats_data_final_rows_selected)[1])] )
@@ -466,6 +461,16 @@ shinyServer(function(session, input, output) {
   })
   
   
+  #-------------------------------------------------------------------------------------------------------------  
+  
+  observeEvent(input$create_stats_oneprotein_plots, { 
+    cat(file = stderr(), "stats_data_show clicked..." , "\n")
+    
+    create_stats_oneprotein_plots(session, input, output, params)
+    
+    cat(file = stderr(), "stats_data_show clicked...end" , "\n")
+    
+  })
   
   
   

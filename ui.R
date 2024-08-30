@@ -724,12 +724,112 @@ source("Shiny_UI.R")
                 actionButton("stats_data_update", label = "Remove from Stats", width = 200,
                              style="color: #fff; background-color: #337ab7; border-color: #2e6da4")
               )       
+      ),
+      
+      
+      tabItem("stats_protein_plots", 
+               fluidRow(
+                 box(id = "stats_protein_parameters", title = "Protein Plot Parameters...", status = "primary",
+                     solidHeader = TRUE, collapsible = FALSE, align = "left", width = 12, height = 125,
+                     column(width =1, offset =0,
+                            textInput("stats_oneprotein_accession", label="Accession", value = "0", width = 100)
+                     ),
+                     column(width =3, offset =0,
+                            selectInput("stats_oneprotein_plot_comp", label = "comparison", 
+                                        choices = list("Choice 1" = 1, "Choice 2" = 2, "Choice 3" = 3), 
+                                        selected = 1)
+                     ),
+                     column(width =1, offset =0,
+                            checkboxInput("stats_oneprotein_plot_spqc", label = "Add SPQC?")
+                     ),
+                     column(width =1, offset =0,
+                            checkboxInput("stats_use_zscore", label = "Use zscore?")
+                     ),
+                     column(width =1, offset =0,
+                            br(),
+                            actionButton("create_stats_oneprotein_plots", label = "Create Plots", width = 100,
+                                         style="color: #fff; background-color: #337ab7; border-color: #2e6da4")
+                     ),
+                     column(width =2, offset =1,
+                            textInput("stats_oneprotein_data_filename", label="File Name", value = "my_protein_data.xlsx", width = 250)
+                     ),
+                     column(width =1, offset =0,
+                            br(),
+                            actionButton("stats_oneprotein_data_save", label = "Save Data", width = 100,
+                                         style="color: #fff; background-color: #337ab7; border-color: #2e6da4"),
+                     ),
+                     column(width =1, offset =0,
+                            br(),
+                            downloadButton('download_stats_oneprotein_data_save')
+                     )
+                 )
+               ),
               
+               fluidRow(
+                 box(id = "stats_protein_plot", title = "Protein Plot...", status = "primary",
+                     solidHeader = TRUE, collapsible = FALSE, align = "left", width = 12, height = 400,
+                     column(width =12, offset =0,
+                            dropdownButton(
+                              textInput("stats_oneprotein_barplot_y_axis_label", label="y axis label", value = "Intensity", width = 200),
+                              textInput("stats_oneprotein_barplot_title", label="plot title", value = "Total Summed Intensity", width = 200),
+                              sliderInput("stats_oneprotein_barplot_label_size", label = h5("Label Size"), min = 1, 
+                                          max = 50, value = 11),
+                              sliderInput("stats_oneprotein_barplot_title_size", label = h5("Title Size"), min = 10, 
+                                          max = 50, value = 20),
+                              circle = TRUE, status = "danger", icon = icon("cogs"), width = "300px", size = "sm",
+                              tooltip = tooltipOptions(title = "Click to see inputs !")
+                            ),
+                            div(
+                              style = "position:relative",
+                              plotOutput("stats_oneprotein_barplot", width = 1200, height = 400)
+                            ),
+                            downloadButton('download_stats_oneprotein_barplot')
+                     )
+                 )
+               ),
               
+               fluidRow(
+                 box(id = "stats_protein_plot_table", title = "Protein Plot Table...", status = "primary",
+                     solidHeader = TRUE, collapsible = FALSE, align = "left", width = 12, height = 400,
+                    column(width =12, offset =0,
+                        dropdownButton(
+                          textInput("stats_oneprotein_grouped_barplot_y_axis_label", label="y axis label", value = "Intensity", width = 200),
+                          textInput("stats_oneprotein_grouped_barplot_x_axis_label", label="x axis label", value = "Sequence", width = 200),
+                          textInput("stats_oneprotein_grouped_barplot_title", label="plot title", value = "Total Summed Intensity", width = 200),
+                          sliderInput("stats_oneprotein_grouped_barplot_label_size", label = h5("Label Size"), min = 1, 
+                                      max = 50, value = 11),
+                          sliderInput("stats_oneprotein_grouped_barplot_title_size", label = h5("Title Size"), min = 10, 
+                                      max = 50, value = 20),
+                          circle = TRUE, status = "danger", icon = icon("cogs"), width = "300px", size = "sm",
+                          tooltip = tooltipOptions(title = "Click to see inputs !")
+                        ),
+                        div(
+                          style = "position:relative",
+                          plotOutput("stats_oneprotein_grouped_barplot", width = 1200, height = 400)
+                        ),
+                        downloadButton('download_stats_oneprotein_grouped_barplot')
+                 )
+                 )
+                 ),
+                 
+               fluidRow(
+                 column(width =12, offset =0,
+                        hr(),
+                        tags$head(tags$style("#oneprotein_peptide_table{color: blue;
+                                                           font-size: 12px;
+                                                           }"
+                        )
+                        ),
+                        DT::dataTableOutput("oneprotein_peptide_table", width ='100%')
+                 )
+               )
               
-              
-              
-      )
+               )
+      
+      
+      
+      
+      
       
       
       
