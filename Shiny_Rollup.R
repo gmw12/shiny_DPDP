@@ -31,13 +31,18 @@ rollup_apply_bg <- function(params) {
     
     table_name <- stringr::str_c("precursor_impute_", norm)
     table_name_out <- stringr::str_c("protein_", norm)
+    table_name_out_peptide <- stringr::str_c("peptide_", norm)
     
     df <- RSQLite::dbReadTable(conn, table_name)
 
     #rollup precursor/peptides
     protein_df <- rollup_selector(df, params, df_design)
+    
+    #rollup precursor to peptide
+    peptide_df <- rollup_sum_peptide(df, df_design)
 
     RSQLite::dbWriteTable(conn, table_name_out, protein_df, overwrite = TRUE)
+    RSQLite::dbWriteTable(conn, table_name_out_peptide, peptide_df, overwrite = TRUE)
   }
   
   RSQLite::dbDisconnect(conn)

@@ -376,10 +376,7 @@ stats_data_table_filter <- function(df, sample_number, start_sample_col, input_s
 oneprotein_data <- function(df, input_stats_oneprotein_plot_comp, input_stats_oneprotein_accession, input_stats_oneprotein_plot_spqc, input_stats_use_zscore) {
   cat(file = stderr(), "Function oneprotein_data..." , "\n")
   
-  #subset data
-  df <- df[grep(as.character(input_stats_oneprotein_accession), df$Accession), ]
-
-  if (dpmsr_set$x$final_data_output == "Peptide") {
+  if (params$data_output == "Peptide") {
     df_peptide <- dpmsr_set$data$stats[[comp_string]]
     df_peptide <- df_peptide[1:(dpmsr_set$y$info_columns_final + sample_number + dpmsr_set$y$stats$comp_spqc_number)]
   }else{

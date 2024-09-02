@@ -12,33 +12,54 @@ write_table <- function(table_name, df, params){
   RSQLite::dbDisconnect(conn)
 }
 
-list_tables <- function(table_name){
+list_tables <- function(table_name, params){
   conn <- dbConnect(RSQLite::SQLite(), params$database_path) 
   table_list <- dbListTables(conn)
   RSQLite::dbDisconnect(conn)
   return(table_list)
 }
 
-list_tables()
+filter_db <- function(table_name, column_name, key_word, params) {
+  conn <- dbConnect(RSQLite::SQLite(), params$database_path) 
+  query <- stringr::str_c("SELECT * FROM ", table_name, " WHERE ", column_name, " LIKE '", accession,"'") 
+  df <- dbGetQuery(conn, query)
+  RSQLite::dbDisconnect(conn)
+  return(df)
+}
+
+test <- filter_db(data_name, "Accession", accession, params)
+
+list_tables(params)
 
 
-testme <- read_table("precursor_norm_sltmm", params)
+testme <- read_table("precursor_impute_sltmm", params)
 testme2 <- read_table("temp_df_impute", params)
-test_design <- read_table("design", params)
+df_design <- read_table("design", params)
 test_sample_groups <- read_table("sample_groups", params)
-test_stats_comp <- read_table("stats_comp", params)
+stats_comp <- read_table("stats_comp", params)
 test_design <- read_table("design", params)
 test_protein_missing <- read_table("protein_missing", params)
 
 stats_comp <- read_table("stats_comp", params)
 sample_groups <- read_table("sample_groups", params)
 
-test2 <- read_table('precursor_impute_sltmm', params)
+df <- read_table('precursor_impute_sltmm', params)
 test3 <- read_table('protein_sltmm', params)
 test4 <- read_table('protein_sltmm_final', params)
 df <- read_table('protein_sltmm_Caskin1_Test_v_Caskin1_Ctrl_final', params)
 
-#------------
+data_name <- 'protein_sltmm_Caskin1_Test_v_Caskin1_Ctrl_final'
+accession <- 'Q9JMG2'
+conn <- dbConnect(RSQLite::SQLite(), params$database_path) 
+
+query <- stringr::str_c("SELECT * FROM ", data_name, " WHERE Accession LIKE '", accession,"'") 
+query
+rs <- dbGetQuery(conn, query)
+
+
+RSQLite::dbDisconnect(conn)
+
+  #------------
 sample_cols <- c(colnames(df |> dplyr::select(contains("Normalized"))),
                  colnames(df |> dplyr::select(contains("Imputed"))) )
 

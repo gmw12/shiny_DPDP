@@ -168,6 +168,10 @@ stat_calc_bg <- function(params, comp_number, stats_comp){
     df_rollup_list <- peptide_refilter_rollup(df_filter_list, params, df_design)
     df <- df_rollup_list[[1]]
     df_missing <- df_rollup_list[[2]]
+    
+    #rollup up filtered precursors to peptide to save for graphs
+    df_peptide <- rollup_sum_peptide(df_filter_list[[1]], df_design)
+    df_peptide_name <- stringr::str_c("peptide_", stats_comp$Name[comp_number], "_final")
   }
   
   #add stats to df
@@ -175,6 +179,7 @@ stat_calc_bg <- function(params, comp_number, stats_comp){
   
   stats_out_name <- stringr::str_c(stats_comp$Table_Name[comp_number], "_final")
   RSQLite::dbWriteTable(conn, stats_out_name, df, overwrite = TRUE)
+  RSQLite::dbWriteTable(conn, df_peptide_name, df_peptide, overwrite = TRUE)
   RSQLite::dbDisconnect(conn)
   
   cat(file = stderr(), "function stat_calc_bg....end", "\n")
@@ -432,7 +437,8 @@ stats_table_select <- function(session, input, output, input_stats_data_final_ro
     cat(file = stderr(), "Function create_stats_oneprotein_plots...", "\n")
     showModal(modalDialog("Createing stats oneprotein plots...", footer = NULL))  
     
-    arg_list <- list(input$stats_norm_type, input$stats_oneprotein_plot_comp, params)
+    arg_list <- list(input$stats_norm_type, input$stats_oneprotein_plot_comp,input$stats_oneprotein_accession, 
+                     params)
     
     create_stats_oneprotein_plots <- callr::r_bg(func = create_stats_oneprotein_plots_bg , args = arg_list, stderr = str_c(params$error_path, "//error_create_stats_oneprotein_plots.txt"), supervise = TRUE)
     create_stats_oneprotein_plots$wait()
@@ -445,30 +451,29 @@ stats_table_select <- function(session, input, output, input_stats_data_final_ro
   
   
   #------------------------------------------------------------------------------------------------------------------
-  create_stats_oneprotein_plots_bg <- function(input_stats_norm_type, input_stats_oneprotein_plot_comp, params) {
+  create_stats_oneprotein_plots_bg <- function(input_stats_norm_type, input_stats_oneprotein_plot_comp, 
+                                               input_stats_oneprotein_accession, params) {
     cat(file = stderr(), "Function create_stats_oneprotein_plots_bg...", "\n")
     source('Shiny_File.R')
     
     #confirm data exists in database
     data_name <- stringr::str_c("protein_", input_stats_norm_type, "_", input_stats_oneprotein_plot_comp, "_final")
+    data_name_peptide <- stringr::str_c("peptide_", input_stats_norm_type, "_", input_stats_oneprotein_plot_comp, "_final")
+    
     if (data_name %in% list_tables(params)) {
       cat(file = stderr(), stringr::str_c(data_name, " is in database"), "\n") 
       
-      #load data
-      conn <- RSQLite::dbConnect(RSQLite::SQLite(), params$database_path)
-      df <- RSQLite::dbReadTable(conn, data_name)
-      stats_comp <- RSQLite::dbReadTable(conn, "stats_comp")
-      RSQLite::dbDisconnect(conn)
-    }
+      df <- filter_db(data_name, "Accession", input_stats_oneprotein_accession, params)
+      df_peptide <- filter_db(data_name, "Accession", input_stats_oneprotein_accession, params)
 
-    comp_number <- which(stats_comp$Name == input_stats_oneprotein_plot_comp)
-    sample_number <- as.integer(stats_comp$N[comp_number]) + as.integer(stats_comp$D[comp_number])
-    start_sample_col <- min(grep(stats_comp$FactorsN[comp_number], names(df)), grep(stats_comp$FactorsD[comp_number], names(df)))
-    spqc_number <- as.integer(stats_comp$SPQC[comp_number])
-
-    #get data
-    df_list <- oneprotein_data(df, input_stats_oneprotein_plot_comp, input_stats_oneprotein_accession, input_stats_oneprotein_plot_spqc, input_stats_use_zscore)
-    
+      comp_number <- which(stats_comp$Name == input_stats_oneprotein_plot_comp)
+      sample_number <- as.integer(stats_comp$N[comp_number]) + as.integer(stats_comp$D[comp_number])
+      start_sample_col <- min(grep(stats_comp$FactorsN[comp_number], names(df)), grep(stats_comp$FactorsD[comp_number], names(df)))
+      spqc_number <- as.integer(stats_comp$SPQC[comp_number])
+  
+      #get data
+      df_list <- oneprotein_data(df, input_stats_oneprotein_plot_comp, input_stats_oneprotein_accession, input_stats_oneprotein_plot_spqc, input_stats_use_zscore)
+      
     
         #
         #test_df_list <<- df_list
@@ -551,6 +556,6 @@ stats_table_select <- function(session, input, output, input_stats_data_final_ro
     removeModal()
     cat(file = stderr(), "Function create_stats_oneprotein_plots_bg...end", "\n")
   }
-  
+  }
   
   #--------------------------------------------------

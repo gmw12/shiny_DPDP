@@ -126,7 +126,14 @@ table_exists <- function(table_name){
   RSQLite::dbDisconnect(conn)
   return(table_name %in% tables_list)
 }
-
+#-----------------------------------------------------------------------------------------
+filter_db <- function(table_name, column_name, key_word, params) {
+  conn <- dbConnect(RSQLite::SQLite(), params$database_path) 
+  query <- stringr::str_c("SELECT * FROM ", table_name, " WHERE ", column_name, " LIKE '", accession,"'") 
+  df <- dbGetQuery(conn, query)
+  RSQLite::dbDisconnect(conn)
+  return(df)
+}
 #----------------------------------------------------------------------------------------
 up <- function(packed_string){
   return(strsplit(packed_string, ","))
