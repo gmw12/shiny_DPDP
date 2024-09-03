@@ -1,5 +1,5 @@
 
-read_table <- function(table_name){
+read_table <- function(table_name, params){
   conn <- dbConnect(RSQLite::SQLite(), params$database_path) 
   df <- dbReadTable(conn, table_name)
   RSQLite::dbDisconnect(conn)
@@ -30,6 +30,7 @@ filter_db <- function(table_name, column_name, key_word, params) {
 test <- filter_db(data_name, "Accession", accession, params)
 
 list_tables(params)
+
 
 
 testme <- read_table("precursor_impute_sltmm", params)

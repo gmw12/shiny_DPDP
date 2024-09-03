@@ -373,7 +373,24 @@ stats_data_table_filter <- function(df, sample_number, start_sample_col, input_s
 
 # one protein data ------------------------------------------------------
 
-oneprotein_data <- function(df, input_stats_oneprotein_plot_comp, input_stats_oneprotein_accession, input_stats_oneprotein_plot_spqc, input_stats_use_zscore) {
+oneprotein_data_backup <- function(df, input_stats_oneprotein_plot_comp, input_stats_oneprotein_accession, 
+                                   input_stats_oneprotein_plot_spqc, input_stats_use_zscore, df_design) {
+ 
+cat(file = stderr(), "Function oneprotein_data..." , "\n")
+
+  
+  
+  
+
+  
+cat(file = stderr(), "Function oneprotein_data...end" , "\n")
+}
+
+
+# one protein data ------------------------------------------------------
+
+oneprotein_data_backup <- function(df, input_stats_oneprotein_plot_comp, input_stats_oneprotein_accession, 
+                            input_stats_oneprotein_plot_spqc, input_stats_use_zscore) {
   cat(file = stderr(), "Function oneprotein_data..." , "\n")
   
   if (params$data_output == "Peptide") {

@@ -7,7 +7,9 @@ check_comp_names <- function(session, input, output){
   showModal(modalDialog("Setting Stat groups...", footer = NULL))  
   
   table_name <- str_c("protein_", input$stats_norm_type)
-  table_name <- gsub(" ", "", table_name, fixed = TRUE) 
+  table_name_peptide <- str_c("peptide_", input$stats_norm_type)
+  table_name <- gsub(" ", "", table_name, fixed = TRUE)
+  table_name_peptide <- gsub(" ", "", table_name_peptide, fixed = TRUE) 
   
   params$stat_norm <<- input$stats_norm_type
   params$comp_spqc <<- toString(input$comp_spqc)
@@ -23,7 +25,7 @@ check_comp_names <- function(session, input, output){
   for (comp_number in 1:input$comp_number) {
     factorsN <- input[[stringr::str_c('comp_',comp_number,'N')]]
     factorsD <- input[[stringr::str_c('comp_',comp_number,'D')]]
-    bg_stat_groups <- callr::r_bg(func = check_comp_names_bg, args = list(params, table_name, comp_number, factorsN, factorsD), 
+    bg_stat_groups <- callr::r_bg(func = check_comp_names_bg, args = list(params, table_name, table_name_peptide, comp_number, factorsN, factorsD), 
                                   stderr = stringr::str_c(params$error_path, "//stat_groups.txt"), supervise = TRUE)
     bg_stat_groups$wait()
     print_stderr("stat_groups.txt")
@@ -52,7 +54,7 @@ check_comp_names <- function(session, input, output){
 #----------------------------------------------------------------------------------------- 
 
 #create data frame for comparisons
-check_comp_names_bg <- function(params, table_name, comp_number, factorsN, factorsD){
+check_comp_names_bg <- function(params, table_name, table_name_peptide, comp_number, factorsN, factorsD){
   cat(file = stderr(), "function check_comp_names_bg....", "\n")
   
   conn <- RSQLite::dbConnect(RSQLite::SQLite(), params$database_path)
@@ -96,12 +98,15 @@ check_comp_names_bg <- function(params, table_name, comp_number, factorsN, facto
   comp_name <- stringr::str_c(comp_N, "_v_", comp_D)
   stats_out_name <- stringr::str_c(table_name, "_", comp_name)
   final_stats_out_name <- stringr::str_c(table_name, "_", comp_name, "_final")
+  final_stats_out_name_peptide <- stringr::str_c(table_name_peptide, "_", comp_name, "_final")
   
   total_samples <- ncol(stats_data_N) + ncol(stats_data_D) + ncol(stats_data_SPQC)
   new_row <- c(comp_number, toString(factorsN), toString(factorsD), comp_name, ncol(stats_data_N), ncol(stats_data_D), ncol(stats_data_SPQC), 
-               total_samples, toString(samples_N), toString(samples_D), toString(samples_SPQC), stats_out_name, final_stats_out_name)
+               total_samples, toString(samples_N), toString(samples_D), toString(samples_SPQC), stats_out_name, final_stats_out_name,
+               final_stats_out_name_peptide)
   stats_comp <- rbind(stats_comp, new_row)
-  col_names <- c("Comp", "FactorsN", "FactorsD", "Name", "N", "D", "SPQC", "Total", "N_loc", "D_loc", "SPQC_loc", "Table_Name", "Final_Table_Name")
+  col_names <- c("Comp", "FactorsN", "FactorsD", "Name", "N", "D", "SPQC", "Total", "N_loc", "D_loc", "SPQC_loc", "Table_Name", 
+                 "Final_Table_Name", "Final_Table_Name_Peptide")
   names(stats_comp) <- col_names
   
   RSQLite::dbWriteTable(conn, "stats_comp", stats_comp, overwrite = TRUE)
@@ -171,7 +176,7 @@ stat_calc_bg <- function(params, comp_number, stats_comp){
     
     #rollup up filtered precursors to peptide to save for graphs
     df_peptide <- rollup_sum_peptide(df_filter_list[[1]], df_design)
-    df_peptide_name <- stringr::str_c("peptide_", stats_comp$Name[comp_number], "_final")
+    df_peptide_name <- stringr::str_c(stats_comp$Final_Table_Name_Peptide[comp_number])
   }
   
   #add stats to df
@@ -437,7 +442,9 @@ stats_table_select <- function(session, input, output, input_stats_data_final_ro
     cat(file = stderr(), "Function create_stats_oneprotein_plots...", "\n")
     showModal(modalDialog("Createing stats oneprotein plots...", footer = NULL))  
     
-    arg_list <- list(input$stats_norm_type, input$stats_oneprotein_plot_comp,input$stats_oneprotein_accession, 
+    df_design <- read_table("design", params)
+    
+    arg_list <- list(input$stats_norm_type, input$stats_oneprotein_plot_comp,input$stats_oneprotein_accession, df_design,
                      params)
     
     create_stats_oneprotein_plots <- callr::r_bg(func = create_stats_oneprotein_plots_bg , args = arg_list, stderr = str_c(params$error_path, "//error_create_stats_oneprotein_plots.txt"), supervise = TRUE)
@@ -452,7 +459,7 @@ stats_table_select <- function(session, input, output, input_stats_data_final_ro
   
   #------------------------------------------------------------------------------------------------------------------
   create_stats_oneprotein_plots_bg <- function(input_stats_norm_type, input_stats_oneprotein_plot_comp, 
-                                               input_stats_oneprotein_accession, params) {
+                                               input_stats_oneprotein_accession, df_design, params) {
     cat(file = stderr(), "Function create_stats_oneprotein_plots_bg...", "\n")
     source('Shiny_File.R')
     
@@ -460,11 +467,11 @@ stats_table_select <- function(session, input, output, input_stats_data_final_ro
     data_name <- stringr::str_c("protein_", input_stats_norm_type, "_", input_stats_oneprotein_plot_comp, "_final")
     data_name_peptide <- stringr::str_c("peptide_", input_stats_norm_type, "_", input_stats_oneprotein_plot_comp, "_final")
     
-    if (data_name %in% list_tables(params)) {
-      cat(file = stderr(), stringr::str_c(data_name, " is in database"), "\n") 
+    if (data_name %in% list_tables(params) & data_name_peptide %in% list_tables(params)  ) {
+      cat(file = stderr(), stringr::str_c(data_name, " & ", data_name_peptide, " are in database"), "\n") 
       
       df <- filter_db(data_name, "Accession", input_stats_oneprotein_accession, params)
-      df_peptide <- filter_db(data_name, "Accession", input_stats_oneprotein_accession, params)
+      df_peptide <- filter_db(data_name_peptide, "Accession", input_stats_oneprotein_accession, params)
 
       comp_number <- which(stats_comp$Name == input_stats_oneprotein_plot_comp)
       sample_number <- as.integer(stats_comp$N[comp_number]) + as.integer(stats_comp$D[comp_number])
@@ -472,35 +479,29 @@ stats_table_select <- function(session, input, output, input_stats_data_final_ro
       spqc_number <- as.integer(stats_comp$SPQC[comp_number])
   
       #get data
-      df_list <- oneprotein_data(df, input_stats_oneprotein_plot_comp, input_stats_oneprotein_accession, input_stats_oneprotein_plot_spqc, input_stats_use_zscore)
-      
-    
-        #
-        #test_df_list <<- df_list
+      df_list <- oneprotein_data(df, df_peptide, input_stats_oneprotein_plot_comp, input_stats_oneprotein_accession, 
+                                 input_stats_oneprotein_plot_spqc, input_stats_use_zscore, df_design)
         
-        for (j in names(df_list)) {assign(j, df_list[[j]]) }
+      for (j in names(df_list)) {assign(j, df_list[[j]]) }
         
-        interactive_barplot(session, input, output, df, namex, color_list, "stats_oneprotein_barplot", input$stats_oneprotein_plot_comp)
+      interactive_barplot(session, input, output, df, namex, color_list, "stats_oneprotein_barplot", input$stats_oneprotein_plot_comp)
         
-        peptide_pos_lookup <-  peptide_position_lookup(session, input, output, as.character(input$stats_oneprotein_accession))
+      peptide_pos_lookup <-  peptide_position_lookup(session, input, output, as.character(input$stats_oneprotein_accession))
         
-        grouped_color <- unique(color_list)
-        interactive_grouped_barplot(session, input, output, comp_string, df_peptide, peptide_info_columns, 
+      grouped_color <- unique(color_list)
+      interactive_grouped_barplot(session, input, output, comp_string, df_peptide, peptide_info_columns, 
                                     input$stats_oneprotein_plot_comp, peptide_pos_lookup, grouped_color)
         
-        #test_df_peptide <<- df_peptide
-        #test_peptide_pos_lookup <<- peptide_pos_lookup
+      df_peptide <- merge(df_peptide, peptide_pos_lookup, by = (c("Accession", "Sequence"))    )
+      df_peptide$Start <- as.numeric(df_peptide$Start)
+      df_peptide$Stop <- as.numeric(df_peptide$Stop)
+      df_peptide <- df_peptide %>% dplyr::select(Stop, everything())
+      df_peptide <- df_peptide %>% dplyr::select(Start, everything())
+      df_peptide <- df_peptide[order(df_peptide$Start, df_peptide$Stop), ]
         
-        df_peptide <- merge(df_peptide, peptide_pos_lookup, by = (c("Accession", "Sequence"))    )
-        df_peptide$Start <- as.numeric(df_peptide$Start)
-        df_peptide$Stop <- as.numeric(df_peptide$Stop)
-        df_peptide <- df_peptide %>% dplyr::select(Stop, everything())
-        df_peptide <- df_peptide %>% dplyr::select(Start, everything())
-        df_peptide <- df_peptide[order(df_peptide$Start, df_peptide$Stop), ]
+      sample_col_numbers <- seq(from = 14, to = ncol(df_peptide) )
         
-        sample_col_numbers <- seq(from = 14, to = ncol(df_peptide) )
-        
-        dpmsr_set$data$oneprotein_peptide_DT <<- df_peptide
+      dpmsr_set$data$oneprotein_peptide_DT <<- df_peptide
         
         oneprotein_peptide_DT <-  DT::datatable(df_peptide,
                                                 rownames = FALSE,
