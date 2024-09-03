@@ -374,16 +374,23 @@ stats_data_table_filter <- function(df, sample_number, start_sample_col, input_s
 # one protein data ------------------------------------------------------
 
 oneprotein_data_backup <- function(df, input_stats_oneprotein_plot_comp, input_stats_oneprotein_accession, 
-                                   input_stats_oneprotein_plot_spqc, input_stats_use_zscore, df_design) {
+                                   input_stats_oneprotein_plot_spqc, input_stats_use_zscore, df_design, comp_number,
+                                   sample_number, start_sample_col, start_sample_col_peptide, spqc_number) {
  
-cat(file = stderr(), "Function oneprotein_data..." , "\n")
+  cat(file = stderr(), "Function oneprotein_data..." , "\n")
+
+  #add spqc to plots
+  cat(file = stderr(), "One Protein stats and plots...3" , "\n")
+  if (input_stats_oneprotein_plot_spqc) {
+    df <- df[(dpmsr_set$y$info_columns_final + 1):(dpmsr_set$y$info_columns_final + sample_number + dpmsr_set$y$stats$comp_spqc_number)]
+  }else{
+    df <- df[(dpmsr_set$y$info_columns_final + 1):(dpmsr_set$y$info_columns_final + sample_number)]
+  }  
+  
+  
 
   
-  
-  
-
-  
-cat(file = stderr(), "Function oneprotein_data...end" , "\n")
+  cat(file = stderr(), "Function oneprotein_data...end" , "\n")
 }
 
 

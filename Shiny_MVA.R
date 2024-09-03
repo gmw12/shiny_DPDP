@@ -476,11 +476,13 @@ stats_table_select <- function(session, input, output, input_stats_data_final_ro
       comp_number <- which(stats_comp$Name == input_stats_oneprotein_plot_comp)
       sample_number <- as.integer(stats_comp$N[comp_number]) + as.integer(stats_comp$D[comp_number])
       start_sample_col <- min(grep(stats_comp$FactorsN[comp_number], names(df)), grep(stats_comp$FactorsD[comp_number], names(df)))
+      start_sample_col_peptide <- min(grep(stats_comp$FactorsN[comp_number], names(df_peptide)), grep(stats_comp$FactorsD[comp_number], names(df)))
       spqc_number <- as.integer(stats_comp$SPQC[comp_number])
   
       #get data
       df_list <- oneprotein_data(df, df_peptide, input_stats_oneprotein_plot_comp, input_stats_oneprotein_accession, 
-                                 input_stats_oneprotein_plot_spqc, input_stats_use_zscore, df_design)
+                                 input_stats_oneprotein_plot_spqc, input_stats_use_zscore, df_design, comp_number,
+                                 sample_number, start_sample_col, start_sample_col_peptide, spqc_number)
         
       for (j in names(df_list)) {assign(j, df_list[[j]]) }
         
