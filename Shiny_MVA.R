@@ -443,13 +443,22 @@ stats_table_select <- function(session, input, output, input_stats_data_final_ro
     showModal(modalDialog("Createing stats oneprotein plots...", footer = NULL))  
     
     df_design <- read_table("design", params)
+    stats_comp <- read_table("stats_comp", params)
     
-    arg_list <- list(input$stats_norm_type, input$stats_oneprotein_plot_comp,input$stats_oneprotein_accession, df_design,
-                     params)
+    arg_list <- list(input$stats_norm_type, input$stats_oneprotein_plot_comp, input$stats_oneprotein_accession, input$stats_oneprotein_plot_spqc, df_design,
+                     stats_comp, params)
     
     create_stats_oneprotein_plots <- callr::r_bg(func = create_stats_oneprotein_plots_bg , args = arg_list, stderr = str_c(params$error_path, "//error_create_stats_oneprotein_plots.txt"), supervise = TRUE)
     create_stats_oneprotein_plots$wait()
     print_stderr("error_create_stats_oneprotein_plots.txt")
+  
+    cat(file = stderr(), "Function create_stats_oneprotein_plots...1", "\n")
+    bg_plot_list <<- create_stats_oneprotein_plots$get_result()
+    df <- bg_plot_list[[1]]
+    namex <- bg_plot_list[[2]]
+    color_list <- bg_plot_list[[3]]
+
+    interactive_barplot(session, input, output, df, namex, color_list, "stats_oneprotein_barplot", input$stats_oneprotein_plot_comp, plot_number=1)
     
     cat(file = stderr(), "Function create_stats_oneprotein_plots...end", "\n")
     removeModal()
@@ -459,9 +468,11 @@ stats_table_select <- function(session, input, output, input_stats_data_final_ro
   
   #------------------------------------------------------------------------------------------------------------------
   create_stats_oneprotein_plots_bg <- function(input_stats_norm_type, input_stats_oneprotein_plot_comp, 
-                                               input_stats_oneprotein_accession, df_design, params) {
+                                               input_stats_oneprotein_accession, input_stats_oneprotein_plot_spqc,
+                                               df_design, stats_comp, params) {
     cat(file = stderr(), "Function create_stats_oneprotein_plots_bg...", "\n")
     source('Shiny_File.R')
+    source('Shiny_Misc_Functions.R')
     
     #confirm data exists in database
     data_name <- stringr::str_c("protein_", input_stats_norm_type, "_", input_stats_oneprotein_plot_comp, "_final")
@@ -473,21 +484,41 @@ stats_table_select <- function(session, input, output, input_stats_data_final_ro
       df <- filter_db(data_name, "Accession", input_stats_oneprotein_accession, params)
       df_peptide <- filter_db(data_name_peptide, "Accession", input_stats_oneprotein_accession, params)
 
+      cat(file = stderr(), "Function create_stats_oneprotein_plots_bg...1", "\n")
       comp_number <- which(stats_comp$Name == input_stats_oneprotein_plot_comp)
       sample_number <- as.integer(stats_comp$N[comp_number]) + as.integer(stats_comp$D[comp_number])
       start_sample_col <- min(grep(stats_comp$FactorsN[comp_number], names(df)), grep(stats_comp$FactorsD[comp_number], names(df)))
       start_sample_col_peptide <- min(grep(stats_comp$FactorsN[comp_number], names(df_peptide)), grep(stats_comp$FactorsD[comp_number], names(df)))
       spqc_number <- as.integer(stats_comp$SPQC[comp_number])
-  
+      
+      if(input_stats_oneprotein_plot_spqc) {
+        df <- df[,(start_sample_col:(start_sample_col + sample_number + spqc_number - 1))]
+        design_pos <- stringr::str_c(unlist(stats_comp$N_loc[comp_number]), ", ", unlist(stats_comp$D_loc[comp_number]), ", ", unlist(stats_comp$SPQC_loc[comp_number]))
+      }else{
+        df <- df[,(start_sample_col:(start_sample_col + sample_number - 1))]
+        design_pos <- stringr::str_c(unlist(stats_comp$N_loc[comp_number]), ", ", unlist(stats_comp$D_loc[comp_number]))
+      }
+      
+      design_pos <- str_to_numlist(design_pos)
+      namex <- df_design$Label[design_pos]
+      color_list <- df_design$colorlist[design_pos]
+      
+      cat(file = stderr(), "Function create_stats_oneprotein_plots_bg...end", "\n")
+      return(list(df, namex, color_list))
+
+    }
+  }
+      
+            
+create_stats_oneprotein_plots_bg2 <- function(input_stats_norm_type, input_stats_oneprotein_plot_comp, 
+                                                   input_stats_oneprotein_accession, input_stats_oneprotein_plot_spqc,
+                                                   df_design, params) {
       #get data
       df_list <- oneprotein_data(df, df_peptide, input_stats_oneprotein_plot_comp, input_stats_oneprotein_accession, 
                                  input_stats_oneprotein_plot_spqc, input_stats_use_zscore, df_design, comp_number,
                                  sample_number, start_sample_col, start_sample_col_peptide, spqc_number)
         
-      for (j in names(df_list)) {assign(j, df_list[[j]]) }
-        
-      interactive_barplot(session, input, output, df, namex, color_list, "stats_oneprotein_barplot", input$stats_oneprotein_plot_comp)
-        
+      
       peptide_pos_lookup <-  peptide_position_lookup(session, input, output, as.character(input$stats_oneprotein_accession))
         
       grouped_color <- unique(color_list)
@@ -559,6 +590,6 @@ stats_table_select <- function(session, input, output, input_stats_data_final_ro
     removeModal()
     cat(file = stderr(), "Function create_stats_oneprotein_plots_bg...end", "\n")
   }
-  }
+  
   
   #--------------------------------------------------

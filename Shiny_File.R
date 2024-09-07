@@ -128,8 +128,9 @@ table_exists <- function(table_name){
 }
 #-----------------------------------------------------------------------------------------
 filter_db <- function(table_name, column_name, key_word, params) {
+  require('RSQLite')
   conn <- dbConnect(RSQLite::SQLite(), params$database_path) 
-  query <- stringr::str_c("SELECT * FROM ", table_name, " WHERE ", column_name, " LIKE '", accession,"'") 
+  query <- stringr::str_c("SELECT * FROM ", table_name, " WHERE ", column_name, " LIKE '", key_word,"'") 
   df <- dbGetQuery(conn, query)
   RSQLite::dbDisconnect(conn)
   return(df)
