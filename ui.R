@@ -768,7 +768,7 @@ source("Shiny_UI.R")
                ),
               
                fluidRow(
-                 tabBox(title = "Protein Plot...", width = 12, height = 400,
+                 tabBox(title = "Protein Plots", width = 12, height = 700,
                      tabPanel("Protein",
                        column(width =12, offset =0,
                               dropdownButton(
@@ -783,51 +783,49 @@ source("Shiny_UI.R")
                               ),
                               div(
                                 style = "position:relative",
-                                plotOutput("1_stats_oneprotein_barplot", width = 1200, height = 400)
+                                plotOutput("1_stats_oneprotein_barplot", width = 1200, height = 600)
                               ),
                               downloadButton('1_download_stats_oneprotein_barplot')
                        )
-                   )
-                 )
-                 ),
-              
-               fluidRow(
-                 box(id = "stats_protein_plot_table", title = "Protein Plot Table...", status = "primary",
-                     solidHeader = TRUE, collapsible = FALSE, align = "left", width = 12, height = 400,
-                    column(width =12, offset =0,
-                        dropdownButton(
-                          textInput("stats_oneprotein_grouped_barplot_y_axis_label", label="y axis label", value = "Intensity", width = 200),
-                          textInput("stats_oneprotein_grouped_barplot_x_axis_label", label="x axis label", value = "Sequence", width = 200),
-                          textInput("stats_oneprotein_grouped_barplot_title", label="plot title", value = "Total Summed Intensity", width = 200),
-                          sliderInput("stats_oneprotein_grouped_barplot_label_size", label = h5("Label Size"), min = 1, 
-                                      max = 50, value = 11),
-                          sliderInput("stats_oneprotein_grouped_barplot_title_size", label = h5("Title Size"), min = 10, 
-                                      max = 50, value = 20),
-                          circle = TRUE, status = "danger", icon = icon("cogs"), width = "300px", size = "sm",
-                          tooltip = tooltipOptions(title = "Click to see inputs !")
-                        ),
-                        div(
-                          style = "position:relative",
-                          plotOutput("stats_oneprotein_grouped_barplot", width = 1200, height = 400)
-                        ),
-                        downloadButton('download_stats_oneprotein_grouped_barplot')
-                 )
-                 )
-                 ),
-                 
-               fluidRow(
-                 column(width =12, offset =0,
-                        hr(),
-                        tags$head(tags$style("#oneprotein_peptide_table{color: blue;
+                    ),
+                    tabPanel("Peptide",
+                             column(width =12, offset =0,
+                                    dropdownButton(
+                                      textInput("stats_oneprotein_grouped_barplot_y_axis_label", label="y axis label", value = "Intensity", width = 200),
+                                      textInput("stats_oneprotein_grouped_barplot_x_axis_label", label="x axis label", value = "Sequence", width = 200),
+                                      textInput("stats_oneprotein_grouped_barplot_title", label="plot title", value = "Total Summed Intensity", width = 200),
+                                      sliderInput("stats_oneprotein_grouped_barplot_label_size", label = h5("Label Size"), min = 1, 
+                                                  max = 50, value = 11),
+                                      sliderInput("stats_oneprotein_grouped_barplot_title_size", label = h5("Title Size"), min = 10, 
+                                                  max = 50, value = 20),
+                                      circle = TRUE, status = "danger", icon = icon("cogs"), width = "300px", size = "sm",
+                                      tooltip = tooltipOptions(title = "Click to see inputs !")
+                                    ),
+                                    div(
+                                      style = "position:relative",
+                                      plotOutput("stats_oneprotein_grouped_barplot", width = 1200, height = 400)
+                                    ),
+                                    downloadButton('download_stats_oneprotein_grouped_barplot')
+                             )
+                             
+                             
+                             
+                             ),
+                    tabPanel("Peptide Data",
+                             column(width =12, offset =0,
+                                    hr(),
+                                    tags$head(tags$style("#oneprotein_peptide_table{color: blue;
                                                            font-size: 12px;
                                                            }"
-                        )
-                        ),
-                        DT::dataTableOutput("oneprotein_peptide_table", width ='100%')
+                                    )
+                                    ),
+                                    DT::dataTableOutput("oneprotein_peptide_table", width ='100%')
+                                  )
+                             )
                  )
-               )
-              
-               )
+
+               )  
+      )
       
       
       

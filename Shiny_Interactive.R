@@ -27,10 +27,10 @@ interactive_barplot <- function(session, input, output, df, namex, color_list, o
       xlab(NULL) +
       #scale_y_discrete(labels = NULL) +
       coord_cartesian(ylim = NULL, expand = TRUE) +
-      theme(plot.title = element_text(hjust = 0.5, size = input[[stringr::str_c(output_name, "_title_size")]]), 
-            axis.title = element_text(size = input[[stringr::str_c(plot_number, "_",output_name, "_label_size")]], color = "black"),
-            axis.text.x = element_text(size = input[[stringr::str_c(plot_number, "_",output_name, "_label_size")]], angle = 90,  color = "black"),
-            axis.text.y = element_text(size = input[[stringr::str_c(plot_number, "_",output_name, "_label_size")]],  color = "black"),
+      theme(plot.title = element_text(hjust = 0.5, size = input[[stringr::str_c(plot_number, "_", output_name, "_title_size")]]), 
+            axis.title = element_text(size = input[[stringr::str_c(plot_number, "_", output_name, "_label_size")]], color = "black"),
+            axis.text.x = element_text(size = input[[stringr::str_c(plot_number, "_", output_name, "_label_size")]], angle = 90,  color = "black"),
+            axis.text.y = element_text(size = input[[stringr::str_c(plot_number, "_", output_name, "_label_size")]],  color = "black"),
       ) 
   })
   
