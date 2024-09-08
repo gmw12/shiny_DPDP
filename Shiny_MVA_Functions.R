@@ -516,4 +516,65 @@ onepeptide_data <- function(session, input, output) {
 }
 
 
+#------------------------------------------------------------------------------------------------------------------------------------
+peptide_position_lookup <- function(df_peptide, params)  {
+  cat(file = stderr(), "function peptide_position_lookup...", "\n")
+  
+
+  if (params$data_source == "PD") {
+    # create peptide lookup table
+    if (dpmsr_set$x$final_data_output == "Protein") {
+      if (class(dpmsr_set$data$data_raw_peptide$Positions.in.Master.Proteins) == "NULL") {
+        peptide_pos_lookup <- try(dpmsr_set$data$data_raw_peptide %>% dplyr::select(Sequence, Positions.in.Proteins))
+      }else{
+        peptide_pos_lookup <- try(dpmsr_set$data$data_raw_peptide %>% dplyr::select(Sequence, Positions.in.Master.Proteins))
+      }
+    }else{
+      if (dpmsr_set$x$peptide_isoform) {
+        peptide_pos_lookup <- try(dpmsr_set$data$data_raw_isoform %>% dplyr::select(Sequence, Positions.in.Proteins))
+      }else{
+        peptide_pos_lookup <- try(dpmsr_set$data$data_raw_peptide %>% dplyr::select(Sequence, Positions.in.Proteins))
+      }
+    }
+    
+    cat(file = stderr(), "peptide_position_lookup...1", "\n")
+    colnames(peptide_pos_lookup) <- c("Sequence", "Position")
+    peptide_pos_lookup$Position <- gsub("\\]; \\[", "xxx",  peptide_pos_lookup$Position)
+    s <- strsplit(peptide_pos_lookup$Position, split = "; ")
+    peptide_pos_lookup <- data.frame(Sequence = rep(peptide_pos_lookup$Sequence, sapply(s, length)), Position = unlist(s))
+    peptide_pos_lookup$Count <- str_count(peptide_pos_lookup$Position, "xxx")
+    peptide_pos_lookup <- peptide_pos_lookup %>% separate(Position, c("Accession", "Start_Stop"), sep = " ")
+    peptide_pos_lookup$Start_Stop <- gsub("\\[", "",  peptide_pos_lookup$Start_Stop)
+    peptide_pos_lookup$Start_Stop <- gsub("\\]", "",  peptide_pos_lookup$Start_Stop)
+    peptide_pos_lookup$Start_Stop <- gsub("xxx", ", ",  peptide_pos_lookup$Start_Stop)
+    peptide_pos_lookup$AS <- str_c(peptide_pos_lookup$Accession, " ", peptide_pos_lookup$Sequence)
+    cat(file = stderr(), "peptide_position_lookup...2", "\n")
+    s <- strsplit(peptide_pos_lookup$Start_Stop, split = ", ")
+    peptide_pos_lookup <- data.frame(AS = rep(peptide_pos_lookup$AS, sapply(s, length)), Position = unlist(s))
+    peptide_pos_lookup <- peptide_pos_lookup %>% separate(AS, c("Accession", "Sequence"), sep = " ")
+    peptide_pos_lookup <- peptide_pos_lookup %>% separate(Position, c("Start", "Stop"), sep = "-")
+  }
+  
+  if (params$data_source == "SP") {
+    # create peptide lookup table
+    if (params$data_output == "Protein") {
+      peptide_pos_lookup <- df_peptide |> dplyr::select(Accession, Sequence, PeptidePosition)
+      peptide_pos_lookup$Sequence <- gsub("_", "", peptide_pos_lookup$Sequence)
+    }
+    
+    cat(file = stderr(), "peptide_position_lookup...3", "\n")
+    colnames(peptide_pos_lookup) <- c("Accession", "Sequence", "Start")
+    peptide_pos_lookup <- peptide_pos_lookup |> dplyr::distinct()
+    peptide_pos_lookup$Stop <- nchar(peptide_pos_lookup$Sequence) + as.numeric(peptide_pos_lookup$Start)
+    
+  }    
+  
+  peptide_pos_lookup$dup <- stringr::str_c(peptide_pos_lookup$Accession, peptide_pos_lookup$Sequence, peptide_pos_lookup$Start, peptide_pos_lookup$Stop)
+  peptide_pos_lookup <- peptide_pos_lookup[!duplicated(peptide_pos_lookup$dup),]
+  peptide_pos_lookup$dup <- NULL
+  
+  cat(file = stderr(), "function peptide_position_lookup...end", "\n")
+  return(peptide_pos_lookup)
+  
+}
 

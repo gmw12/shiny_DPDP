@@ -807,10 +807,7 @@ source("Shiny_UI.R")
                                     ),
                                     downloadButton('download_stats_oneprotein_grouped_barplot')
                              )
-                             
-                             
-                             
-                             ),
+                        ),
                     tabPanel("Peptide Data",
                              column(width =12, offset =0,
                                     hr(),

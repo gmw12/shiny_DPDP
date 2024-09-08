@@ -27,13 +27,14 @@ filter_db <- function(table_name, column_name, key_word, params) {
   return(df)
 }
 
-test <- filter_db(data_name, "Accession", accession, params)
+accession = "A0A087WPF7"
+df_peptide <- filter_db("peptide_sltmm", "Accession", accession, params)
 
 list_tables(params)
 
 
 
-testme <- read_table("precursor_impute_sltmm", params)
+df_peptide <- read_table("peptide_sltmm_Caskin1_Test_v_Caskin1_Ctrl_final", params)
 testme2 <- read_table("temp_df_impute", params)
 df_design <- read_table("design", params)
 test_sample_groups <- read_table("sample_groups", params)
@@ -44,7 +45,7 @@ test_protein_missing <- read_table("protein_missing", params)
 stats_comp <- read_table("stats_comp", params)
 sample_groups <- read_table("sample_groups", params)
 
-df <- read_table('precursor_impute_sltmm', params)
+df <- read_table('peptide_impute', params)
 test3 <- read_table('protein_sltmm', params)
 test4 <- read_table('protein_sltmm_final', params)
 df <- read_table('protein_sltmm_Caskin1_Test_v_Caskin1_Ctrl_final', params)

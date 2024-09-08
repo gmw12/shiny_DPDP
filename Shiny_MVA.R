@@ -205,7 +205,6 @@ save_stat_options <- function(session, input, output, params) {
   
 }
 
-#---------------------------------------------------------------------------------------------------------------------
 #----------------------------------------------------------------------------------------
 # create final excel documents
 stats_Final_Excel <- function(session, input, output, params) {
@@ -440,7 +439,7 @@ stats_table_select <- function(session, input, output, input_stats_data_final_ro
 #-------------------------------------------------------------------------------------------------------------  
   create_stats_oneprotein_plots <- function(session, input, output, params) {
     cat(file = stderr(), "Function create_stats_oneprotein_plots...", "\n")
-    showModal(modalDialog("Createing stats oneprotein plots...", footer = NULL))  
+    showModal(modalDialog("Creating stats oneprotein plots...", footer = NULL))  
     
     df_design <- read_table("design", params)
     stats_comp <- read_table("stats_comp", params)
@@ -457,8 +456,15 @@ stats_table_select <- function(session, input, output, input_stats_data_final_ro
     df <- bg_plot_list[[1]]
     namex <- bg_plot_list[[2]]
     color_list <- bg_plot_list[[3]]
+    peptide_pos_lookup <- bg_plot_list[[4]]
+    grouped_color_list <- bg_plot_list[[5]]
+    new_df <- bg_plot_list[[6]]
+    
+    tst_color <<- grouped_color_list
 
     interactive_barplot(session, input, output, df, namex, color_list, "stats_oneprotein_barplot", input$stats_oneprotein_plot_comp, plot_number=1)
+    
+    interactive_grouped_barplot(session, input, output, new_df, input$stats_oneprotein_plot_comp, grouped_color_list)
     
     cat(file = stderr(), "Function create_stats_oneprotein_plots...end", "\n")
     removeModal()
@@ -473,11 +479,13 @@ stats_table_select <- function(session, input, output, input_stats_data_final_ro
     cat(file = stderr(), "Function create_stats_oneprotein_plots_bg...", "\n")
     source('Shiny_File.R')
     source('Shiny_Misc_Functions.R')
+    source('Shiny_MVA_Functions.R')
     
     #confirm data exists in database
     data_name <- stringr::str_c("protein_", input_stats_norm_type, "_", input_stats_oneprotein_plot_comp, "_final")
     data_name_peptide <- stringr::str_c("peptide_", input_stats_norm_type, "_", input_stats_oneprotein_plot_comp, "_final")
     
+    #protein plot
     if (data_name %in% list_tables(params) & data_name_peptide %in% list_tables(params)  ) {
       cat(file = stderr(), stringr::str_c(data_name, " & ", data_name_peptide, " are in database"), "\n") 
       
@@ -491,6 +499,7 @@ stats_table_select <- function(session, input, output, input_stats_data_final_ro
       start_sample_col_peptide <- min(grep(stats_comp$FactorsN[comp_number], names(df_peptide)), grep(stats_comp$FactorsD[comp_number], names(df)))
       spqc_number <- as.integer(stats_comp$SPQC[comp_number])
       
+      cat(file = stderr(), "Function create_stats_oneprotein_plots_bg...2", "\n")
       if(input_stats_oneprotein_plot_spqc) {
         df <- df[,(start_sample_col:(start_sample_col + sample_number + spqc_number - 1))]
         design_pos <- stringr::str_c(unlist(stats_comp$N_loc[comp_number]), ", ", unlist(stats_comp$D_loc[comp_number]), ", ", unlist(stats_comp$SPQC_loc[comp_number]))
@@ -503,8 +512,86 @@ stats_table_select <- function(session, input, output, input_stats_data_final_ro
       namex <- df_design$Label[design_pos]
       color_list <- df_design$colorlist[design_pos]
       
+      #grouped peptide 
+      cat(file = stderr(), "Function create_stats_oneprotein_plots_bg...3", "\n")
+      peptide_pos_lookup <-  peptide_position_lookup(df_peptide, params)
+      grouped_color <- unique(color_list)
+
+      start <- start_sample_col_peptide
+      stop <- start + as.numeric(stats_comp$N[comp_number]) -1
+      df_N <- cbind(df_peptide$Sequence, df_peptide[, start:stop])
+      
+      start <- start + as.numeric(stats_comp$N[comp_number])
+      stop <- start + as.numeric(stats_comp$D[comp_number]) -1
+      df_D <- cbind(df_peptide$Sequence, df_peptide[, start:stop])
+      
+      start <- start + as.numeric(stats_comp$D[comp_number])
+      stop <- start + as.numeric(stats_comp$SPQC[comp_number]) - 1
+      df_SPQC <- cbind(df_peptide$Sequence, df_peptide[, start:stop])
+      
+      stats_data_N <- tidyr::gather(df_N, test, y, unlist(2:ncol(df_N)))
+      colnames(stats_data_N) <- c("Sequence", "Name", "y")
+      
+      stats_data_D <- tidyr::gather(df_D, test, y, unlist(2:ncol(df_D)))
+      colnames(stats_data_D) <- c("Sequence", "Name", "y")
+      
+      stats_data_SPQC <- tidyr::gather(df_SPQC, test, y, unlist(2:ncol(df_SPQC)))
+      colnames(stats_data_SPQC) <- c("Sequence", "Name", "y")
+      
+      #may not need this, need to test running primary group
+      cat(file = stderr(), "Function create_stats_oneprotein_plots_bg...4", "\n")
+      if (params$primary_group == "Primary"){
+        stats_data_N$Comp <- stats_comp$FactorsN[comp_number]
+        stats_data_D$Comp <- stats_comp$FactorsD[comp_number]
+      }else{
+        stats_data_N$Comp <- stats_comp$FactorsN[comp_number]
+        stats_data_D$Comp <- stats_comp$FactorsD[comp_number]
+      }
+      
+      stats_data_SPQC$Comp <- params$comp_spqc
+      stats_data_N$Order <- "1"
+      stats_data_D$Order <- "2"
+      stats_data_SPQC$Order <- "3"
+      
+      if(input_stats_oneprotein_plot_spqc){
+        stats_data_all <- rbind(stats_data_N, stats_data_D, stats_data_SPQC)
+      }else{
+        stats_data_all <- rbind(stats_data_N, stats_data_D)
+      }
+      
+      cat(file = stderr(), "Function create_stats_oneprotein_plots_bg...5", "\n")
+      stats_data_all$Sequence <- gsub("_", "", stats_data_all$Sequence)
+      
+      new_df <- merge(stats_data_all, peptide_pos_lookup, by="Sequence")
+      new_df$Position <- stringr::str_c(new_df$Start, "-", new_df$Stop)
+      
+      new_df$Name <- NULL
+      new_df$Accession <- NULL
+      
+      new_df$Comp<- as.character(new_df$Comp)
+      new_df$Position <- as.character(new_df$Position )
+      new_df$Sequence <- as.character(new_df$Sequence)
+     
+      cat(file = stderr(), "Function create_stats_oneprotein_plots_bg...6", "\n") 
+      new_df2 <- new_df |> dplyr::group_by(Order, Comp, Sequence, Position, Start, Stop) |> dplyr::summarise(y_mean=mean(y), sd=sd(y))
+      
+      new_df2 <- data.frame(dplyr::ungroup(new_df2))
+      new_df2$Start<- as.numeric(new_df2$Start)
+      new_df2$Stop<- as.numeric(new_df2$Stop)
+      new_df2 <- new_df2[order(new_df2$Order,new_df2$Start, new_df2$Stop), ]
+      
+      new_df2$Position <- as.character(new_df2$Position)
+      new_df2_sort <- unique(new_df2$Position)
+      new_df2$Position <- factor(new_df2$Position, levels = new_df2_sort)
+      
+      new_df2$Comp <- as.character(new_df2$Comp)
+      new_df2_sort2 <- unique(new_df2$Comp)
+      new_df2$Comp <- factor(new_df2$Comp, levels = new_df2_sort2)
+      
+      grouped_color_list <- rep(color_list, nrow(new_df2)/length(color_list))
+
       cat(file = stderr(), "Function create_stats_oneprotein_plots_bg...end", "\n")
-      return(list(df, namex, color_list))
+      return(list(df, namex, color_list, peptide_pos_lookup, grouped_color_list, new_df2))
 
     }
   }

@@ -31,10 +31,10 @@ rollup_sum <- function(df){
 rollup_sum_peptide <- function(df, df_design){
   cat(file = stderr(), "function rollup_sum_peptide...", "\n")
   
-  df <- df |> dplyr::select(contains(c("Accession", "Description", "Genes", "Sequence", df_design$ID))) |> 
-    dplyr::mutate(Precursors = 1, .after = Sequence)
+  df <- df |> dplyr::select(contains(c("Accession", "Description", "Genes", "Sequence", "PeptidePosition", df_design$ID))) |> 
+    dplyr::mutate(Precursors = 1, .after = PeptidePosition)
   
-  peptide_df <- df |> dplyr::group_by(Accession, Description, Genes, Sequence) |> dplyr::summarise_all(list(sum))
+  peptide_df <- df |> dplyr::group_by(Accession, Description, Genes, Sequence, PeptidePosition) |> dplyr::summarise_all(list(sum))
   peptide_df <- data.frame(dplyr::ungroup(peptide_df))
   
   cat(file = stderr(), "function rollup_sum_peptide...end", "\n")
