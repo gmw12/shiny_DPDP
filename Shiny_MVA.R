@@ -459,8 +459,6 @@ stats_table_select <- function(session, input, output, input_stats_data_final_ro
     peptide_pos_lookup <- bg_plot_list[[4]]
     grouped_color_list <- bg_plot_list[[5]]
     new_df <- bg_plot_list[[6]]
-    
-    tst_color <<- grouped_color_list
 
     interactive_barplot(session, input, output, df, namex, color_list, "stats_oneprotein_barplot", input$stats_oneprotein_plot_comp, plot_number=1)
     
@@ -588,7 +586,8 @@ stats_table_select <- function(session, input, output, input_stats_data_final_ro
       new_df2_sort2 <- unique(new_df2$Comp)
       new_df2$Comp <- factor(new_df2$Comp, levels = new_df2_sort2)
       
-      grouped_color_list <- rep(color_list, nrow(new_df2)/length(color_list))
+      unique_colors <- unique(color_list)
+      grouped_color_list <- rep(unique_colors, nrow(new_df2)/length(unique_colors))
 
       cat(file = stderr(), "Function create_stats_oneprotein_plots_bg...end", "\n")
       return(list(df, namex, color_list, peptide_pos_lookup, grouped_color_list, new_df2))
