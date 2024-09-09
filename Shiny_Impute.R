@@ -91,6 +91,7 @@ impute_apply_bg2 <- function(norm, params, df_random, df_groups, df) {
     df_impute <- tmm_normalize(norm_data, df_impute, info_columns)
   }
   
+  cat(file = stderr(), "Function - impute_apply_bg2...1", "\n")
   new_table_name <- stringr::str_c('precursor_impute_', norm)
   conn3 <- RSQLite::dbConnect(RSQLite::SQLite(), params$database_path)
   RSQLite::dbWriteTable(conn3, new_table_name, df_impute, overwrite = TRUE)
