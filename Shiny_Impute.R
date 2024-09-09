@@ -12,14 +12,7 @@ impute_apply <- function(session, input, output) {
   bg_impute_apply$wait()
   print_stderr("error_impute_bg.txt")
 
-  # print error messages
-  # for (norm in norm_type) {
-  #   norm <- stringr::str_replace_all(norm, " ", "")
-  #   bg_name <- stringr::str_c('bg_impute_', norm)
-  #   bg_file <- stringr::str_c("error_", bg_name, ".txt")
-  #   print_stderr(bg_file)
-  # }
-  
+
   #create imputed df's for protein and precursor
   source("Shiny_MVA_Functions.R")
   bg_impute_df <- callr::r_bg(func = create_imputed_df, args = list(params), stderr = str_c(params$error_path, "//error_impute_df.txt"), supervise = TRUE)
