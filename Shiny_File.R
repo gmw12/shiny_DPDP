@@ -165,11 +165,15 @@ read_table <- function(table_name, params){
   return(df)
 }
 
+
+
 write_table <- function(table_name, df, params){
   conn <- RSQLite::dbConnect(RSQLite::SQLite(), params$database_path) 
   RSQLite::dbWriteTable(conn, table_name, df, overwrite = TRUE)
   RSQLite::dbDisconnect(conn)
 }
+
+
 
 list_tables <- function(params){
   conn <- RSQLite::dbConnect(RSQLite::SQLite(), params$database_path) 
