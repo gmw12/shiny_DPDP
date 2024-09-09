@@ -24,8 +24,8 @@ for (pack in package_list) {
     print("not installing")
   }else{
     print("installing")
-    #install.packages(pack, dependencies = TRUE, lib = "/home/dpmsr/R/library_4.3") 
-    install.packages(pack, dependencies = TRUE) 
+    install.packages(pack, dependencies = TRUE, lib = "/home/R_Packages") 
+    #install.packages(pack, dependencies = TRUE) 
   }
 }
 
