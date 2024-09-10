@@ -452,7 +452,7 @@ stats_table_select <- function(session, input, output, input_stats_data_final_ro
     print_stderr("error_create_stats_oneprotein_plots.txt")
   
     cat(file = stderr(), "Function create_stats_oneprotein_plots...1", "\n")
-    bg_plot_list <<- create_stats_oneprotein_plots$get_result()
+    bg_plot_list <- create_stats_oneprotein_plots$get_result()
     df <- bg_plot_list[[1]]
     namex <- bg_plot_list[[2]]
     color_list <- bg_plot_list[[3]]

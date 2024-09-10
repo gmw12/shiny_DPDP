@@ -32,7 +32,7 @@ df_peptide <- filter_db("peptide_sltmm", "Accession", accession, params)
 
 list_tables(params)
 
-
+mv <- read_table("missing_values", params)
 
 df_peptide <- read_table("peptide_sltmm_Caskin1_Test_v_Caskin1_Ctrl_final", params)
 testme2 <- read_table("temp_df_impute", params)

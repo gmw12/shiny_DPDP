@@ -32,10 +32,8 @@ impute_apply_bg <- function(norm_type, params) {
   source("Shiny_Impute.R")
   source("Shiny_File.R")
 
-  conn <- RSQLite::dbConnect(RSQLite::SQLite(), params$database_path)
-  df_random <- RSQLite::dbReadTable(conn, "random")
-  df_groups <- RSQLite::dbReadTable(conn, "sample_groups")
-  RSQLite::dbDisconnect(conn)
+  df_random <- read_table_try("random", params)
+  df_groups <- read_table_try("sample_groups", params)
   
   for (norm in norm_type) {
     cat(file = stderr(), stringr::str_c("impute_apply...", norm), "\n\n")
@@ -44,10 +42,8 @@ impute_apply_bg <- function(norm_type, params) {
     table_name <- stringr::str_c("precursor_norm_", norm)
     cat(file = stderr(), stringr::str_c("imputing...", table_name), "\n")
     
-    conn1 <- RSQLite::dbConnect(RSQLite::SQLite(), params$database_path)
-    df <- RSQLite::dbReadTable(conn1, table_name)
-    RSQLite::dbDisconnect(conn1)
-    
+    df <- read_table_try(table_name, params)
+
     bg_name <- stringr::str_c('bg_impute_', norm)
     bg_file <- stringr::str_c(params$error_path, "//error_", bg_name, ".txt")
     assign(bg_name, callr::r_bg(func = impute_apply_bg2, args = list(norm, params, df_random, df_groups, df), stderr = bg_file, supervise = TRUE))
@@ -85,18 +81,13 @@ impute_apply_bg2 <- function(norm, params, df_random, df_groups, df) {
   if (norm == "sltmm") {
     cat(file = stderr(), "sltmm found, apply tmm norm now ...", "\n")
     info_columns <- ncol(df_impute) - params$sample_number
-    conn2 <- RSQLite::dbConnect(RSQLite::SQLite(), params$database_path)
-    norm_data <- RSQLite::dbReadTable(conn2, "precursor_normdata")
-    RSQLite::dbDisconnect(conn2)
+    norm_data <-  read_table_try("precursor_normdata", params)
     df_impute <- tmm_normalize(norm_data, df_impute, info_columns)
   }
   
   cat(file = stderr(), "Function - impute_apply_bg2...1", "\n")
   new_table_name <- stringr::str_c('precursor_impute_', norm)
-  conn3 <- RSQLite::dbConnect(RSQLite::SQLite(), params$database_path)
-  RSQLite::dbWriteTable(conn3, new_table_name, df_impute, overwrite = TRUE)
-  RSQLite::dbDisconnect(conn3)
-  
+  write_table_try(new_table_name, df_impute, params)
   cat(file = stderr(), "Function - impute_apply_bg2...end", "\n")
 }
 

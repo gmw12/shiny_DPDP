@@ -83,10 +83,10 @@ create_stats_design_table_bg <- function(database_path){
 
 
 #load design table
-create_impute_table <- function(session, input, output){
+create_impute_table <- function(session, input, output, params){
   cat(file = stderr(), "Function create_impute_table", "\n")
   
-  bg_imputetable <- callr::r_bg(create_impute_table_bg, args = list(params$database_path), stderr = str_c(params$error_path, "//error_imputetable.txt"), supervise = TRUE)
+  bg_imputetable <- callr::r_bg(create_impute_table_bg, args = list(params), stderr = str_c(params$error_path, "//error_imputetable.txt"), supervise = TRUE)
   bg_imputetable$wait()
   print_stderr("error_imputetable.txt")
   
@@ -98,13 +98,12 @@ create_impute_table <- function(session, input, output){
 
 #--------------------------------
 
-create_impute_table_bg <- function(database_path){
+create_impute_table_bg <- function(params){
   cat(file = stderr(), "Function build_design_table", "\n")
+  source("Shiny_File.R")
   
   #get design data
-  conn <- RSQLite::dbConnect(RSQLite::SQLite(), database_path)
-  df <- RSQLite::dbReadTable(conn, "missing_values")
-  RSQLite::dbDisconnect(conn)
+  df <- read_table_try("missing_values", params)
   
   impute_DT <-  DT::datatable(df,
                               rownames = FALSE,
@@ -116,6 +115,7 @@ create_impute_table_bg <- function(database_path){
                                 pageLength = 12, 
                                 lengthMenu = c(12,20,100,500)
                               ))
+  
   cat(file = stderr(), "Function build_impute_table...end", "\n")
   return(impute_DT)   
 }

@@ -172,6 +172,10 @@ render_impute_graphs <- function(session, input, output) {
     list(src = str_c(params$qc_path,"missing_percent_plot.png"), contentType = 'image/png', width = 420, height = 480, alt = "this is alt text")
   }, deleteFile = FALSE)
   
+  if ("missing_values" %in% list_tables(params)) {
+    create_impute_table(session, input, output, params)
+  }
+  
   cat(file = stderr(), "Function render_impute_graphs...end", "\n")  
 }
 

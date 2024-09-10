@@ -179,8 +179,6 @@ read_table_try <- function(table_name, params){
   }
 }
 
-test <- read_table_try("test23", params)
-
 
 write_table <- function(table_name, df, params){
   conn <- RSQLite::dbConnect(RSQLite::SQLite(), params$database_path) 

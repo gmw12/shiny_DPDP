@@ -229,7 +229,7 @@ shinyServer(function(session, input, output) {
    #render_impute_parameters(session, input, output) 
    
    #render plots
-   create_impute_table(session, input, output)
+   create_impute_table(session, input, output, params)
    impute_create_plots(session, input, output, params)
    render_impute_graphs(session, input, output)
    
