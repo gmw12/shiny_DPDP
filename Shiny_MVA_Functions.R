@@ -580,9 +580,9 @@ peptide_position_lookup <- function(df_peptide, params)  {
 
 # peptide zscore ------------------------------------------------------
 
-peptide_zscore <- function(df_peptide, info_columns) {
-  info_df <- df_peptide[1:info_columns]
-  df <- df_peptide[(info_columns + 1):ncol(df_peptide)]
+peptide_zscore <- function(df_peptide, start_sample_col_peptide) {
+  info_df <- df_peptide[1:(start_sample_col_peptide - 1)]
+  df <- df_peptide[(start_sample_col_peptide):ncol(df_peptide)]
   df <- log(df, 2)
   z_mean <- rowMeans(df)
   z_stdev  <- apply(df[1:ncol(df)], 1, sd)

@@ -444,8 +444,8 @@ stats_table_select <- function(session, input, output, input_stats_data_final_ro
     df_design <- read_table("design", params)
     stats_comp <- read_table("stats_comp", params)
     
-    arg_list <- list(input$stats_norm_type, input$stats_oneprotein_plot_comp, input$stats_oneprotein_accession, input$stats_oneprotein_plot_spqc, df_design,
-                     stats_comp, params)
+    arg_list <- list(input$stats_norm_type, input$stats_oneprotein_plot_comp, input$stats_oneprotein_accession, input$stats_oneprotein_plot_spqc,
+                     input$stats_use_zscore, df_design, stats_comp, params)
     
     create_stats_oneprotein_plots <- callr::r_bg(func = create_stats_oneprotein_plots_bg , args = arg_list, stderr = str_c(params$error_path, "//error_create_stats_oneprotein_plots.txt"), supervise = TRUE)
     create_stats_oneprotein_plots$wait()
@@ -473,7 +473,7 @@ stats_table_select <- function(session, input, output, input_stats_data_final_ro
   #------------------------------------------------------------------------------------------------------------------
   create_stats_oneprotein_plots_bg <- function(input_stats_norm_type, input_stats_oneprotein_plot_comp, 
                                                input_stats_oneprotein_accession, input_stats_oneprotein_plot_spqc,
-                                               df_design, stats_comp, params) {
+                                               input_stats_use_zscore, df_design, stats_comp, params) {
     cat(file = stderr(), "Function create_stats_oneprotein_plots_bg...", "\n")
     source('Shiny_File.R')
     source('Shiny_Misc_Functions.R')
@@ -512,6 +512,7 @@ stats_table_select <- function(session, input, output, input_stats_data_final_ro
       
       #grouped peptide 
       cat(file = stderr(), "Function create_stats_oneprotein_plots_bg...3", "\n")
+      if (input_stats_use_zscore) {df_peptide <- peptide_zscore(df_peptide, start_sample_col_peptide)}
       peptide_pos_lookup <-  peptide_position_lookup(df_peptide, params)
       grouped_color <- unique(color_list)
 

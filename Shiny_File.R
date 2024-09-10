@@ -166,11 +166,40 @@ read_table <- function(table_name, params){
 }
 
 
+read_table_try <- function(table_name, params){
+  for (i in 1:10) {
+    df <- try(read_table(table_name, params))
+    if (class(df) != "try-error"){
+      i <- 10
+      return(df)
+    }else{
+      cat(file = stderr(), "Read table error...", "\n")
+      Sys.sleep(0.5)
+    }
+  }
+}
+
+test <- read_table_try("test23", params)
+
 
 write_table <- function(table_name, df, params){
   conn <- RSQLite::dbConnect(RSQLite::SQLite(), params$database_path) 
   RSQLite::dbWriteTable(conn, table_name, df, overwrite = TRUE)
   RSQLite::dbDisconnect(conn)
+}
+
+
+write_table_try <- function(table_name, df, params){
+  for (i in 1:10) {
+    df <- try(write_table(table_name, df, params))
+    if (class(df) != "write-error"){
+      i <- 10
+      return(df)
+    }else{
+      cat(file = stderr(), "Write table error...", "\n")
+      Sys.sleep(0.5)
+    }
+  }
 }
 
 
