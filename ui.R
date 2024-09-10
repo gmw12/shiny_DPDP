@@ -753,16 +753,16 @@ source("Shiny_UI.R")
                                          style="color: #fff; background-color: #337ab7; border-color: #2e6da4")
                      ),
                      column(width =2, offset =1,
-                            textInput("1_stats_oneprotein_data_filename", label="File Name", value = "my_protein_data.xlsx", width = 250)
+                            textInput("stats_oneprotein_data_filename", label="File Name", value = "my_protein_data.xlsx", width = 250)
                      ),
                      column(width =1, offset =0,
                             br(),
-                            actionButton("1_stats_oneprotein_data_save", label = "Save Data", width = 100,
+                            actionButton("stats_oneprotein_data_save", label = "Save Data", width = 100,
                                          style="color: #fff; background-color: #337ab7; border-color: #2e6da4"),
                      ),
                      column(width =1, offset =0,
                             br(),
-                            downloadButton('1_download_stats_oneprotein_data_save')
+                            downloadButton('download_stats_oneprotein_data_save')
                      )
                  )
                ),
@@ -803,7 +803,7 @@ source("Shiny_UI.R")
                                     ),
                                     div(
                                       style = "position:relative",
-                                      plotOutput("stats_oneprotein_grouped_barplot", width = 1200, height = 400)
+                                      plotOutput("stats_oneprotein_grouped_barplot", width = 1000, height = 400)
                                     ),
                                     downloadButton('download_stats_oneprotein_grouped_barplot')
                              )

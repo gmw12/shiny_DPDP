@@ -219,14 +219,86 @@ protein_table <- function(df, start_sample_col, sample_number, spqc_number){
     pageLength = 10,
     lengthMenu = c(10, 50, 100, 200)
     #formatRound(columns = c(sample_col_numbers + 1), digits = 0)
-    
   )
   
   cat(file = stderr(), "Function protein_table...end", "\n")
   return(list(df, options))   
 }
 
+#------------------------------------------------------------------------------------------------------------------
 
+protein_peptide_table <- function(df_peptide, peptide_pos_lookup, start_sample_col_peptide){
+  cat(file = stderr(), "Function protein_table...", "\n")
+  require('DT')
+
+  df_peptide$Sequence <- gsub("_", "", df_peptide$Sequence)
+  df_peptide <- merge(df_peptide, peptide_pos_lookup, by = (c("Accession", "Sequence"))    )
+  df_peptide$Start <- as.numeric(df_peptide$Start)
+  df_peptide$Stop <- as.numeric(df_peptide$Stop)
+  df_peptide <- df_peptide |> dplyr::select(Stop, everything())
+  df_peptide <- df_peptide |> dplyr::select(Start, everything())
+  df_peptide <- df_peptide[order(df_peptide$Start, df_peptide$Stop), ]
+  
+  df_peptide <- df_peptide |> dplyr::mutate(dplyr::across((start_sample_col_peptide+2):(ncol(df_peptide)), round, 1))
+
+  options <- list(
+    selection = 'single',
+    #dom = 'Bfrtipl',
+    autoWidth = TRUE,
+    scrollX = TRUE,
+    scrollY = 500,
+    scrollCollapse = TRUE,
+    columnDefs = list(
+      list(
+        targets = c(0),
+        visibile = TRUE,
+        "width" = '6',
+        className = 'dt-center'
+      ),
+      list(
+        targets = c(1),
+        visibile = TRUE,
+        "width" = '6',
+        className = 'dt-center'
+      ),
+      list(
+        targets = c(2),
+        visible = TRUE,
+        "width" = '15',
+        className = 'dt-center'
+      ),
+      list(
+        targets = c(3),
+        width = '10',
+        render = JS(
+          "function(data, type, row, meta) {",
+          "return type === 'display' && data.length > 35 ?",
+          "'<span title=\"' + data + '\">' + data.substr(0, 35) + '...</span>' : data;",
+          "}"
+        )
+      ),
+      list(
+        targets = c(4),
+        width = '100',
+        render = JS(
+          "function(data, type, row, meta) {",
+          "return type === 'display' && data.length > 20 ?",
+          "'<span title=\"' + data + '\">' + data.substr(0, 20) + '...</span>' : data;",
+          "}"
+        )
+      )
+    ),
+    ordering = TRUE,
+    orderClasses = TRUE,
+    fixedColumns = list(leftColumns = 1),
+    pageLength = 10,
+    lengthMenu = c(10, 50, 100, 200)
+    #formatRound(columns = c(sample_col_numbers + 1), digits = 0)
+  )
+  
+  cat(file = stderr(), "Function protein_table...end", "\n")
+  return(list(df_peptide, options))   
+}
 
 
 #--------------------------------

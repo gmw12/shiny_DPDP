@@ -35,7 +35,7 @@ set_user <- function() {
     }else if (Sys.info()["nodename"] == "shiny-titan") {
       volumes <<- c(h1 = '/mnt/h_black1', h2 = '/mnt/h_black2', dc = '/mnt/RawData', wd = '.', Home = fs::path_home(), getVolumes()())
       site_user <<- "dpmsr"
-      params$python_path <<- "/home/dpmsr/anaconda3/envs/PDP/bin/python3"
+      params$python_path <<- "/home/user/anaconda3/envs/python38/bin/python3"
     }else{
       #for public website
       volumes <<- c(dd = '/data', wd = '.', Home = fs::path_home(), getVolumes()())

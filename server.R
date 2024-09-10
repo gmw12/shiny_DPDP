@@ -385,9 +385,40 @@ shinyServer(function(session, input, output) {
     cat(file = stderr(), "stats_data_save clicked...end" , "\n")
   })
   
+  #-------------------------------------------------------------------------------------------------------------  
+  observeEvent(input$stats_oneprotein_data_save, { 
+    
+    cat(file = stderr(), "stats saving OneProtein datatable to excel..." , "\n") 
+    
+    oneprotein_data_save_excel(session, input, output, params) 
+    
+    cat(file = stderr(), "stats saving OneProtein datatable to excel...end" , "\n") 
+    
+  })
   
   #-------------------------------------------------------------------------------------------------------------  
   
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  #-------------------------------------------------------------------------------------------------------------  
   observeEvent(input$stats_data_show_backup, { 
     showModal(modalDialog("Getting data...", footer = NULL))  
     cat(file = stderr(), "stats data show triggered..." , "\n")

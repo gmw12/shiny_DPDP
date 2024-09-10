@@ -298,7 +298,7 @@ create_stats_data_table <- function(session, input, output, params) {
       updateTextInput(session, "stats_oneprotein_accession", 
                       value = df_DT$Accession[as.numeric(unlist(input$stats_data_final_rows_selected)[1])]  )
       updateSelectInput(session, "stats_oneprotein_plot_comp", selected = input$stats_select_data_comp)
-      accession_stat <<- df_DT$Accession[as.numeric(unlist(input$stats_data_final_rows_selected)[1])] 
+      accession_stat <- df_DT$Accession[as.numeric(unlist(input$stats_data_final_rows_selected)[1])] 
     })
   }
   
@@ -332,10 +332,8 @@ create_stats_data_table_bg <- function(input_stats_norm_type, input_stats_select
     cat(file = stderr(), stringr::str_c(data_name, " is in database"), "\n") 
     
     #load data
-    conn <- RSQLite::dbConnect(RSQLite::SQLite(), params$database_path)
-    df <- RSQLite::dbReadTable(conn, data_name)
-    stats_comp <- RSQLite::dbReadTable(conn, "stats_comp")
-    RSQLite::dbDisconnect(conn)
+    df <- read_table_try(data_name, params)
+    stats_comp <- read_table_try("stats_comp", params)
   }
   
   comp_number <- which(stats_comp$Name == input_stats_select_data_comp)
@@ -352,7 +350,7 @@ create_stats_data_table_bg <- function(input_stats_norm_type, input_stats_select
     stats_DT <- peptide_table(df, start_sample_col, sample_number, spqc_number)
   }
   
-  write_table("stats_DT", stats_DT[[1]], params)
+  write_table_try("stats_DT", stats_DT[[1]], params)
   
   return(stats_DT)
   
@@ -459,10 +457,29 @@ stats_table_select <- function(session, input, output, input_stats_data_final_ro
     peptide_pos_lookup <- bg_plot_list[[4]]
     grouped_color_list <- bg_plot_list[[5]]
     new_df <- bg_plot_list[[6]]
+    df_peptide <- bg_plot_list[[7]]
+    options_DT <- bg_plot_list[[8]]
 
     interactive_barplot(session, input, output, df, namex, color_list, "stats_oneprotein_barplot", input$stats_oneprotein_plot_comp, plot_number=1)
     
     interactive_grouped_barplot(session, input, output, new_df, input$stats_oneprotein_plot_comp, grouped_color_list)
+    
+    output$oneprotein_peptide_table <-  DT::renderDataTable(df_peptide, rownames = FALSE, extensions = c("FixedColumns"), 
+                                                    selection = 'single', options=options_DT,
+                                                    callback = DT::JS('table.page(3).draw(false);')
+    )
+    
+    output$download_stats_oneprotein_data_save <- downloadHandler(
+      file = function(){
+        input$stats_oneprotein_data_filename
+      },
+      content = function(file){
+        fullname <- stringr::str_c(params$data_path, input$stats_norm_type, "//", input$stats_oneprotein_data_filename)
+        cat(file = stderr(), stringr::str_c("download_stats_oneprotein_data fullname = ", fullname), "\n")
+        file.copy(fullname, file)
+      }
+    )
+    
     
     cat(file = stderr(), "Function create_stats_oneprotein_plots...end", "\n")
     removeModal()
@@ -478,6 +495,7 @@ stats_table_select <- function(session, input, output, input_stats_data_final_ro
     source('Shiny_File.R')
     source('Shiny_Misc_Functions.R')
     source('Shiny_MVA_Functions.R')
+    source('Shiny_Tables.R')
     
     #confirm data exists in database
     data_name <- stringr::str_c("protein_", input_stats_norm_type, "_", input_stats_oneprotein_plot_comp, "_final")
@@ -590,93 +608,51 @@ stats_table_select <- function(session, input, output, input_stats_data_final_ro
       unique_colors <- unique(color_list)
       grouped_color_list <- rep(unique_colors, nrow(new_df2)/length(unique_colors))
 
+      #table data
+      table_data <- protein_peptide_table(df_peptide, peptide_pos_lookup, start_sample_col_peptide)
+      df_peptide <- table_data[[1]]
+      options_DT <- table_data[[2]]
+      write_table_try("oneprotein_peptide_data", df_peptide, params)
+
       cat(file = stderr(), "Function create_stats_oneprotein_plots_bg...end", "\n")
-      return(list(df, namex, color_list, peptide_pos_lookup, grouped_color_list, new_df2))
+      return(list(df, namex, color_list, peptide_pos_lookup, grouped_color_list, new_df2, df_peptide, options_DT))
 
     }
   }
-      
-            
-create_stats_oneprotein_plots_bg2 <- function(input_stats_norm_type, input_stats_oneprotein_plot_comp, 
-                                                   input_stats_oneprotein_accession, input_stats_oneprotein_plot_spqc,
-                                                   df_design, params) {
-      #get data
-      df_list <- oneprotein_data(df, df_peptide, input_stats_oneprotein_plot_comp, input_stats_oneprotein_accession, 
-                                 input_stats_oneprotein_plot_spqc, input_stats_use_zscore, df_design, comp_number,
-                                 sample_number, start_sample_col, start_sample_col_peptide, spqc_number)
-        
-      
-      peptide_pos_lookup <-  peptide_position_lookup(session, input, output, as.character(input$stats_oneprotein_accession))
-        
-      grouped_color <- unique(color_list)
-      interactive_grouped_barplot(session, input, output, comp_string, df_peptide, peptide_info_columns, 
-                                    input$stats_oneprotein_plot_comp, peptide_pos_lookup, grouped_color)
-        
-      df_peptide <- merge(df_peptide, peptide_pos_lookup, by = (c("Accession", "Sequence"))    )
-      df_peptide$Start <- as.numeric(df_peptide$Start)
-      df_peptide$Stop <- as.numeric(df_peptide$Stop)
-      df_peptide <- df_peptide %>% dplyr::select(Stop, everything())
-      df_peptide <- df_peptide %>% dplyr::select(Start, everything())
-      df_peptide <- df_peptide[order(df_peptide$Start, df_peptide$Stop), ]
-        
-      sample_col_numbers <- seq(from = 14, to = ncol(df_peptide) )
-        
-      dpmsr_set$data$oneprotein_peptide_DT <<- df_peptide
-        
-        oneprotein_peptide_DT <-  DT::datatable(df_peptide,
-                                                rownames = FALSE,
-                                                extensions = c("FixedColumns"), #, "Buttons"),
-                                                options = list(
-                                                  #dom = 'Bfrtipl',
-                                                  autoWidth = TRUE,
-                                                  scrollX = TRUE,
-                                                  scrollY = 500,
-                                                  scrollCollapse = TRUE,
-                                                  columnDefs = list(list(targets = c(0,1), visibile = TRUE, "width" = '30', className = 'dt-center'),
-                                                                    list(targets = c(2), visible = TRUE, "width" = '20', className = 'dt-center'),
-                                                                    list(
-                                                                      targets = c(5),
-                                                                      width = '250',
-                                                                      render = JS(
-                                                                        "function(data, type, row, meta) {",
-                                                                        "return type === 'display' && data.length > 35 ?",
-                                                                        "'<span title=\"' + data + '\">' + data.substr(0, 35) + '...</span>' : data;",
-                                                                        "}")
-                                                                    ),
-                                                                    list(
-                                                                      targets = c(6),
-                                                                      width = '150',
-                                                                      render = JS(
-                                                                        "function(data, type, row, meta) {",
-                                                                        "return type === 'display' && data.length > 35 ?",
-                                                                        "'<span title=\"' + data + '\">' + data.substr(0, 35) + '...</span>' : data;",
-                                                                        "}")
-                                                                    ),
-                                                                    list(
-                                                                      targets = c(12),
-                                                                      width = '100',
-                                                                      render = JS(
-                                                                        "function(data, type, row, meta) {",
-                                                                        "return type === 'display' && data.length > 20 ?",
-                                                                        "'<span title=\"' + data + '\">' + data.substr(0, 20) + '...</span>' : data;",
-                                                                        "}")
-                                                                    )
-                                                  ),
-                                                  ordering = TRUE,
-                                                  orderClasses = TRUE,
-                                                  fixedColumns = list(leftColumns = 2),
-                                                  pageLength = 100, lengthMenu = c(10,50,100,200)),
-                                                #buttons=c('copy', 'csv', 'excelHtml5', 'pdf')),
-                                                callback = JS('table.page(3).draw(false);'
-                                                ))
-        
-        oneprotein_peptide_DT <- oneprotein_peptide_DT %>%  formatRound(columns = c(sample_col_numbers), digits = 2)
-        
-        output$oneprotein_peptide_table <-  DT::renderDataTable({oneprotein_peptide_DT })
 
-    removeModal()
-    cat(file = stderr(), "Function create_stats_oneprotein_plots_bg...end", "\n")
+#-------------------------------------------------------------------------------------------------------------  
+oneprotein_data_save_excel <- function(session, input, output, params) {
+  cat(file = stderr(), "Function oneprotein_data_save_excel...", "\n")
+  showModal(modalDialog("Saving data table to excel...", footer = NULL))  
+  
+  arg_list <- list(input$stats_norm_type,  input$stats_oneprotein_data_filename, params)
+  
+  bg_stats_data_save_excel <- callr::r_bg(func = oneprotein_data_save_excel_bg , args = arg_list, stderr = str_c(params$error_path, "//error_oneprotein_data_save_excel.txt"), supervise = TRUE)
+  bg_stats_data_save_excel$wait()
+  print_stderr("error_oneprotein_data_save_excel.txt")
+  
+  cat(file = stderr(), "Function oneprotein_data_save_excel...end", "\n")
+  removeModal()
+  
+}
+#-------------------------------------------------------------------------------------------------------------  
+oneprotein_data_save_excel_bg <- function(input_stats_norm_type,  input_stats_oneprotein_data_filename, params) {
+  cat(file = stderr(), "Function oneprotein_data_save_excel_bg...", "\n")
+  source('Shiny_File.R')
+  
+  filename <- stringr::str_c(params$data_path, input_stats_norm_type, "//", input_stats_oneprotein_data_filename)
+  file_dir <- stringr::str_c(params$data_path, input_stats_norm_type) 
+  
+  if(!fs::is_dir(file_dir)) {
+    cat(file = stderr(), stringr::str_c("create_dir...", file_dir), "\n")
+    dir_create(file_dir)
   }
   
+  cat(file = stderr(), stringr::str_c("filename = ", filename) , "\n")
   
-  #--------------------------------------------------
+  df_oneprotein <- read_table_try("oneprotein_peptide_data", params)
+  Simple_Excel(df_oneprotein, "data", filename)
+  
+  cat(file = stderr(), "Function oneprotein_data_save_excel_bg...end", "\n")
+  
+}
