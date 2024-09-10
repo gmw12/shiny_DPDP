@@ -3,12 +3,12 @@ set_pathway <- function(input, output, session){
   cat(file = stderr(), "Set Pathway..." , "\n")
   tax_choice <- input$select_organism
   
-  if (!is.null(dpmsr_set$tax_choice)) {
-    if (tax_choice == dpmsr_set$tax_choice) {
+  if (!is.null(params$tax_choice)) {
+    if (tax_choice == params$tax_choice) {
       cat(file = stderr(), "Tax choice same as previous..." , "\n")
     }else{
       cat(file = stderr(), "Tax has changed..." , "\n")
-      dpmsr_set$x$pathway_set <<- 0
+      params$pathway_set <- 0
     }
   }
   

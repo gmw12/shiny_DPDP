@@ -440,11 +440,11 @@ shinyServer(function(session, input, output) {
   #-------------------------------------------------------------------------------------------------------------
   #-------------------------------------------------------------------------------------------------------------
   observeEvent(input$set_pathway, {
+    
     showModal(modalDialog("Downloading and Setting up databases...", footer = NULL))  
     set_pathway(input, output, session)
     removeModal()
-    updateTabsetPanel(session, "nlp1", selected = "wiki")
-    updateNavbarPage(session, "path", selected = "wiki")
+    
   }
   )
   

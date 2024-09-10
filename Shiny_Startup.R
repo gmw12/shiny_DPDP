@@ -197,7 +197,9 @@ create_default_params <- function() {
               "rollup_topn" = 3,
               "stat_norm" = "impute",
               "comp_spqc" =  "",
-              "comp_number" = 1
+              "comp_number" = 1,
+              "tax_choice" = "",
+              "pathway_set" = 0
 
   )
   
