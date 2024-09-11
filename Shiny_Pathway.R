@@ -13,21 +13,25 @@ set_pathway <- function(input, output, session, params){
   if (tax_choice == "Mouse") {string_species <- 10090}
   if (tax_choice == "Rat") {string_species <- 10116}
 
-  
+
   if (tax_choice == params$tax_choice) {
     cat(file = stderr(), "Tax choice same as previous..." , "\n")
   }else{
     cat(file = stderr(), "Tax choice has updated..." , "\n")
+    
+    #save params
+    params$tax_choice <- tax_choice
+    params$string_species <- string_species
+    params <<- params
+    write_table_try("params", params, params)
+    
     arg_list <- list(input$checkbox_filter_adjpval, params)
     bg_setup_string <- callr::r_bg(func = setup_string_bg , args = arg_list, stderr = stringr::str_c(params$error_path, "//error_setup_string.txt"), supervise = TRUE)
     bg_setup_string$wait()
     print_stderr("error_setup_string.txt")
   }
 
-  #save params
-  params$tax_choice <- tax_choice
-  params$string_species <- string_species
-  write_table_try("parameters", params, params)
+
   
   removeModal()
   cat(file = stderr(), "Function set_pathway...end" , "\n") 

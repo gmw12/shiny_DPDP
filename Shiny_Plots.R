@@ -412,7 +412,7 @@ histogram_plot <- function(table_name, plottitle, params)
   cat(file = stderr(), stringr::str_c("na - > ", params$total_na, "   ma -> ", params$total_misaligned), "\n")
   
   #save params to database
-  RSQLite::dbWriteTable(conn, "parameters", params, overwrite = TRUE)
+  RSQLite::dbWriteTable(conn, "params", params, overwrite = TRUE)
   RSQLite::dbDisconnect(conn)
   
   my_legend1 <- grid::grid.text(stringr::str_c("Misaligned Intensity Cutoff:", round(intensity_cutoff, digits = 1), " / ", round(params$intensity_cutoff, digits = 1)), x = .80, y = .95, gp = grid::gpar(col = "green4", fontsize = 10))

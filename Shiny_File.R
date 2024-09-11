@@ -105,7 +105,7 @@ param_update <- function(param, value){
 param_load_from_database <- function(){
   cat(file = stderr(), "Function - param_load_from_database", "\n")
   conn <- RSQLite::dbConnect(RSQLite::SQLite(), params$database_path)
-  params <- RSQLite::dbReadTable(conn, "parameters")
+  params <- RSQLite::dbReadTable(conn, "params")
   RSQLite::dbDisconnect(conn)
   return(params)
 }
@@ -114,7 +114,7 @@ param_load_from_database <- function(){
 param_save_to_database <- function(){
   cat(file = stderr(), "Function - param_save_to_database", "\n")
   conn <- RSQLite::dbConnect(RSQLite::SQLite(), params$database_path)
-  RSQLite::dbWriteTable(conn, "parameters", params, overwrite = TRUE)
+  RSQLite::dbWriteTable(conn, "params", params, overwrite = TRUE)
   RSQLite::dbDisconnect(conn)
 }
 

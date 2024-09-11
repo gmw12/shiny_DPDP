@@ -60,7 +60,7 @@ load_unknown_data <- function(data_sfb, params){
   
   conn <- RSQLite::dbConnect(RSQLite::SQLite(), params$database_path)
   RSQLite::dbWriteTable(conn, "precursor_raw", df, overwrite = TRUE)
-  RSQLite::dbWriteTable(conn, "parameters", params, overwrite = TRUE)
+  RSQLite::dbWriteTable(conn, "params", params, overwrite = TRUE)
   RSQLite::dbDisconnect(conn)
   
   gc(verbose = getOption("verbose"), reset = FALSE, full = TRUE)
@@ -238,7 +238,7 @@ meta_data_bg <- function(table_name, data_format, params){
     params[[protein_name]] <- length(unique(df$Accession))
   }
   
-  RSQLite::dbWriteTable(conn, "parameters", params, overwrite = TRUE)
+  RSQLite::dbWriteTable(conn, "params", params, overwrite = TRUE)
   RSQLite::dbDisconnect(conn)
   
   cat(file = stderr(), "Function meta_data bg...end", "\n\n")
@@ -306,7 +306,7 @@ impute_meta_data_bg <- function(table_name, params){
   rand_df = data.frame(matrix(runif(ncol(df) * nrow(df), min = -1, max = 1), ncol = ncol(df)))
   
   RSQLite::dbWriteTable(conn, "random", rand_df, overwrite = TRUE)
-  RSQLite::dbWriteTable(conn, "parameters", params, overwrite = TRUE)
+  RSQLite::dbWriteTable(conn, "params", params, overwrite = TRUE)
   RSQLite::dbDisconnect(conn)
   
   cat(file = stderr(), "Function impute_meta_data bg...end", "\n\n")

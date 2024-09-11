@@ -15,13 +15,21 @@ source("Shiny_UI.R")
       menuItem("Impute", tabName = "impute"),
       menuItem("Rollup", tabName = "rollup"),
       menuItem("QC", tabName = "qc"),
-      menuItem("Stats", tabName = "stats", startExpanded = TRUE,
+      menuItem("Stats", tabName = "stats", startExpanded = FALSE,
                menuItem("Setup", tabName = "stats_setup"),
                menuItem("Comparisons", tabName = "stats_compare"),
                menuItem("Graphs", tabName = "stats_plots"),
                menuItem("Data", tabName = "stats_data"),
                menuItem("Protein Plots", tabName = "stats_protein_plots")),
-      menuItem("Pathway", tabName = "pathway"),
+      menuItem("Pathway", tabName = "pathway", startExpanded = FALSE,
+               menuItem("Setup", tabName = "pathway_setup"),
+               menuItem("Wiki Pathways", tabName = "pathway_wiki"),
+               menuItem("Go Profile", tabName = "pathway_go_profile"),
+               menuItem("Go Analysis", tabName = "pathway_go_analysis"),
+               menuItem("Go Volcano", tabName = "pathway_go_volcano"),
+               menuItem("StringDB", tabName = "pathway_string"),
+               menuItem("StringDB Enrich", tabName = "pathway_string_enrich")
+               ),
       menuItem("Save")
     )
   )
@@ -826,9 +834,9 @@ source("Shiny_UI.R")
       ),
       
 #-----
-    tabItem("pathway",
+    tabItem("pathway_setup",
             fluidRow(
-              tabBox(title = "Protein Plots", width = 12, height = 1200,
+              box(title = "Pathway Setup", width = 12, height = 1200,
                    tabPanel("Organism", value = "tp_save", align = "center",
                             br(),
                             br(),
@@ -838,16 +846,16 @@ source("Shiny_UI.R")
                             hr(),
                             selectInput("select_organism", label = "organism", 
                                         choices = list("Human", "Mouse", "Rat"), #, "Rat", "Danio", "Arabidopsis", "Ecoli"), 
-                                        selected = "Human"),
+                                        selected = "Human", width = 400),
                             br(),
                             actionButton("set_pathway", label = "Set Pathway", width = 300, 
                                          style = "color: #fff; background-color: #337ab7; border-color: #2e6da4")
-                   ),
+                   )))),
                    
-                   tabPanel("WikiPathways", id = "wiki",
-                            fluidRow( 
-                              column(width = 3, offset = 0,
-                                     selectInput("select_data_comp_wiki", label = "comparison", 
+      tabItem("pathway_wiki",
+              fluidRow( 
+                  column(width = 3, offset = 0,
+                     selectInput("select_data_comp_wiki", label = "comparison", 
                                                  choices = list("Choice 1" = 1, "Choice 2" = 2, "Choice 3" = 3), 
                                                  selected = 1)
                               ),
@@ -871,9 +879,9 @@ source("Shiny_UI.R")
                             ),
                             br(),
                             downloadButton('download_wiki_table')
-                   ),
+          ),
                    
-                   tabPanel("Go Profile", id="go_profile",
+      tabItem("pathway_go_profile",
                             fluidRow( 
                               column(width = 2, offset =0,
                                      selectInput("select_data_comp_profile", label = "comparison", 
@@ -918,7 +926,7 @@ source("Shiny_UI.R")
                             )
                    ),
                    
-                   tabPanel("Go Analysis", id="go",
+      tabItem("pathway_go_analysis",
                             fluidRow( 
                               column(width =3 , offset =0,
                                      selectInput("select_data_comp_go", label = "comparison", 
@@ -956,7 +964,7 @@ source("Shiny_UI.R")
                             )
                    ), #end of go analysis
                    
-                   tabPanel("Go Volcano", id = "go_volcano",
+      tabItem("pathway_go_volcano",
                             fluidRow(
                               column(width =2, offset =0,
                                      textInput("go_volcano_id", label="GO ID", value = "", width = 200),
@@ -1000,86 +1008,84 @@ source("Shiny_UI.R")
                    ), #end of go volcano 
                    
                    
-                   tabPanel("StringDB", id="string",
-                            fluidRow( 
-                              column(width =3, offset =0,
-                                     selectInput("select_data_comp_string", label = "comparison", 
-                                                 choices = list("Choice 1" = 1, "Choice 2" = 2, "Choice 3" = 3), 
-                                                 selected = 1)
-                              ),
-                              column(width =2, offset =0,  
-                                     radioButtons("string_direction", label="Fold Change Direction", choices = list("Up", "Down", "UpDown"),  selected = "Up", width = 200)
-                              ),
-                              column(width =1, offset =0,
-                                     selectInput("protein_number", label = "Max #Proteins", 
-                                                 choices = list(10, 25, 50, 75, 100), #150, 200, 250, 300, 350, 400), 
-                                                 selected = 100)
-                              ),                   
-                              column(width =2, offset =2,
-                                     actionButton("get_string", label = "String Analysis", width = 150,
-                                                  style="color: #fff; background-color: #337ab7; border-color: #2e6da4")
-                              )
-                            ),
-                            fluidRow(
-                              hr(),
-                              #string link depreciated - save incase comes back
-                              tags$head(tags$style("#string_link{color: blue;
-                                  font-size: 12px;
-                                   }"
-                              )
-                              ),
-                              #textOutput("string_link"),
-                              uiOutput("string_link"),
-                              br(),
-                              downloadButton('download_string_plot'),
-                              plotOutput("string_plot")  
-                              #rHandsontableOutput("string_table")
-                            )
-                   ), #end of string analysis
+       tabItem("pathway_string", 
+          fluidRow(
+            
+            box(id = "string_parameters", title = "StringDB Parameters...", status = "primary",
+                solidHeader = TRUE, collapsible = FALSE, align = "left", width = 3, height = 800,
+                br(),
+                selectInput("select_data_comp_string", label = "comparison", 
+                         choices = list("Choice 1" = 1, "Choice 2" = 2, "Choice 3" = 3), 
+                         selected = 1),
+                br(),
+                radioButtons("string_direction", label="Fold Change Direction", choices = list("Up", "Down", "UpDown"),  selected = "Up", width = 200),
+                br(),
+                selectInput("protein_number", label = "Max #Proteins", 
+                        choices = list(10, 25, 50, 75, 100), #150, 200, 250, 300, 350, 400), 
+                        selected = 100),
+                br(),
+                actionButton("get_string", label = "String Analysis", width = 150,
+                          style="color: #fff; background-color: #337ab7; border-color: #2e6da4"),
+                br(),
+                br(),
+                br(),
+                tags$head(tags$style("#string_link{color: blue;
+                                font-size: 12px;
+                                 }")),
+                uiOutput("string_link"),
+                br(),
+                br(),
+                br(),
+                br(),
+                downloadButton('download_string_plot'),
+              ),
+            
+            box(id = "string_plot", title = "StringDB Plot...", status = "primary",
+                solidHeader = TRUE, collapsible = FALSE, align = "left", width = 9, height = 800,
+                
+                plotOutput("string_plot")  
+              )
+          )
+          ),
+             
                    
-                   tabPanel("StringDB_enrich", id="string_enrich",
-                            fluidRow( 
-                              column(width =3, offset =0,
-                                     selectInput("select_data_comp_string_enrich", label = "comparison", 
-                                                 choices = list("Choice 1" = 1, "Choice 2" = 2, "Choice 3" = 3), 
-                                                 selected = 1)
-                              ),
-                              column(width =3, offset =0,  
-                                     radioButtons("string_enrich_direction", label="Fold Change Direction", choices = list("Up", "Down", "UpDown"),  selected = "Up", width = 200)
-                              ),
-                              # column(width =1, offset =0,
-                              #        selectInput("select_string_enrich", label = "Enrichment", 
-                              #                    choices = list("Process", "Component", "Function", "KEGG", "Pfam", "InterPro"), 
-                              #                    selected = "Process")
-                              # ),
-                              column(width =2, offset =0,
-                                     actionButton("go_string_enrich", label = "String Enrichment", width = 150,
-                                                  style="color: #fff; background-color: #337ab7; border-color: #2e6da4")
-                              )
-                            ),
-                            
-                            fluidRow(
-                              hr(),
-                              tags$head(tags$style("#data_final{color: blue;
+      tabItem("pathway_string_enrich", 
+        fluidRow(
+          box(id = "string_enrich_parameters", title = "StringDB Enrich Parameters...", status = "primary",
+              solidHeader = TRUE, collapsible = FALSE, align = "left", width = 3, height = 800,
+              br(),
+              br(),
+              selectInput("select_data_comp_string_enrich", label = "comparison", 
+                          choices = list("Choice 1" = 1, "Choice 2" = 2, "Choice 3" = 3), 
+                          selected = 1),
+              br(),
+              radioButtons("string_enrich_direction", label="Fold Change Direction", choices = list("Up", "Down", "UpDown"),  selected = "Up", width = 200),
+              br(),
+              br(),
+              actionButton("get_string_enrich", label = "String Enrichment", width = 150,
+                           style="color: #fff; background-color: #337ab7; border-color: #2e6da4"),
+              br(),
+              br(),
+              br(),
+              br(),
+              downloadButton('download_string_enrich_table')
+          ),
+          
+          box(id = "string_enrich_plot", title = "StringDB Enrich Plot...", status = "primary",
+              solidHeader = TRUE, collapsible = FALSE, align = "left", width = 9, height = 800,
+              tags$head(tags$style("#data_final{color: blue;
                                  font-size: 12px;
                                   }"
-                              )
-                              ),
-                              rHandsontableOutput("string_table"),
-                              downloadButton('download_string_enrich_table')
-                            )
-                   ) #end of string analysis        
-                   
-                   
-        ) #end of tabbox
-      ) # end of fluidrow
-    ) # end of tabItem
+              )
+              ),
+              rHandsontableOutput("string_table")
+          )
+        )
+      )
+                              
 
 
-
-
-
-#----
+#---------------------------------------------------------------------
       
       
       

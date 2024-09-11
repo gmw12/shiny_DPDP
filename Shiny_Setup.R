@@ -8,7 +8,7 @@ create_parameter_table <- function(session, input, output){
   cat(file = stderr(), "\n",  "Function create_parameter_table", "\n")
 
   conn <- RSQLite::dbConnect(RSQLite::SQLite(), params$database_path)
-  RSQLite::dbWriteTable(conn, "parameters", df, overwrite = TRUE)
+  RSQLite::dbWriteTable(conn, "paramss", df, overwrite = TRUE)
   RSQLite::dbDisconnect(conn)
 
   gc(verbose = getOption("verbose"), reset = FALSE, full = TRUE)
@@ -203,7 +203,7 @@ set_sample_groups_bg <- function(session, input, output, params, check_design_so
   cat(file = stderr(), "set_sample_groups ...5", "\n")
   RSQLite::dbWriteTable(conn, "sample_groups", sample_groups, overwrite = TRUE )
   RSQLite::dbWriteTable(conn, "design", design, overwrite = TRUE)
-  RSQLite::dbWriteTable(conn, "parameters", params, overwrite = TRUE)
+  RSQLite::dbWriteTable(conn, "params", params, overwrite = TRUE)
   RSQLite::dbDisconnect(conn)
   
   cat(file = stderr(), "set_sample_groups_bg ...end", "\n")

@@ -105,75 +105,123 @@ setup_string_bg <- function(input_checkbox_filter_adjpval, params){
   return()
 }  
 
-
-
-
-
+#--------------------------------------------------------------------------------
+run_string <- function(session, input, output, params) {
+  cat(file=stderr(), stringr::str_c("function run_string..."), "\n")
+  showModal(modalDialog("String Analysis...", footer = NULL))  
+  
+  stats_comp <- read_table_try("stats_comp", params)
+  string_check <- sum(stringr::str_count(list_tables(params), "String_"))
+  
+  if(string_check >= nrow(stats_comp)) {
+    cat(file = stderr(), "go string triggered", "\n")
+    
+    arg_list <- list(input$foldchange_cutoff, input$pvalue_cutoff, input$select_data_comp_string, input$string_direction, 
+                     input$protein_number, stats_comp, params)
+    bg_run_string <- callr::r_bg(func = run_string_bg , args = arg_list, stderr = stringr::str_c(params$error_path, "//error_run_string.txt"), supervise = TRUE)
+    bg_run_string$wait()
+    print_stderr("error_run_string.txt")
+    string_list <- bg_run_string$get_result()
+    string_file_name <- string_list[[1]]
+    string_link_network <- string_list[[2]]
+    
+    cat(file = stderr(), "string list complete, create plot", "\n")
+    
+    output$string_plot <- renderImage({
+      list(src=string_file_name,  
+           contentType = 'image/png', width=800, height=700, alt="this is alt text")
+    }, deleteFile = FALSE)
+    
+    
+    fullName <- string_list$string_file_name
+    output$download_string_plot <- downloadHandler(
+      filename = function(){
+        stringr::str_c(input$select_data_comp_string, ".png")
+      },
+      content = function(file){
+        file.copy(fullName, file)
+      }
+    )
+    
+    # depreciated
+    cat(file = stderr(), "create string link", "\n")
+    url <- a(string_link_network, href= string_link_network, target="_blank")
+    output$string_link <- renderUI({
+      tagList("URL link: ", url)
+    })
+    
+  }else{
+    shinyalert("Oops!", "Need to run String Setup first...", type = "error")
+  }
+  
+  removeModal()
+  cat(file=stderr(), stringr::str_c("function run_string...end"), "\n")
+}
 
 #-------------------------------------------------------------------
 
-run_string <- function(session, input, output){
+run_string_bg <- function(input_foldchange_cutoff, input_pvalue_cutoff, input_select_data_comp_string, input_string_direction, 
+                          input_protein_number, stats_comp, params){
+  cat(file=stderr(), stringr::str_c("function run_string_bg..."), "\n")
   require(httr)
   require(png)
+  source("Shiny_File.R")
   
-  cat(file=stderr(), "run string step 1", "\n")
-  input_fc_up <- log(input$foldchange_cutoff, 2)
-  input_fc_down <- log(1/input$foldchange_cutoff, 2)
+  cat(file=stderr(), "run_string_bg 1", "\n")
+  input_fc_up <- log(input_foldchange_cutoff, 2)
+  input_fc_down <- log(1/input_foldchange_cutoff, 2)
+
+  cat(file=stderr(), "run_string_bg 2", "\n")
   
-  input_pval <- input$pvalue_cutoff
-  input_comp <- input$select_data_comp_string
+  comp_number <- which(stats_comp$Name == input_select_data_comp_string)
   
-  cat(file=stderr(), "run string step 2", "\n")
-  
-  df <- dpmsr_set$string[[input_comp]]
-  test1 <<- df
-  df <- subset(df, pvalue < input_pval)
-  test2 <<-df
-  
+  table_name <- stringr::str_c("String_", stats_comp$Final_Table_Name[comp_number])
+  df <- read_table_try(table_name, params)
+  df <- subset(df, pvalue <= input_pvalue_cutoff)
+
   cat(file=stderr(), stringr::str_c("length of dataframe...", nrow(df)), "\n")
   
-  cat(file=stderr(), "run string step 3", "\n")
+  cat(file=stderr(), "run_string_bg 3", "\n")
   
-  if (input$string_direction == "Up"){
+  if (input_string_direction == "Up"){
     df <- subset(df, logFC >= input_fc_up)
-  }else if (input$string_direction == "Down"){
+  }else if (input_string_direction == "Down"){
     df <- subset(df, logFC <= input_fc_down)
   }else {
     df <- subset(df, logFC >= input_fc_up | logFC <= input_fc_down )
   }
   
   df <- df[order(-df$logFC),]
-  test3 <<-df
-  
+
   cat(file=stderr(), stringr::str_c("length of dataframe...", nrow(df)), "\n")
-  cat(file=stderr(), "run string step 4", "\n")
+  cat(file=stderr(), "run_string_bg 4", "\n")
   
-  if (nrow(df) > as.numeric(input$protein_number)){
-    hits <- df$stringId[1:as.numeric(input$protein_number)]
+  if (nrow(df) > as.numeric(input_protein_number)){
+    hits <- df$stringId[1:as.numeric(input_protein_number)]
   }else{
     hits <- df$stringId
   }
   
   cat(file=stderr(), stringr::str_c("number of hits searched...", length(hits)), "\n")
   
-  cat(file=stderr(), "run string step 5", "\n")
+  cat(file=stderr(), "run_string_bg 5", "\n")
   
   hit_list <- hits[1]
   for(i in 2:length(hits)){
     hit_list <- stringr::str_c(hit_list,"%0d", hits[i])
   }
   
-  cat(file=stderr(), "run string step 6", "\n")
-  string_file_name <- stringr::str_c(params$string_path, input_comp, ".png")
+  cat(file=stderr(), "run_string_bg 6", "\n")
+  string_file_name <- stringr::str_c(params$string_path, input_select_data_comp_string, ".png")
   cat(file=stderr(), stringr::str_c("string file name... ", string_file_name ), "\n")
   
   
-  cat(file=stderr(), "run string step 7", "\n")
+  cat(file=stderr(), "run_string_bg 7", "\n")
   
   test_hits <<- hit_list  
   string_api <- stringr::str_c("https://string-db.org/api/highres_image/network?identifiers=",
                       hit_list,
-                      "&species=", dpmsr_set$string$string_db$species, 
+                      "&species=", params$string_species, 
                       "&caller_identity=DukeProteomics" )
   
   res <- GET(string_api)
@@ -181,48 +229,27 @@ run_string <- function(session, input, output){
   writePNG(res_image, target=string_file_name)
   
   #save string png
-  cat(file=stderr(), "run string step 8", "\n")
-  
-  # string_plot <- try(dpmsr_set$string$string_db$plot_network(hits, add_link = TRUE, add_summary = TRUE), silent = TRUE)
-  # cat(file=stderr(), "run string step 9 - plot object created", "\n")
-  # 
-  # if ( string_plot != "try-error"){
-  #   png(filename=string_file_name, units="px", width = 1200, height = 1200)
-  #   string_plot
-  #   dev.off()
-  #   cat(file=stderr(), "run string step 20 - saved plot", "\n")
-  # }else{
-  #   shinyalert("Oops!", "StringDB server failed to return data...", type = "error")
-  # }
-  
-  # png(filename=string_file_name, units="px", width = 1200, height = 1200)
-  # dpmsr_set$string$string_db$plot_network(hits, add_link = TRUE, add_summary = TRUE)
-  # dev.off()
-  # cat(file=stderr(), "run string step 9 - saved plot", "\n")
-  
-  
-  # cat(file=stderr(), "run string step 8", "\n")
+  cat(file=stderr(), "run_string_bg 8", "\n")
   
   string2_api <- stringr::str_c("https://string-db.org/api/tsv-no-header/get_link?identifiers=", 
                        hit_list,
-                       "&species=", dpmsr_set$string$string_db$species, 
+                       "&species=", params$string_species, 
                        "&caller_identity=DukeProteomics" )
-  
-  
+
   res_link <- GET(string2_api)
   link_network <- rawToChar(res_link$content)
   cat(file=stderr(), stringr::str_c("string link ", link_network), "\n")
-  dpmsr_set$string$link_network <<- link_network
-  #dpmsr_set$string$link_network <<- substr(link_network, 1, nchar(link_network)-2)
   
   gc()
-  return(list("string_file_name" = string_file_name))
+  cat(file=stderr(), stringr::str_c("function run_string_bg...end"), "\n")
+  return(list(string_file_name, link_network))
 }
 
 
 #--------------------------------------------------------------------
 
-run_string_enrich <- function(input, output){
+run_string_enrich <- function(session, input, output, params){
+  cat(file=stderr(), stringr::str_c("function run_string_enrich_bg..."), "\n")
   
   input_fc_up <- log(input$foldchange_cutoff, 2)
   input_fc_down <- log(1/input$foldchange_cutoff, 2)
@@ -255,11 +282,52 @@ run_string_enrich <- function(input, output){
   gc()
   cat(file=stderr(), stringr::str_c("enrichment output...", nrow(enrichment)), "\n")
   
+  cat(file=stderr(), stringr::str_c("function run_string_enrich..end"), "\n")
   return(enrichment)
   
   
 }
 
+#--------------------------------------------------------------------
+
+run_string_enrich_bg <- function(params){
+  cat(file=stderr(), stringr::str_c("function run_string_enrich_bg..."), "\n")
+  input_fc_up <- log(input$foldchange_cutoff, 2)
+  input_fc_down <- log(1/input$foldchange_cutoff, 2)
+  
+  input_pval <- input$pvalue_cutoff
+  
+  input_comp <- input$select_data_comp_string_enrich
+  
+  df <- dpmsr_set$string[[input_comp]]
+  cat(file=stderr(), stringr::str_c("dataframe size...", nrow(df)), "\n")
+  df <- subset(df, pvalue <= input_pval)
+  cat(file=stderr(), stringr::str_c("dataframe subset size...", nrow(df)), "\n")
+  
+  if (input$string_enrich_direction == "Up"){
+    df <- subset(df, logFC >= input_fc_up)
+  }else if (input$string_enrich_direction == "Down"){
+    df <- subset(df, logFC <= input_fc_down)
+  }else {
+    df <- subset(df, logFC >= input_fc_up | logFC <= input_fc_down )
+  }
+  
+  df <- df[order(-df$logFC),]
+  
+  hits <- df$stringId
+  
+  cat(file=stderr(), stringr::str_c("number of hits searched...", length(hits)), "\n")
+  
+  enrichment <- dpmsr_set$string$string_db$get_enrichment(hits) #, category = input$select_string_enrich )
+  
+  gc()
+  cat(file=stderr(), stringr::str_c("enrichment output...", nrow(enrichment)), "\n")
+  
+  cat(file=stderr(), stringr::str_c("function run_string_enrich_bg...end"), "\n")
+  return(enrichment)
+  
+  
+}
 
 
 

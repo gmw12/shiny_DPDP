@@ -79,7 +79,7 @@ which(str_detect(colnames(df), "SPQC"))
 conn <- dbConnect(RSQLite::SQLite(), params$database_path)
 dbListTables(conn)
 
-df <- dbReadTable(conn, "parameters")
+df <- dbReadTable(conn, "params")
 df <- dbReadTable(conn, "precursor_raw")
 df <- dbReadTable(conn, "precursor_start")
 df <- dbReadTable(conn, "precursor_filter")

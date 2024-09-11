@@ -76,7 +76,7 @@ noise_inflection_bg <- function(table_name, params){
   
   plotdf <- df[seq(1, nrow(df), 10),]
   
-  RSQLite::dbWriteTable(conn, "parameters", params, overwrite = TRUE)
+  RSQLite::dbWriteTable(conn, "params", params, overwrite = TRUE)
   RSQLite::dbDisconnect(conn)
   
   ggplot2::ggplot(plotdf, ggplot2::aes(x = ID, y = vec)) +
@@ -138,7 +138,7 @@ noise_remove_bg <- function(table_name, new_table_name, params){
   df[(ncol(df) - params$sample_number + 1):ncol(df)][df[(ncol(df) - params$sample_number + 1):ncol(df)] < noise_baseline] <- NA
   
   RSQLite::dbWriteTable(conn, new_table_name, df, overwrite = TRUE)
-  RSQLite::dbWriteTable(conn, "parameters", params, overwrite = TRUE)
+  RSQLite::dbWriteTable(conn, "params", params, overwrite = TRUE)
   RSQLite::dbDisconnect(conn)
 
   cat(file = stderr(), stringr::str_c("noise_remove_bg... end"), "\n")
