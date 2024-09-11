@@ -92,8 +92,8 @@ set_pathway_old <- function(input, output, session){
   
   gmt_get <- function(tax_choice){
     if (tax_choice == "Human"){
-      wp.gmt <- rWikiPathways::downloadPathwayArchive(date = "20220110", organism="Homo sapiens", format = "gmt", destpath = dpmsr_set$file$string)
-      wp2gene <- clusterProfiler::read.gmt(str_c(dpmsr_set$file$string,wp.gmt))
+      wp.gmt <- rWikiPathways::downloadPathwayArchive(date = "20220110", organism="Homo sapiens", format = "gmt", destpath = params$string_path)
+      wp2gene <- clusterProfiler::read.gmt(str_c(params$string_path, wp.gmt))
     }
     if (tax_choice == "Mouse"){
       wp.gmt <- rWikiPathways::downloadPathwayArchive(date = "20220110", organism="Mus musculus" , format = "gmt", destpath = dpmsr_set$file$string)
