@@ -1,6 +1,46 @@
-set_pathway <- function(input, output, session){
+cat(file = stderr(), "Shiny_Pathway.R", "\n")
+
+#----------------------------------------------------------------------------------------- 
+set_pathway <- function(input, output, session, params){
   
-  cat(file = stderr(), "Set Pathway..." , "\n")
+  cat(file = stderr(), "Function set_pathway..." , "\n")
+  showModal(modalDialog("Downloading and Setting up databases...", footer = NULL))  
+  
+  tax_choice <- input$select_organism
+  cat(file = stderr(), stringr::str_c("Pathway tax choice...", tax_choice), "\n")
+
+  if (tax_choice == "Human") {string_species <- 9606}
+  if (tax_choice == "Mouse") {string_species <- 10090}
+  if (tax_choice == "Rat") {string_species <- 10116}
+
+  
+  if (tax_choice == params$tax_choice) {
+    cat(file = stderr(), "Tax choice same as previous..." , "\n")
+  }else{
+    cat(file = stderr(), "Tax choice has updated..." , "\n")
+    arg_list <- list(input$checkbox_filter_adjpval, params)
+    bg_setup_string <- callr::r_bg(func = setup_string_bg , args = arg_list, stderr = stringr::str_c(params$error_path, "//error_setup_string.txt"), supervise = TRUE)
+    bg_setup_string$wait()
+    print_stderr("error_setup_string.txt")
+  }
+
+  #save params
+  params$tax_choice <- tax_choice
+  params$string_species <- string_species
+  write_table_try("parameters", params, params)
+  
+  removeModal()
+  cat(file = stderr(), "Function set_pathway...end" , "\n") 
+}
+
+
+
+
+
+#----------------------------------------------------------------------------------------- 
+set_pathway_backup <- function(input, output, session){
+  
+  cat(file = stderr(), "Function set_pathway..." , "\n")
   tax_choice <- input$select_organism
   
   if (!is.null(params$tax_choice)) {
@@ -14,10 +54,10 @@ set_pathway <- function(input, output, session){
   
   cat(file = stderr(), str_c("Pathway tax choice...", tax_choice), "\n")
   
-  string_dir <- stringr::str_c(getwd(), "/")
+  base_dir <- stringr::str_c(getwd(), "/")
   
-  load(file = stringr::str_c(string_dir,"Pathway_wp2gene_",tax_choice), envir = .GlobalEnv)
-  load(file = stringr::str_c(string_dir,"Pathway_myGENE2GO_",tax_choice), envir = .GlobalEnv)
+  load(file = stringr::str_c(base_dir,"Pathway_wp2gene_",tax_choice), envir = .GlobalEnv)
+  load(file = stringr::str_c(base_dir,"Pathway_myGENE2GO_",tax_choice), envir = .GlobalEnv)
   
   if (tax_choice == "Human") {
     cat(file = stderr(), str_c("Load tax library...", tax_choice ), "\n")
@@ -33,9 +73,7 @@ set_pathway <- function(input, output, session){
     cat(file = stderr(), str_c("Load tax library...", tax_choice ), "\n")
     library(org.Rn.eg.db)
     tax_db <<- org.Rn.eg.db} 
-  
-  
-  
+
   if (dpmsr_set$x$pathway_set == 1) {
     cat(file = stderr(), "Pathway previously set, skipping string download..." , "\n")
   }else{
@@ -44,12 +82,40 @@ set_pathway <- function(input, output, session){
     cat(file = stderr(), "String setup complete..." , "\n")
   }
   
-  dpmsr_set$x$pathway_set <<- 1
-  dpmsr_set$tax_choice <<- tax_choice
+  params$pathway_set <- 1
+  params$tax_choice <- tax_choice
   
   gc()
-  cat(file = stderr(), "Pathway setup complete..." , "\n")
+  cat(file = stderr(), "Function set_pathway...end" , "\n")
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 #-----------------------------------------------------------------------------------------------------------------------------------

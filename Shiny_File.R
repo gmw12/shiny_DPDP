@@ -96,7 +96,7 @@ param_query <- function(param){
 #----------------------------------------------------------------------------------------
 param_update <- function(param, value){
   conn <- RSQLite::dbConnect(RSQLite::SQLite(), params$database_path)
-  query_str <<- str_c("UPDATE Parameters SET ", param, "=", value)
+  query_str <<- stringr::str_c("UPDATE Parameters SET ", param, "=", value)
   RSQLite::dbExecute(conn, query_str)
   RSQLite::dbDisconnect(conn)
 }

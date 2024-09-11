@@ -199,7 +199,7 @@ create_default_params <- function() {
               "comp_spqc" =  "",
               "comp_number" = 1,
               "tax_choice" = "",
-              "pathway_set" = 0
+              "string_species" = 0
 
   )
   

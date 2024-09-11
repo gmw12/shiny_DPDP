@@ -440,14 +440,62 @@ shinyServer(function(session, input, output) {
   #-------------------------------------------------------------------------------------------------------------
   #-------------------------------------------------------------------------------------------------------------
   observeEvent(input$set_pathway, {
+    cat(file = stderr(), "set_pathway clicked..." , "\n")
     
-    showModal(modalDialog("Downloading and Setting up databases...", footer = NULL))  
-    set_pathway(input, output, session)
-    removeModal()
-    
+    set_pathway(input, output, session, params)
+    params <- read_table_try("parameters", params)
+
+    cat(file = stderr(), "set_pathway clicked...end" , "\n")
   }
   )
   
+  #-------------------------------------------------------------------------------------------------------------
+  
+  observeEvent(input$get_string, {
+    cat(file = stderr(), "get_string clicked...", "\n")
+    
+    if(length(dpmsr_set$string) > dpmsr_set$x$comp_number) {
+      cat(file = stderr(), "go string triggered", "\n")
+      showModal(modalDialog("String Analysis...", footer = NULL))  
+      
+      string_list <- run_string(session, input, output)
+      
+      cat(file = stderr(), "string list complete, create plot", "\n")
+      
+      output$string_plot <- renderImage({
+        list(src=string_list$string_file_name,  
+             contentType = 'image/png', width=1200, height=1200, alt="this is alt text")
+      }, deleteFile = FALSE)
+      
+      
+      fullName <- string_list$string_file_name
+      output$download_string_plot <- downloadHandler(
+        filename = function(){
+          str_c(input$select_data_comp_string, ".png")
+        },
+        content = function(file){
+          file.copy(fullName, file)
+        }
+      )
+      
+      # depreciated
+      cat(file = stderr(), "create string link", "\n")
+      #output$string_link <- renderText({dpmsr_set$string$link_network})
+      #output$string_link <- renderText({string_list$linkthis})
+      url <- a(dpmsr_set$string$link_network, href= dpmsr_set$string$link_network, target="_blank")
+      output$string_link <- renderUI({
+        tagList("URL link: ", url)
+      })
+      
+      removeModal()
+      
+    }else{
+      shinyalert("Oops!", "Need to run String Setup first...", type = "error")
+    }  
+    
+    cat(file = stderr(), "get_string clicked...end", "\n")
+  }
+  ) 
   
   
   #-------------------------------------------------------------------------------------------------------------

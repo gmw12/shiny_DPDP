@@ -1016,7 +1016,7 @@ source("Shiny_UI.R")
                                                  selected = 100)
                               ),                   
                               column(width =2, offset =2,
-                                     actionButton("go_string", label = "String Analysis", width = 150,
+                                     actionButton("get_string", label = "String Analysis", width = 150,
                                                   style="color: #fff; background-color: #337ab7; border-color: #2e6da4")
                               )
                             ),

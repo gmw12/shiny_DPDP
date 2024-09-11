@@ -48,7 +48,7 @@ sample_groups <- read_table("sample_groups", params)
 df <- read_table('peptide_impute', params)
 test3 <- read_table('protein_sltmm', params)
 test4 <- read_table('protein_sltmm_final', params)
-df <- read_table('protein_sltmm_Caskin1_Test_v_Caskin1_Ctrl_final', params)
+df <- read_table(stats_comp$Final_Table_Name[1], params)
 
 data_name <- 'protein_sltmm_Caskin1_Test_v_Caskin1_Ctrl_final'
 accession <- 'Q9JMG2'
