@@ -101,6 +101,7 @@ setup_string_bg <- function(input_checkbox_filter_adjpval, params){
   
   gc()
   cat(file=stderr(), stringr::str_c("function setup_string_bg...end"), "\n")
+  save(string_db, file=stringr::str_c(getwd(), "/database/string_db"))
   
   return()
 }  
@@ -251,62 +252,137 @@ run_string_bg <- function(input_foldchange_cutoff, input_pvalue_cutoff, input_se
 run_string_enrich <- function(session, input, output, params){
   cat(file=stderr(), stringr::str_c("function run_string_enrich_bg..."), "\n")
   
-  input_fc_up <- log(input$foldchange_cutoff, 2)
-  input_fc_down <- log(1/input$foldchange_cutoff, 2)
+  stats_comp <- read_table_try("stats_comp", params)
+  arg_list <- list(input$foldchange_cutoff, input$pvalue_cutoff, input$select_data_comp_string_enrich, input$string_enrich_direction, 
+                   stats_comp, params)
+  bg_run_string_enrich <- callr::r_bg(func = run_string_enrich_bg , args = arg_list, stderr = stringr::str_c(params$error_path, "//error_run_string_enrich.txt"), supervise = TRUE)
+  bg_run_string_enrich$wait()
+  print_stderr("error_run_string_enrich.txt")
+  string_result <<- bg_run_string_enrich$get_result()
   
-  input_pval <- input$pvalue_cutoff
+  string_result <- dplyr::rename(string_result, genes = number_of_genes)
+  string_result <- dplyr::rename(string_result, genes_background = number_of_genes_in_background)
   
-  input_comp <- input$select_data_comp_string_enrich
+  options_DT <- list(
+    selection = 'single',
+    #dom = 'Bfrtipl',
+    autoWidth = TRUE,
+    scrollX = TRUE,
+    scrollY = 500,
+    scrollCollapse = TRUE,
+    columnDefs = list(
+      list(
+        targets = c(0),
+        visibile = TRUE,
+        "width" = '6',
+        className = 'dt-center'
+      ),
+      list(
+        targets = c(1),
+        visibile = TRUE,
+        "width" = '6',
+        className = 'dt-center'
+      ),
+      list(
+        targets = c(2),
+        visible = TRUE,
+        "width" = '15',
+        className = 'dt-center'
+      ),
+      list(
+        targets = c(3),
+        visible = TRUE,
+        "width" = '10',
+        className = 'dt-center'
+      ),
+      list(
+        targets = c(4),
+        visible = TRUE,
+        "width" = '10',
+        className = 'dt-center'
+      ),
+      list(
+        targets = c(5),
+        width = '20',
+        render = JS(
+          "function(data, type, row, meta) {",
+          "return type === 'display' && data.length > 35 ?",
+          "'<span title=\"' + data + '\">' + data.substr(0, 35) + '...</span>' : data;",
+          "}"
+        )
+      ),
+      list(
+        targets = c(6),
+        width = '20',
+        render = JS(
+          "function(data, type, row, meta) {",
+          "return type === 'display' && data.length > 20 ?",
+          "'<span title=\"' + data + '\">' + data.substr(0, 20) + '...</span>' : data;",
+          "}"
+        )
+      )
+    ),
+    ordering = TRUE,
+    orderClasses = TRUE,
+    fixedColumns = list(leftColumns = 1),
+    pageLength = 10,
+    lengthMenu = c(10, 50, 100, 200)
+    #formatRound(columns = c(sample_col_numbers + 1), digits = 0)
+  )
   
-  df <- dpmsr_set$string[[input_comp]]
-  cat(file=stderr(), stringr::str_c("dataframe size...", nrow(df)), "\n")
-  df <- subset(df, pvalue <= input_pval)
-  cat(file=stderr(), stringr::str_c("dataframe subset size...", nrow(df)), "\n")
+  output$string_table <-  DT::renderDataTable(string_result, rownames = FALSE, extensions = c("FixedColumns"), 
+                                                  selection = 'single', options=options_DT,
+                                                  callback = DT::JS('table.page(3).draw(false);')
+  )
   
-  if (input$string_enrich_direction == "Up"){
-    df <- subset(df, logFC >= input_fc_up)
-  }else if (input$string_enrich_direction == "Down"){
-    df <- subset(df, logFC <= input_fc_down)
-  }else {
-    df <- subset(df, logFC >= input_fc_up | logFC <= input_fc_down )
-  }
+  removeModal()
   
-  df <- df[order(-df$logFC),]
   
-  hits <- df$stringId
+  fullName <- str_c(params$string_path, input$select_data_comp_string_enrich, "_", input$select_string_enrich, ".xlsx", collapse = " ")
   
-  cat(file=stderr(), stringr::str_c("number of hits searched...", length(hits)), "\n")
+
   
-  enrichment <- dpmsr_set$string$string_db$get_enrichment(hits) #, category = input$select_string_enrich )
-  
-  gc()
-  cat(file=stderr(), stringr::str_c("enrichment output...", nrow(enrichment)), "\n")
+  output$download_string_enrich_table <- downloadHandler(
+    file = function(){
+      input$string_enrich_data_filename
+    },
+    content = function(file){
+      fullname <- stringr::str_c(params$string_path, input$string_enrich_data_filename)
+      cat(file = stderr(), stringr::str_c("download_stats_data fullname = ", fullname), "\n")
+      file.copy(fullname, file)
+    }
+  )
   
   cat(file=stderr(), stringr::str_c("function run_string_enrich..end"), "\n")
-  return(enrichment)
+
   
   
 }
 
 #--------------------------------------------------------------------
 
-run_string_enrich_bg <- function(params){
+run_string_enrich_bg <- function(input_foldchange_cutoff, input_pvalue_cutoff, input_select_data_comp_string_enrich, input_string_enrich_direction, 
+                                 stats_comp, params){
   cat(file=stderr(), stringr::str_c("function run_string_enrich_bg..."), "\n")
-  input_fc_up <- log(input$foldchange_cutoff, 2)
-  input_fc_down <- log(1/input$foldchange_cutoff, 2)
+  source("Shiny_File.R")
   
-  input_pval <- input$pvalue_cutoff
+  input_fc_up <- log(input_foldchange_cutoff, 2)
+  input_fc_down <- log(1/input_foldchange_cutoff, 2)
   
-  input_comp <- input$select_data_comp_string_enrich
+  input_pval <- input_pvalue_cutoff
+  input_comp <- input_select_data_comp_string_enrich
   
-  df <- dpmsr_set$string[[input_comp]]
+  comp_number <- which(stats_comp$Name == input_select_data_comp_string_enrich)
+  table_name <- stringr::str_c("String_", stats_comp$Final_Table_Name[comp_number])
+  df <- read_table_try(table_name, params)
+  
   cat(file=stderr(), stringr::str_c("dataframe size...", nrow(df)), "\n")
   df <- subset(df, pvalue <= input_pval)
   cat(file=stderr(), stringr::str_c("dataframe subset size...", nrow(df)), "\n")
   
-  if (input$string_enrich_direction == "Up"){
+  if (input_string_enrich_direction == "Up"){
     df <- subset(df, logFC >= input_fc_up)
-  }else if (input$string_enrich_direction == "Down"){
+  }else if (input_string_enrich_direction == "Down"){
     df <- subset(df, logFC <= input_fc_down)
   }else {
     df <- subset(df, logFC >= input_fc_up | logFC <= input_fc_down )
@@ -318,7 +394,8 @@ run_string_enrich_bg <- function(params){
   
   cat(file=stderr(), stringr::str_c("number of hits searched...", length(hits)), "\n")
   
-  enrichment <- dpmsr_set$string$string_db$get_enrichment(hits) #, category = input$select_string_enrich )
+  stringdb <- load(stringr::str_c(getwd(), "/database/string_db"))
+  enrichment <- string_db$get_enrichment(hits) #, category = input$select_string_enrich )
   
   gc()
   cat(file=stderr(), stringr::str_c("enrichment output...", nrow(enrichment)), "\n")
@@ -326,9 +403,42 @@ run_string_enrich_bg <- function(params){
   cat(file=stderr(), stringr::str_c("function run_string_enrich_bg...end"), "\n")
   return(enrichment)
   
-  
 }
 
 
-
+#-------------------------------------------------------------------------------------------------------------  
+string_enrich_data_save_excel <- function(session, input, output, params) {
+  cat(file = stderr(), "Function string_enrich_data_save_excel...", "\n")
+  showModal(modalDialog("Saving data table to excel...", footer = NULL))  
+  
+  arg_list <- list(input$stats_norm_type,  input$string_enrich_data_filename, params)
+  bg_string_enrich_data_save_excel <- callr::r_bg(func = string_enrich_data_save_excel_bg , args = arg_list, stderr = str_c(params$error_path, "//error_string_enrich_data_save_excel.txt"), supervise = TRUE)
+  bg_string_enrich_data_save_excel$wait()
+  print_stderr("error_string_enrich_data_save_excel.txt")
+  
+  cat(file = stderr(), "Function string_enrich_data_save_excel...end", "\n")
+  removeModal()
+  
+}
+#-------------------------------------------------------------------------------------------------------------  
+string_enrich_data_save_excel_bg <- function(input_stats_norm_type,  input_string_enrich_data_filename, params) {
+  cat(file = stderr(), "Function string_enrich_data_save_excel_bg...", "\n")
+  source('Shiny_File.R')
+  
+  filename <- stringr::str_c(params$string_path, input_string_enrich_data_filename)
+  file_dir <- stringr::str_c(params$string_path) 
+  
+  if(!fs::is_dir(file_dir)) {
+    cat(file = stderr(), stringr::str_c("create_dir...", file_dir), "\n")
+    dir_create(file_dir)
+  }
+  
+  cat(file = stderr(), stringr::str_c("filename = ", filename) , "\n")
+  
+  string_enrich_DT <- read_table("string_table", params)
+  Simple_Excel(string_enrich_DT, "data", filename)
+  
+  cat(file = stderr(), "Function string_enrich_data_save_excel_bg...end", "\n")
+  
+}
 

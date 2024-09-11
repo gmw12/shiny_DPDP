@@ -469,7 +469,14 @@ shinyServer(function(session, input, output) {
   }
   ) 
   
-  
+  #-------------------------------------------------------------------------------------------------------------  
+  observeEvent(input$string_enrich_data_save, { 
+    cat(file = stderr(), "string_enrich_data_save clicked..." , "\n")
+    
+    stats_data_save_excel(session, input, output, params)
+    
+    cat(file = stderr(), "string_enrich_data_save clicked...end" , "\n")
+  })
   
   
   

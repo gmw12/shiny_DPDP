@@ -1052,7 +1052,7 @@ source("Shiny_UI.R")
       tabItem("pathway_string_enrich", 
         fluidRow(
           box(id = "string_enrich_parameters", title = "StringDB Enrich Parameters...", status = "primary",
-              solidHeader = TRUE, collapsible = FALSE, align = "left", width = 3, height = 800,
+              solidHeader = TRUE, collapsible = FALSE, align = "left", width = 2, height = 800,
               br(),
               br(),
               selectInput("select_data_comp_string_enrich", label = "comparison", 
@@ -1066,19 +1066,22 @@ source("Shiny_UI.R")
                            style="color: #fff; background-color: #337ab7; border-color: #2e6da4"),
               br(),
               br(),
+              textInput("string_enrich_data_filename", label="File Name", value = "my_data.xlsx", width = 250),
+              br(),
+              actionButton("string_enrich_data_save", label = "Save Data", width = 100,
+                          style="color: #fff; background-color: #337ab7; border-color: #2e6da4"),
               br(),
               br(),
               downloadButton('download_string_enrich_table')
           ),
           
-          box(id = "string_enrich_plot", title = "StringDB Enrich Plot...", status = "primary",
-              solidHeader = TRUE, collapsible = FALSE, align = "left", width = 9, height = 800,
-              tags$head(tags$style("#data_final{color: blue;
-                                 font-size: 12px;
-                                  }"
-              )
-              ),
-              rHandsontableOutput("string_table")
+          box(id = "string_enrich_table", title = "StringDB Enrich Table...", status = "primary",
+              solidHeader = TRUE, collapsible = FALSE, align = "left", width = 8, height = 800,
+              tags$head(tags$style("#string_table{color: blue; font-size: 12px;}"
+              )),
+              DT::dataTableOutput("string_table", width ='100%')
+              
+
           )
         )
       )
