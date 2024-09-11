@@ -14,10 +14,10 @@ set_pathway <- function(input, output, session){
   
   cat(file = stderr(), str_c("Pathway tax choice...", tax_choice), "\n")
   
-  string_dir <- str_c(getwd(), "/")
+  string_dir <- stringr::str_c(getwd(), "/")
   
-  load(file = str_c(string_dir,"Pathway_wp2gene_",tax_choice), envir = .GlobalEnv)
-  load(file = str_c(string_dir,"Pathway_myGENE2GO_",tax_choice), envir = .GlobalEnv)
+  load(file = stringr::str_c(string_dir,"Pathway_wp2gene_",tax_choice), envir = .GlobalEnv)
+  load(file = stringr::str_c(string_dir,"Pathway_myGENE2GO_",tax_choice), envir = .GlobalEnv)
   
   if (tax_choice == "Human") {
     cat(file = stderr(), str_c("Load tax library...", tax_choice ), "\n")
