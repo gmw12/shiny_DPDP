@@ -568,4 +568,12 @@ library(DT)
 library(shiny)
 selectedrowindex = 0
 
+#-------------------------
 
+library(rWikiPathways)
+listPathways('Homo sapiens')
+listOrganisms()
+listPathwayUrls()
+
+wp.gmt <- downloadPathwayArchive(date="20240910", organism="Mus musculus", format="gmt", destpath = params$string_path) ## download file
+wp2gene <- clusterProfiler::read.gmt(str_c(params$string_path, wp.gmt))
