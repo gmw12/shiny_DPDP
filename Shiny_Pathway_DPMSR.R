@@ -7,7 +7,7 @@ get_pathway_files(params)
 #-------------------------------------------------------------------------------------------------------------  
 get_pathway_files <- function(params) {
   cat(file = stderr(), "Function get_pathway_files...", "\n")
-  showModal(modalDialog("Downloading Pathway Files...", footer = NULL))  
+  #showModal(modalDialog("Downloading Pathway Files...", footer = NULL))  
   
   arg_list <- list(params)
   
@@ -16,7 +16,7 @@ get_pathway_files <- function(params) {
   print_stderr("error_get_pathway_files.txt")
   
   cat(file = stderr(), "Function get_pathway_files...end", "\n")
-  removeModal()
+  #removeModal()
   
 }
 #-----------------------------------------------------------------------------------------------------------------
@@ -51,9 +51,9 @@ get_pathway_files_bg <- function(params) {
     wp2gene <- clusterProfiler::read.gmt(stringr::str_c(base_dir, wp.gmt))
     
     if (version$major < 4){
-      wp2gene <- wp2gene %>% tidyr::separate(ont, c("name","version","wpid","org"), "%")
+      wp2gene <- wp2gene |> tidyr::separate(ont, c("name","version","wpid","org"), "%")
     }else {
-      wp2gene <- try(wp2gene %>% tidyr::separate(term, c("name","version","wpid","org"), "%") )
+      wp2gene <- try(wp2gene |> tidyr::separate(term, c("name","version","wpid","org"), "%") )
     }
     
     Uniprot <- ViSEAGO::Uniprot2GO()

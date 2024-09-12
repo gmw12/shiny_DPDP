@@ -250,7 +250,8 @@ run_string_bg <- function(input_foldchange_cutoff, input_pvalue_cutoff, input_se
 #--------------------------------------------------------------------
 
 run_string_enrich <- function(session, input, output, params){
-  cat(file=stderr(), stringr::str_c("function run_string_enrich_bg..."), "\n")
+  cat(file=stderr(), stringr::str_c("function run_string_enrich..."), "\n")
+  showModal(modalDialog("Running StringDB Enrich...", footer = NULL))  
   
   stats_comp <- read_table_try("stats_comp", params)
   arg_list <- list(input$foldchange_cutoff, input$pvalue_cutoff, input$select_data_comp_string_enrich, input$string_enrich_direction, 
@@ -258,11 +259,9 @@ run_string_enrich <- function(session, input, output, params){
   bg_run_string_enrich <- callr::r_bg(func = run_string_enrich_bg , args = arg_list, stderr = stringr::str_c(params$error_path, "//error_run_string_enrich.txt"), supervise = TRUE)
   bg_run_string_enrich$wait()
   print_stderr("error_run_string_enrich.txt")
-  string_result <<- bg_run_string_enrich$get_result()
+  string_result <- bg_run_string_enrich$get_result()
   
-  string_result <- dplyr::rename(string_result, genes = number_of_genes)
-  string_result <- dplyr::rename(string_result, genes_background = number_of_genes_in_background)
-  
+  cat(file=stderr(), stringr::str_c("function run_string_enrich...1"), "\n")
   options_DT <- list(
     selection = 'single',
     #dom = 'Bfrtipl',
@@ -290,34 +289,18 @@ run_string_enrich <- function(session, input, output, params){
         className = 'dt-center'
       ),
       list(
-        targets = c(3),
+        targets = c(3,4),
         visible = TRUE,
         "width" = '10',
         className = 'dt-center'
       ),
       list(
-        targets = c(4),
-        visible = TRUE,
-        "width" = '10',
-        className = 'dt-center'
-      ),
-      list(
-        targets = c(5),
+        targets = c(5,6),
         width = '20',
         render = JS(
           "function(data, type, row, meta) {",
           "return type === 'display' && data.length > 35 ?",
           "'<span title=\"' + data + '\">' + data.substr(0, 35) + '...</span>' : data;",
-          "}"
-        )
-      ),
-      list(
-        targets = c(6),
-        width = '20',
-        render = JS(
-          "function(data, type, row, meta) {",
-          "return type === 'display' && data.length > 20 ?",
-          "'<span title=\"' + data + '\">' + data.substr(0, 20) + '...</span>' : data;",
           "}"
         )
       )
@@ -327,24 +310,19 @@ run_string_enrich <- function(session, input, output, params){
     fixedColumns = list(leftColumns = 1),
     pageLength = 10,
     lengthMenu = c(10, 50, 100, 200)
-    #formatRound(columns = c(sample_col_numbers + 1), digits = 0)
   )
   
+  cat(file=stderr(), stringr::str_c("function run_string_enrich...2"), "\n")
   output$string_table <-  DT::renderDataTable(string_result, rownames = FALSE, extensions = c("FixedColumns"), 
                                                   selection = 'single', options=options_DT,
                                                   callback = DT::JS('table.page(3).draw(false);')
   )
   
-  removeModal()
-  
-  
-  fullName <- str_c(params$string_path, input$select_data_comp_string_enrich, "_", input$select_string_enrich, ".xlsx", collapse = " ")
-  
+  fullName <- stringr::str_c(params$string_path, input$string_enrich_data_filename)
 
-  
   output$download_string_enrich_table <- downloadHandler(
     file = function(){
-      input$string_enrich_data_filename
+      stringr::str_c(input$string_enrich_data_filename)
     },
     content = function(file){
       fullname <- stringr::str_c(params$string_path, input$string_enrich_data_filename)
@@ -354,9 +332,7 @@ run_string_enrich <- function(session, input, output, params){
   )
   
   cat(file=stderr(), stringr::str_c("function run_string_enrich..end"), "\n")
-
-  
-  
+  removeModal()
 }
 
 #--------------------------------------------------------------------
@@ -394,15 +370,18 @@ run_string_enrich_bg <- function(input_foldchange_cutoff, input_pvalue_cutoff, i
   
   cat(file=stderr(), stringr::str_c("number of hits searched...", length(hits)), "\n")
   
-  stringdb <- load(stringr::str_c(getwd(), "/database/string_db"))
+  string_db <- loadRData(stringr::str_c(getwd(), "/database/string_db"))
   enrichment <- string_db$get_enrichment(hits) #, category = input$select_string_enrich )
-  
-  gc()
+
   cat(file=stderr(), stringr::str_c("enrichment output...", nrow(enrichment)), "\n")
+  
+  enrichment <- dplyr::rename(enrichment, genes = number_of_genes)
+  enrichment <- dplyr::rename(enrichment, genes_background = number_of_genes_in_background)
+  
+  write_table_try("string_enrichment", enrichment, params)
   
   cat(file=stderr(), stringr::str_c("function run_string_enrich_bg...end"), "\n")
   return(enrichment)
-  
 }
 
 

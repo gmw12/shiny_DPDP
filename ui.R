@@ -872,13 +872,18 @@ height_factor <- 1
                                         style = "color: #fff; background-color: #337ab7; border-color: #2e6da4"),
                     br(),
                     br(),
+                    textInput("wiki_data_filename", label="File Name", value = "wiki_data.xlsx", width = 250),
+                    br(),
+                    actionButton("wiki_data_save", label = "Save Data", width = 100,
+                                 style="color: #fff; background-color: #337ab7; border-color: #2e6da4"),
+                    br(),
                     br(),
                     downloadButton('download_wiki_table')
               ),
                 box(id = "wiki_plot", title = "WikiPathways...", status = "primary",
                     solidHeader = TRUE, collapsible = FALSE, align = "left", width = 10, height = 800, 
                     tags$head(tags$style("#data_final{color: blue; font-size: 12px;}")),
-                    rHandsontableOutput("wiki_table")
+                    DT::dataTableOutput("wiki_table", width ='100%')
                 )
               )
             ),
@@ -1039,7 +1044,7 @@ height_factor <- 1
                            style="color: #fff; background-color: #337ab7; border-color: #2e6da4"),
               br(),
               br(),
-              textInput("string_enrich_data_filename", label="File Name", value = "my_data.xlsx", width = 250),
+              textInput("string_enrich_data_filename", label="File Name", value = "string_data.xlsx", width = 250),
               br(),
               actionButton("string_enrich_data_save", label = "Save Data", width = 100,
                           style="color: #fff; background-color: #337ab7; border-color: #2e6da4"),

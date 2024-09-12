@@ -453,6 +453,31 @@ shinyServer(function(session, input, output) {
   )
   
   #-------------------------------------------------------------------------------------------------------------
+  observeEvent(input$wiki_show, {
+    cat(file = stderr(), "wiki_show clicked..." , "\n") 
+    
+    source("Shiny_Wiki.R")
+    run_wiki(session, input, output, params)
+  
+    cat(file = stderr(), "wiki_show clicked...end" , "\n") 
+    
+  }
+  )
+  #-------------------------------------------------------------------------------------------------------------  
+  observeEvent(input$wiki_data_save, { 
+    cat(file = stderr(), "wiki_data_save clicked..." , "\n")
+    
+    db_table_to_Excel("wiki_table",  "wiki pathways", stringr::str_c(params$string_path, input$wiki_data_filename), params)
+    
+    cat(file = stderr(), "wiki_data_save clicked...end" , "\n")
+  })
+  #-------------------------------------------------------------------------------------------------------------
+  
+  
+  
+  
+  
+  #-------------------------------------------------------------------------------------------------------------
   
   observeEvent(input$get_string, {
     cat(file = stderr(), "get_string clicked...", "\n")
@@ -477,7 +502,7 @@ shinyServer(function(session, input, output) {
   observeEvent(input$string_enrich_data_save, { 
     cat(file = stderr(), "string_enrich_data_save clicked..." , "\n")
     
-    stats_data_save_excel(session, input, output, params)
+    db_table_to_Excel("string_enrichment",  "string_enrich", stringr::str_c(params$string_path, input$string_enrich_data_filename), params)
     
     cat(file = stderr(), "string_enrich_data_save clicked...end" , "\n")
   })
@@ -497,49 +522,7 @@ shinyServer(function(session, input, output) {
   
   
   
-  
-  
-  #-------------------------------------------------------------------------------------------------------------
-  observeEvent(input$wiki_show, {
-    showModal(modalDialog("Wiki Pathway Enrichment...", footer = NULL))  
-    
-    wiki_data <<- try(run_wiki(session, input, output), silent = TRUE)
-    
-    if ( class(wiki_data) != "try-error"){
-      output$wiki_table<- renderRHandsontable({
-        rhandsontable(wiki_data, rowHeaders = NULL, readOnly = TRUE) %>%
-          hot_cols(colWidths = 80, halign = "htCenter" ) %>%
-          hot_col(col = "ID", halign = "htCenter", colWidths = 120) %>%
-          hot_col(col = "Description", halign = "htCenter", colWidths = 250) %>%
-          hot_col(col = "pvalue", halign = "htCenter", colWidths = 150, format = '0.000000') %>% 
-          hot_col(col = "p.adjust", halign = "htCenter", colWidths = 150, format = '0.000000') %>% 
-          hot_col(col = "qvalue", halign = "htCenter", colWidths = 100, format = '0.00000') %>% 
-          hot_col(col = "geneID", halign = "htCenter", colWidths = 400)
-      })
-    }else{
-      shinyalert("Oops!", "Wiki Pathway enrichment failed due to insufficient gene IDs mapping to pathways", type = "error")
-    }
-    
-    removeModal()
-    
-    
-    fullName <- str_c(dpmsr_set$file$string, "Wiki_", input$select_data_comp_wiki, "_", 
-                      input$select_ont_wiki,input$select_level_wiki, ".xlsx", collapse = " ")
-    output$download_wiki_table <- downloadHandler(
-      filename = function(){
-        str_c("Wiki_", input$select_data_comp_wiki, "_", 
-              input$select_ont_wiki,input$select_level_wiki, ".xlsx", collapse = " ")
-      },
-      content = function(file){
-        file.copy(fullName, file)
-      }
-    )
-    
-    
-    
-  }
-  )
-  
+
   
   
   

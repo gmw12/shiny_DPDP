@@ -15,6 +15,30 @@ Simple_Excel <- function(df, sheetname, filename) {
   openxlsx::saveWorkbook(wb, filename, overwrite = TRUE)
 }
 
+#----------------------------------------------
+db_table_to_Excel <- function(table_name, sheetname, filename, params) {
+  cat(file=stderr(), stringr::str_c("Function db_table_to_Excel -> ", table_name, " to", filename), "\n")
+  
+  arg_list <- list(table_name, sheetname, filename, params)
+  bg_db_table_to_Excel <- callr::r_bg(func = db_table_to_Excel_bg , args = arg_list, stderr = stringr::str_c(params$error_path, "//error_db_table_to_Excel.txt"), supervise = TRUE)
+  bg_db_table_to_Excel$wait()
+  print_stderr("error_db_table_to_Excel.txt")
+  cat(file=stderr(), stringr::str_c("db_table_to_Excel...end"), "\n")
+}
+#----------------------------------------------
+db_table_to_Excel_bg <- function(table_name, sheetname, filename, params) {
+  cat(file=stderr(), stringr::str_c("db_table_to_Excel_bg..."), "\n")
+  
+  source("Shiny_File.R")
+  df <- read_table_try(table_name, params)
+  
+  wb <- openxlsx::createWorkbook()
+  openxlsx::addWorksheet(wb, sheetname)
+  openxlsx::writeData(wb, sheet=1, df)  
+  openxlsx::saveWorkbook(wb, filename, overwrite = TRUE)
+  cat(file=stderr(), stringr::str_c("db_table_to_Excel_bg...end"), "\n")
+}
+
 #----------------------------------------------------------------------------------------
 file_set <- function(){
   cat(file = stderr(), "Function file_set", "\n")
@@ -207,4 +231,10 @@ list_tables <- function(params){
   table_list <- RSQLite::dbListTables(conn)
   RSQLite::dbDisconnect(conn)
   return(table_list)
+}
+
+loadRData <- function(fileName){
+  #loads an RData file, and returns it
+  load(fileName)
+  get(ls()[ls() != "fileName"])
 }
