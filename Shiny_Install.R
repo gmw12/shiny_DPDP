@@ -8,7 +8,7 @@ package_list <- c('devtools', 'tidyr', 'httr', 'png', 'tidyverse', 'dplyr', 'fs'
                   'shinyjs', 'shinyalert', 'DT', 'ggraph', 'imp4p', 'Peptides',
                   'flexdashboard', 'openxlsx', 'stringi', 'jsonlite', 'remotes', 
                   'BiocManager', 'rAmCharts', 'future', 'promises', 'miscTools', 'reticulate', 'iq',
-                  'inflection', 'foreach', "doParallel")
+                  'inflection', 'foreach', "doParallel", "shinybrowser")
 
 
 biocmanager_list = c('impute', 'ViSEAGO', 'topGO', 'clusterProfiler', 'GSEABase', 'rWikiPathways', 
@@ -24,8 +24,8 @@ for (pack in package_list) {
     print("not installing")
   }else{
     print("installing")
-    install.packages(pack, dependencies = TRUE, lib = "/home/R_Packages") 
-    #install.packages(pack, dependencies = TRUE) 
+    #install.packages(pack, dependencies = TRUE, lib = "/home/R_Packages") 
+    install.packages(pack, dependencies = TRUE) 
   }
 }
 

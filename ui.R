@@ -5,6 +5,7 @@ source("Shiny_UI.R")
 
   sidebar <- dashboardSidebar(width = 165,
     useShinyjs(),
+    shinybrowser::detect(),
     sidebarMenu(
       menuItem("Welcome", tabName = "welcome", selected = TRUE),
       menuItem("Load", tabName = "load"),
@@ -1076,7 +1077,7 @@ source("Shiny_UI.R")
           ),
           
           box(id = "string_enrich_table", title = "StringDB Enrich Table...", status = "primary",
-              solidHeader = TRUE, collapsible = FALSE, align = "left", width = 8, height = 800,
+              solidHeader = TRUE, collapsible = FALSE, align = "left", width = 10, height = 800),
               tags$head(tags$style("#string_table{color: blue; font-size: 12px;}"
               )),
               DT::dataTableOutput("string_table", width ='100%')

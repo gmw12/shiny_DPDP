@@ -41,6 +41,9 @@ shinyServer(function(session, input, output) {
   if (table_exists("summary_cv"))  {create_cv_table(session, input, output, params)}
   removeModal()
   
+  observe({
+    browser_info <<- (shinybrowser::get_all_info())
+  })
   #------------------------------------------------------------------------------------------------------  
   #Load design file
   observeEvent(input$sfb_design_file, {
