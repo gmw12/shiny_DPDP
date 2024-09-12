@@ -41,10 +41,10 @@ shinyServer(function(session, input, output) {
   if (table_exists("summary_cv"))  {create_cv_table(session, input, output, params)}
   removeModal()
   
-  observe({
-    browser_info <<- (shinybrowser::get_all_info())
-    height_factor <<- browser_info$dimensions$height / 1200
-  })
+  # observe({
+  #   browser_info <<- (shinybrowser::get_all_info())
+  #   height_factor <<- browser_info$dimensions$height / 1200
+  # })
   #------------------------------------------------------------------------------------------------------  
   #Load design file
   observeEvent(input$sfb_design_file, {

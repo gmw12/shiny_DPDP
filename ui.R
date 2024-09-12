@@ -6,7 +6,7 @@ height_factor <- 1
 
   sidebar <- dashboardSidebar(width = 165,
     useShinyjs(),
-    shinybrowser::detect(),
+    #shinybrowser::detect(),
     sidebarMenu(
       menuItem("Welcome", tabName = "welcome", selected = TRUE),
       menuItem("Load", tabName = "load"),
@@ -855,129 +855,107 @@ height_factor <- 1
                    )))),
                    
       tabItem("pathway_wiki",
-              fluidRow( 
-                  column(width = 3, offset = 0,
-                     selectInput("select_data_comp_wiki", label = "comparison", 
-                                                 choices = list("Choice 1" = 1, "Choice 2" = 2, "Choice 3" = 3), 
-                                                 selected = 1)
-                              ),
-                              column(width = 3, offset = 0,  
-                                     radioButtons("wiki_direction", label = "Fold Change Direction", choices = list("Up", "Down", "UpDown"),  selected = "Up", width = 200)
-                              ),
-                              column(width = 1, offset = 1,
-                                     actionButton("wiki_show", label = "Find WikiPathway", width = 150,
-                                                  style = "color: #fff; background-color: #337ab7; border-color: #2e6da4")
-                              )
-                            ),
+              fluidRow(
+                box(id = "wiki_parameters", title = "WikiPathway Parameters...", status = "primary",
+                    solidHeader = TRUE, collapsible = FALSE, align = "left", width = 2, height = 800,
+                    br(),
+                    br(),
+                    selectInput("select_data_comp_wiki", label = "comparison", 
+                                               choices = list("Choice 1" = 1, "Choice 2" = 2, "Choice 3" = 3), 
+                                               selected = 1),
+                    br(),
+                    radioButtons("wiki_direction", label = "Fold Change Direction", choices = list("Up", "Down", "UpDown"),  selected = "Up", width = 200),
+                    br(),
+                    br(),
+                    br(),
+                    actionButton("wiki_show", label = "Find WikiPathway", width = 150,
+                                        style = "color: #fff; background-color: #337ab7; border-color: #2e6da4"),
+                    br(),
+                    br(),
+                    br(),
+                    downloadButton('download_wiki_table')
+              ),
+                box(id = "wiki_plot", title = "WikiPathways...", status = "primary",
+                    solidHeader = TRUE, collapsible = FALSE, align = "left", width = 10, height = 800, 
+                    tags$head(tags$style("#data_final{color: blue; font-size: 12px;}")),
+                    rHandsontableOutput("wiki_table")
+                )
+              )
+            ),
                             
-                            fluidRow(
-                              hr(),
-                              tags$head(tags$style("#data_final{color: blue;
-                                 font-size: 12px;
-                                  }"
-                              )
-                              ),
-                              rHandsontableOutput("wiki_table")
-                            ),
-                            br(),
-                            downloadButton('download_wiki_table')
-          ),
-                   
       tabItem("pathway_go_profile",
-                            fluidRow( 
-                              column(width = 2, offset =0,
-                                     selectInput("select_data_comp_profile", label = "comparison", 
-                                                 choices = list("Choice 1" = 1, "Choice 2" = 2, "Choice 3" = 3), 
-                                                 selected = 1)
-                              ),
-                              column(width = 3, offset =0,  
-                                     radioButtons("profile_direction", label="Fold Change Direction", choices = list("Up", "Down", "UpDown"),  selected = "Up", width = 200)
-                              ),
-                              column(width = 2, offset =0,
-                                     selectInput("select_ont_profile", label = "ontology", 
-                                                 choices = list("CC", "BP", "MF"), 
-                                                 selected = "BP")
-                              ),
-                              column(width = 2, offset =0,
-                                     selectInput("select_level_profile", label = "ontology level", 
-                                                 choices = list("1", "2", "3", "4", "5", "6"), 
-                                                 selected = "3")
-                              ),
-                              column(width = 1, offset =0,
-                                     actionButton("profile_show", label = "Find Go Profile", width = 150,
-                                                  style="color: #fff; background-color: #337ab7; border-color: #2e6da4")
-                              )
-                            ),  
-                            fluidRow(
-                              hr(),
-                              column(width = 6, offset = 0,
-                                     tags$head(tags$style("#data_final{color: blue;
-                                     font-size: 12px;
-                                     }"
-                                     )
-                                     ),
-                                     rHandsontableOutput("go_profile_table"),
-                                     br(),
-                                     downloadButton('download_go_profile_table')
-                              ),
-                              column(width = 6, offset = 0,
-                                     plotOutput("go_profile_plot"),
-                                     br(),
-                                     downloadButton('download_go_profile_plot')
-                              )
-                            )
-                   ),
+              fluidRow(
+                box(id = "go_profile_parameters", title = "Go Profile Parameters...", status = "primary",
+                    solidHeader = TRUE, collapsible = FALSE, align = "left", width = 2, height = 800,
+                    selectInput("select_data_comp_profile", label = "comparison", 
+                                         choices = list("Choice 1" = 1, "Choice 2" = 2, "Choice 3" = 3), 
+                                         selected = 1),
+                    radioButtons("profile_direction", label="Fold Change Direction", choices = list("Up", "Down", "UpDown"),  selected = "Up", width = 200),
+                    selectInput("select_ont_profile", label = "ontology", 
+                                         choices = list("CC", "BP", "MF"), 
+                                         selected = "BP"),
+                    selectInput("select_level_profile", label = "ontology level", 
+                                         choices = list("1", "2", "3", "4", "5", "6"), 
+                                         selected = "3"),
+                    br(),
+                    br(),
+                    actionButton("profile_show", label = "Find Go Profile", width = 150,
+                                          style="color: #fff; background-color: #337ab7; border-color: #2e6da4"),
+                    br(),
+                    downloadButton('download_go_profile_table'),
+                    br(),
+                    downloadButton('download_go_profile_plot')
+                  ),
+                box(id = "go_profile_plot", title = "Go Profile Plot...", status = "primary",
+                    solidHeader = TRUE, collapsible = FALSE, align = "left", width = 10, height = 800,
+                    tags$head(tags$style("#data_final{color: blue; font-size: 12px; }" )),
+                    rHandsontableOutput("go_profile_table"),
+                    plotOutput("go_profile_plot")
+                )
+              )
+            ),
                    
       tabItem("pathway_go_analysis",
-                            fluidRow( 
-                              column(width =3 , offset =0,
-                                     selectInput("select_data_comp_go", label = "comparison", 
-                                                 choices = list("Choice 1" = 1, "Choice 2" = 2, "Choice 3" = 3), 
-                                                 selected = 1)
-                              ),
-                              column(width = 3, offset = 0,  
-                                     radioButtons("go_direction", label="Fold Change Direction", choices = list("Up", "Down", "UpDown"),  selected = "Up", width = 200)
-                              ),
-                              column(width = 1, offset = 0,
-                                     selectInput("select_ont_go", label = "ontology", 
-                                                 choices = list("CC", "BP", "MF"), 
-                                                 selected = "BP")
-                              ),
-                              # column(width =1, offset =0,
-                              #        selectInput("select_algorithm", label = "algorithm", 
-                              #                    choices = list("classic", "elim", "weight", "weight01"), 
-                              #                    selected = "classic")
-                              # ),
-                              column(width = 1, offset = 0,
-                                     actionButton("go_show", label = "Go Analysis", width = 100,
-                                                  style="color: #fff; background-color: #337ab7; border-color: #2e6da4")
-                              )
-                            ),
-                            
-                            fluidRow(
-                              hr(),
-                              tags$head(tags$style("#data_final{color: blue;
-                                 font-size: 12px;
-                                  }"
-                              )
-                              ),
-                              rHandsontableOutput("go_table"),
-                              downloadButton('download_go_table')
-                            )
-                   ), #end of go analysis
+              fluidRow(
+                box(id = "go_anlaysis_parameters", title = "Go Analysis Parameters...", status = "primary",
+                    solidHeader = TRUE, collapsible = FALSE, align = "left", width = 2, height = 800,
+                    selectInput("select_data_comp_go", label = "comparison", 
+                                       choices = list("Choice 1" = 1, "Choice 2" = 2, "Choice 3" = 3), 
+                                       selected = 1),
+                    br(),
+                    radioButtons("go_direction", label="Fold Change Direction", choices = list("Up", "Down", "UpDown"),  selected = "Up", width = 200),
+                    br(),
+                    selectInput("select_ont_go", label = "ontology", 
+                                       choices = list("CC", "BP", "MF"), 
+                                       selected = "BP"),
+                    br(),
+                    br(),
+                    actionButton("go_show", label = "Go Analysis", width = 100,
+                                      style="color: #fff; background-color: #337ab7; border-color: #2e6da4"),
+                    br(),
+                    br(),
+                    downloadButton('download_go_table')
+                ),
+                
+                box(id = "go_anlaysis", title = "Go Analysis...", status = "primary",
+                    solidHeader = TRUE, collapsible = FALSE, align = "left", width = 10, height = 800,      
+                    tags$head(tags$style("#data_final{color: blue; font-size: 12px;}")),
+                    rHandsontableOutput("go_table")
+                  )
+              )
+            ), 
                    
       tabItem("pathway_go_volcano",
-                            fluidRow(
-                              column(width =2, offset =0,
+              fluidRow(
+                box(id = "go_volcano_parameters", title = "Go Volcano Parameters...", status = "primary",
+                    solidHeader = TRUE, collapsible = FALSE, align = "left", width = 2, height = 800,
                                      textInput("go_volcano_id", label="GO ID", value = "", width = 200),
                                      textInput("plot_y_axis_label", label="y axis label", value = "-log_pvalue", width = 200),
                                      textInput("plot_x_axis_label", label="x axis label", value = "log_FC", width = 200),
                                      textInput("plot_title", label="plot title", value = "Go Volcano", width = 200),
                                      colourpicker::colourInput("volcano_dot_color", "Select Color", "blue"),
                                      actionButton("go_volcano", label = "Volcano", width = 100,
-                                                  style="color: #fff; background-color: #337ab7; border-color: #2e6da4")
-                              ),  
-                              column(width =2, offset =0,
+                                                  style="color: #fff; background-color: #337ab7; border-color: #2e6da4"),
                                      sliderInput("plot_dot_size", label = h5("Point Size"), min = 1, 
                                                  max = 10, value = 2),
                                      sliderInput("plot_label_size", label = h5("Label Size"), min = 1, 
@@ -986,35 +964,28 @@ height_factor <- 1
                                                  max = 50, value = 20),   
                                      downloadButton('download_go_volcano')
                               ),
-                              column(width =8, offset =0,  
-                                     div(
-                                       style = "position:relative",
-                                       plotOutput("volcano_go_plot", width = 800, height = 600,
-                                                  hover = hoverOpts("plot_hover", delay = 100, delayType = "debounce")),
-                                       uiOutput("hover_info")
-                                     )
-                              )
-                            ),
-                            fluidRow(
-                              column(width =12, offset =0,
-                                     hr(),
-                                     tags$head(tags$style("#volcano_data_final{color: blue;
-                                                           font-size: 12px;
-                                                           }"
-                                     )
-                                     ),
+                
+                box(id = "go_volcano", title = "Go Volcano...", status = "primary",
+                    solidHeader = TRUE, collapsible = FALSE, align = "left", width = 10, height = 800,
+                    div(
+                      style = "position:relative",
+                      plotOutput("volcano_go_plot", width = 800, height = 600,
+                                 hover = hoverOpts("plot_hover", delay = 100, delayType = "debounce")),
+                      uiOutput("hover_info")
+                    ),
+                    tags$head(tags$style("#volcano_data_final{color: blue; font-size: 12px;}")),
                                      DT::dataTableOutput("volcano_data_final", width ='100%'),
                                      downloadButton('download_go_volcano_table')
-                              )
-                            )
-                   ), #end of go volcano 
+                  )
+                )
+            ),  
                    
                    
        tabItem("pathway_string", 
           fluidRow(
             
             box(id = "string_parameters", title = "StringDB Parameters...", status = "primary",
-                solidHeader = TRUE, collapsible = FALSE, align = "left", width = 3, height = 800,
+                solidHeader = TRUE, collapsible = FALSE, align = "left", width = 2, height = 800,
                 br(),
                 selectInput("select_data_comp_string", label = "comparison", 
                          choices = list("Choice 1" = 1, "Choice 2" = 2, "Choice 3" = 3), 
@@ -1043,7 +1014,7 @@ height_factor <- 1
               ),
             
             box(id = "string_plot", title = "StringDB Plot...", status = "primary",
-                solidHeader = TRUE, collapsible = FALSE, align = "left", width = 9, height = 800,
+                solidHeader = TRUE, collapsible = FALSE, align = "left", width = 10, height = 800,
                 
                 plotOutput("string_plot")  
               )
@@ -1078,7 +1049,7 @@ height_factor <- 1
           ),
           
           box(id = "string_enrich_table", title = "StringDB Enrich Table...", status = "primary",
-              solidHeader = TRUE, collapsible = FALSE, align = "left", width = 10, height = (800*height_factor),
+              solidHeader = TRUE, collapsible = FALSE, align = "left", width = 10, height = 800,
               tags$head(tags$style("#string_table{color: blue; font-size: 12px;}"
               )),
               DT::dataTableOutput("string_table", width ='100%')
