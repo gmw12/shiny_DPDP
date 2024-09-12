@@ -449,8 +449,7 @@ shinyServer(function(session, input, output) {
     set_pathway(input, output, session, params)
 
     cat(file = stderr(), "set_pathway clicked...end" , "\n")
-  }
-  )
+  })
   
   #-------------------------------------------------------------------------------------------------------------
   observeEvent(input$wiki_show, {
@@ -461,8 +460,7 @@ shinyServer(function(session, input, output) {
   
     cat(file = stderr(), "wiki_show clicked...end" , "\n") 
     
-  }
-  )
+  })
   #-------------------------------------------------------------------------------------------------------------  
   observeEvent(input$wiki_data_save, { 
     cat(file = stderr(), "wiki_data_save clicked..." , "\n")
@@ -472,7 +470,24 @@ shinyServer(function(session, input, output) {
     cat(file = stderr(), "wiki_data_save clicked...end" , "\n")
   })
   #-------------------------------------------------------------------------------------------------------------
-  
+
+  observeEvent(input$profile_go_show, {
+    cat(file = stderr(), "profile_go_show clicked..." , "\n")
+    
+    source("Shiny_Wiki.R")
+    run_profile_go(session, input, output, params)
+    
+    cat(file = stderr(), "profile_go_show clicked...end" , "\n")
+  })
+  #-------------------------------------------------------------------------------------------------------------
+  #-------------------------------------------------------------------------------------------------------------  
+  observeEvent(input$profile_go_excel, { 
+    cat(file = stderr(), "profile_go_excel clicked..." , "\n")
+    
+    db_table_to_Excel("go_profile_result",  "go profile", stringr::str_c(params$string_path, input$go_profile_filename), params)
+    
+    cat(file = stderr(), "profile_go_excel clicked...end" , "\n")
+  })
   
   
   
@@ -485,8 +500,7 @@ shinyServer(function(session, input, output) {
     run_string(session, input, output, params)
     
     cat(file = stderr(), "get_string clicked...end", "\n")
-  }
-  ) 
+  }) 
   
   #-------------------------------------------------------------------------------------------------------------
   observeEvent(input$get_string_enrich, {
@@ -495,8 +509,7 @@ shinyServer(function(session, input, output) {
     run_string_enrich(session, input, output, params)
     
     cat(file = stderr(), "get_string_enrich clicked...end", "\n")
-  }
-  ) 
+  }) 
   
   #-------------------------------------------------------------------------------------------------------------  
   observeEvent(input$string_enrich_data_save, { 
@@ -507,9 +520,7 @@ shinyServer(function(session, input, output) {
     cat(file = stderr(), "string_enrich_data_save clicked...end" , "\n")
   })
   
-  
-  
-  
+
   
   
   

@@ -82,7 +82,7 @@ run_wiki <- function(session, input, output, params){
 #----------------------------------------------------------------------------------------- 
 run_wiki_bg <- function(input_select_data_comp_wiki, input_wiki_direction, params){
   cat(file=stderr(), stringr::str_c("Function run_wiki_bg..." ), "\n")
-  require(clusterProfiler)
+  require(clusterProfiler, quietly = TRUE)
   source('Shiny_File.R')
   source('Shiny_Wiki.R')
   
@@ -149,74 +149,177 @@ run_wiki_bg <- function(input_select_data_comp_wiki, input_wiki_direction, param
 
 
 #----------------------------------------------------------------------------------------- 
-run_profile <- function(session, input, output){
-  require(clusterProfiler)
-  cat(file=stderr(), "run_profile ...1", "\n")
-  comp_string <- input$select_data_comp_profile
-  comp_number <- which(grepl(comp_string, dpmsr_set$y$stats$groups$comp_name))
+run_profile_go <- function(session, input, output, params){
+  cat(file=stderr(), "run_profile_go...", "\n")
+  showModal(modalDialog("Creating Go Profile...", footer = NULL)) 
   
-  cat(file=stderr(), stringr::str_c("Run go profile..." ), "\n")
+  arg_list <- list(input$select_go_profile_data_comp, input$profile_direction, input$select_ont_profile, 
+                   input$select_level_profile, params)
+  bg_run_profile_go <- callr::r_bg(func = run_profile_go_bg , args = arg_list, stderr = stringr::str_c(params$error_path, "//error_run_profile_go.txt"), supervise = TRUE)
+  bg_run_profile_go$wait()
+  print_stderr("error_run_profile_go.txt")
+  go_profile_result <- bg_run_profile_go$get_result()
+  go_profile_data <- go_profile_result[[1]]
+  go_profile_plot <- go_profile_result[[2]]
   
-  data_in <- dpmsr_set$data$stats[[comp_string]]
+  if (class(go_profile_data) != "try-error"){
+    options_DT <- list(
+      selection = 'single',
+      #autoWidth = TRUE,
+      scrollX = TRUE,
+      scrollY = 500,
+      scrollCollapse = TRUE,
+      columnDefs = list(
+        list(
+          targets = c(0,1,2),
+          visibile = TRUE,
+          "width" = '10',
+          className = 'dt-center'
+        ),
+        list(
+          targets = c(3),
+          visibile = TRUE,
+          "width" = '20',
+          className = 'dt-center'
+        ),
+        list(
+          targets = c(4),
+          width = '10',
+          render = JS(
+            "function(data, type, row, meta) {",
+            "return type === 'display' && data.length > 35 ?",
+            "'<span title=\"' + data + '\">' + data.substr(0, 35) + '...</span>' : data;",
+            "}"
+          )
+        )
+      ),
+      ordering = TRUE,
+      orderClasses = TRUE,
+      fixedColumns = list(leftColumns = 1),
+      pageLength = 10,
+      lengthMenu = c(10, 50, 100, 200)
+    )
+    
+    output$go_profile_table <-  DT::renderDataTable(go_profile_data, rownames = FALSE, extensions = c("FixedColumns"), 
+                                              selection = 'single', options=options_DT,
+                                              callback = DT::JS('table.page(3).draw(false);')
+    )
+    
+    output$go_profile_plot <- renderPlot({go_profile_plot})
+    
+  }else{
+    shinyalert("Oops!", "Go Profile failed due to insufficient gene IDs mapping to pathways", type = "error")
+  }
   
-  cat(file=stderr(), "run_profile ...2", "\n")
-  if(input$profile_direction == 'Up') {
+  fullName <- stringr::str_c(params$string_path, input$go_profile_filename)
+  output$download_go_profile_table <- downloadHandler(
+    file = function(){
+      stringr::str_c(input$go_profile_filename)
+    },
+    content = function(file){
+      file.copy(fullName, file)
+    }
+  )
+  
+  fullName <- stringr::str_c(params$string_path, "GO_Profile_", input$select_go_profile_data_comp, "_", 
+                                      input$select_ont_profile, input$select_level_profile, ".png", collapse = " ")
+  output$download_go_profile_plot <- downloadHandler(
+    file = function(){
+      stringr::str_c("GO_Profile_", input$select_go_profile_data_comp, "_", 
+                     input$select_ont_profile, input$select_level_profile, ".png", collapse = " ")
+    },
+    content = function(file){
+      file.copy(fullName, file)
+    }
+  )
+  
+  
+  
+  removeModal()
+  cat(file=stderr(), "run_profile_go...end", "\n")
+}
+
+#----------------------------------------------------------------------------------------- 
+run_profile_go_bg <- function(input_select_go_profile_data_comp, input_profile_direction, input_select_ont_profile, 
+                              input_select_level_profile, params){
+  cat(file=stderr(), "run_profile_go_bg...", "\n")
+  
+  require(clusterProfiler, quietly = TRUE)
+  source('Shiny_File.R')
+  source('Shiny_Wiki.R')
+  
+  comp_string <- input_select_go_profile_data_comp
+  stats_comp <- read_table_try("stats_comp", params)
+  comp_number <- which(grepl(comp_string, stats_comp$Name))
+  
+  data_in <- read_table_try(stats_comp$Final_Table_Name[comp_number], params)
+    
+  cat(file=stderr(), "run_profile_go_bg...1", "\n")
+  if(input_profile_direction == 'Up') {
     go_df <- subset(data_in, data_in$Stats == "Up" ) 
-  }else if (input$profile_direction == 'Down') {
+  }else if (input_profile_direction == 'Down') {
     go_df <- subset(data_in, data_in$Stats == "Down" ) 
   }else{
     go_df <- subset(data_in, data_in$Stats == "Up" | data_in$Stats == "Down") 
   }
   
   atest <- go_df$Accession
+  tax_db <- get_tax_db(params$tax_choice)
   
-  cat(file=stderr(), "run_profile ...3", "\n")
-  test.df <- bitr(atest, fromType = "UNIPROT",
+  cat(file=stderr(), "run_profile_go_bg...2", "\n")
+  test.df <- clusterProfiler::bitr(atest, fromType = "UNIPROT",
                   toType = c("ENTREZID", "ENSEMBL", "SYMBOL","GENENAME","PATH", "ONTOLOGY"),
                   OrgDb = tax_db)
   
-  cat(file=stderr(), "run_profile ...4", "\n")
-  ggo <- groupGO(gene     = test.df$ENTREZID,
+  cat(file=stderr(), stringr::str_c("run_profile_go_bg...3", "  ", input_select_ont_profile, "  ", input_select_level_profile), "\n")
+  ggo <- try(clusterProfiler::groupGO(gene = test.df$ENTREZID,
                  OrgDb    = tax_db,
-                 ont      = input$select_ont_profile,
-                 level    = as.numeric(input$select_level_profile),
+                 ont      = input_select_ont_profile,
+                 level    = as.numeric(input_select_level_profile),
                  readable = TRUE) 
-  
-  Simple_Excel_bg(ggo, "Go_Profile", stringr::str_c(dpmsr_set$file$string, "GO_Profile_", input$select_data_comp_profile, "_", 
-                                           input$select_ont_profile,input$select_level_profile, ".xlsx", collapse = " "))
-  
-  #ggo_result <<- ggo@result[1:5]
-  #ggo_result <- ggo_result[order(-ggo_result$Count),]
-  
-  #test_ggo <<- ggo
-  
-  #save profile png
-  profile_plot_name <- stringr::str_c(dpmsr_set$file$string, "GO_Profile_", input$select_data_comp_profile, "_", 
-                             input$select_ont_profile,input$select_level_profile, ".png", collapse = " ")
-  p <- barplot(ggo, title = stringr::str_c("Go Profile ", input$select_ont_profile, " level=", input$select_level_profile), 
+        )
+
+  profile_plot_name <- stringr::str_c(params$string_path, "GO_Profile_", input_select_go_profile_data_comp, "_", 
+                             input_select_ont_profile ,input_select_level_profile, ".png", collapse = " ")
+  p <- barplot(ggo, title = stringr::str_c("Go Profile ", input_select_ont_profile, " level=", input_select_level_profile), 
                drop=TRUE, showCategory=12, order=TRUE)
-  ggsave(profile_plot_name, p, width=10, height=8)
+  ggplot2::ggsave(profile_plot_name, p, width=10, height=8)
+
   
-  gc()
-  return(ggo)
+  
+  go_profile_result <- ggo@result[,1:5]
+  go_profile_result <- go_profile_result[go_profile_result$Count >= 1,]
+  go_profile_result <- go_profile_result[order(-go_profile_result$Count),]
+  
+  write_table_try("go_profile_result", go_profile_result, params)
+  
+  cat(file=stderr(), "run_profile_go_bg...end", "\n")
+  return(list(go_profile_result, p))
 }
+
+
+
+
+
+
+
 
 #----------------------------------------------------------------------------------------- 
 get_tax_db <- function(tax_choice) {
 
   if (tax_choice == "Human") {
     cat(file = stderr(), stringr::str_c("Load tax library...", tax_choice ), "\n")
-    library(org.Hs.eg.db)
+    library(org.Hs.eg.db, quietly = TRUE)
     tax_db <- org.Hs.eg.db}
   
   if (tax_choice == "Mouse") {
     cat(file = stderr(), stringr::str_c("Load tax library...", tax_choice ), "\n")
-    library(org.Mm.eg.db)
+    library(org.Mm.eg.db, quietly = TRUE)
     tax_db <- org.Mm.eg.db}
   
   if (tax_choice == "Rat") {
     cat(file = stderr(), stringr::str_c("Load tax library...", tax_choice ), "\n")
-    library(org.Rn.eg.db)
+    library(org.Rn.eg.db, quietly = TRUE)
     tax_db <- org.Rn.eg.db} 
  
   return(tax_db) 

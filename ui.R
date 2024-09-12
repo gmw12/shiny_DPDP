@@ -882,7 +882,7 @@ height_factor <- 1
               ),
                 box(id = "wiki_plot", title = "WikiPathways...", status = "primary",
                     solidHeader = TRUE, collapsible = FALSE, align = "left", width = 10, height = 800, 
-                    tags$head(tags$style("#data_final{color: blue; font-size: 12px;}")),
+                    tags$head(tags$style("#wiki_table{color: blue; font-size: 12px;}")),
                     DT::dataTableOutput("wiki_table", width ='100%')
                 )
               )
@@ -892,7 +892,7 @@ height_factor <- 1
               fluidRow(
                 box(id = "go_profile_parameters", title = "Go Profile Parameters...", status = "primary",
                     solidHeader = TRUE, collapsible = FALSE, align = "left", width = 2, height = 800,
-                    selectInput("select_data_comp_profile", label = "comparison", 
+                    selectInput("select_go_profile_data_comp", label = "comparison", 
                                          choices = list("Choice 1" = 1, "Choice 2" = 2, "Choice 3" = 3), 
                                          selected = 1),
                     radioButtons("profile_direction", label="Fold Change Direction", choices = list("Up", "Down", "UpDown"),  selected = "Up", width = 200),
@@ -904,18 +904,30 @@ height_factor <- 1
                                          selected = "3"),
                     br(),
                     br(),
-                    actionButton("profile_show", label = "Find Go Profile", width = 150,
+                    actionButton("profile_go_show", label = "Find Go Profile", width = 150,
                                           style="color: #fff; background-color: #337ab7; border-color: #2e6da4"),
                     br(),
-                    downloadButton('download_go_profile_table'),
                     br(),
-                    downloadButton('download_go_profile_plot')
+                    textInput("go_profile_filename", label="File Name", value = "go_profile_data.xlsx", width = 250),
+                    br(),
+                    actionButton("profile_go_excel", label = "Save Data", width = 150,
+                                 style="color: #fff; background-color: #337ab7; border-color: #2e6da4"),
+                    br(),
+                    br(),
+                    downloadButton(label =  "Download Table", 'download_go_profile_table'),
+                    br(),
+                    br(),
+                    downloadButton(label = "Download Plot", 'download_go_profile_plot')
                   ),
-                box(id = "go_profile_plot", title = "Go Profile Plot...", status = "primary",
-                    solidHeader = TRUE, collapsible = FALSE, align = "left", width = 10, height = 800,
-                    tags$head(tags$style("#data_final{color: blue; font-size: 12px; }" )),
-                    rHandsontableOutput("go_profile_table"),
-                    plotOutput("go_profile_plot")
+                
+                tabBox(title = "Go Profile", width = 10, height = 800,
+                       tabPanel("Go Profile Table",
+                                tags$head(tags$style("#go_profile_table{color: blue; font-size: 12px;}")),
+                                DT::dataTableOutput("go_profile_table", width ='100%')
+                       ),
+                       tabPanel("Go Profile Plot",
+                                plotOutput("go_profile_plot")
+                                )
                 )
               )
             ),
@@ -924,7 +936,7 @@ height_factor <- 1
               fluidRow(
                 box(id = "go_anlaysis_parameters", title = "Go Analysis Parameters...", status = "primary",
                     solidHeader = TRUE, collapsible = FALSE, align = "left", width = 2, height = 800,
-                    selectInput("select_data_comp_go", label = "comparison", 
+                    selectInput("select_go_data_comp", label = "comparison", 
                                        choices = list("Choice 1" = 1, "Choice 2" = 2, "Choice 3" = 3), 
                                        selected = 1),
                     br(),
@@ -1015,7 +1027,7 @@ height_factor <- 1
                 br(),
                 br(),
                 br(),
-                downloadButton('download_string_plot'),
+                downloadButton(label =  "Download Plot", 'download_string_plot'),
               ),
             
             box(id = "string_plot", title = "StringDB Plot...", status = "primary",
@@ -1050,7 +1062,7 @@ height_factor <- 1
                           style="color: #fff; background-color: #337ab7; border-color: #2e6da4"),
               br(),
               br(),
-              downloadButton('download_string_enrich_table')
+              downloadButton(label =  "Download Table", 'download_string_enrich_table')
           ),
           
           box(id = "string_enrich_table", title = "StringDB Enrich Table...", status = "primary",

@@ -341,8 +341,8 @@ update_widgets_stats <- function(session, input, output, params){
     updateSelectInput(session, "stats_select_data_comp", choices = stats_comp_choices)
     updateSelectInput(session, "stats_oneprotein_plot_comp", choices = stats_comp_choices)
     updateSelectInput(session, "select_data_comp_wiki", choices = stats_comp_choices)
-    updateSelectInput(session, "select_data_comp_profile", choices = stats_comp_choices)
-    updateSelectInput(session, "select_data_comp_go", choices = stats_comp_choices)
+    updateSelectInput(session, "select_go_profile_data_comp", choices = stats_comp_choices)
+    updateSelectInput(session, "select_go_data_comp", choices = stats_comp_choices)
     updateSelectInput(session, "select_data_comp_string", choices = stats_comp_choices)
     updateSelectInput(session, "select_data_comp_string_enrich", choices = stats_comp_choices)
   }

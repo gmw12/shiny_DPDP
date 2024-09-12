@@ -35,7 +35,7 @@ list_tables(params)
 mv <- read_table("missing_values", params)
 
 df_peptide <- read_table("peptide_sltmm_Caskin1_Test_v_Caskin1_Ctrl_final", params)
-testme2 <- read_table("temp_df_impute", params)
+testme2 <- read_table("go_profile_result", params)
 df_design <- read_table("design", params)
 test_sample_groups <- read_table("sample_groups", params)
 stats_comp <- read_table("stats_comp", params)
@@ -577,3 +577,7 @@ listPathwayUrls()
 
 wp.gmt <- downloadPathwayArchive(date="20240910", organism="Mus musculus", format="gmt", destpath = params$string_path) ## download file
 wp2gene <- clusterProfiler::read.gmt(str_c(params$string_path, wp.gmt))
+
+
+p <- barplot(ggo, title = stringr::str_c("Go Profile"), drop=TRUE, showCategory=12, order=TRUE)
+p
