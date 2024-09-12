@@ -2,6 +2,7 @@ cat(file = stderr(), "ui.R started", "\n")
 
 source("Shiny_Libraries.R")
 source("Shiny_UI.R")
+height_factor <- 1
 
   sidebar <- dashboardSidebar(width = 165,
     useShinyjs(),
@@ -1077,7 +1078,7 @@ source("Shiny_UI.R")
           ),
           
           box(id = "string_enrich_table", title = "StringDB Enrich Table...", status = "primary",
-              solidHeader = TRUE, collapsible = FALSE, align = "left", width = 10, height = 800),
+              solidHeader = TRUE, collapsible = FALSE, align = "left", width = 10, height = (800*height_factor),
               tags$head(tags$style("#string_table{color: blue; font-size: 12px;}"
               )),
               DT::dataTableOutput("string_table", width ='100%')
