@@ -2,7 +2,7 @@ cat(file = stderr(), "Shiny_Wiki.R", "\n")
 
 #----------------------------------------------------------------------------------------- 
 run_wiki <- function(session, input, output, params){
-  cat(file=stderr(), stringr::str_c("Functgion run_wiki..." ), "\n")
+  cat(file=stderr(), stringr::str_c("Function run_wiki..." ), "\n")
   showModal(modalDialog("Processing Wiki Pathway...", footer = NULL))  
   
   arg_list <- list(input$select_data_comp_wiki, input$wiki_direction, params)
@@ -91,7 +91,7 @@ run_wiki_bg <- function(input_select_data_comp_wiki, input_wiki_direction, param
   comp_string <- input_select_data_comp_wiki
   comp_number <- which(grepl(comp_string, stats_comp$Name))
   
-  cat(file=stderr(), stringr::str_c("Run wiki...1" ), "\n")
+  cat(file=stderr(), stringr::str_c("run_wiki_bg...1" ), "\n")
   
   table_name <- stats_comp$Final_Table_Name[comp_number]
   data_in <- read_table_try(table_name, params)
@@ -104,7 +104,7 @@ run_wiki_bg <- function(input_select_data_comp_wiki, input_wiki_direction, param
     go_df <- subset(data_in, data_in$Stats == "Up" | data_in$Stats == "Down") 
   }
   
-  cat(file=stderr(), stringr::str_c("Run wiki...2" ), "\n")
+  cat(file=stderr(), stringr::str_c("run_wiki_bg...2" ), "\n")
   atest <- go_df$Accession
   tax_db <- get_tax_db(params$tax_choice)
   wp2gene <- get_wp2gene(params$tax_choice)
@@ -113,26 +113,18 @@ run_wiki_bg <- function(input_select_data_comp_wiki, input_wiki_direction, param
                                    toType = c("ENTREZID", "ENSEMBL", "SYMBOL","GENENAME","PATH", "ONTOLOGY"),
                                    OrgDb = tax_db)
   
-  cat(file=stderr(), stringr::str_c("Run wiki...3" ), "\n")
+  cat(file=stderr(), stringr::str_c("run_wiki_bg...3" ), "\n")
   universe.df <- clusterProfiler::bitr(data_in$Accession, fromType = "UNIPROT",
                       toType = c("ENTREZID", "ENSEMBL", "SYMBOL","GENENAME","PATH", "ONTOLOGY"),
                       OrgDb = tax_db)
   
-  cat(file=stderr(), stringr::str_c("Run wiki...4" ), "\n")
+  cat(file=stderr(), stringr::str_c("run_wiki_bg...4" ), "\n")
   wpid2gene <- wp2gene |> dplyr::select(wpid, gene) #TERM2GENE
   wpid2name <- wp2gene |> dplyr::select(wpid, name) #TERM2NAME
   
-  cat(file=stderr(), stringr::str_c("Run wiki...5" ), "\n")
+  cat(file=stderr(), stringr::str_c("run_wiki_bg...5" ), "\n")
   ewp <- clusterProfiler::enricher(gene=test.df$ENTREZID, universe=universe.df$ENTREZID, TERM2GENE = wpid2gene, TERM2NAME = wpid2name)
   ewp <- try(clusterProfiler::setReadable(ewp, tax_db, keyType = "ENTREZID"))
-  
-  cat(file=stderr(), stringr::str_c("Run wiki...6" ), "\n")
-  #Simple_Excel_bg(ewp@result, "Wiki", stringr::str_c(dpmsr_set$file$string, "Wiki_", input$select_data_comp_wiki, "_", 
-  #                                          input$select_ont_wiki,input$select_level_wiki, ".xlsx", collapse = " "))
-  #ggo_result <<- ggo@result[1:5]
-  #ggo_result <- ggo_result[order(-ggo_result$Count),]
-  cat(file=stderr(), stringr::str_c("Functgion run_wiki_bg...end" ), "\n")
-  gc()
   
   df <- ewp@result
   df$RichFactor <- round(df$RichFactor,3)
@@ -143,6 +135,7 @@ run_wiki_bg <- function(input_select_data_comp_wiki, input_wiki_direction, param
   df$qvalue <- round(df$qvalue,3)
   
   write_table_try("wiki_table", df, params)
+  cat(file=stderr(), stringr::str_c("Function run_wiki_bg...end" ), "\n")
   
   return(df)
 }
@@ -343,4 +336,5 @@ get_wp2gene <- function(tax_choice) {
   
   return(wp2gene) 
 }
+
 

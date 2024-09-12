@@ -2,7 +2,24 @@ cat(file = stderr(), "ui.R started", "\n")
 
 source("Shiny_Libraries.R")
 source("Shiny_UI.R")
-height_factor <- 1
+#height_factor <- 1
+
+tags$head(tags$script('
+	var dimension = [0, 0];
+	$(document).on("shiny:connected", function(e) {
+		dimension[0] = window.innerWidth;
+		dimension[1] = window.innerHeight;
+		Shiny.onInputChange("dimension", dimension);
+	});
+	$(window).resize(function(e) {
+		dimension[0] = window.innerWidth;
+		dimension[1] = window.innerHeight;
+		Shiny.onInputChange("dimension", dimension);
+	});
+'))
+
+
+
 
   sidebar <- dashboardSidebar(width = 165,
     useShinyjs(),
@@ -951,14 +968,21 @@ height_factor <- 1
                                       style="color: #fff; background-color: #337ab7; border-color: #2e6da4"),
                     br(),
                     br(),
-                    downloadButton('download_go_table')
+                    textInput("go_filename", label="File Name", value = "go_analysis_data.xlsx", width = 250),
+                    br(),
+                    actionButton("go_excel", label = "Save Data", width = 150,
+                                 style="color: #fff; background-color: #337ab7; border-color: #2e6da4"),
+                    br(),
+                    br(),
+                    downloadButton(label =  "Download Table", 'download_go_table')
                 ),
                 
                 box(id = "go_anlaysis", title = "Go Analysis...", status = "primary",
                     solidHeader = TRUE, collapsible = FALSE, align = "left", width = 10, height = 800,      
-                    tags$head(tags$style("#data_final{color: blue; font-size: 12px;}")),
-                    rHandsontableOutput("go_table")
+                    tags$head(tags$style("#go_table{color: blue; font-size: 12px;}")),
+                    DT::dataTableOutput("go__table", width ='100%')
                   )
+                
               )
             ), 
                    
