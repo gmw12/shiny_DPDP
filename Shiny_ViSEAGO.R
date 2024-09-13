@@ -57,8 +57,14 @@ run_go_analysis <- function(session, input, output, params){
     
     output$go_table <-  DT::renderDataTable(go_data, rownames = FALSE, #extensions = c("FixedColumns"), 
                                                     selection = 'single', options=options_DT,
-                                                    callback = DT::JS('table.page(3).draw(false);')
-    )
+                                                    callback = DT::JS('table.page(3).draw(false);'))
+                                    
+    output$go_volcano_selection <- renderPrint(go_data$GO.ID[as.numeric(unlist(input$go_table_rows_selected)[1])] ) 
+    observe({
+      updateTextInput(session, "go_volcano_id", 
+                      value = go_data$GO.ID[as.numeric(unlist(input$go_table_rows_selected)[1])] ) 
+    })
+    
   }else{
     shinyalert("Oops!", "Go Analysis failed...", type = "error")
   } 
@@ -293,8 +299,15 @@ create_go_volcano <- function(session, input, output, params){
                                             callback = DT::JS('table.page(3).draw(false);')
     )
     
-    
-    
+    fullName <- stringr::str_c(params$string_path, input$go_volcano_filename)
+    output$download_go_volcano_table <- downloadHandler(
+      file = function(){
+        stringr::str_c(input$go_volcano_filename)
+      },
+      content = function(file){
+        file.copy(fullName, file)
+      }
+    )
     
     
     removeModal()
@@ -354,6 +367,9 @@ create_go_volcano_bg <- function(input_select_go_data_comp, input_go_volcano_id,
   volcano_go_data <- volcano_go_data |> dplyr::mutate(dplyr::across(cv_cols, round, 2))
   volcano_go_data <- volcano_go_data |> dplyr::mutate(dplyr::across(fc_cols, round, 2))
   volcano_go_data <- volcano_go_data |> dplyr::mutate(dplyr::across(sample_cols, round, 2))
+  
+  
+  write_table_try("volcano_go_data", volcano_go_data, params)
   
   cat(file=stderr(), stringr::str_c("create_go_volcano...end" ), "\n")
   return(list(volcano_data, volcano_go_data, sample_cols))

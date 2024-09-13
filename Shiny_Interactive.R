@@ -698,6 +698,9 @@ interactive_go_volcano <- function(session, input, output, volcano_data)
       scale_colour_gradient(low = input$volcano_dot_color, high = input$volcano_dot_color) +
       ggtitle(input$plot_title)+    
       xlim(-max(volcano_data$log_fc), max(volcano_data$log_fc)) +
+      geom_vline(aes(xintercept = log(input$foldchange_cutoff, 2)),  linetype = "dotted", color = "black")  + 
+      geom_vline(aes(xintercept = -log(input$foldchange_cutoff, 2)),  linetype = "dotted", color = "black")  + 
+      geom_hline(aes(yintercept = -log(input$pvalue_cutoff, 10)),  linetype = "dotted", color = "black") +
       theme(plot.title = element_text(size=input$plot_title_size, hjust = 0.5),
             axis.title = element_text(size=input$plot_label_size, color="black"),
             axis.text.x = element_text(size=10, color="black"),

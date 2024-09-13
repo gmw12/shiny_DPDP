@@ -514,7 +514,14 @@ shinyServer(function(session, input, output) {
     
     cat(file = stderr(), "start_go_volcano clicked...end" , "\n")
   })  
-  
+  #-------------------------------------------------------------------------------------------------------------  
+  observeEvent(input$go_volcano_excel, { 
+    cat(file = stderr(), "go_volcano_excel clicked..." , "\n")
+    
+    db_table_to_Excel("go_volcano_data",  "go volcano data", stringr::str_c(params$string_path, input$go_volcano_filename), params)
+    
+    cat(file = stderr(), "go_volcano_excel clicked...end" , "\n")
+  })
   
   #-------------------------------------------------------------------------------------------------------------
   

@@ -976,9 +976,10 @@ tags$head(tags$script('
                     br(),
                     downloadButton(label =  "Download Table", 'download_go_table')
                 ),
-
+                
                 box(id = "go_anlaysis", title = "Go Analysis...", status = "primary",
-                    solidHeader = TRUE, collapsible = FALSE, align = "left", width = 10, height = 800,      
+                    solidHeader = TRUE, collapsible = FALSE, align = "left", width = 10, height = 800,
+                    verbatimTextOutput('go_volcano_selection'), #('stats_data_final_protein')
                     tags$head(tags$style("#go_table{color: blue; font-size: 12px;}")),
                     DT::dataTableOutput("go_table", width ='100%')
                   )
@@ -990,21 +991,41 @@ tags$head(tags$script('
               fluidRow(
                 box(id = "go_volcano_parameters", title = "Go Volcano Parameters...", status = "primary",
                     solidHeader = TRUE, collapsible = FALSE, align = "left", width = 2, height = 800,
-                                     textInput("go_volcano_id", label="GO ID", value = "", width = 200),
-                                     textInput("plot_y_axis_label", label="y axis label", value = "-log_pvalue", width = 200),
-                                     textInput("plot_x_axis_label", label="x axis label", value = "log_FC", width = 200),
-                                     textInput("plot_title", label="plot title", value = "Go Volcano", width = 200),
-                                     colourpicker::colourInput("volcano_dot_color", "Select Color", "blue"),
-                                     actionButton("start_go_volcano", label = "Volcano", width = 100,
-                                                  style="color: #fff; background-color: #337ab7; border-color: #2e6da4"),
-                                     sliderInput("plot_dot_size", label = h5("Point Size"), min = 1, 
-                                                 max = 10, value = 2),
-                                     sliderInput("plot_label_size", label = h5("Label Size"), min = 1, 
-                                                 max = 50, value = 20),
-                                     sliderInput("plot_title_size", label = h5("Title Size"), min = 10, 
-                                                 max = 50, value = 20),   
-                                     downloadButton('download_go_volcano')
-                              ),
+                          textInput("go_volcano_id", label="GO ID", value = "", width = 200),
+                          br(),
+                          dropdownButton(
+                            textInput("plot_y_axis_label", label="y axis label", value = "-log_pvalue", width = 200),
+                            textInput("plot_x_axis_label", label="x axis label", value = "log_FC", width = 200),
+                            textInput("plot_title", label="plot title", value = "Go Volcano", width = 200),
+                            sliderInput("plot_dot_size", label = h5("Point Size"), min = 1, 
+                                        max = 10, value = 2),
+                            sliderInput("plot_label_size", label = h5("Label Size"), min = 1, 
+                                        max = 50, value = 20),
+                            sliderInput("plot_title_size", label = h5("Title Size"), min = 10, 
+                                        max = 50, value = 20),  
+                            colourpicker::colourInput("volcano_dot_color", "Select Color", "blue"),
+                            circle = TRUE, status = "danger", icon = icon("cogs"), width = "300px", size = "sm",
+                            tooltip = tooltipOptions(title = "Click to see inputs !")
+                          ),
+                    br(),
+                    actionButton("start_go_volcano", label = "Create Volcano", width = 150,
+                                            style="color: #fff; background-color: #337ab7; border-color: #2e6da4"),
+                    br(),
+                    hr(),
+                    br(),
+                    br(),
+                    textInput("go_volcano_filename", label="File Name", value = "go_volcano_data.xlsx", width = 250),
+                    br(),
+                    actionButton("go_volcano_excel", label = "Save Data", width = 150,
+                           style="color: #fff; background-color: #337ab7; border-color: #2e6da4"),
+                    br(),
+                    br(),
+                    downloadButton(label =  "Download Table", 'download_go_volcano_table'),
+                    br(),
+                    hr(),
+                    br(),
+                    downloadButton(label =  "Download Plot", 'download_go_volcano')
+                    ),
                 
                 tabBox(id = "go_volcano", title = "Go Volcano...", width = 10, height = 800,
                     tabPanel(title = "Go Volcano Plot",
@@ -1017,8 +1038,7 @@ tags$head(tags$script('
                        ),
                     tabPanel(title = "Go Volcano Data",
                     tags$head(tags$style("#volcano_data_final{color: blue; font-size: 12px;}")),
-                                     DT::dataTableOutput("volcano_data_final", width ='100%'),
-                                     downloadButton('download_go_volcano_table')
+                                     DT::dataTableOutput("volcano_data_final", width ='100%')
                     )
                   )
                 )
