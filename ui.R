@@ -976,11 +976,11 @@ tags$head(tags$script('
                     br(),
                     downloadButton(label =  "Download Table", 'download_go_table')
                 ),
-                
+
                 box(id = "go_anlaysis", title = "Go Analysis...", status = "primary",
                     solidHeader = TRUE, collapsible = FALSE, align = "left", width = 10, height = 800,      
                     tags$head(tags$style("#go_table{color: blue; font-size: 12px;}")),
-                    DT::dataTableOutput("go__table", width ='100%')
+                    DT::dataTableOutput("go_table", width ='100%')
                   )
                 
               )
@@ -995,7 +995,7 @@ tags$head(tags$script('
                                      textInput("plot_x_axis_label", label="x axis label", value = "log_FC", width = 200),
                                      textInput("plot_title", label="plot title", value = "Go Volcano", width = 200),
                                      colourpicker::colourInput("volcano_dot_color", "Select Color", "blue"),
-                                     actionButton("go_volcano", label = "Volcano", width = 100,
+                                     actionButton("start_go_volcano", label = "Volcano", width = 100,
                                                   style="color: #fff; background-color: #337ab7; border-color: #2e6da4"),
                                      sliderInput("plot_dot_size", label = h5("Point Size"), min = 1, 
                                                  max = 10, value = 2),
@@ -1006,17 +1006,20 @@ tags$head(tags$script('
                                      downloadButton('download_go_volcano')
                               ),
                 
-                box(id = "go_volcano", title = "Go Volcano...", status = "primary",
-                    solidHeader = TRUE, collapsible = FALSE, align = "left", width = 10, height = 800,
-                    div(
-                      style = "position:relative",
-                      plotOutput("volcano_go_plot", width = 800, height = 600,
-                                 hover = hoverOpts("plot_hover", delay = 100, delayType = "debounce")),
-                      uiOutput("hover_info")
-                    ),
+                tabBox(id = "go_volcano", title = "Go Volcano...", width = 10, height = 800,
+                    tabPanel(title = "Go Volcano Plot",
+                          div(
+                            style = "position:relative",
+                            plotOutput("volcano_go_plot", width = 800, height = 600,
+                                       hover = hoverOpts("plot_hover", delay = 100, delayType = "debounce")),
+                            uiOutput("hover_info")
+                    )
+                       ),
+                    tabPanel(title = "Go Volcano Data",
                     tags$head(tags$style("#volcano_data_final{color: blue; font-size: 12px;}")),
                                      DT::dataTableOutput("volcano_data_final", width ='100%'),
                                      downloadButton('download_go_volcano_table')
+                    )
                   )
                 )
             ),  

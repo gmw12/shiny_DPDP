@@ -426,7 +426,6 @@ shinyServer(function(session, input, output) {
     
   })
   
-  
 #-------------------------------------------------------------------------------------------------------------  
   
   observeEvent(input$create_stats_oneprotein_plots, { 
@@ -438,14 +437,12 @@ shinyServer(function(session, input, output) {
     
   })
   
-  
-  #-------------------------------------------------------------------------------------------------------------  
-  
-  #-------------------------------------------------------------------------------------------------------------
+
   #-------------------------------------------------------------------------------------------------------------
   observeEvent(input$set_pathway, {
     cat(file = stderr(), "set_pathway clicked..." , "\n")
     
+    source("Shiny_Pathway.R")
     set_pathway(input, output, session, params)
 
     cat(file = stderr(), "set_pathway clicked...end" , "\n")
@@ -493,6 +490,7 @@ shinyServer(function(session, input, output) {
   observeEvent(input$go_show, {
     cat(file = stderr(), "profile_go_show clicked..." , "\n")
     
+    source("Shiny_ViSEAGO.R")
     run_go_analysis(session, input, output, params)
     
     cat(file = stderr(), "profile_go_show clicked...end" , "\n")
@@ -508,12 +506,13 @@ shinyServer(function(session, input, output) {
   })
   
   #-------------------------------------------------------------------------------------------------------------
-  observeEvent(input$go_volcano, {
-    cat(file = stderr(), "go_volcano clicked..." , "\n")
+  observeEvent(input$start_go_volcano, {
+    cat(file = stderr(), "start_go_volcano clicked..." , "\n")
     
+    source('Shiny_ViSEAGO.R')
     create_go_volcano(session, input, output, params)
     
-    cat(file = stderr(), "go_volcano clicked...end" , "\n")
+    cat(file = stderr(), "start_go_volcano clicked...end" , "\n")
   })  
   
   
@@ -522,6 +521,7 @@ shinyServer(function(session, input, output) {
   observeEvent(input$get_string, {
     cat(file = stderr(), "get_string clicked...", "\n")
     
+    source('Shiny_String.R')
     run_string(session, input, output, params)
     
     cat(file = stderr(), "get_string clicked...end", "\n")
@@ -531,6 +531,7 @@ shinyServer(function(session, input, output) {
   observeEvent(input$get_string_enrich, {
     cat(file = stderr(), "get_string_enrich clicked...", "\n")
     
+    source('Shiny_String.R')
     run_string_enrich(session, input, output, params)
     
     cat(file = stderr(), "get_string_enrich clicked...end", "\n")

@@ -684,17 +684,12 @@ interactive_grouped_barplot <- function(session, input, output, df, comp_name, c
 }
 
 
-
-
-
 #------------------------------------------------------------------------------------------------------------------------
 
-interactive_go_volcano <- function(session, input, output)
+interactive_go_volcano <- function(session, input, output, volcano_data)
 {
-  cat(file=stderr(), "interactive_go_volcano" , "\n")
-  volcano_data <- create_go_volcano(session, input, output)
+  cat(file=stderr(), "Function interactive_go_volcano..." , "\n")
   
-
   volcano_go_plot <- reactive({
     ggplot(volcano_data, aes(x = log_fc, y = log_pvalue)) +
       theme_minimal() +
@@ -769,6 +764,7 @@ interactive_go_volcano <- function(session, input, output)
     )
   })
   
+  cat(file=stderr(), "Function interactive_go_volcano...end" , "\n")
   return(volcano_data)
 }
 
