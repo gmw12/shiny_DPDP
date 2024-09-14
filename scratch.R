@@ -553,7 +553,7 @@ for (c in colnames(df)) {
   test <- df[[c]]
   find_rows <- which(stringr::str_detect(test, ";"))
   for (r in find_rows) {
-    if (grepl(";", df[[r,c]])) {
+    if (grepl(";", test[r])) {
       test[r] <- max(strsplit(test[r], ";") |> unlist() |> as.numeric())
       count <- count + 1
     }
@@ -569,12 +569,17 @@ cores <- detectCores()
 cl <- makeCluster(cores - 2)
 registerDoParallel(cl)
 
-parallel_result <- foreach(j = 1:nrow(find_final), .combine = c) %dopar% {
-  r <- find_final$row[j]
-  c <- find_final$col[j]
-  findsd <- df_impute_bin |> dplyr::filter(df_temp$average[r] >= min2, df_temp$average[r] <= max)
-  df_temp$average[r] + (df_temp_random[r,c] * findsd$sd[1])
+start <- Sys.time()
+parallel_result <- foreach(c = colnames(df), .combine = cbind) %dopar% {
+  test <- df[[c]]
+  find_rows <- which(stringr::str_detect(test, ";"))
+  for (r in find_rows) {
+    if (grepl(";", test[r])) {
+      test[r] <- max(strsplit(test[r], ";") |> unlist() |> as.numeric())
+    }
+  }
+  test
 }
-
+cat(file = stderr(), stringr::str_c("time = ", Sys.time() - start), "\n")
 stopCluster(cl) 
 
