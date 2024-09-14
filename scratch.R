@@ -515,60 +515,7 @@ test2 = read_table("protein_sltmm_cv")
 test <- cbind(test1, test2[,2:ncol(test2)])
 write_table("protein_sltmm_final", test)
 
-#-------------------------------------
 
-# Server.R
-shinyServer(function(input, output, session) {
-  output$sampletable <- DT::renderDataTable({
-    sampletable
-  }, server = TRUE, selection = 'single')
-  
-  output$selectedrow <- DT::renderDataTable({
-    selectedrowindex <<-
-      input$sampletable_rows_selected[length(input$sampletable_rows_selected)]
-    selectedrowindex <<- as.numeric(selectedrowindex)
-    selectedrow <- (sampletable[selectedrowindex, ])
-    selectedrow
-  })
-  
-  output$plots <- renderPlot({
-    variable <- sampletable[selectedrowindex, 1]
-    #write your plot function
-    
-    
-  })
-  
-  
-})
-
-#ui.R
-shinyUI(navbarPage(
-  "Single Row Selection",
-  
-  
-  
-  tabPanel(
-    "Row selection example",
-    sidebarLayout(
-      sidebarPanel("Parameters"),
-      mainPanel(
-        DT::dataTableOutput("selectedrow"),
-        DT::dataTableOutput("sampletable")
-        
-      )
-    )
-    
-  )
-  
-))
-
-# global.R
-
-library(DT)
-library(shiny)
-selectedrowindex = 0
-
-#-------------------------
 
 library(rWikiPathways)
 listPathways('Homo sapiens')
@@ -581,3 +528,53 @@ wp2gene <- clusterProfiler::read.gmt(str_c(params$string_path, wp.gmt))
 
 p <- barplot(ggo, title = stringr::str_c("Go Profile"), drop=TRUE, showCategory=12, order=TRUE)
 p
+#---------------------------------------------
+
+local_file <- "/Users/gregwaitt/data/20240806_112832_10514_vikas_080524_Report_local.tsv"
+df_local <- data.table::fread(file = local_file, header = TRUE, stringsAsFactors = FALSE, sep = "\t")
+
+notlocal_file <- "/Users/gregwaitt/data/20240806_112832_10514_vikas_080524_Report_notlocal.tsv"
+df_notlocal <- data.table::fread(file = notlocal_file, header = TRUE, stringsAsFactors = FALSE, sep = "\t")
+df <- df_notlocal |> dplyr::select(contains('PTMProbabilities')) 
+
+find_ptm <- data.frame(which(grepl(";", df), arr.ind = TRUE))
+
+test <- df[[9,2]]
+num_out <- max(strsplit(test, ";") |> unlist() |> as.numeric())
+
+test <- df[,1]
+test <- unlist(test)
+find_rows <- which(grepl(";", test), arr.ind = TRUE)
+find_rows <- which(stringr::str_detect(test, ";"))
+
+start <- Sys.time()
+count = 0
+for (c in colnames(df)) {
+  test <- df[[c]]
+  find_rows <- which(stringr::str_detect(test, ";"))
+  for (r in find_rows) {
+    if (grepl(";", df[[r,c]])) {
+      test[r] <- max(strsplit(test[r], ";") |> unlist() |> as.numeric())
+      count <- count + 1
+    }
+  }
+  df[[c]] <- test
+}
+cat(file = stderr(), stringr::str_c("time = ", Sys.time() - start), "\n")
+
+
+require(foreach)
+require(doParallel)
+cores <- detectCores()
+cl <- makeCluster(cores - 2)
+registerDoParallel(cl)
+
+parallel_result <- foreach(j = 1:nrow(find_final), .combine = c) %dopar% {
+  r <- find_final$row[j]
+  c <- find_final$col[j]
+  findsd <- df_impute_bin |> dplyr::filter(df_temp$average[r] >= min2, df_temp$average[r] <= max)
+  df_temp$average[r] + (df_temp_random[r,c] * findsd$sd[1])
+}
+
+stopCluster(cl) 
+
