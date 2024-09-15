@@ -87,7 +87,7 @@ df_notphos_notlocal <- df_notlocal[!grepl("Phospho", df_notlocal$EG.PrecursorId)
 notphos_local_notin_notlocal <- df_notphos_local[!df_notphos_local$EG.PrecursorId %in% df_notphos_notlocal$EG.PrecursorId,]
 notphos_notlocal_notin_local <- df_notphos_notlocal[!df_notphos_notlocal$EG.PrecursorId %in% df_notphos_local$EG.PrecursorId,]
 
-testseq <- "AFAMIIDKLEEDINSSMTNSTAASRPPVTLR"
+testseq <- "VFDSLNYLPNMLLGMEAAGSAGGVVEAAISYTGDVADPSR"
 test_local <- df_notphos_local[df_notphos_local$PEP.StrippedSequence == testseq,]
 test_notlocal <- df_notphos_notlocal[df_notphos_notlocal$PEP.StrippedSequence == testseq,]
 
@@ -139,3 +139,73 @@ list2 <- (df_local_nophos$EG.PrecursorId)
 list3 <- list2[!(list2 %in% list1)]
 
 test_df3 <- df_local_nophos[df_local_nophos$EG.PrecursorId %in% list3]
+
+
+#--------
+start <- Sys.time()
+df <- data.frame()
+for (r in (1:nrow(df_notlocal_p))) {
+  check <- 0
+  for (c in (1:9)){
+    if(df_notlocal_p[[r,c]] != ""){
+      sites <- strsplit(unlist(df_notlocal_p[[r,c]]), ";") |> unlist() |> as.numeric()
+      if (check == 0){
+        temp_df <- data.frame(sites)
+        check <- 1
+      }else{
+        temp_df <- cbind(temp_df, sites)
+      }
+    }
+  }
+  if (check == 0){
+    sites <- ""
+  }else{
+    temp_df$max <- apply(temp_df, 1, max)
+    sites <- paste(temp_df$max, collapse = ", " )
+  }
+  df <- rbind(df, sites)
+}
+cat(file = stderr(), stringr::str_c("time = ", Sys.time() - start), "\n")
+
+#------------------------------------
+require(foreach)
+require(doParallel)
+cores <- detectCores()
+cl <- makeCluster(cores - 2)
+registerDoParallel(cl)
+
+start <- Sys.time()
+df_notlocal_p[df_notlocal_p=="Filtered"] <- ""
+parallel_result <- foreach(r = 1:nrow(df_notlocal_p), .combine = rbind) %dopar% {
+  check <- 0
+  for (c in (1:ncol(df_notlocal_p))){
+    if(df_notlocal_p[[r,c]] != ""){
+      sites <- strsplit(unlist(df_notlocal_p[[r,c]]), ";") |> unlist() |> as.numeric()
+      if (check == 0){
+        temp_df <- data.frame(sites)
+        check <- 1
+      }else{
+        temp_df <- cbind(temp_df, sites)
+      }
+    }
+  }
+  if (check == 0){
+    sites <- ""
+  }else{
+    temp_df$max <- apply(temp_df, 1, max)
+    sites <- paste(temp_df$max, collapse = ", " )
+  }
+  sites
+}
+cat(file = stderr(), stringr::str_c("time = ", Sys.time() - start), "\n")
+stopCluster(cl) 
+
+df_notlocal_p$prob <- parallel_result
+save(df_notlocal_p, file = "erase")
+load("erase")
+
+source("Shiny_Misc_Functions.R")
+df_notlocal_p$max_local <- ""
+for (r in (1:nrow(df_notlocal_p))) {
+  df_notlocal_p$max_local[r] <- str_to_numlist_max(df_notlocal_p$prob[[r]])  
+}

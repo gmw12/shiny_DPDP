@@ -16,3 +16,13 @@ str_to_numlist <- function(str_in) {
   
   return(num_out)
 }
+
+
+str_to_numlist_max <- function(str_in) {
+  if (str_in == "") {
+    num_out <- ""
+  }else {
+    num_out <- max(strsplit(str_in, ",") |> unlist() |> as.numeric())
+  }
+  return(num_out)
+}
