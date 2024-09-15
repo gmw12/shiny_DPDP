@@ -530,10 +530,10 @@ p <- barplot(ggo, title = stringr::str_c("Go Profile"), drop=TRUE, showCategory=
 p
 #---------------------------------------------
 
-local_file <- "/Users/gregwaitt/data/20240806_112832_10514_vikas_080524_Report_local.tsv"
+local_file <- "/Users/gregwaitt/data/20240914_164026_10546_Daichi_Phos_081224_Report_local.tsv"
 df_local <- data.table::fread(file = local_file, header = TRUE, stringsAsFactors = FALSE, sep = "\t")
 
-notlocal_file <- "/Users/gregwaitt/data/20240806_112832_10514_vikas_080524_Report_notlocal.tsv"
+notlocal_file <- "/Users/gregwaitt/data/20240914_164026_10546_Daichi_Phos_081224_Report_notlocal.tsv"
 df_notlocal <- data.table::fread(file = notlocal_file, header = TRUE, stringsAsFactors = FALSE, sep = "\t")
 df <- df_notlocal |> dplyr::select(contains('PTMProbabilities')) 
 
@@ -583,3 +583,36 @@ parallel_result <- foreach(c = colnames(df), .combine = cbind) %dopar% {
 cat(file = stderr(), stringr::str_c("time = ", Sys.time() - start), "\n")
 stopCluster(cl) 
 
+parallel_result <- data.frame(parallel_result)
+
+colnames(parallel_result) <-  colnames(df)
+df2 <- parallel_result
+df2[df2=="Filtered"] <- ""
+df2$phos <- grepl("Phospho", df_notlocal$EG.ModifiedSequence)
+df2$precursorID <- df_notlocal$EG.PrecursorId
+
+df2$duplicates <- duplicated(df2$precursorID)
+
+df2$max_local <- apply(df2, 1, max)
+to_delete <- which(df2$phos == "TRUE" & df2$max_local < 0.75)
+df_notlocal2 <- df_notlocal[-to_delete]
+
+df_test <- df_notlocal[df_notlocal$EG.PrecursorId %in% unlist(df_local$EG.PrecursorId)]
+
+testme <- df_local[grepl("AVDDIP", df_local$EG.PrecursorId)]
+
+
+df_notlocal$inlocal <- 0
+
+nrow(df_notlocal) - nrow(df_local)
+
+list1 <- (df_notlocal$EG.PrecursorId)
+list2 <- (df_local$EG.PrecursorId)
+list3 <- list2[!(list2 %in% list1)]
+length(list1)
+length(list2)
+length(list3)
+
+testp <- list3[3]
+test_df1 <- df_local[df_local$EG.PrecursorId == testp]
+test_df2 <- df_notlocal[df_notlocal$EG.PrecursorId == testp]
