@@ -5,6 +5,7 @@ set_pathway <- function(input, output, session, params){
   
   cat(file = stderr(), "Function set_pathway..." , "\n")
   showModal(modalDialog("Downloading and Setting up databases...", footer = NULL))  
+  source('Shiny_String.R')
   
   tax_choice <- input$select_organism
   cat(file = stderr(), stringr::str_c("Pathway tax choice...", tax_choice), "\n")

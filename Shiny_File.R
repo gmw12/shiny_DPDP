@@ -111,7 +111,7 @@ save_data_bg <- function(file1, dir1){
 #----------------------------------------------------------------------------------------
 param_query <- function(param){
   conn <- RSQLite::dbConnect(RSQLite::SQLite(), params$database_path)
-  query_str <- str_c("SELECT ", param, " FROM Parameters")
+  query_str <- str_c("SELECT ", param, " FROM params")
   df <- RSQLite::dbGetQuery(conn, query_str)
   RSQLite::dbDisconnect(conn)
   return(df[1,1])
@@ -120,7 +120,7 @@ param_query <- function(param){
 #----------------------------------------------------------------------------------------
 param_update <- function(param, value){
   conn <- RSQLite::dbConnect(RSQLite::SQLite(), params$database_path)
-  query_str <<- stringr::str_c("UPDATE Parameters SET ", param, "=", value)
+  query_str <<- stringr::str_c("UPDATE params SET ", param, "=", value)
   RSQLite::dbExecute(conn, query_str)
   RSQLite::dbDisconnect(conn)
 }

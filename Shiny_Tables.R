@@ -84,12 +84,12 @@ create_stats_design_table_bg <- function(database_path){
 
 #load design table
 create_impute_table <- function(session, input, output, params){
-  cat(file = stderr(), "Function create_impute_table", "\n")
-  
-  bg_imputetable <- callr::r_bg(create_impute_table_bg, args = list(params), stderr = str_c(params$error_path, "//error_imputetable.txt"), supervise = TRUE)
+  cat(file = stderr(), "Function create_impute_table...", "\n")
+
+  bg_imputetable <- callr::r_bg(create_impute_table_bg, args = list(params), stderr = stringr::str_c(params$error_path, "//error_imputetable.txt"), supervise = TRUE)
   bg_imputetable$wait()
   print_stderr("error_imputetable.txt")
-  
+
   impute_DT <- bg_imputetable$get_result()
   output$impute_meta_table <-  DT::renderDataTable(impute_DT)
   
@@ -99,7 +99,7 @@ create_impute_table <- function(session, input, output, params){
 #--------------------------------
 
 create_impute_table_bg <- function(params){
-  cat(file = stderr(), "Function build_design_table", "\n")
+  cat(file = stderr(), "Function create_impute_table_bg...", "\n")
   source("Shiny_File.R")
   
   #get design data
@@ -116,7 +116,7 @@ create_impute_table_bg <- function(params){
                                 lengthMenu = c(12,20,100,500)
                               ))
   
-  cat(file = stderr(), "Function build_impute_table...end", "\n")
+  cat(file = stderr(), "Function create_impute_table_bg...end", "\n")
   return(impute_DT)   
 }
 
