@@ -126,9 +126,10 @@ stat_calc <- function(session, input, output){
   conn <- RSQLite::dbConnect(RSQLite::SQLite(), params$database_path)
   stats_comp <- RSQLite::dbReadTable(conn, "stats_comp")
   RSQLite::dbDisconnect(conn)
-  
+
   for (comp_number in 1:nrow(stats_comp)) {
-    bg_stat_calc <- callr::r_bg(func = stat_calc_bg, args = list(params, comp_number, stats_comp), stderr = stringr::str_c(params$error_path, "//stat_calc.txt"), supervise = TRUE)
+    arg_list <- list(params, comp_number, stats_comp, input$rollup_method, input$rollup_topn)
+    bg_stat_calc <- callr::r_bg(func = stat_calc_bg, args = arg_list, stderr = stringr::str_c(params$error_path, "//stat_calc.txt"), supervise = TRUE)
     bg_stat_calc$wait()
     print_stderr("stat_calc.txt")
   }
@@ -142,19 +143,21 @@ stat_calc <- function(session, input, output){
 #----------------------------------------------------------------------------------------- 
 
 #create data frame for comparisons
-stat_calc_bg <- function(params, comp_number, stats_comp){
+stat_calc_bg <- function(params, comp_number, stats_comp, input_rollup_method, input_rollup_topn){
   cat(file = stderr(), "function stat_calc_bg....", "\n")
   source('Shiny_MVA_Functions.R')
 
   conn <- RSQLite::dbConnect(RSQLite::SQLite(), params$database_path)
   
   if (!params$peptide_refilter) {
+    cat(file = stderr(), "data NOT refiltered at peptide/precursor level....", "\n")
     df <- RSQLite::dbReadTable(conn, stats_comp$Table_Name[comp_number])
     #add imputed column
     df_list <- add_imputed_df(df, params, stats_comp, comp_number, "protein_missing")
     df <- df_list[[1]]
     df_missing <- df_list[[2]]
   } else {
+    cat(file = stderr(), "data IS refiltered at peptide/precursor level....", "\n")
     table_name <- stringr::str_c("precursor_impute_", params$stat_norm)
     df <- RSQLite::dbReadTable(conn, table_name)  
     df_design <- RSQLite::dbReadTable(conn, "design") 
@@ -170,7 +173,7 @@ stat_calc_bg <- function(params, comp_number, stats_comp){
     df_filter_list <- peptide_refilter(df_list, df_missing_list, params)
     
     #rollup, and unpack list
-    df_rollup_list <- peptide_refilter_rollup(df_filter_list, params, df_design)
+    df_rollup_list <- peptide_refilter_rollup(df_filter_list, df_design, input_rollup_method, input_rollup_topn, params) 
     df <- df_rollup_list[[1]]
     df_missing <- df_rollup_list[[2]]
     

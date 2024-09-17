@@ -129,7 +129,7 @@ peptide_refilter <- function(df_list, df_missing_list, params) {
 }
 
 #-------------------------------------------------------------------------------
-peptide_refilter_rollup <- function(df_filter_list, params, df_design) {
+peptide_refilter_rollup <- function(df_filter_list, df_design, input_rollup_method, input_rollup_topn, params) {
   cat(file = stderr(), "Function - peptide_refilter_rollup...", "\n")
   
   source('Shiny_Rollup_Functions.R')
@@ -139,8 +139,12 @@ peptide_refilter_rollup <- function(df_filter_list, params, df_design) {
   df <- df_filter_list[[1]]
   df_missing <- df_filter_list[[2]]
   
+  #save(df, file="dfb")
+  #save(df_missing, file="df_missingb")
+  
   #count samples
   sample_count <- ncol(df_missing)
+  info_columns <- ncol(df) - sample_count
   
   #need to add back info columns to missing for rollup
   df_missing <- cbind(df[,1:(ncol(df) - sample_count)], df_missing)
@@ -148,8 +152,17 @@ peptide_refilter_rollup <- function(df_filter_list, params, df_design) {
     dplyr::mutate(Precursors = 1, .after = Genes)
   
   #rollup data and missing
-  df <- rollup_selector(df, params, df_design)
+  df <- rollup_selector(df, df_design, input_rollup_method, input_rollup_topn, info_columns, params)
   df_missing <- rollup_sum(df_missing)
+  
+  #save(df, file="df2b")
+  #save(df_missing, file="df_missing2b")
+  
+  #resort because maxlfq sorts data, while summing does not...
+  df <- df[order(df$Accession), ]
+  df_missing <- df_missing[order(df_missing$Accession), ]
+  row.names(df) <- NULL
+  row.names(df_missing) <- NULL
   
   #add missing column to data
   df_missing <- df_missing[, (ncol(df_missing) - sample_count + 1):ncol(df_missing)]
@@ -164,6 +177,9 @@ peptide_refilter_rollup <- function(df_filter_list, params, df_design) {
 #-------------------------------------------------------------------------------
 stat_add <- function(df, df_missing, params, comp_number, stats_comp, df_design) {
   cat(file = stderr(), "Function - stat_add...", "\n")
+  
+  #load(file="df")
+  #load(file="df_missing")
   
   source("Shiny_Misc_Functions.R")
   source("Shiny_Stats_Functions.R")
@@ -252,9 +268,8 @@ stat_add <- function(df, df_missing, params, comp_number, stats_comp, df_design)
   df$Stats[filtered_up] <- "Up"
   df$Stats[filtered_down] <- "Down"
   
-  df <- sort_by(df, df$Stats)
   df <- df[order(df$Stats, -df[[stringr::str_c(stats_comp$Name[comp_number], "_pval")]], decreasing = TRUE), ]
-  
+
   cat(file = stderr(), "Function - stat_add...end", "\n\n")  
 
   return(df)  

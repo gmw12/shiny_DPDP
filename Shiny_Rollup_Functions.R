@@ -1,16 +1,18 @@
 cat(file = stderr(), "Shiny_Rollup_Functions.R", "\n")
 
 #--------------------------------------------------------------------------------
-rollup_selector <- function(df, params, df_design){
+rollup_selector <- function(df, df_design, input_rollup_method, input_rollup_topn, info_columns, params){
   cat(file = stderr(), "function rollup_selector...", "\n")
   
   df <- df |> dplyr::select(contains(c("Accession", "Description", "Genes", df_design$ID))) |> 
     dplyr::mutate(Precursors = 1, .after = Genes)
   
-  if (params$rollup_method == "sum") {df <-  rollup_sum(df)}
-    else if (params$rollup_method == "median") {df <-  rollup_median(df)}
-    else if (params$rollup_method == "mean") {df <-  rollup_mean(df)}
-    else if (params$rollup_method == "topn") {df <-  rollup_topn(df, params$rollup_topn)}
+  if (input_rollup_method == "sum") {df <-  rollup_sum(df)}
+    else if (input_rollup_method == "median") {df <-  rollup_median(df)}
+    else if (input_rollup_method == "median_polish") {df <-  rollup_median_polish(df, info_columns)}
+    else if (input_rollup_method == "mean") {df <-  rollup_mean(df)}
+    else if (input_rollup_method == "topn") {df <-  rollup_topn(df, input_rollup_topn)}
+    else if (input_rollup_method == "iq_maxlfq") {df <-  rollup_maxlfq(df, info_columns)}
   
   cat(file = stderr(), "function rollup_selector...end", "\n")
   return(df)
@@ -146,7 +148,7 @@ rollup_maxlfq <- function(peptide_data, info_columns){
   samples_columns <- ncol(peptide_data) - info_columns
   
   #group and sum data (summed samples will be over written below)
-  df <- peptide_data |> group_by(Accession, Description, Genes) |> summarise_all(list(sum))
+  df <- peptide_data |> dplyr::group_by(Accession, Description, Genes) |> dplyr::summarise_all(list(sum))
   
   #select data and log
   df_data <- peptide_data[,(info_columns + 1):ncol(peptide_data)]
@@ -183,8 +185,8 @@ rollup_maxlfq <- function(peptide_data, info_columns){
   
   #combine annotation data with protein rollup, (replacing summed data)
   result <- result[order(row.names(result)),]
+
   df <- df[order(df$Accession),]
-  
   df[(info_columns + 1):ncol(df)] <- result
   
   
