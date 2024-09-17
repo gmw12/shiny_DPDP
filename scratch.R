@@ -45,6 +45,7 @@ test_protein_missing <- read_table("protein_missing", params)
 stats_comp <- read_table("stats_comp", params)
 sample_groups <- read_table("sample_groups", params)
 
+df <- read_table('protein_sltmm_Kcnb1_Test_v_Kcnb1_Ctrl_final', params)
 df <- read_table('peptide_impute', params)
 test3 <- read_table('protein_sltmm', params)
 test4 <- read_table('protein_sltmm_final', params)

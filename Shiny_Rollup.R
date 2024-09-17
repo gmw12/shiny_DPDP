@@ -1,11 +1,13 @@
 cat(file = stderr(), "Shiny_Rollup.R", "\n")
 #--------------------------------------------------------------------
 
-rollup_apply <- function(session, input, output){ 
+rollup_apply <- function(session, input, output, params){ 
   cat(file = stderr(), "Function - rollup_apply...", "\n")
   showModal(modalDialog("Apply Rollup...", footer = NULL))
   
-  bg_rollup_apply <- callr::r_bg(func = rollup_apply_bg, args = list(params), stderr = str_c(params$error_path, "//error_rollup_bg.txt"), supervise = TRUE)
+  cat(file = stderr(), stringr::str_c("rollup_method = ", input$rollup_method), "\n")
+  arg_list <- list(input$rollup_method, input$rollup_topn, params)
+  bg_rollup_apply <- callr::r_bg(func = rollup_apply_bg, args = arg_list, stderr = stringr::str_c(params$error_path, "//error_rollup_bg.txt"), supervise = TRUE)
   bg_rollup_apply$wait()
   print_stderr("error_rollup_bg.txt")
 
@@ -14,7 +16,7 @@ rollup_apply <- function(session, input, output){
 
 #--------------------------------------------------------------------
 
-rollup_apply_bg <- function(params) {
+rollup_apply_bg <- function(input_rollup_method, input_rollup_top, params) {
   cat(file = stderr(), "Function - rollup_apply_bg...", "\n")
   
   source("Shiny_Rollup_Functions.R") 
@@ -27,16 +29,17 @@ rollup_apply_bg <- function(params) {
   for (norm in norm_type) {
     norm <- stringr::str_replace_all(norm, " ", "")
     
-    cat(file = stderr(), stringr::str_c("norm = ", norm,    ",   rollup_method = ", params$rollup_method), "\n")
+    cat(file = stderr(), stringr::str_c("norm = ", norm,    ",   rollup_method = ", input_rollup_method), "\n")
     
     table_name <- stringr::str_c("precursor_impute_", norm)
     table_name_out <- stringr::str_c("protein_", norm)
     table_name_out_peptide <- stringr::str_c("peptide_", norm)
     
     df <- RSQLite::dbReadTable(conn, table_name)
+    info_columns <- grep(df_design$ID[1], colnames(df)) - 1
 
     #rollup precursor/peptides
-    protein_df <- rollup_selector(df, params, df_design)
+    protein_df <- rollup_selector(df, df_design, input_rollup_method, input_rollup_top, info_columns, params)
     
     #rollup precursor to peptide
     peptide_df <- rollup_sum_peptide(df, df_design)

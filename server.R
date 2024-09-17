@@ -259,7 +259,7 @@ shinyServer(function(session, input, output) {
     rollup_widget_save(session, input, output) 
     
     #start rollup
-    rollup_apply(session, input, output)
+    rollup_apply(session, input, output, params)
     
     #start qc stats
     qc_stats(session, input, output, params)
