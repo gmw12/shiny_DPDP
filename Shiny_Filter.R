@@ -33,8 +33,36 @@ filter_data_bg <- function(table_name, new_table_name, params){
   total_columns <- ncol(df)
   df[df == 0] <- NA
   
-  #Step 1 optional misaligned filter
-  cat(file = stderr(), "step 1, misaligned filter...", "\n")
+  # Step 1 remove peptides/proteins below minimum count requirement overall 
+  cat(file = stderr(), "step 1, remove below minimum...", "\n")
+  minimum_filter <- function(df, info_columns, params) {
+    df$measured_count <- apply(df[, (info_columns + 1):ncol(df)], 1, function(x) sum(!is.na(x)))
+    df <- subset(df, df$measured_count >= params$filter_min_measured_all)
+    df <- df[,1:total_columns]
+    return(df)
+  }
+  df <- minimum_filter(df, info_columns, params)
+  
+  # Step 2 remove peptides/proteins below minimum count requirement in groups 
+  cat(file = stderr(), "step 2, remove below minimum group requirement...", "\n")
+  filter_min_group <- function(df, sample_groups, info_columns, params) {
+    for (i in 1:params$group_number) {
+      df$na_count <- apply(df[, (sample_groups$start[i] + info_columns):(sample_groups$end[i] + info_columns)], 1, function(x) sum(!is.na(x)))
+      df$na_count <- df$na_count / sample_groups$Count[i]
+      colnames(df)[colnames(df) == "na_count"] <- sample_groups$Group[i]
+    }
+    df$max <- apply(df[, (total_columns + 1):(ncol(df))], 1, function(x) max(x))
+    df <- subset(df, df$max >= params$filter_x_percent_value)
+    df <- df[1:total_columns]
+    return(df)
+  }
+  
+  if (params$filter_x_percent) {
+    filter_min_group(df, sample_groups, info_columns, params)
+  }
+  
+  #Step 3 optional misaligned filter
+  cat(file = stderr(), "step 3, misaligned filter...", "\n")
   
   if (params$checkbox_misaligned) {
     cat(file = stderr(), "setting misaligned to NA...", "\n")
@@ -52,39 +80,37 @@ filter_data_bg <- function(table_name, new_table_name, params){
     }
     
     misaligned_count <- 0
+    misaligned_rows_total <- NULL
+    misaligned_rows_total = c(misaligned_rows_total, 1, 3)
     for (i in 1:nrow(sample_groups)) {
       temp_df <- df[,(sample_groups$start[i] + info_columns):(sample_groups$end[i] + info_columns)] 
       test <- apply(temp_df, 1, test_alignment )
       misaligned_rows <- which(test == TRUE)
+      misaligned_rows_total <- c(misaligned_rows_total, misaligned_rows)
       misaligned_count = misaligned_count + length(misaligned_rows)
       temp_df[misaligned_rows, ] <- NA
       df[,(sample_groups$start[i] + info_columns):(sample_groups$end[i] + info_columns)] <- temp_df
     } 
     
     cat(file = stderr(), stringr::str_c("Misaligned rows --> ", misaligned_count), "\n")
+        
+    misaligned_rows_total <- unique(misaligned_rows_total)
+    if (params$misaligned_target == "dataset") {
+      cat(file = stderr(), stringr::str_c("Misaligned dataset rows --> ", length(misaligned_rows_total), "\n")
+      df <- df[-misaligned_rows_total,]
+      }
+    
   }
   
   
-  # Step 2 remove peptides/proteins below minimum count requirement overall 
-  cat(file = stderr(), "step 2, remove below minimum...", "\n")
-  df$measured_count <- apply(df[, (info_columns + 1):ncol(df)], 1, function(x) sum(!is.na(x)))
-  df <- subset(df, df$measured_count >= params$filter_min_measured_all)
-  df <- df[,1:total_columns]
-  
-  # Step 3 remove peptides/proteins below minimum count requirement in groups 
-  cat(file = stderr(), "step 3, remove below minimum group requirement...", "\n")
+  # Step 4, reapply first 2 filters in case misalignment filter creates new canidates 
+  cat(file = stderr(), "step 1,2 repeat, remove below minimum group requirement...", "\n")
+  df <- minimum_filter(df, info_columns, params)
   if (params$filter_x_percent) {
-    for (i in 1:params$group_number) {
-      df$na_count <- apply(df[, (sample_groups$start[i] + info_columns):(sample_groups$end[i] + info_columns)], 1, function(x) sum(!is.na(x)))
-      df$na_count <- df$na_count / sample_groups$Count[i]
-      colnames(df)[colnames(df) == "na_count"] <- sample_groups$Group[i]
-    }
-    df$max <- apply(df[, (total_columns + 1):(ncol(df))], 1, function(x) max(x))
-    df <- subset(df, df$max >= params$filter_x_percent_value)
-    df <- df[1:total_columns]
+    filter_min_group(df, sample_groups, info_columns, params)
   }
   
-  #Step 4 optional filter by cv of specific sample group
+  #Step 5 optional filter by cv of specific sample group
   cat(file = stderr(), "step 4, cv minimum...", "\n")
   if (params$filter_cv) {
     cat(file = stderr(), stringr::str_c("filter by cv"), "\n")

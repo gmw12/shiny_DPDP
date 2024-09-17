@@ -382,7 +382,7 @@ filter_widget_save <- function(session, input, output){
   cat(file = stderr(), "Function - parameter_widget_save...", "\n")
   
   names <- c('filter_min_measured_all', 'filter_x_percent', 'filter_x_percent_value', 'filter_cv', 'filter_cv_group', 'filter_cv_value',
-             "checkbox_misaligned", "misaligned_cutoff", "custom_intensity_cutoff", "intensity_cutoff_sd")
+             "checkbox_misaligned", "misaligned_cutoff", "misaligned_target", "custom_intensity_cutoff", "intensity_cutoff_sd")
   
   for (name in names) {
     params[[name]] <<- input[[name]]
