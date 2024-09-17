@@ -96,7 +96,7 @@ filter_data_bg <- function(table_name, new_table_name, params){
         
     misaligned_rows_total <- unique(misaligned_rows_total)
     if (params$misaligned_target == "dataset") {
-      cat(file = stderr(), stringr::str_c("Misaligned dataset rows --> ", length(misaligned_rows_total), "\n")
+      cat(file = stderr(), stringr::str_c("Misaligned dataset rows --> ", length(misaligned_rows_total), "\n"))
       df <- df[-misaligned_rows_total,]
       }
     
