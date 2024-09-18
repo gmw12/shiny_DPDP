@@ -221,7 +221,7 @@ source("Shiny_UI.R")
                              numericInput("filter_min_measured_all", label = "Enter minimum # measured values (all samples)", value = 2),
                              hr(),
                              fluidRow(
-                             column(width = 6, checkboxInput("filter_x_percent", label = "Require X% measured values in at least one group?")),
+                             column(width = 6, checkboxInput("filter_x_percent", label = "Require X% measured values in at least one group?", value=TRUE)),
                              column(width = 6, numericInput("filter_x_percent_value", label = "Enter X% measured values (decimal)", value = 0.8))
                              ),
                              fluidRow(
@@ -232,16 +232,52 @@ source("Shiny_UI.R")
                              ),
                              hr(),
                              fluidRow(
-                               column(width = 12, checkboxInput("checkbox_misaligned", label = "Misaligned Filter?"))
+                               column(width = 6, checkboxInput("checkbox_misaligned", label = "Misaligned Filter?")),
+                               column(width = 6,
+                                      dropdownButton(
+                                        fluidRow(
+                                          column(width = 12, tags$h5("When there are missing values present in a group this filter examines the values that are
+                                                                     measured.  If the percent of missing is above the threshold below the filter compares
+                                                                     the intensity to the cutoff threshold below.  If it is above then the values are either
+                                                                     removed fromt the group (NA) or the entire precursor can be removed from the dataset."))
+                                        ),
+                                        fluidRow(
+                                          column(width = 12, numericInput("intensity_cutoff_sd", label = "Misaligned intensity cutoff = mean+(x*stdev)", value = 0.5, width = '100%'))
+                                        ),
+                                        fluidRow(   
+                                          column(width = 12, numericInput("misaligned_cutoff", label = "X% missing values to be considered for misalignment if average > intensity cutoff", value = 51, width = '100%'))
+                                        ),
+                                        fluidRow(
+                                          column(width = 12, selectInput("misaligned_target", label = "Remove misalignment from group or dataset?", 
+                                                                         choices = list("group", "dataset"), selected = "SPQC"))
+                                        ),
+                                        circle = TRUE, status = "danger", icon = icon("cogs"), width = "300px", size = "sm",
+                                        tooltip = tooltipOptions(title = "Click to see misalignment options!")
+                                      )
+                                  )
                              ),
+                             hr(),
                              fluidRow(
-                               column(width = 6, numericInput("intensity_cutoff_sd", label = "Misaligned intensity cutoff = mean+(x*stdev)", value = 0.5, width = '100%')),
-                               column(width = 6, numericInput("misaligned_cutoff", label = "X% missing values to be considered for misalignment if average > intensity cutoff", value = 51, width = '100%'))
+                               column(width = 6, checkboxInput("precursor_quality", label = "Precusor Quality Filter")),
+                               column(width = 6,
+                                      dropdownButton(
+                                        fluidRow(
+                                          column(width = 12, tags$h5("This filter compares the percentage contribution of a precursor to the protein
+                                                                     accross all samples.  If the percent standard deviation and intensity is above the 
+                                                                     threshold below then the precusor is removed.  The filter examines the highest intensity 
+                                                                     precursor first.  It is then removed from the filter calculation steps for the next
+                                                                     abundant precursor.  Minimum of 3 precursors required."))
+                                        ),
+                                        fluidRow(
+                                          column(width = 12, numericInput("precursor_quality_sd", label = "Percent SD cuttof", value = 50))),
+                                        fluidRow(
+                                          column(width = 12, numericInput("precursor_quality_intensity", label = "Minimum Intensity", value = 500))),
+                                        circle = TRUE, status = "danger", icon = icon("cogs"), width = "300px", size = "sm",
+                                        tooltip = tooltipOptions(title = "Click to see misalignment options!")
+                                      )
+                             )
                              ),
-                             fluidRow(
-                               column(width = 12, selectInput("misaligned_target", label = "Remove misalignment from group or dataset?", 
-                                                             choices = list("group", "dataset"), selected = "SPQC"))
-                             ),
+
                              hr(),
                              fluidRow(align = "center", 
                                       actionButton("filter_cutoff", label = "Recalculate Cutoff",

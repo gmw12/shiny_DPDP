@@ -21,6 +21,7 @@ filter_data <- function(session, input, output){
 # require row to contain at least one group that has at least 2 values
 filter_data_bg <- function(table_name, new_table_name, params){
   cat(file = stderr(), "Function - filter_data_bg...", "\n")
+  source("Shiny_Filter.R")
   
   start <- Sys.time()
   
@@ -63,6 +64,8 @@ filter_data_bg <- function(table_name, new_table_name, params){
   
   #Step 3 optional misaligned filter
   cat(file = stderr(), "step 3, misaligned filter...", "\n")
+  misaligned_count <- 0
+  misaligned_rows_total <- NULL
   
   if (params$checkbox_misaligned) {
     cat(file = stderr(), "setting misaligned to NA...", "\n")
@@ -79,9 +82,6 @@ filter_data_bg <- function(table_name, new_table_name, params){
       return(misaligned)
     }
     
-    misaligned_count <- 0
-    misaligned_rows_total <- NULL
-    misaligned_rows_total = c(misaligned_rows_total, 1, 3)
     for (i in 1:nrow(sample_groups)) {
       temp_df <- df[,(sample_groups$start[i] + info_columns):(sample_groups$end[i] + info_columns)] 
       test <- apply(temp_df, 1, test_alignment )
@@ -132,7 +132,14 @@ filter_data_bg <- function(table_name, new_table_name, params){
   
   }
   
-  cat(file = stderr(), "step 5 - remove_duplicates...", "\n")
+  
+  # Step 5, precursor quality filter 
+  cat(file = stderr(), "step 5 - Precursor Quality Filter...", "\n")
+  if (params$precursor_quality) {
+    df <- precursor_quality(df, params)
+  }
+  
+  cat(file = stderr(), "step 6 - remove_duplicates...", "\n")
   
   if (params$data_source == "PD") {
     df$Modifications[is.na(df$Modifications)] <- ""
@@ -196,3 +203,58 @@ remove_duplicates <- function(data_in){
   
   return(data_out)
 }
+  
+  #----------------------------------------------------------------------------------
+  
+  precursor_quality <- function(df, params){
+    cat(file = stderr(), "Function precusor_quality...", "\n")
+    
+    protein_list <- unique(df$Accession)
+    
+    require(foreach)
+    require(doParallel)
+    cores <- detectCores()
+    cl <- makeCluster(cores - 2)
+    registerDoParallel(cl)
+    
+    bad_df <- foreach(protein = protein_list, .combine = rbind) %dopar% {
+      df2 <- df[df$Accession==protein,]
+      
+      bad_list <- NULL
+      bad_result <- NULL
+      bad_average <- NULL
+      if (nrow(df2) >= 3) {
+        df3 <- df2[,(ncol(df2)-params$sample_number+1):ncol(df2)]
+        row.names(df3) <- df2$PrecursorId
+        
+        df3$average <- rowMeans(df3, na.rm = TRUE)
+        df3 <- df3[order(df3$average, decreasing=TRUE),]
+        prec_average <- unlist(df3$average)
+        df3$average <- NULL
+        prec_rows <- min(2, nrow(df3) - 2) 
+        for (i in (1:nrow(df3))) {
+          if (prec_average[i] < params$precursor_quality_intensity) { break }
+          prec_sums <- colSums(df3, na.rm = TRUE)
+          prec_ratio <- unlist(df3[1,]) / prec_sums 
+          test <- sd(prec_ratio, na.rm = TRUE)/mean(prec_ratio, na.rm = TRUE) * 100
+          if (test > params$precursor_quality_sd) {
+            bad_list <- c(bad_list, row.names(df3)[1])
+            bad_result <- c(bad_result, test)
+            bad_average <- c(bad_average, prec_average[i])
+          }
+          df3 <- df3[-1,]
+        }
+      }
+      
+      temp_df <- data.frame(cbind(bad_list, bad_result, bad_average))
+      temp_df
+
+    }
+    stopCluster(cl) 
+    
+    df_final <- df[!(df$PrecursorId %in% bad_df$bad_list),]
+    
+    cat(file = stderr(), "Function precusor_quality...end", "\n")
+    return(df_final)
+  } 
+  
