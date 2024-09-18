@@ -205,7 +205,7 @@ meta_data <- function(table_string){
   showModal(modalDialog("Gathering meta data...", footer = NULL))
   
   table_name <- str_c("precursor_", table_string)
-  error_file <- str_c("error_", table_string, "meta.txt")
+  error_file <- str_c("error_", table_string, "_meta.txt")
   
   bg_meta <- callr::r_bg(func = meta_data_bg, args = list(table_name, table_string, params), stderr = str_c(params$error_path, "//", error_file), supervise = TRUE)
   bg_meta$wait()

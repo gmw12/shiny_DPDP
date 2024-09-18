@@ -12,6 +12,8 @@ filter_data <- function(session, input, output){
     print_stderr("error_filter.txt")
   } 
   
+  params <<- bg_filter$get_result()
+  
   cat(file = stderr(), "Function - filter_data...end", "\n\n")
   removeModal()
 }
@@ -22,66 +24,53 @@ filter_data <- function(session, input, output){
 filter_data_bg <- function(table_name, new_table_name, params){
   cat(file = stderr(), "Function - filter_data_bg...", "\n")
   source("Shiny_Filter.R")
+  source("Shiny_File.R")
   
   start <- Sys.time()
   
-  conn <- RSQLite::dbConnect(RSQLite::SQLite(), params$database_path)
-  df <- RSQLite::dbReadTable(conn, table_name)
-  sample_groups <- RSQLite::dbReadTable(conn, "sample_groups")
-
+  df <- read_table_try(table_name, params)
+  sample_groups <- read_table_try("sample_groups", params)
 
   info_columns <- ncol(df) - params$sample_number
   total_columns <- ncol(df)
   df[df == 0] <- NA
   
+  step0 <- filter_stats(df)
+  
   # Step 1 remove peptides/proteins below minimum count requirement overall 
   cat(file = stderr(), "step 1, remove below minimum...", "\n")
-  minimum_filter <- function(df, info_columns, params) {
-    df$measured_count <- apply(df[, (info_columns + 1):ncol(df)], 1, function(x) sum(!is.na(x)))
-    df <- subset(df, df$measured_count >= params$filter_min_measured_all)
-    df <- df[,1:total_columns]
-    return(df)
-  }
-  df <- minimum_filter(df, info_columns, params)
+  df <- minimum_filter(df, info_columns, total_columns, params)
+  step1 <- filter_stats(df)
+  cat(file = stderr(), stringr::str_c("step 1 - ", step0[[1]]-step1[[1]], " ", step0[[2]]-step1[[2]], " ", step0[[3]]-step1[[3]]), "\n")
+  
   
   # Step 2 remove peptides/proteins below minimum count requirement in groups 
   cat(file = stderr(), "step 2, remove below minimum group requirement...", "\n")
-  filter_min_group <- function(df, sample_groups, info_columns, params) {
-    for (i in 1:params$group_number) {
-      df$na_count <- apply(df[, (sample_groups$start[i] + info_columns):(sample_groups$end[i] + info_columns)], 1, function(x) sum(!is.na(x)))
-      df$na_count <- df$na_count / sample_groups$Count[i]
-      colnames(df)[colnames(df) == "na_count"] <- sample_groups$Group[i]
-    }
-    df$max <- apply(df[, (total_columns + 1):(ncol(df))], 1, function(x) max(x))
-    df <- subset(df, df$max >= params$filter_x_percent_value)
-    df <- df[1:total_columns]
-    return(df)
-  }
-  
   if (params$filter_x_percent) {
-    filter_min_group(df, sample_groups, info_columns, params)
+    df <- filter_min_group(df, sample_groups, info_columns, total_columns, params)
   }
+  step2 <- filter_stats(df)
+  cat(file = stderr(), stringr::str_c("step 2 - ", step1[[1]]-step2[[1]], " ", step1[[2]]-step2[[2]], " ", step1[[3]]-step2[[3]]), "\n")
+  
   
   #Step 3 optional misaligned filter
   cat(file = stderr(), "step 3, misaligned filter...", "\n")
   misaligned_count <- 0
   misaligned_rows_total <- NULL
   
-  if (params$checkbox_misaligned) {
-    cat(file = stderr(), "setting misaligned to NA...", "\n")
-    
-    #function to find misalignments
-    test_alignment <- function(x) {
-      misaligned <- FALSE
-      missing <- sum(is.na(x))/length(x) * 100
-      if (missing > params$misaligned_cutoff && missing < 100) {
-        if (mean(x, na.rm = TRUE) >= params$intensity_cutoff) {
-          misaligned <- TRUE
-        }
+  #function to find misalignments
+  test_alignment <- function(x) {
+    misaligned <- FALSE
+    missing <- sum(is.na(x))/length(x) * 100
+    if (missing > params$misaligned_cutoff && missing < 100) {
+      if (mean(x, na.rm = TRUE) >= params$intensity_cutoff) {
+        misaligned <- TRUE
       }
-      return(misaligned)
     }
-    
+    return(misaligned)
+  }
+  
+  if (params$checkbox_misaligned) {
     for (i in 1:nrow(sample_groups)) {
       temp_df <- df[,(sample_groups$start[i] + info_columns):(sample_groups$end[i] + info_columns)] 
       test <- apply(temp_df, 1, test_alignment )
@@ -99,47 +88,49 @@ filter_data_bg <- function(table_name, new_table_name, params){
       cat(file = stderr(), stringr::str_c("Misaligned dataset rows --> ", length(misaligned_rows_total), "\n"))
       df <- df[-misaligned_rows_total,]
       }
-    
   }
   
+  step3 <- filter_stats(df)
+  cat(file = stderr(), stringr::str_c("step 3 - ", step2[[1]]-step3[[1]], " ", step2[[2]]-step3[[2]], " ", step2[[3]]-step3[[3]]), "\n")
   
   # Step 4, reapply first 2 filters in case misalignment filter creates new canidates 
-  cat(file = stderr(), "step 1,2 repeat, remove below minimum group requirement...", "\n")
-  df <- minimum_filter(df, info_columns, params)
+  cat(file = stderr(), "step 4, remove below minimum group requirement...", "\n")
+  df <- minimum_filter(df, info_columns, total_columns,params)
   if (params$filter_x_percent) {
-    filter_min_group(df, sample_groups, info_columns, params)
+    filter_min_group(df, sample_groups, info_columns, total_columns, params)
   }
+  
+  step4 <- filter_stats(df)
+  cat(file = stderr(), stringr::str_c("step 4 - ", step3[[1]]-step4[[1]], " ", step3[[2]]-step4[[2]], " ", step3[[3]]-step4[[3]]), "\n")
+  
+  
   
   #Step 5 optional filter by cv of specific sample group
-  cat(file = stderr(), "step 4, cv minimum...", "\n")
+  cat(file = stderr(), "step 5, cv minimum...", "\n")
   if (params$filter_cv) {
     cat(file = stderr(), stringr::str_c("filter by cv"), "\n")
-
-    #Percent CV ---------------------------------
-    percentCV <- function(x) {
-      ave <- rowMeans(x)
-      n <- ncol(x)
-      sd <- apply(x[1:n], 1, sd)
-      cv <- (100 * sd / ave)
-      return(signif(cv, digits = 3))
-    }
-    
     start <- info_columns + sample_groups$start[sample_groups$Group == params$filter_cv_group]
     end <- info_columns + sample_groups$end[sample_groups$Group == params$filter_cv_group]
-    df$filterCV <- percentCV(df[start:end])
+    df$filterCV <- filter_percentCV(df[start:end])
     df <- subset(df, df$filterCV < params$filter_cv_value)
     df <- df[-ncol(df)]
-  
   }
+  step5 <- filter_stats(df)
+  cat(file = stderr(), stringr::str_c("step 5 - ", step4[[1]]-step5[[1]], " ", step4[[2]]-step5[[2]], " ", step4[[3]]-step5[[3]]), "\n")
   
   
-  # Step 5, precursor quality filter 
-  cat(file = stderr(), "step 5 - Precursor Quality Filter...", "\n")
+  # Step 6, precursor quality filter 
+  cat(file = stderr(), "step 6 - Precursor Quality Filter...", "\n")
   if (params$precursor_quality) {
     df <- precursor_quality(df, params)
   }
+  step6 <- filter_stats(df)
+  cat(file = stderr(), stringr::str_c("step 6 - ", step5[[1]]-step6[[1]], " ", step5[[2]]-step6[[2]], " ", step5[[3]]-step6[[3]]), "\n")
   
-  cat(file = stderr(), "step 6 - remove_duplicates...", "\n")
+  
+  
+  
+  cat(file = stderr(), "step 7 - remove_duplicates...", "\n")
   
   if (params$data_source == "PD") {
     df$Modifications[is.na(df$Modifications)] <- ""
@@ -151,8 +142,12 @@ filter_data_bg <- function(table_name, new_table_name, params){
   if (params$data_source == "SP") {
     df <- dplyr::distinct(df, PrecursorId, .keep_all = TRUE)
   }
+
+  step7 <- filter_stats(df)
+  cat(file = stderr(), stringr::str_c("step 7 - ", step6[[1]]-step7[[1]], " ", step6[[2]]-step7[[2]], " ", step6[[3]]-step7[[3]]), "\n")
   
-  cat(file = stderr(), "step 6 - create missing.values table for impute page...", "\n")
+    
+  cat(file = stderr(), "step 8 - create missing.values table for impute page...", "\n")
   df_samples <- df[(info_columns + 1):ncol(df)]
   missing.values <- df_samples |>
     tidyr::gather(key = "key", value = "val") |>
@@ -162,9 +157,10 @@ filter_data_bg <- function(table_name, new_table_name, params){
     dplyr::filter(is.missing == T) |>
     dplyr::select(-is.missing) |>
     dplyr::arrange(desc(num.missing)) 
-  RSQLite::dbWriteTable(conn, "missing_values", missing.values, overwrite = TRUE)
   
-  cat(file = stderr(), "step 7 - create missing.values2 table for impute page plots...", "\n")
+  write_table_try("missing_values", missing.values, params)
+  
+  cat(file = stderr(), "step 9 - create missing.values2 table for impute page plots...", "\n")
   missing.values2 <- df_samples |>
     tidyr::gather(key = "key", value = "val") |>
     dplyr::mutate(isna = is.na(val)) |>
@@ -174,16 +170,63 @@ filter_data_bg <- function(table_name, new_table_name, params){
     dplyr::summarise(num.isna = dplyr::n()) |>
     dplyr::mutate(pct = num.isna / total * 100)
   
-  RSQLite::dbWriteTable(conn, "missing_values_plots", missing.values2, overwrite = TRUE)
+  write_table_try("missing_values_plots", missing.values2, params)
   
-  cat(file = stderr(), "step 8 - write data to db...", "\n")
-  RSQLite::dbWriteTable(conn, new_table_name, df, overwrite = TRUE)
-  RSQLite::dbDisconnect(conn)
+  cat(file = stderr(), "step 10 - write data to db...", "\n")
+  write_table_try(new_table_name, df, params)
+  
+  params$meta_protein_filter <- step7[[1]]
+  params$meta_peptide_filter <- step7[[2]]
+  params$meta_precursor_filter <- step7[[3]]
+  
+  write_table_try("params", params, params)
   
   cat(file = stderr(), stringr::str_c("filter_data completed in ", Sys.time() - start), "\n")
-  return()
+  return(params)
 }
 
+
+#----------------------------------------------------------------------------------
+filter_stats <- function(df) {
+  current_protein <- length(unique(df$Accession))
+  current_peptide <- length(unique(df$Sequence))
+  current_precursor <- length(unique(df$PrecursorId))
+  return(list(current_protein, current_peptide, current_precursor))
+  }
+#----------------------------------------------------------------------------------
+
+
+
+#----------------------------------------
+
+filter_percentCV <- function(x) {
+  ave <- rowMeans(x)
+  n <- ncol(x)
+  sd <- apply(x[1:n], 1, sd)
+  cv <- (100 * sd / ave)
+  return(signif(cv, digits = 3))
+}
+
+#----------------------------------------------------------------------------------
+filter_min_group <- function(df, sample_groups, info_columns, total_columns, params) {
+  for (i in 1:params$group_number) {
+    df$na_count <- apply(df[, (sample_groups$start[i] + info_columns):(sample_groups$end[i] + info_columns)], 1, function(x) sum(!is.na(x)))
+    df$na_count <- df$na_count / sample_groups$Count[i]
+    colnames(df)[colnames(df) == "na_count"] <- sample_groups$Group[i]
+  }
+  df$max <- apply(df[, (total_columns + 1):(ncol(df))], 1, function(x) max(x))
+  df <- subset(df, df$max >= params$filter_x_percent_value)
+  df <- df[1:total_columns]
+  return(df)
+}
+#----------------------------------------------------------------------------------
+
+minimum_filter <- function(df, info_columns, total_columns, params) {
+  df$measured_count <- apply(df[, (info_columns + 1):ncol(df)], 1, function(x) sum(!is.na(x)))
+  df <- subset(df, df$measured_count >= params$filter_min_measured_all)
+  df <- df[,1:total_columns]
+  return(df)
+}
 #----------------------------------------------------------------------------------
 
 remove_duplicates <- function(data_in){

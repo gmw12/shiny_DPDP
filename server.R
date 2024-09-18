@@ -183,7 +183,7 @@ shinyServer(function(session, input, output) {
    filter_create_plots(sesion, input, output, params)
    
    #gather meta data for filtered dataframe
-   meta_data("filter")
+   #meta_data("filter")
    
    cat(file = stderr(), "filter apply clicked...end", "\n")
  })
