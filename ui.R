@@ -235,19 +235,12 @@ source("Shiny_UI.R")
                                column(width = 12, checkboxInput("checkbox_misaligned", label = "Misaligned Filter?"))
                              ),
                              fluidRow(
-<<<<<<< HEAD
-                               column(width = 12, numericInput("intensity_cutoff_sd", label = "Misaligned intensity cutoff = mean+(x*stdev)", value = 0.5, width = '100%'))
-=======
-                               column(width = 12, numericInput("misaligned_cutoff", label = "X% missing values to be considered for misalignment if average > intensity cutoff", value = 51, width = '100%'))
+                               column(width = 6, numericInput("intensity_cutoff_sd", label = "Misaligned intensity cutoff = mean+(x*stdev)", value = 0.5, width = '100%')),
+                               column(width = 6, numericInput("misaligned_cutoff", label = "X% missing values to be considered for misalignment if average > intensity cutoff", value = 51, width = '100%'))
                              ),
                              fluidRow(
                                column(width = 12, selectInput("misaligned_target", label = "Remove misalignment from group or dataset?", 
                                                              choices = list("group", "dataset"), selected = "SPQC"))
-                             ),
-                             fluidRow(
-                               column(width = 6, checkboxInput("custom_intensity_cutoff", label = "Misalignment Intensity Cutoff?")),
-                               column(width = 6, numericInput("intensity_cutoff_sd", label = "intensity cutoff = mean+(x*stdev)", value = 0.5, width = '100%'))
->>>>>>> e0acd8cb9e416b9280872377dc341d38d02519f4
                              ),
                              hr(),
                              fluidRow(align = "center", 
