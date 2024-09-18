@@ -254,7 +254,6 @@ update_widgets <- function(session, input, output, params) {
     updateNumericInput(session, 'filter_cv_value', value = params$filter_cv_value)
     updateCheckboxInput(session, 'checkbox_misaligned', value = params$checkbox_misaligned) 
     updateNumericInput(session, 'misaligned_cutoff', value = params$misaligned_cutoff)
-    updateCheckboxInput(session, 'custom_intensity_cutoff', value = params$custom_intensity_cutoff) 
     updateNumericInput(session, 'intensity_cutoff_sd', value = params$intensity_cutoff_sd)
     
     #Norm---------------------------------------------------
@@ -382,7 +381,7 @@ filter_widget_save <- function(session, input, output){
   cat(file = stderr(), "Function - parameter_widget_save...", "\n")
   
   names <- c('filter_min_measured_all', 'filter_x_percent', 'filter_x_percent_value', 'filter_cv', 'filter_cv_group', 'filter_cv_value',
-             "checkbox_misaligned", "misaligned_cutoff", "custom_intensity_cutoff", "intensity_cutoff_sd")
+             "checkbox_misaligned", "misaligned_cutoff", "intensity_cutoff_sd")
   
   for (name in names) {
     params[[name]] <<- input[[name]]

@@ -372,12 +372,10 @@ histogram_plot <- function(table_name, plottitle, params)
   params$intensity_mean <- x_mean
   params$intensity_sd <- x_stdev
   
-  if (params$custom_intensity_cutoff) {
-    cat(file = stderr(), "using custom intensity cutoff...", "\n")
-    intensity_cutoff <- x_mean + (as.numeric(params$intensity_cutoff_sd) * x_stdev)
-    params$intensity_cutoff <- trunc(2^intensity_cutoff)
-    cat(file = stderr(), stringr::str_c("new intensity_cuttoff = ", intensity_cutoff), "\n")
-  }
+  intensity_cutoff <- x_mean + (as.numeric(params$intensity_cutoff_sd) * x_stdev)
+  params$intensity_cutoff <- trunc(2^intensity_cutoff)
+  cat(file = stderr(), stringr::str_c("new intensity_cuttoff = ", intensity_cutoff), "\n")
+
 
   df_gather <- tidyr::gather(df)
   df_gather <- subset(df_gather, df_gather$value > 0)

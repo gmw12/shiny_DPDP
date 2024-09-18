@@ -181,12 +181,13 @@ rollup_maxlfq <- function(peptide_data, info_columns){
   
   protein_table <- iq::fast_MaxLFQ(df_maxlfq)
   result <- data.frame(2^protein_table$estimate)
-  #result[is.na(result)] <- 0
   
   #combine annotation data with protein rollup, (replacing summed data)
   result <- result[order(row.names(result)),]
 
   df <- df[order(df$Accession),]
+  rownames(df) <- NULL
+
   df[(info_columns + 1):ncol(df)] <- result
   
   

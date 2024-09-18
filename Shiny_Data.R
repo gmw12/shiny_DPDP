@@ -689,6 +689,7 @@ order_rename_columns_bg <- function(table_name, params) {
   
   #make sure data is numeric
   df <- dplyr::mutate_all(df, function(x) as.numeric(as.character(x)))
+  
   colnames(df) <- design$Header1
   df <- cbind(annotate_df, df)
   
