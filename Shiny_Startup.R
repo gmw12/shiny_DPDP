@@ -179,6 +179,7 @@ create_default_params <- function() {
               "missing_cutoff" = 50,
               "checkbox_misaligned" = FALSE,
               "misaligned_cutoff" = 50,
+              "misaligned_target" = "group",
               "total_na" = 0,
               "total_misaligned" = 0,
               "norm_include" = FALSE,
