@@ -1,11 +1,14 @@
 cat(file = stderr(), "Shiny_Rollup_Functions.R", "\n")
 
 #--------------------------------------------------------------------------------
-rollup_selector <- function(df, df_design, input_rollup_method, input_rollup_topn, info_columns, params){
+rollup_selector <- function(df, df_design, input_rollup_method, input_rollup_topn, params){
   cat(file = stderr(), "function rollup_selector...", "\n")
   
   df <- df |> dplyr::select(contains(c("Accession", "Description", "Genes", df_design$ID))) |> 
     dplyr::mutate(Precursors = 1, .after = Genes)
+  
+  #hard coded from above selection
+  info_columns <- 4
   
   if (input_rollup_method == "sum") {df <-  rollup_sum(df)}
     else if (input_rollup_method == "median") {df <-  rollup_median(df)}
@@ -22,7 +25,7 @@ rollup_selector <- function(df, df_design, input_rollup_method, input_rollup_top
 rollup_sum <- function(df){
   cat(file = stderr(), "function rollup_sum...", "\n")
   
-  protein_df <- df |> dplyr::group_by(Accession, Description, Genes) |> dplyr::summarise_all(list(sum))
+  protein_df <- df |> dplyr::group_by(Accession, Description, Name, Genes) |> dplyr::summarise_all(list(sum))
   protein_df <- data.frame(dplyr::ungroup(protein_df))
   
   cat(file = stderr(), "function rollup_sum...end", "\n")
@@ -33,7 +36,7 @@ rollup_sum <- function(df){
 rollup_sum_peptide <- function(df, df_design){
   cat(file = stderr(), "function rollup_sum_peptide...", "\n")
   
-  df <- df |> dplyr::select(contains(c("Accession", "Description", "Genes", "Sequence", "PeptidePosition", df_design$ID))) |> 
+  df <- df |> dplyr::select(contains(c("Accession", "Description", "Name", "Genes", "Sequence", "PeptidePosition", df_design$ID))) |> 
     dplyr::mutate(Precursors = 1, .after = PeptidePosition)
   
   peptide_df <- df |> dplyr::group_by(Accession, Description, Genes, Sequence, PeptidePosition) |> dplyr::summarise_all(list(sum))
@@ -48,7 +51,7 @@ rollup_median <- function(df){
   cat(file = stderr(), "function rollup_median...", "\n")
   
   #group and sum for precursors column
-  df_info <- df |> dplyr::select(contains(c("Accession", "Description", "Gene", "Precursors"))) |> 
+  df_info <- df |> dplyr::select(contains(c("Accession", "Description", "Name", "Gene", "Precursors"))) |> 
     dplyr::group_by(Accession, Description, Genes) |> dplyr::summarise_all(list(sum))
   df_info <- data.frame(dplyr::ungroup(df_info))
   
@@ -69,7 +72,7 @@ rollup_mean <- function(peptide_data, info_columns){
   cat(file = stderr(), "rollup_mean triggered...", "\n")
   
   #group and sum for precursors column
-  df_info <- df |> dplyr::select(contains(c("Accession", "Description", "Gene", "Precursors"))) |> 
+  df_info <- df |> dplyr::select(contains(c("Accession", "Description", "Name", "Gene", "Precursors"))) |> 
     dplyr::group_by(Accession, Description, Genes) |> dplyr::summarise_all(list(sum))
   df_info <- data.frame(dplyr::ungroup(df_info))
   
@@ -90,7 +93,7 @@ rollup_median_polish <- function(peptide_data, info_columns){
   cat(file = stderr(), "rollup_median_polish triggered...", "\n")
   
   #group and sum data (summed samples will be over written below)
-  df <- peptide_data |> group_by(Accession, Description, Genes) |> summarise_all(list(sum))
+  df <- peptide_data |> group_by(Accession, Description, Name, Genes) |> summarise_all(list(sum))
   df <- data.frame(ungroup(df))
   
   #select data and log
@@ -116,7 +119,7 @@ rollup_topn <- function(df, topn_count){
   cat(file = stderr(), "rollup_topn triggered...", "\n")
   
   #group and sum data (summed samples will be over written below)
-  df_info <- df |> dplyr::group_by(Accession, Description, Genes) |> dplyr::summarise_all(list(sum))
+  df_info <- df |> dplyr::group_by(Accession, Description, Name, Genes) |> dplyr::summarise_all(list(sum))
   df_info <- data.frame(dplyr::ungroup(df_info))
   
   #select data and log, hardcoded start of data for now...
@@ -148,7 +151,10 @@ rollup_maxlfq <- function(peptide_data, info_columns){
   samples_columns <- ncol(peptide_data) - info_columns
   
   #group and sum data (summed samples will be over written below)
-  df <- peptide_data |> dplyr::group_by(Accession, Description, Genes) |> dplyr::summarise_all(list(sum))
+  save(peptide_data, file="lfq1")
+  save(info_columns, file="lfq2")
+  #load(file="lfq1"); load(file="lfq2")
+  df <- peptide_data |> dplyr::group_by(Accession, Description, Name, Genes) |> dplyr::summarise_all(list(sum))
   
   #select data and log
   df_data <- peptide_data[,(info_columns + 1):ncol(peptide_data)]
@@ -181,15 +187,17 @@ rollup_maxlfq <- function(peptide_data, info_columns){
   
   protein_table <- iq::fast_MaxLFQ(df_maxlfq)
   result <- data.frame(2^protein_table$estimate)
+
+  save(result, file = "lfq3")
+  save(df, file = "lfq4")
+  #load(file="lfq3"); load(file="lfq4")
   
   #combine annotation data with protein rollup, (replacing summed data)
   result <- result[order(row.names(result)),]
-
   df <- df[order(df$Accession),]
   rownames(df) <- NULL
 
   df[(info_columns + 1):ncol(df)] <- result
-  
   
   return(df)  
 }

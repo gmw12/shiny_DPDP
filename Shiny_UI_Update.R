@@ -6,7 +6,7 @@ ui_render_load_design <- function(session, input, output) {
   #showModal(modalDialog("Render design...", footer = NULL))
   
   output$data_source <- renderText({str_c("Source:  ", params$data_source)})
-  output$data_format <- renderText({str_c("Input format:  ", params$raw_data_format)})
+  output$data_input <- renderText({str_c("Raw Data Format:  ", params$raw_data_format)})
   output$data_table_format <- renderText({str_c("Table format:  ", params$data_table_format)})
   
   if (params$ptm) {
@@ -72,7 +72,7 @@ render_filter_histogram_graphs <- function(session, input, output) {
   cat(file = stderr(), "Function render_filter_histogram_graphs", "\n")
   
   output$impute_histogram <- renderImage({
-    list(src = str_c(params$qc_path, "Precursor_NoiseFiltered_Histogram.png"), contentType = 'image/png', width = 600, height = 600, alt = "this is alt text")
+    list(src = str_c(params$qc_path, "Precursor_NoiseFiltered_Histogram.png"), contentType = 'image/png', width = 500, height = 600, alt = "this is alt text")
   }, deleteFile = FALSE)
   
   output$impute_total_na <- renderText({str_c("Total missing:  ", params$total_na)})
@@ -116,11 +116,11 @@ render_filter_graphs <- function(session, input, output) {
   cat(file = stderr(), "Function render_filter_graphs", "\n")
   
   output$filter_bar <- renderImage({
-    list(src = str_c(params$qc_path,"Precursor_Filter_barplot.png"), contentType = 'image/png', width = 400, height = 400, alt = "this is alt text")
+    list(src = str_c(params$qc_path,"Precursor_Filter_barplot.png"), contentType = 'image/png', width = 350, height = 400, alt = "this is alt text")
   }, deleteFile = FALSE)
   
   output$filter_box <- renderImage({
-    list(src = str_c(params$qc_path,"Precursor_Filter_boxplot.png"), contentType = 'image/png', width = 400, height = 250, alt = "this is alt text")
+    list(src = str_c(params$qc_path,"Precursor_Filter_boxplot.png"), contentType = 'image/png', width = 350, height = 250, alt = "this is alt text")
   }, deleteFile = FALSE)
   
   
@@ -259,6 +259,9 @@ update_widgets <- function(session, input, output, params) {
     updateCheckboxInput(session, 'precursor_quality', value = params$precursor_quality) 
     updateNumericInput(session, 'precursor_quality_sd', value = params$precursor_quality_sd)
     updateNumericInput(session, 'precursor_quality_intensity', value = params$precursor_quality_intensity)
+    updateCheckboxInput(session, 'precursor_spqc_ratio', value = params$precursor_spqc_ratio) 
+    updateNumericInput(session, 'precursor_spqc_intensity', value = params$precursor_spqc_intensity)
+    updateNumericInput(session, 'precursor_spqc_accuracy', value = params$precursor_spqc_accuracy)
     
     #Norm---------------------------------------------------
     updateCheckboxInput(session, 'norm_exclude', value = params$norm_exclude) 
@@ -386,7 +389,7 @@ filter_widget_save <- function(session, input, output){
   
   names <- c('filter_min_measured_all', 'filter_x_percent', 'filter_x_percent_value', 'filter_cv', 'filter_cv_group', 'filter_cv_value',
              "checkbox_misaligned", "misaligned_cutoff", "misaligned_target", "intensity_cutoff_sd", "precursor_quality", "precursor_quality_sd",
-             "precursor_quality_intensity")
+             "precursor_quality_intensity", "precursor_spqc_ratio", "precursor_spqc_intensity", "precursor_spqc_accuracy")
   
   for (name in names) {
     params[[name]] <<- input[[name]]
@@ -462,7 +465,7 @@ stat_widget_save <- function(session, input, output){
   }
 
   param_save_to_database()
-  
+  cat(file = stderr(), "Function - stat_widget_save...end", "\n")
 }
 
 

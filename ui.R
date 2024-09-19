@@ -125,7 +125,8 @@ source("Shiny_UI.R")
 
                 checkboxInput("use_isoform", label = "Use Peptide Isoform?"),
 
-                fluidRow(align = "center", actionButton("accept_parameters", label = "Accept Parameters",
+                fluidRow(align = "center", 
+                         actionButton("accept_parameters", label = "Accept Parameters",
                              style = "color: #fff; background-color: #337ab7; border-color: #2e6da4"))
                 ))),
         
@@ -222,7 +223,7 @@ source("Shiny_UI.R")
                              hr(),
                              fluidRow(
                              column(width = 6, checkboxInput("filter_x_percent", label = "Require X% measured values in at least one group?", value=TRUE)),
-                             column(width = 6, numericInput("filter_x_percent_value", label = "Enter X% measured values (decimal)", value = 0.8))
+                             column(width = 6, numericInput("filter_x_percent_value", label = "Enter X% measured values", value = 50))
                              ),
                              fluidRow(
                               column(width = 4, checkboxInput("filter_cv", label = "Filter on Group CV?")),
@@ -277,7 +278,26 @@ source("Shiny_UI.R")
                                       )
                              )
                              ),
-
+                             hr(),
+                             fluidRow(
+                               column(width = 6, checkboxInput("precursor_spqc_ratio", label = "Precursor SPQC Accuracy Filter")),
+                               column(width = 6,
+                                      dropdownButton(
+                                        fluidRow(
+                                          column(width = 12, tags$h5("This filter compares the average intensity of samples to the average intensity
+                                                                     of spqc.  Assumption is the the SPQC should be the average sample.  If the accuracy
+                                                                     is outside of the designated tolerance and above the minimum intensity it is 
+                                                                     removed."))
+                                        ),
+                                        fluidRow(
+                                          column(width = 12, numericInput("precursor_spqc_accuracy", label = "+- Percent SPQC Accuracy", value = 50))),
+                                        fluidRow(
+                                          column(width = 12, numericInput("precursor_spqc_intensity", label = "Minimum Intensity of SPQC Samples", value = 500))),
+                                        circle = TRUE, status = "danger", icon = icon("cogs"), width = "300px", size = "sm",
+                                        tooltip = tooltipOptions(title = "Click to see misalignment options!")
+                                      )
+                               )
+                             ),
                              hr(),
                              fluidRow(align = "center", 
                                       actionButton("filter_cutoff", label = "Recalculate Cutoff",

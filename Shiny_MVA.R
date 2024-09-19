@@ -146,22 +146,24 @@ stat_calc <- function(session, input, output){
 stat_calc_bg <- function(params, comp_number, stats_comp, input_rollup_method, input_rollup_topn){
   cat(file = stderr(), "function stat_calc_bg....", "\n")
   source('Shiny_MVA_Functions.R')
+  source('Shiny_File.R')
 
-  conn <- RSQLite::dbConnect(RSQLite::SQLite(), params$database_path)
+  df_design <- read_table_try("design", params) 
   
   if (!params$peptide_refilter) {
     cat(file = stderr(), "data NOT refiltered at peptide/precursor level....", "\n")
-    df <- RSQLite::dbReadTable(conn, stats_comp$Table_Name[comp_number])
+    df <- read_table_try(stats_comp$Table_Name[comp_number], params)
     #add imputed column
-    df_list <- add_imputed_df(df, params, stats_comp, comp_number, "protein_missing")
-    df <- df_list[[1]]
-    df_missing <- df_list[[2]]
+    if (params$raw_data_format != "protein"){
+      df_list <- add_imputed_df(df, params, stats_comp, comp_number, "protein_missing")
+      df <- df_list[[1]]
+      df_missing <- df_list[[2]]
+    }
   } else {
     cat(file = stderr(), "data IS refiltered at peptide/precursor level....", "\n")
     table_name <- stringr::str_c("precursor_impute_", params$stat_norm)
-    df <- RSQLite::dbReadTable(conn, table_name)  
-    df_design <- RSQLite::dbReadTable(conn, "design") 
-    df_missing <- RSQLite::dbReadTable(conn, "precursor_missing") 
+    df <- read_table_try(table_name, params)  
+    df_missing <- read_table_try("precursor_missing", params) 
     
     # reduce precursor df to samples of interest
     df_list <- stat_create_comp_df(df, stats_comp$FactorsN[comp_number], stats_comp$FactorsD[comp_number], params, df_design)
@@ -180,15 +182,15 @@ stat_calc_bg <- function(params, comp_number, stats_comp, input_rollup_method, i
     #rollup up filtered precursors to peptide to save for graphs
     df_peptide <- rollup_sum_peptide(df_filter_list[[1]], df_design)
     df_peptide_name <- stringr::str_c(stats_comp$Final_Table_Name_Peptide[comp_number])
+    
+    write_table_try(df_peptide_name, df_peptide, params)
   }
   
   #add stats to df
   df <- stat_add(df, df_missing, params, comp_number, stats_comp, df_design) 
   
   stats_out_name <- stringr::str_c(stats_comp$Table_Name[comp_number], "_final")
-  RSQLite::dbWriteTable(conn, stats_out_name, df, overwrite = TRUE)
-  RSQLite::dbWriteTable(conn, df_peptide_name, df_peptide, overwrite = TRUE)
-  RSQLite::dbDisconnect(conn)
+  write_table_try(stats_out_name, df, params)
   
   cat(file = stderr(), "function stat_calc_bg....end", "\n")
 }
@@ -203,6 +205,15 @@ save_stat_options <- function(session, input, output, params) {
   params$padjust_options <<- input$padjust_options
   params$foldchange_cutoff <<- input$foldchange_cutoff
   params$missing_factor <<- input$missing_factor
+  params$peptide_refilter <<- input$peptide_refilter
+  params$peptide_missing_filter <<- input$peptide_missing_filter
+  params$peptide_missing_factor <<- input$peptide_missing_factor
+  params$peptide_cv_filter <<- input$peptide_cv_filter
+  params$peptide_cv_factor <<- input$peptide_cv_factor
+  params$stats_spqc_cv_filter <<- input$ stats_spqc_cv_filter
+  params$stats_spqc_cv_filter_factor <<- input$stats_spqc_cv_filter_factor
+  params$stats_comp_cv_filter <<- input$stats_comp_cv_filter
+  params$stats_comp_cv_filter_factor <<- input$stats_comp_cv_filter_factor
   
   param_save_to_database()
   

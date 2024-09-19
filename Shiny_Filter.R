@@ -12,7 +12,7 @@ filter_data <- function(session, input, output){
     print_stderr("error_filter.txt")
   } 
   
-  params <<- bg_filter$get_result()
+  params <<- read_table_try("params", params)
   
   cat(file = stderr(), "Function - filter_data...end", "\n\n")
   removeModal()
@@ -128,9 +128,17 @@ filter_data_bg <- function(table_name, new_table_name, params){
   cat(file = stderr(), stringr::str_c("step 6 - ", step5[[1]]-step6[[1]], " ", step5[[2]]-step6[[2]], " ", step5[[3]]-step6[[3]]), "\n")
   
   
+  # Step 7, spqc ratio filter 
+  cat(file = stderr(), "step 7 - SPQC Ratio Filter...", "\n")
+  if (params$precursor_spqc_ratio) {
+    df <- precursor_spqc_quality(df, info_columns, params)
+  }
+  step7 <- filter_stats(df)
+  cat(file = stderr(), stringr::str_c("step 7 - ", step6[[1]]-step7[[1]], " ", step6[[2]]-step7[[2]], " ", step6[[3]]-step7[[3]]), "\n")
   
   
-  cat(file = stderr(), "step 7 - remove_duplicates...", "\n")
+  
+  cat(file = stderr(), "step 8 - remove_duplicates...", "\n")
   
   if (params$data_source == "PD") {
     df$Modifications[is.na(df$Modifications)] <- ""
@@ -143,11 +151,11 @@ filter_data_bg <- function(table_name, new_table_name, params){
     df <- dplyr::distinct(df, PrecursorId, .keep_all = TRUE)
   }
 
-  step7 <- filter_stats(df)
-  cat(file = stderr(), stringr::str_c("step 7 - ", step6[[1]]-step7[[1]], " ", step6[[2]]-step7[[2]], " ", step6[[3]]-step7[[3]]), "\n")
+  step8 <- filter_stats(df)
+  cat(file = stderr(), stringr::str_c("step 8 - ", step7[[1]]-step8[[1]], " ", step7[[2]]-step8[[2]], " ", step7[[3]]-step8[[3]]), "\n")
   
     
-  cat(file = stderr(), "step 8 - create missing.values table for impute page...", "\n")
+  cat(file = stderr(), "step 9 - create missing.values table for impute page...", "\n")
   df_samples <- df[(info_columns + 1):ncol(df)]
   missing.values <- df_samples |>
     tidyr::gather(key = "key", value = "val") |>
@@ -160,7 +168,7 @@ filter_data_bg <- function(table_name, new_table_name, params){
   
   write_table_try("missing_values", missing.values, params)
   
-  cat(file = stderr(), "step 9 - create missing.values2 table for impute page plots...", "\n")
+  cat(file = stderr(), "step 10 - create missing.values2 table for impute page plots...", "\n")
   missing.values2 <- df_samples |>
     tidyr::gather(key = "key", value = "val") |>
     dplyr::mutate(isna = is.na(val)) |>
@@ -172,7 +180,7 @@ filter_data_bg <- function(table_name, new_table_name, params){
   
   write_table_try("missing_values_plots", missing.values2, params)
   
-  cat(file = stderr(), "step 10 - write data to db...", "\n")
+  cat(file = stderr(), "step 11 - write data to db...", "\n")
   write_table_try(new_table_name, df, params)
   
   params$meta_protein_filter <- step7[[1]]
@@ -182,7 +190,7 @@ filter_data_bg <- function(table_name, new_table_name, params){
   write_table_try("params", params, params)
   
   cat(file = stderr(), stringr::str_c("filter_data completed in ", Sys.time() - start), "\n")
-  return(params)
+  return()
 }
 
 
@@ -194,7 +202,24 @@ filter_stats <- function(df) {
   return(list(current_protein, current_peptide, current_precursor))
   }
 #----------------------------------------------------------------------------------
-
+precursor_spqc_quality <- function(df, info_columns, params) {
+  
+  df_sample <- df[,(info_columns+1):ncol(df)]
+  df_spqc <- df_sample |> dplyr::select(contains("SPQC"))
+  df_sample <- df_sample |> dplyr::select(!contains("SPQC"))
+  
+  sample_avg <- rowMeans(df_sample, na.rm = TRUE)
+  spqc_avg <- rowMeans(df_spqc, na.rm = TRUE)
+  accuracy <- spqc_avg/sample_avg * 100
+  
+  spqc_above_intensity <- which(spqc_avg > params$precursor_spqc_intensity)
+  bad_spqc <- which(accuracy > (100 + params$precursor_spqc_accuracy) | accuracy < (100 - params$precursor_spqc_accuracy))
+  bad_final <- bad_spqc[which(bad_spqc %in% spqc_above_intensity)]
+  
+  df <- df[-bad_final,]
+  
+  return(df)
+  }
 
 
 #----------------------------------------
@@ -215,7 +240,7 @@ filter_min_group <- function(df, sample_groups, info_columns, total_columns, par
     colnames(df)[colnames(df) == "na_count"] <- sample_groups$Group[i]
   }
   df$max <- apply(df[, (total_columns + 1):(ncol(df))], 1, function(x) max(x))
-  df <- subset(df, df$max >= params$filter_x_percent_value)
+  df <- subset(df, df$max >= params$filter_x_percent_value/100)
   df <- df[1:total_columns]
   return(df)
 }

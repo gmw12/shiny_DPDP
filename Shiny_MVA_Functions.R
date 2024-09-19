@@ -152,7 +152,7 @@ peptide_refilter_rollup <- function(df_filter_list, df_design, input_rollup_meth
     dplyr::mutate(Precursors = 1, .after = Genes)
   
   #rollup data and missing
-  df <- rollup_selector(df, df_design, input_rollup_method, input_rollup_topn, info_columns, params)
+  df <- rollup_selector(df, df_design, input_rollup_method, input_rollup_topn, params)
   df_missing <- rollup_sum(df_missing)
   
   #save(df, file="df2b")
@@ -178,8 +178,8 @@ peptide_refilter_rollup <- function(df_filter_list, df_design, input_rollup_meth
 stat_add <- function(df, df_missing, params, comp_number, stats_comp, df_design) {
   cat(file = stderr(), "Function - stat_add...", "\n")
   
-  #load(file="df")
-  #load(file="df_missing")
+  save(df, file="statdf"); save(comp_number, file="statcompnumber"); save(stats_comp, file="statstatscomp"); save(df_design, file="statdfdesign");
+  #load(file="statdf"); load(file="statcompnumber"); load(file="statstatscomp"); load(file="statdfdesign")
   
   source("Shiny_Misc_Functions.R")
   source("Shiny_Stats_Functions.R")
@@ -193,6 +193,7 @@ stat_add <- function(df, df_missing, params, comp_number, stats_comp, df_design)
                     df_design$Header2[str_to_numlist(stats_comp$D_loc[comp_number])],
                     df_design$Header2[str_to_numlist(stats_comp$SPQC_loc[comp_number])])
   colnames(df)[(ncol(df) - sample_count + 1):ncol(df)] <- sample_names
+  colnames(df_samples) <- sample_names
   
   cat(file = stderr(), "stat_add...2", "\n")
   
@@ -200,9 +201,11 @@ stat_add <- function(df, df_missing, params, comp_number, stats_comp, df_design)
   df_D <- df_samples |> dplyr::select(starts_with(stats_comp$FactorsD[comp_number]))
   df_SPQC <- df_samples |> dplyr::select(starts_with(params$comp_spqc))
   
-  df_N_missing <- df_missing |> dplyr::select(starts_with(stats_comp$FactorsN[comp_number]))
-  df_D_missing <- df_missing |> dplyr::select(starts_with(stats_comp$FactorsD[comp_number]))
-
+  if (params$raw_data_format != "protein"){
+    df_N_missing <- df_missing |> dplyr::select(starts_with(stats_comp$FactorsN[comp_number]))
+    df_D_missing <- df_missing |> dplyr::select(starts_with(stats_comp$FactorsD[comp_number]))
+  }
+  
   cat(file = stderr(), "stat_add...3", "\n")
   df[[stringr::str_c(stats_comp$FactorsN[comp_number], "_CV")]] <- percentCV_gw(df_N)
   df[[stringr::str_c(stats_comp$FactorsD[comp_number], "_CV")]] <- percentCV_gw(df_D)
@@ -226,20 +229,22 @@ stat_add <- function(df, df_missing, params, comp_number, stats_comp, df_design)
     df[[stringr::str_c(stats_comp$Name[comp_number], "_limma")]] <- limma_gw(df_N, df_D)
   }
   
-  cat(file = stderr(), "stat_add...5", "\n")
-  
-  df[[stringr::str_c(stats_comp$Name[comp_number], "_mf")]] <- missing_factor_gw(df_N_missing, df_D_missing)
-  
-  # Final filters
-  #missing filter, always on...
-  filtered_mf <- which(df[[stringr::str_c(stats_comp$Name[comp_number], "_mf")]] < params$missing_factor)  
-  df <- df[-(filtered_mf),]
+  cat(file = stderr(), "stat_add...6", "\n")
+  if (params$raw_data_format != "protein"){
+    df[[stringr::str_c(stats_comp$Name[comp_number], "_mf")]] <- missing_factor_gw(df_N_missing, df_D_missing)
+    
+    # Final filters
+    #missing filter, always on...
+    filtered_mf <- which(df[[stringr::str_c(stats_comp$Name[comp_number], "_mf")]] < params$missing_factor)  
+    df <- df[-(filtered_mf),]
+  }
   
   if(params$stats_spqc_cv_filter) {
     filtered_spqc <- which(df[[stringr::str_c(params$comp_spqc, "_CV")]] > params$stats_spqc_cv_filter_factor)  
     df <- df[-(filtered_spqc),]
     }
   
+  cat(file = stderr(), "stat_add...7", "\n")
   if(params$stats_comp_cv_filter) {
     filtered_onegroup <- which(df[[stringr::str_c(stats_comp$FactorsN[comp_number], "_CV")]] > params$stats_comp_cv_filter_factor & 
                                  df[[stringr::str_c(stats_comp$FactorsD[comp_number], "_CV")]] > params$stats_comp_cv_filter_factor)  
@@ -251,6 +256,7 @@ stat_add <- function(df, df_missing, params, comp_number, stats_comp, df_design)
     df <- df[-(filtered_min_peptide),]
     }
   
+  cat(file = stderr(), "stat_add...8", "\n")
   #label up/down
   df$Stats <- ""
   if(params$checkbox_filter_adjpval){
@@ -265,6 +271,7 @@ stat_add <- function(df, df_missing, params, comp_number, stats_comp, df_design)
                            df[[stringr::str_c(stats_comp$Name[comp_number], "_pval")]] <= params$pvalue_cutoff) 
   }
   
+  cat(file = stderr(), "stat_add...9", "\n")
   df$Stats[filtered_up] <- "Up"
   df$Stats[filtered_down] <- "Down"
   

@@ -99,12 +99,12 @@ interactive_boxplot <- function(session, input, output, df, namex, color_list, c
 
 interactive_pca2d <- function(session, input, output, df, namex, color_list, groupx, comp_name, plot_number)
 {
-  #test_df <<- df
-  #test_groupx <<- groupx
-  #df<-test_df
-  #groupx <- test_groupx
+  save(df, file="pcadf"); save(groupx, file="pca_groupx")
+  #load(file="pcadf"); load(file="pca_groupx")
+  df_sd <-apply(df, 1, sd) 
   
-  cat(file = stderr(), "interactive_pca2d" , "\n")
+  
+  cat(file = stderr(), "interactive_pca2d..." , "\n")
   x_transpose <- t(df)
   x_transpose <- data.frame(x_transpose)
   cat(file = stderr(), "interactive_pca2d...1" , "\n")

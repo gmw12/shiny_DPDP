@@ -39,7 +39,7 @@ rollup_apply_bg <- function(input_rollup_method, input_rollup_top, params) {
     info_columns <- grep(df_design$ID[1], colnames(df)) - 1
 
     #rollup precursor/peptides
-    protein_df <- rollup_selector(df, df_design, input_rollup_method, input_rollup_top, info_columns, params)
+    protein_df <- rollup_selector(df, df_design, input_rollup_method, input_rollup_top, params)
     
     #rollup precursor to peptide
     peptide_df <- rollup_sum_peptide(df, df_design)

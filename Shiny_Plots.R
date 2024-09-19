@@ -440,7 +440,7 @@ histogram_plot <- function(table_name, plottitle, params)
       ggplot2::annotation_custom(my_legend3) +
       ggplot2::annotation_custom(my_legend4) +
       ggplot2::annotation_custom(my_legend5) 
-    ggplot2::ggsave(stringr::str_c(plot_dir, plottitle, ".png"), width = 8, height = 8)
+    ggplot2::ggsave(stringr::str_c(plot_dir, plottitle, ".png"), width = 5, height = 6)
 
 
   

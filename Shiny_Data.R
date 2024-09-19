@@ -1,21 +1,22 @@
 cat(file = stderr(), "Shiny_Data.R", "\n")
 
 #---------------------------------------------------------------------
-load_data_file <- function(session, input, output){
+load_data_file <- function(session, input, output, params){
   cat(file = stderr(), "Function load_data_file", "\n")
   showModal(modalDialog("Loading data...", footer = NULL))
   
-  params$data_source <<- "unkown"
+  params$data_source <- "unkown"
   data_sfb <- parseFilePaths(volumes, input$sfb_data_file)
   data_path <- str_extract(data_sfb$datapath, "^/.*/")
-  params$data_file <<- basename(data_sfb$datapath)
+  params$data_file <- basename(data_sfb$datapath)
   
   cat(file = stderr(), str_c("loading data file(s) from ", data_path[1]), "\n")
   
   #Proteome Discoverer
   if (nrow(data_sfb) > 1) {
     cat(file = stderr(), stringr::str_c("data source <---- Proteome Discoverer"), "\n")
-    params$data_source <<-  "PD"
+    params$data_source <-  "PD"
+    write_table_try("params", params, params)
     load_PD_data(data_sfb)
   }else {
     cat(file = stderr(), str_c("data source <---- Spectronaut/Fragpipe"), "\n")
@@ -25,7 +26,7 @@ load_data_file <- function(session, input, output){
   }
   
   #parameters are written to db during r_bg (process cannot write to params directly)
-  params <<- param_load_from_database()
+  params <<- read_table_try("params", params)
   
   gc(verbose = getOption("verbose"), reset = FALSE, full = TRUE)
   cat(file = stderr(), "Function load_data_file...end", "\n\n")
@@ -36,8 +37,10 @@ load_data_file <- function(session, input, output){
 #----------------------------------------------------------------------------------------
 load_unknown_data <- function(data_sfb, params){
   cat(file = stderr(), "Function load_unkown_data...", "\n")
+  source('Shiny_File.R')
   
   df <- data.table::fread(file = data_sfb$datapath, header = TRUE, stringsAsFactors = FALSE, sep = "\t")
+  #load(file="df")
   
   if ("EG.PrecursorId" %in% names(df)) {
     cat(file = stderr(), "Spectronaut data, precursor...", "\n")
@@ -54,14 +57,24 @@ load_unknown_data <- function(data_sfb, params){
     if (length(grep("EG.TotalQuantity", names(df))) > 1) {
       params$data_table_format <- "short"
     }else {
-      params$data__table_format <- "long"
+      params$data_table_format <- "long"
     }
+    
+    write_table_try("precursor_raw", df, params)
+    
+  }else if (any(grepl("PG.Quantity", names(df)))){
+    cat(file = stderr(), "Spectronaut data, protein...", "\n")
+    params$data_source <- "SP"
+    params$raw_data_format <- "protein"
+    params$data_table_format <- "short"
+
+    write_table_try("protein_raw", df, params)
+  }else{
+    cat(file = stderr(), "Spectronaut data, still a mystery...", "\n")
   }
-  
-  conn <- RSQLite::dbConnect(RSQLite::SQLite(), params$database_path)
-  RSQLite::dbWriteTable(conn, "precursor_raw", df, overwrite = TRUE)
-  RSQLite::dbWriteTable(conn, "params", params, overwrite = TRUE)
-  RSQLite::dbDisconnect(conn)
+
+    write_table_try("params", params, params)
+    save(params, file="params")
   
   gc(verbose = getOption("verbose"), reset = FALSE, full = TRUE)
   cat(file = stderr(), "function load_unkown_data...end", "\n\n")
@@ -381,7 +394,7 @@ protein_to_peptide <- function(){
   }
   
   peptide_final <- peptide_final[order(peptide_final$Master.Protein.Accessions, peptide_final$Sequence),]
-  peptide_out <- peptide_final %>% dplyr::select(Confidence, Master.Protein.Accessions, Master.Protein.Descriptions, Proteins, 
+  peptide_out <- peptide_final |> dplyr::select(Confidence, Master.Protein.Accessions, Master.Protein.Descriptions, Proteins, 
                                                  Sequence, Modifications, Unique,
                                                  contains('RT.in.min.by.Search.Engine.'), 
                                                  starts_with('mz.in.Da.by.Search.Engine.'), 
@@ -402,7 +415,7 @@ protein_to_peptide <- function(){
 }
 
 #----------------------------------------------------------------------------------------
-prepare_data <- function(session, input, output) {  #function(data_type, data_file_path){
+prepare_data <- function(session, input, output, params) {  #function(data_type, data_file_path){
   cat(file = stderr(), "Function prepare_data...", "\n")
   showModal(modalDialog("Preparing Data...", footer = NULL))
   
@@ -410,25 +423,27 @@ prepare_data <- function(session, input, output) {  #function(data_type, data_fi
     cat(file = stderr(), "prepare data_type 1", "\n")
     protein_to_peptide()
     protein_to_protein()
-    params$current_data_format <<- "peptide"
-  }else if (params$raw_data_format == "protein") {
+    params$current_data_format <- "peptide"
+  }else if (params$raw_data_format == "protein" & params$data_source == "SP") {
     cat(file = stderr(), "prepare data_type 2", "\n")
-    protein_to_protein()
-    params$current_data_format <<- "protein"
+    bg_sp_protein_to_protein <- callr::r_bg(func = sp_protein_to_protein_bg, args = list(params), stderr = str_c(params$error_path, "//error_sp_protein_to_protein.txt"), supervise = TRUE)
+    bg_sp_protein_to_protein$wait()
+    print_stderr("error_sp_protein_to_protein.txt")
+    params$current_data_format <- "protein"
   }else if (params$raw_data_format == "peptide") {
     cat(file = stderr(), "prepare data_type 3", "\n")
     peptide_to_peptide()
-    params$current_data_format <<- "peptide"
+    params$current_data_format <- "peptide"
   }else if (params$raw_data_format == "precursor") {
     cat(file = stderr(), "prepare data_type 4", "\n")
     bg_precursor_to_precursor <- callr::r_bg(func = precursor_to_precursor_bg, args = list(params), stderr = str_c(params$error_path, "//error_preparedata.txt"), supervise = TRUE)
     bg_precursor_to_precursor$wait()
     print_stderr("error_preparedata.txt")
-    params$current_data_format <<- "precursor"
+    params$current_data_format <- "precursor"
   }else if (params$raw_data_format == "fragment") {
     cat(file = stderr(), "prepare data_type 5", "\n")
     peptide_to_peptide()
-    params$current_data_format <<- "fragment"
+    params$current_data_format <- "fragment"
   }else{
     shinyalert("Oops!", "Invalid input output in design file", type = "error") 
     }
@@ -436,6 +451,9 @@ prepare_data <- function(session, input, output) {  #function(data_type, data_fi
   if (params$use_isoform) {
     isoform_to_isoform()
   }
+  
+  write_table_try("params", params, params)
+  params <<- params
   
   cat(file = stderr(), "Function prepare_data...end", "\n\n")
   removeModal()
@@ -451,10 +469,10 @@ precursor_to_precursor_bg <- function(params){
   df <- RSQLite::dbReadTable(conn, "precursor_raw")
   
   
-  df_colnames <- c("Accession", "Description", "Genes", "Organisms", "Sequence", "PrecursorId", "PeptidePosition")  
+  df_colnames <- c("Accession", "Description", "Name", "Genes", "Organisms", "Sequence", "PrecursorId", "PeptidePosition")  
   n_col <- length(df_colnames)
   
-  df <- df |> dplyr::select(contains('ProteinAccessions'), contains('ProteinDescriptions'), contains('Genes'), contains('Organisms'),
+  df <- df |> dplyr::select(contains('ProteinAccessions'), contains('ProteinDescriptions'), contains('ProteinNames'), contains('Genes'), contains('Organisms'),
                                                       contains('ModifiedSequence'), contains('PrecursorId'), contains('PeptidePosition'),
                                                       contains("TotalQuantity"))
   
@@ -483,7 +501,38 @@ precursor_to_precursor_bg <- function(params){
   cat(file = stderr(), "precursor_to_precursor_bg complete", "\n\n")
 }
 
+#----------------------------------------------------------------------------------------
+sp_protein_to_protein_bg <- function(params){
+  cat(file = stderr(), "Function sp_protein_to_protein_bg...", "\n")
+  source("Shiny_File.R")
+  
+  df <- read_table_try("protein_raw", params)
+  
+  df_colnames <- c("Accession", "Description", "Name", "Genes", "Organisms", "Precursors")  
+  n_col <- length(df_colnames)
+  
+  df <- df |> dplyr::select(contains('ProteinAccessions'), contains('ProteinDescriptions'), contains('ProteinNames'), contains('Genes'), contains('Organisms'),
+                                      contains('Experiment.Wide'), contains("Quantity"))
+  
+  if (ncol(df) != (n_col + params$sample_number))
+  {
+    shinyalert("Oops!", "Number of columns extracted is not as expected", type = "error") 
+    cat(file = stderr(), "Number of columns extracted is not as expected", "\n")
+  }
+  
+  colnames(df)[1:n_col] <- df_colnames  
+  
+  # set "Filtered" in TotalQuantity to NA
+  df[df ==  "Filtered"] <- NA
+  df[(n_col + 1):ncol(df)] <- as.data.frame(lapply(df[(n_col + 1):ncol(df)], as.numeric))
+  
+  df$Description <- stringr::str_c(df$Description, ", org=", df$Organisms) 
+  df$Organisms <- NULL
+  
+  write_table_try("protein_impute", df, params)
 
+  cat(file = stderr(), "Function sp_protein_to_protein_bg...end ", "\n")
+}
 
 #----------------------------------------------------------------------------------------
 protein_to_protein <- function(){

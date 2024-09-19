@@ -8,22 +8,18 @@ impute_duke <- function(df, df_random, df_groups, params) {
 
   source('Shiny_File.R')
   
+  # write_table("temp_df", df, params)
+  # write_table("temp_df_random", df_random, params)
+  # write_table("temp_df_groups", df_groups, params)
+  # 
+  # df <- read_table("temp_df", params)
+  # df_random <- read_table("temp_df_random", params)
+  # df_groups <- read_table("temp_df_groups", params)
   
-  #write_table("temp_df", df, params)
-  #write_table("temp_df_random", df_random, params)
-  #write_table("temp_df_groups", df_groups, params)
-  
-  #df <- read_table("temp_df")
-  #df_random <- read_table("temp_df_random")
-  #df_groups <- read_table("temp_df_groups")
-  
-  
-
   require(foreach)
   require(doParallel)
   cores <- detectCores()
 
-  
   #save info columns for final df
   df_impute <- df[1:(ncol(df) - params$sample_number)]
   
@@ -44,37 +40,35 @@ impute_duke <- function(df, df_random, df_groups, params) {
       
       #get table for intensity, sd, average 
       df_impute_bin_name <- stringr::str_c("impute_bin_", df_groups$Group[i])
-      conn <- RSQLite::dbConnect(RSQLite::SQLite(), params$database_path)
-      df_impute_bin <- RSQLite::dbReadTable(conn, df_impute_bin_name)
-      RSQLite::dbDisconnect(conn)
-      
-      
+      df_impute_bin <- read_table_try(df_impute_bin_name, params)
+
       find_rows <- which((df_temp$missings > 0 & df_temp$missings <= df_temp$max_missing))
       find_na <- data.frame(which(is.na(df_temp[,1:df_groups$Count[i]]), arr.ind = TRUE))
       find_final <- dplyr::filter(find_na, row %in% find_rows)
       
-      #--
-      cl <- makeCluster(cores - 2)
-      registerDoParallel(cl)
-      
-      parallel_result <- foreach(j = 1:nrow(find_final), .combine = c) %dopar% {
-        r <- find_final$row[j]
-        c <- find_final$col[j]
-        findsd <- df_impute_bin |> dplyr::filter(df_temp$average[r] >= min2, df_temp$average[r] <= max)
-        df_temp$average[r] + (df_temp_random[r,c] * findsd$sd[1])
+      if(nrow(find_final > 0)) {
+          #--
+          cl <- makeCluster(cores-2)
+          registerDoParallel(cl)
+          
+          parallel_result <- foreach(j = 1:nrow(find_final), .combine = c) %dopar% {
+            r <- find_final$row[j]
+            c <- find_final$col[j]
+            findsd <- df_impute_bin |> dplyr::filter(df_temp$average[r] >= min2, df_temp$average[r] <= max)
+            df_temp$average[r] + (df_temp_random[r,c] * findsd$sd[1])
+          }
+    
+          stopCluster(cl) 
+          #--
+          
+          find_final$result <- parallel_result
+          col_max <- max(find_final$col)
+          for (c in 1:col_max) {
+            swap_row <- find_final$row[find_final$col == c]
+            swap_result <- find_final$result[find_final$col == c]
+            df_temp[swap_row, c] <- swap_result
+          }
       }
-
-      stopCluster(cl) 
-      #--
-      
-      find_final$result <- parallel_result
-      col_max <- max(find_final$col)
-      for (c in 1:col_max) {
-        swap_row <- find_final$row[find_final$col == c]
-        swap_result <- find_final$result[find_final$col == c]
-        df_temp[swap_row, c] <- swap_result
-      }
-      
     }
     
     df_temp <- df_temp[1:df_groups$Count[i]]
@@ -82,14 +76,10 @@ impute_duke <- function(df, df_random, df_groups, params) {
     df_temp <- df_temp[1:df_groups$Count[i]]
     
     df_impute <- cbind(df_impute, df_temp)
-    
-    
   }
   
- 
   cat(file = stderr(), "Function - impute_duke...end", "\n")
-  
-  
+
   #write_table("temp_df_impute", df_impute, params)
   
   return(df_impute)

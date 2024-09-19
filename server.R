@@ -85,7 +85,8 @@ shinyServer(function(session, input, output) {
     if (is.list(input$sfb_data_file)) {
       
       #read data files
-      load_data_file(session, input, output)
+      load_data_file(session, input, output, params)
+      
       output$data_file_name <- renderText({get_data_file_name()})
       
       #update UI
@@ -109,20 +110,21 @@ shinyServer(function(session, input, output) {
    set_sample_groups(session, input, output, params)
 
    # Organize raw data into selected columns and info column names
-   prepare_data(session, input, output)
+   prepare_data(session, input, output, params)
    
    # order columns and rename sample column names
    order_rename_columns()
    
-   # gather info on raw data for ui
-   meta_data("raw")
-   
-   # create graphs
-   parameter_create_plots(sesion, input, output, params)
-   
-   #create histogram and calculate cutoff values
-   filter_histogram_plot(sesion, input, output, params, "precursor_start", "Precursor_Start_Histogram")
-
+   if (params$raw_data_format != "protein") {
+     # gather info on raw data for ui
+     meta_data("raw")
+     
+     # create graphs
+     parameter_create_plots(sesion, input, output, params)
+     
+     #create histogram and calculate cutoff values
+     filter_histogram_plot(sesion, input, output, params, "precursor_start", "Precursor_Start_Histogram")
+  }
  })
 
   #------------------------------------------------------------------------------------------------------  
