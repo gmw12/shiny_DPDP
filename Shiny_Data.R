@@ -529,6 +529,9 @@ sp_protein_to_protein_bg <- function(params){
   df$Description <- stringr::str_c(df$Description, ", org=", df$Organisms) 
   df$Organisms <- NULL
   
+  #remove any row with an NA
+  df <- df[complete.cases(df),]
+  
   write_table_try("protein_impute", df, params)
 
   cat(file = stderr(), "Function sp_protein_to_protein_bg...end ", "\n")

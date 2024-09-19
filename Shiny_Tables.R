@@ -160,17 +160,24 @@ create_cv_table_bg <- function(params){
 protein_table <- function(df, start_sample_col, sample_number, spqc_number){
   cat(file = stderr(), "Function protein_table...", "\n")
   require('DT')
+  source('Shiny_Misc_Functions.R')
   
-  pval_cols <- which(stringr::str_detect(colnames(df), "pval"))
-  cv_cols <- which(stringr::str_detect(colnames(df), "CV"))
-  fc_cols <- which(stringr::str_detect(colnames(df), "FC"))
-  mf_cols <- which(stringr::str_detect(colnames(df), "mf"))
-  stat_col <- ncol(df) - 1
+  # pval_cols <- which(stringr::str_detect(colnames(df), "pval"))
+  # cv_cols <- which(stringr::str_detect(colnames(df), "CV"))
+  # fc_cols <- which(stringr::str_detect(colnames(df), "FC"))
+  # mf_cols <- which(stringr::str_detect(colnames(df), "mf"))
+  #stat_col <- ncol(df) - 1
   
-  df <- df |> dplyr::mutate(dplyr::across(start_sample_col:(start_sample_col + sample_number + spqc_number - 1), round, 1))
-  df <- df |> dplyr::mutate(dplyr::across(pval_cols, round, 7))
-  df <- df |> dplyr::mutate(dplyr::across(cv_cols, round, 2))
-  df <- df |> dplyr::mutate(dplyr::across(fc_cols, round, 2))
+  #df <- df |> dplyr::mutate(dplyr::across(start_sample_col:(start_sample_col + sample_number + spqc_number - 1), round, 1))
+  # df <- df |> dplyr::mutate(dplyr::across(pval_cols, round, 7))
+  # df <- df |> dplyr::mutate(dplyr::across(cv_cols, round, 2))
+  # df <- df |> dplyr::mutate(dplyr::across(fc_cols, round, 2))
+  
+  df <- round_columns(df,  rep(start_sample_col:(start_sample_col + sample_number + spqc_number - 1)), 1)
+  df <- round_columns(df, "pval", 7)
+  df <- round_columns(df, "cv_cols", 2)
+  df <- round_columns(df, "fc_cols", 2)
+  
   
   options <- list(
     selection = 'single',
@@ -230,6 +237,7 @@ protein_table <- function(df, start_sample_col, sample_number, spqc_number){
 protein_peptide_table <- function(df_peptide, peptide_pos_lookup, start_sample_col_peptide){
   cat(file = stderr(), "Function protein_table...", "\n")
   require('DT')
+  source('Shiny_Misc_Functions.R')
 
   df_peptide$Sequence <- gsub("_", "", df_peptide$Sequence)
   df_peptide <- merge(df_peptide, peptide_pos_lookup, by = (c("Accession", "Sequence"))    )
@@ -239,8 +247,9 @@ protein_peptide_table <- function(df_peptide, peptide_pos_lookup, start_sample_c
   df_peptide <- df_peptide |> dplyr::select(Start, everything())
   df_peptide <- df_peptide[order(df_peptide$Start, df_peptide$Stop), ]
   
-  df_peptide <- df_peptide |> dplyr::mutate(dplyr::across((start_sample_col_peptide+2):(ncol(df_peptide)), round, 1))
-
+  #df_peptide <- df_peptide |> dplyr::mutate(dplyr::across((start_sample_col_peptide+2):(ncol(df_peptide)), round, 1))
+  df_peptide <- round_columns(df_peptide, rep(start_sample_col_peptide+2):(ncol(df_peptide)), 7)
+  
   options <- list(
     selection = 'single',
     #dom = 'Bfrtipl',

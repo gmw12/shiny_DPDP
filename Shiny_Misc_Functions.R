@@ -26,3 +26,16 @@ str_to_numlist_max <- function(str_in) {
   }
   return(num_out)
 }
+
+
+round_columns <- function(df, search_text, round_digits) {
+  if (is.numeric(search_text[1])) {
+    select_cols = search_text
+  }else {
+    select_cols <- which(stringr::str_detect(colnames(df), search_text))
+  }
+  for (col in select_cols){
+    df[,col] <- df |> select(all_of(col)) |> round(digits = 0)
+  }
+  return(df)
+}

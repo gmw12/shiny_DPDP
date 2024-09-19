@@ -323,6 +323,7 @@ create_go_volcano <- function(session, input, output, params){
 create_go_volcano_bg <- function(input_select_go_data_comp, input_go_volcano_id, params){
   cat(file=stderr(), stringr::str_c("create_go_volcano_bg..." ), "\n")
   source('Shiny_File.R')
+  source('Shiny_Misc_Functions.R')
 
   stats_comp <- read_table_try("stats_comp", params)
   comp_string <- input_select_go_data_comp
@@ -356,18 +357,22 @@ create_go_volcano_bg <- function(input_select_go_data_comp, input_go_volcano_id,
   colnames(volcano_go_data) <-  volcano_go_data_colnames
   
   
-  pval_cols <- which(stringr::str_detect(colnames(volcano_go_data), "pval"))
-  cv_cols <- which(stringr::str_detect(colnames(volcano_go_data), "CV"))
-  fc_cols <- which(stringr::str_detect(colnames(volcano_go_data), "FC"))
+  #pval_cols <- which(stringr::str_detect(colnames(volcano_go_data), "pval"))
+  #cv_cols <- which(stringr::str_detect(colnames(volcano_go_data), "CV"))
+  #fc_cols <- which(stringr::str_detect(colnames(volcano_go_data), "FC"))
   
   start_sample_col <- min(which(stringr::str_detect(colnames(volcano_go_data), gsub("_", ".", stats_comp$FactorsN[comp_number]) )))
   sample_cols <- seq(start_sample_col, (as.numeric(stats_comp$Total[comp_number]) + start_sample_col - 1))   
   
-  volcano_go_data <- volcano_go_data |> dplyr::mutate(dplyr::across(pval_cols, round, 7))
-  volcano_go_data <- volcano_go_data |> dplyr::mutate(dplyr::across(cv_cols, round, 2))
-  volcano_go_data <- volcano_go_data |> dplyr::mutate(dplyr::across(fc_cols, round, 2))
-  volcano_go_data <- volcano_go_data |> dplyr::mutate(dplyr::across(sample_cols, round, 2))
+  #volcano_go_data <- volcano_go_data |> dplyr::mutate(dplyr::across(pval_cols, round, 7))
+  #volcano_go_data <- volcano_go_data |> dplyr::mutate(dplyr::across(cv_cols, round, 2))
+  #volcano_go_data <- volcano_go_data |> dplyr::mutate(dplyr::across(fc_cols, round, 2))
+  #volcano_go_data <- volcano_go_data |> dplyr::mutate(dplyr::across(sample_cols, round, 2))
   
+  volcano_go_data <- round_columns(volcano_go_data, "pval", 7)
+  volcano_go_data <- round_columns(volcano_go_data, "CV", 2)
+  volcano_go_data <- round_columns(volcano_go_data, "FC", 2)
+  volcano_go_data <- round_columns(volcano_go_data, sample_cols, 2)
   
   write_table_try("volcano_go_data", volcano_go_data, params)
   
