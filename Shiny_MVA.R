@@ -68,7 +68,7 @@ check_comp_names_bg <- function(params, table_name, table_name_peptide, comp_num
   stats_data_N <- stats_data
   stats_data_D <- stats_data
   stats_data_SPQC <- stats_data
-    
+  
   # find sample position numbers
   samples_N <- which(df_design$Group %in% as.list(factorsN))
   samples_D <- which(df_design$Group %in% as.list(factorsD))
@@ -91,7 +91,15 @@ check_comp_names_bg <- function(params, table_name, table_name_peptide, comp_num
   
   #combine info and samples to dataframe for stats later
   stats_data_out <- cbind(stats_data_info, stats_data_N, stats_data_D, stats_data_SPQC)
-    
+
+  #save(samples_D, file="samplesD"); save(samples_N, file="samples_N"); save(samples_SPQC, file="samplesSPQC")
+  #load(file="samplesD"); load(file="samples_N"); load(file="samplesSPQC")
+  
+  #rename SPQC columns if the SPQC is acutally a real sample (no real SPQC in set)
+  if (any(samples_N == samples_SPQC | samples_D == samples_SPQC)) {
+    stats_data_out <- cbind(stats_data_info, stats_data_N, stats_data_D)
+  }
+      
   # set comp group names
   comp_N <- paste(unique(unlist(stringr::str_split(factorsN, "_"))), collapse = "_")
   comp_D <- paste(unique(unlist(stringr::str_split(factorsD, "_"))), collapse = "_")
