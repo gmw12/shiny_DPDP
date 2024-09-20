@@ -125,8 +125,9 @@ shinyServer(function(session, input, output) {
      #create histogram and calculate cutoff values
      filter_histogram_plot(sesion, input, output, params, "precursor_start", "Precursor_Start_Histogram")
    }else{
-     
+    # since skipping portion of app, need to load widgets for stats
      ui_render_parameters(session, input, output)
+     update_stat_choices(session, input, output)
   }
  })
 
@@ -312,7 +313,7 @@ shinyServer(function(session, input, output) {
     check_comp_names(session, input, output)
 
     if (is.null(input$comp_spqc)) {
-      shinyalert("Oops!", "Please choose and SPQC group!", type = "error")
+      shinyalert("SPQC", "No SPQC group was selected!", type = "warning")
     }
 
     cat(file = stderr(), "check_stats clicked...end", "\n")

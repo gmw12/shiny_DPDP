@@ -67,7 +67,6 @@ check_comp_names_bg <- function(params, table_name, table_name_peptide, comp_num
   stats_data <- stats_data[(ncol(stats_data) - params$sample_number + 1):ncol(stats_data)]
   stats_data_N <- stats_data
   stats_data_D <- stats_data
-  stats_data_SPQC <- stats_data
   
   # find sample position numbers
   samples_N <- which(df_design$Group %in% as.list(factorsN))
@@ -75,31 +74,31 @@ check_comp_names_bg <- function(params, table_name, table_name_peptide, comp_num
   cat(file = stderr(), stringr::str_c("samples_N = ", samples_N), "\n")
   cat(file = stderr(), stringr::str_c("samples_D = ", samples_D), "\n")
    
-  # find SPQC numbers
-  samples_SPQC <- which(df_design$Group %in% as.list(params$comp_spqc))
-  cat(file = stderr(), stringr::str_c("samples_SPQC = ", samples_SPQC), "\n")
-   
   # reduce dataframe to samples of interest
   stats_data_N <- stats_data_N[c(samples_N)]
   stats_data_D <- stats_data_D[c(samples_D)]
   cat(file = stderr(), stringr::str_c("stats_data_N = ", ncol(stats_data_N)), "\n")
   cat(file = stderr(), stringr::str_c("stats_data_D = ", ncol(stats_data_D)), "\n")
   
+  # find SPQC numbers
+  stats_data_SPQC <- stats_data
+  samples_SPQC <- which(df_design$Group %in% as.list(params$comp_spqc))
+  cat(file = stderr(), stringr::str_c("samples_SPQC = ", samples_SPQC), "\n")
+    
   # reduce dataframe to SPQC
   stats_data_SPQC <- stats_data_SPQC[c(samples_SPQC)]
   cat(file = stderr(), stringr::str_c("stats_data_SPQC = ", ncol(stats_data_SPQC)), "\n")
+
   
   #combine info and samples to dataframe for stats later
-  stats_data_out <- cbind(stats_data_info, stats_data_N, stats_data_D, stats_data_SPQC)
-
+  if (params$comp_spqc !=0) {
+    stats_data_out <- cbind(stats_data_info, stats_data_N, stats_data_D, stats_data_SPQC)
+  }else {
+    stats_data_out <- cbind(stats_data_info, stats_data_N, stats_data_D)
+  }
   #save(samples_D, file="samplesD"); save(samples_N, file="samples_N"); save(samples_SPQC, file="samplesSPQC")
   #load(file="samplesD"); load(file="samples_N"); load(file="samplesSPQC")
   
-  #rename SPQC columns if the SPQC is acutally a real sample (no real SPQC in set)
-  if (any(samples_N == samples_SPQC | samples_D == samples_SPQC)) {
-    stats_data_out <- cbind(stats_data_info, stats_data_N, stats_data_D)
-  }
-      
   # set comp group names
   comp_N <- paste(unique(unlist(stringr::str_split(factorsN, "_"))), collapse = "_")
   comp_D <- paste(unique(unlist(stringr::str_split(factorsD, "_"))), collapse = "_")

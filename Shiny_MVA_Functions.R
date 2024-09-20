@@ -189,9 +189,12 @@ stat_add <- function(df, df_missing, params, comp_number, stats_comp, df_design)
   
   #fix sample names
   cat(file = stderr(), "stat_add...1", "\n")
+  
   sample_names <- c(df_design$Header2[str_to_numlist(stats_comp$N_loc[comp_number])],
-                    df_design$Header2[str_to_numlist(stats_comp$D_loc[comp_number])],
-                    df_design$Header2[str_to_numlist(stats_comp$SPQC_loc[comp_number])])
+                    df_design$Header2[str_to_numlist(stats_comp$D_loc[comp_number])])
+  if (stats_comp$SPQC[comp_number] != 0) {
+    sample_names <- c(samlple_names, df_design$Header2[str_to_numlist(stats_comp$SPQC_loc[comp_number])])
+  }
   colnames(df)[(ncol(df) - sample_count + 1):ncol(df)] <- sample_names
   colnames(df_samples) <- sample_names
   
@@ -199,7 +202,9 @@ stat_add <- function(df, df_missing, params, comp_number, stats_comp, df_design)
   
   df_N <- df_samples |> dplyr::select(starts_with(stats_comp$FactorsN[comp_number]))
   df_D <- df_samples |> dplyr::select(starts_with(stats_comp$FactorsD[comp_number]))
-  df_SPQC <- df_samples |> dplyr::select(starts_with(params$comp_spqc))
+  if (stats_comp$SPQC[comp_number] != 0) {
+    df_SPQC <- df_samples |> dplyr::select(starts_with(params$comp_spqc))
+  }
   
   if (params$raw_data_format != "protein"){
     df_N_missing <- df_missing |> dplyr::select(starts_with(stats_comp$FactorsN[comp_number]))
@@ -209,7 +214,9 @@ stat_add <- function(df, df_missing, params, comp_number, stats_comp, df_design)
   cat(file = stderr(), "stat_add...3", "\n")
   df[[stringr::str_c(stats_comp$FactorsN[comp_number], "_CV")]] <- percentCV_gw(df_N)
   df[[stringr::str_c(stats_comp$FactorsD[comp_number], "_CV")]] <- percentCV_gw(df_D)
-  df[["SPQC_CV"]] <- percentCV_gw(df_SPQC)
+  if (stats_comp$SPQC[comp_number] != 0) {
+    df[["SPQC_CV"]] <- percentCV_gw(df_SPQC)
+  }
   
   cat(file = stderr(), "stat_add...4", "\n")
   df[[stringr::str_c(stats_comp$Name[comp_number], "_FC")]] <- foldchange_gw(df_N, df_D, params)
@@ -239,7 +246,7 @@ stat_add <- function(df, df_missing, params, comp_number, stats_comp, df_design)
     df <- df[-(filtered_mf),]
   }
   
-  if(params$stats_spqc_cv_filter) {
+  if(params$stats_spqc_cv_filter & stats_comp$SPQC[comp_number] != 0) {
     filtered_spqc <- which(df[[stringr::str_c(params$comp_spqc, "_CV")]] > params$stats_spqc_cv_filter_factor)  
     df <- df[-(filtered_spqc),]
     }
