@@ -59,8 +59,8 @@ get_pathway_files_bg <- function(params) {
     Uniprot <- ViSEAGO::Uniprot2GO()
     myGENE2GO <- ViSEAGO::annotate(go_choice, Uniprot)
     
-    save(wp2gene, file=stringr::str_c(base_dir,"Pathway_wp2gene_",tax_choice))
-    save(myGENE2GO, file=stringr::str_c(base_dir,"Pathway_myGENE2GO_",tax_choice))
+    #save(wp2gene, file=stringr::str_c(base_dir,"Pathway_wp2gene_",tax_choice))
+    #save(myGENE2GO, file=stringr::str_c(base_dir,"Pathway_myGENE2GO_",tax_choice))
     
   }
   cat(file = stderr(), "Function get_pathway_files_bg...end", "\n")

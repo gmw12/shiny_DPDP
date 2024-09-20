@@ -178,7 +178,7 @@ peptide_refilter_rollup <- function(df_filter_list, df_design, input_rollup_meth
 stat_add <- function(df, df_missing, params, comp_number, stats_comp, df_design) {
   cat(file = stderr(), "Function - stat_add...", "\n")
   
-  save(df, file="statdf"); save(comp_number, file="statcompnumber"); save(stats_comp, file="statstatscomp"); save(df_design, file="statdfdesign");
+  #save(df, file="statdf"); save(comp_number, file="statcompnumber"); save(stats_comp, file="statstatscomp"); save(df_design, file="statdfdesign");
   #load(file="statdf"); load(file="statcompnumber"); load(file="statstatscomp"); load(file="statdfdesign")
   
   source("Shiny_Misc_Functions.R")

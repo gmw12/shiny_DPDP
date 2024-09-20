@@ -124,6 +124,9 @@ shinyServer(function(session, input, output) {
      
      #create histogram and calculate cutoff values
      filter_histogram_plot(sesion, input, output, params, "precursor_start", "Precursor_Start_Histogram")
+   }else{
+     
+     ui_render_parameters(session, input, output)
   }
  })
 

@@ -151,8 +151,7 @@ rollup_maxlfq <- function(peptide_data, info_columns){
   samples_columns <- ncol(peptide_data) - info_columns
   
   #group and sum data (summed samples will be over written below)
-  save(peptide_data, file="lfq1")
-  save(info_columns, file="lfq2")
+  #save(peptide_data, file="lfq1"); save(info_columns, file="lfq2")
   #load(file="lfq1"); load(file="lfq2")
   df <- peptide_data |> dplyr::group_by(Accession, Description, Name, Genes) |> dplyr::summarise_all(list(sum))
   
@@ -188,8 +187,7 @@ rollup_maxlfq <- function(peptide_data, info_columns){
   protein_table <- iq::fast_MaxLFQ(df_maxlfq)
   result <- data.frame(2^protein_table$estimate)
 
-  save(result, file = "lfq3")
-  save(df, file = "lfq4")
+  #save(result, file = "lfq3"); save(df, file = "lfq4")
   #load(file="lfq3"); load(file="lfq4")
   
   #combine annotation data with protein rollup, (replacing summed data)

@@ -259,6 +259,9 @@ stats_Final_Excel_bg <- function(file_dir, filename, params) {
     excel_list <- list('precursor_start', 'raw_peptide', stringr::str_c("precursor_impute_", params$stat_norm), 
                        stringr::str_c("protein_", params$stat_norm, "_final"))
     excel_list_name <- list('Raw Precursor Data', 'Raw Peptide Data', 'Imputed Precursor Data', 'Normalized Data')
+  }else if (params$raw_data_format == "protein" && params$data_source == "SP" ) {
+    excel_list <- list('protein_raw', 'protein_impute')
+    excel_list_name <- list('SP Protein Data', "Protein Data")
   }
   
   # add stat comparisons to excel list

@@ -74,7 +74,7 @@ load_unknown_data <- function(data_sfb, params){
   }
 
     write_table_try("params", params, params)
-    save(params, file="params")
+    #save(params, file="params")
   
   gc(verbose = getOption("verbose"), reset = FALSE, full = TRUE)
   cat(file = stderr(), "function load_unkown_data...end", "\n\n")
