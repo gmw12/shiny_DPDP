@@ -181,7 +181,7 @@ print_stderr2 <- function(file_name, params){
   }
 }
 
-
+#----------------------------------------------------------------------------------------
 read_table <- function(table_name, params){
   conn <- RSQLite::dbConnect(RSQLite::SQLite(), params$database_path) 
   df <- RSQLite::dbReadTable(conn, table_name)
@@ -189,7 +189,7 @@ read_table <- function(table_name, params){
   return(df)
 }
 
-
+#----------------------------------------------------------------------------------------
 read_table_try <- function(table_name, params){
   for (i in 1:10) {
     df <- try(read_table(table_name, params))
@@ -203,14 +203,14 @@ read_table_try <- function(table_name, params){
   }
 }
 
-
+#----------------------------------------------------------------------------------------
 write_table <- function(table_name, df, params){
   conn <- RSQLite::dbConnect(RSQLite::SQLite(), params$database_path) 
   RSQLite::dbWriteTable(conn, table_name, df, overwrite = TRUE)
   RSQLite::dbDisconnect(conn)
 }
 
-
+#----------------------------------------------------------------------------------------
 write_table_try <- function(table_name, df, params){
   for (i in 1:10) {
     df <- try(write_table(table_name, df, params))
@@ -225,7 +225,7 @@ write_table_try <- function(table_name, df, params){
 }
 
 
-
+#----------------------------------------------------------------------------------------
 list_tables <- function(params){
   conn <- RSQLite::dbConnect(RSQLite::SQLite(), params$database_path) 
   table_list <- RSQLite::dbListTables(conn)
@@ -233,8 +233,39 @@ list_tables <- function(params){
   return(table_list)
 }
 
+#----------------------------------------------------------------------------------------
 loadRData <- function(fileName){
   #loads an RData file, and returns it
   load(fileName)
   get(ls()[ls() != "fileName"])
+}
+
+#----------------------------------------------------------------------------------------
+zip_data_save <- function(session, input, output, params){
+  cat(file = stderr(), "Function - zip_data_save...", "\n")
+  source('Shiny_File.R')
+  showModal(modalDialog("Saving data to zip file...", footer = NULL))
+  
+  arg_list <- list(input$archive_data_filename, params)
+  archive_data <- callr::r_bg(func = zip_data_save_bg, args = arg_list, stderr = str_c(params$error_path, "//error_archive_data.txt"), supervise = TRUE)
+  archive_data$wait()
+  print_stderr("error_archive_data.txt")
+  
+  removeModal()
+  cat(file = stderr(), "Function - zip_data_save...end", "\n")
+}
+
+#----------------------------------------------------------------------------------------
+zip_data_save_bg <- function(input_archive_data_filename, params){
+  cat(file = stderr(), "Function - zip_data_save_bg...", "\n")
+
+  filename <- stringr::str_c(params$data_path, "params")
+  save(params, file=filename)
+  
+  filename <- stringr::str_c(params$data_path, input_archive_data_filename)
+  files2zip <- dir(stringr::str_c(getwd(),"/database"), full.names = TRUE)
+  
+  utils::zip(zipfile = filename, files = files2zip, extras = '-j')
+  
+  cat(file = stderr(), "Function - zip_data_save_bg...end", "\n")
 }

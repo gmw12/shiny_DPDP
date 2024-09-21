@@ -1,6 +1,31 @@
 cat(file = stderr(), "Shiny_Data.R", "\n")
 
 #---------------------------------------------------------------------
+load_archive_file <- function(session, input, output){
+  cat(file = stderr(), "Function load_archive_file...", "\n")
+  showModal(modalDialog("Loading archive file...", footer = NULL))
+  
+  arg_list <- list(input$sfb_data_file)
+  load_archive_data <- callr::r_bg(func = load_archive_file_bg, args = arg_list, stderr = str_c(params$error_path, "//error_load_archive_data.txt"), supervise = TRUE)
+  load_archive_data$wait()
+  print_stderr("error_archive_data.txt")
+  
+  removeModal()
+  cat(file = stderr(), "Function load_archive_file...end", "\n")
+}
+
+#---------------------------------------------------------------------
+load_archive_file_bg <- function(input_sfb_data_file){
+  cat(file = stderr(), "Function load_archive_file_bg...", "\n")
+  
+  data_sfb <- parseFilePaths(volumes, input_sfb_data_file)
+  data_path <- str_extract(data_sfb$datapath, "^/.*/")
+  params$data_file <- basename(data_sfb$datapath)
+  
+  cat(file = stderr(), "Function load_archive_file_bg...end", "\n")
+}
+
+#---------------------------------------------------------------------
 load_data_file <- function(session, input, output, params){
   cat(file = stderr(), "Function load_data_file", "\n")
   showModal(modalDialog("Loading data...", footer = NULL))

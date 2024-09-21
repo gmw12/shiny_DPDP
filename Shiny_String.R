@@ -14,6 +14,8 @@ setup_string_bg <- function(input_checkbox_filter_adjpval, params){
   string_db <- STRINGdb$new(version=string_version, species=params$string_species, 
                             score_threshold=0, input_directory=params$string_path)
   
+  cat(file=stderr(), stringr::str_c("function setup_string_bg...1"), "\n")
+  
   #creates protein list and gets stringId's
   string_id_call <- function(content_type, df, row_start, row_stop, species)
   {
@@ -36,9 +38,15 @@ setup_string_bg <- function(input_checkbox_filter_adjpval, params){
     return(df_temp)
   }
   
-  
+  cat(file=stderr(), stringr::str_c("function setup_string_bg...2"), "\n")
   #get stringIDs for all proteins in set
-  df <- read_table_try("protein_impute_final", params)
+  
+  if (params$raw_data_format == "protein" & params$data_source == "SP") {
+    temp_name <- stringr::str_c("protein_", params$norm_type[[1]])
+    df <- read_table_try(temp_name, params)
+    }else {
+    df <- read_table_try("protein_impute_final", params)
+    }
   
   #get first 500 or all if less than 500
   if (nrow(df) < 501) {

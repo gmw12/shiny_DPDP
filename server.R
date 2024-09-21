@@ -34,10 +34,12 @@ shinyServer(function(session, input, output) {
   
   #update UI
   ui_render_load_design(session, input, output)
+  
   if (params$data_path != "")  {
     create_design_table(session, input, output)
     create_stats_design_table(session, input, output)
-    }
+  }
+  
   if (table_exists("summary_cv"))  {create_cv_table(session, input, output, params)}
   removeModal()
   
@@ -97,7 +99,26 @@ shinyServer(function(session, input, output) {
 
   }) 
 
-   
+  #------------------------------------------------------------------------------------------------------  
+  #Load data file
+  observeEvent(input$sfb_archive_file, {
+    
+    cat(file = stderr(), "\n\n","sfb_archive_file button clicked...", "\n")
+    
+    if (is.list(input$sfb_archive_file)) {
+      
+      #read data files
+      load_archive_file(session, input, output)
+      
+      output$archive_file_name <- renderText({get_data_file_name()})
+      
+      #update UI
+      ui_render_load_data(session, input, output)
+      ui_render_load_design(session, input, output)
+      
+    }
+    
+  }) 
 #------------------------------------------------------------------------------------------------------  
 #accept parameters
  observeEvent(input$accept_parameters, {
@@ -559,7 +580,14 @@ shinyServer(function(session, input, output) {
     cat(file = stderr(), "string_enrich_data_save clicked...end" , "\n")
   })
   
-
+  #-------------------------------------------------------------------------------------------------------------  
+  observeEvent(input$archive_data, { 
+    cat(file = stderr(), "archive_data clicked..." , "\n")
+    
+    zip_data_save(session, input, output, params)
+    
+    cat(file = stderr(), "archive_data clicked...end" , "\n")
+  })
 
   
   

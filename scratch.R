@@ -65,7 +65,11 @@ query
 rs <- dbGetQuery(conn, query)
 
 
-RSQLite::dbDisconnect(conn)
+files2zip <- dir(stringr::str_c(getwd(),"/database"), full.names = TRUE)
+
+utils::zip(zipfile = 'testZip', files = files2zip)
+
+
 
   #------------
 sample_cols <- c(colnames(df |> dplyr::select(contains("Normalized"))),

@@ -61,7 +61,7 @@ set_file_choosers <- function(session, input, output) {
   
   shinyFileChoose(input, 'sfb_design_file', session = session, roots = volumes, filetypes = c('', 'xlsx'))
   shinyFileChoose(input, 'sfb_data_file', session = session, roots = volumes, filetypes = c('', 'tsv', 'txt'))
-  shinyFileChoose(input, 'sfb_database_file', session = session, roots = volumes, filetypes = c('', 'db'))
+  shinyFileChoose(input, 'sfb_archive_file', session = session, roots = volumes, filetypes = c('', 'zip'))
   
   cat(file = stderr(), "Function - set_file_choosers...end", "\n")
 }
