@@ -11,4 +11,5 @@ error*.txt
 erase*
 *heatmap.png
 database/
+.DS_Store
 >>>>>>> 755c5383ad7b9b2caf60972e3885b927b83a53de
