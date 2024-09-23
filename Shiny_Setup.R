@@ -8,7 +8,7 @@ create_parameter_table <- function(session, input, output){
   cat(file = stderr(), "\n",  "Function create_parameter_table", "\n")
 
   conn <- RSQLite::dbConnect(RSQLite::SQLite(), params$database_path)
-  RSQLite::dbWriteTable(conn, "paramss", df, overwrite = TRUE)
+  RSQLite::dbWriteTable(conn, "params", df, overwrite = TRUE)
   RSQLite::dbDisconnect(conn)
 
   gc(verbose = getOption("verbose"), reset = FALSE, full = TRUE)

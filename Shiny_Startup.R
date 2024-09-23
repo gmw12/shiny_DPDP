@@ -36,6 +36,10 @@ set_user <- function() {
       volumes <<- c(h1 = '/mnt/h_black1', h2 = '/mnt/h_black2', dc = '/mnt/RawData', wd = '.', Home = fs::path_home(), getVolumes()())
       site_user <<- "dpmsr"
       params$python_path <<- "/home/user/anaconda3/envs/python38/bin/python3"
+    }else if (Sys.info()["nodename"] == "gregorys-mbp.lan") {
+      volumes <<- c(h1 = '/Users/gregwaitt/Data', h2 = '/Users/gregwaitt/Cloud-Drive/R', dc = '/mnt/RawData', wd = '.', Home = fs::path_home(), getVolumes()())
+      site_user <<- "dpmsr"
+      params$python_path <<- "/home/user/anaconda3/envs/python38/bin/python3"
     }else{
       #for public website
       volumes <<- c(dd = '/data', wd = '.', Home = fs::path_home(), getVolumes()())

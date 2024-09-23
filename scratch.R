@@ -1,4 +1,16 @@
 
+params$database_path <- stringr::str_c(getwd(),"/database/test.db")
+params$database_path <- stringr::str_c("/Users/gregwaitt/Data/test.db")
+
+create_db(params$database_path)
+
+create_db <- function(db_name) {
+  conn <- dbConnect(RSQLite::SQLite(), db_name) 
+  RSQLite::dbDisconnect(conn)
+}
+
+
+
 read_table <- function(table_name, params){
   conn <- dbConnect(RSQLite::SQLite(), params$database_path) 
   df <- dbReadTable(conn, table_name)
@@ -35,7 +47,7 @@ list_tables(params)
 mv <- read_table("missing_values", params)
 
 df_peptide <- read_table("peptide_sltmm_Caskin1_Test_v_Caskin1_Ctrl_final", params)
-testme2 <- read_table("go_profile_result", params)
+testme2 <- read_table("precursor_missing", params)
 df_design <- read_table("design", params)
 test <- read_table("design", params)
 design <- read_table("design", params)
@@ -50,6 +62,7 @@ sample_groups <- read_table("sample_groups", params)
 df <- read_table('protein_impute_EsxM_v_Control_final', params)
 df <- read_table_try('precursor_noise', params)
 df <- read_table_try('precursor_raw', params)
+df <- read_table_try('precursor_norm_sltmm', params)
 df1 <- read_table_try('protein_impute', params)
 df2 <- read_table_try('protein_raw', params)
 test3 <- read_table('protein_sltmm', params)
@@ -65,11 +78,7 @@ query
 rs <- dbGetQuery(conn, query)
 
 
-files2zip <- dir(stringr::str_c(getwd(),"/database"), full.names = TRUE)
-
-utils::zip(zipfile = 'testZip', files = files2zip)
-
-
+RSQLite::dbDisconnect(conn)
 
   #------------
 sample_cols <- c(colnames(df |> dplyr::select(contains("Normalized"))),
@@ -626,3 +635,8 @@ length(list3)
 testp <- list3[3]
 test_df1 <- df_local[df_local$EG.PrecursorId == testp]
 test_df2 <- df_notlocal[df_notlocal$EG.PrecursorId == testp]
+
+
+
+zip(zipfile = 'testZip', files = str_c(getwd(), '/data'))
+getwd()

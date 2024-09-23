@@ -4,7 +4,10 @@ cat(file = stderr(), "Shiny_Rollup_Functions.R", "\n")
 rollup_selector <- function(df, df_design, input_rollup_method, input_rollup_topn, params){
   cat(file = stderr(), "function rollup_selector...", "\n")
   
-  df <- df |> dplyr::select(contains(c("Accession", "Description", "Genes", df_design$ID))) |> 
+  save(df, file="test_df")
+  #. load(file="test_df")
+  
+  df <- df |> dplyr::select(contains(c("Accession", "Description", "Name", "Genes", df_design$ID))) |> 
     dplyr::mutate(Precursors = 1, .after = Genes)
   
   #hard coded from above selection
@@ -28,6 +31,9 @@ rollup_sum <- function(df){
   protein_df <- df |> dplyr::group_by(Accession, Description, Name, Genes) |> dplyr::summarise_all(list(sum))
   protein_df <- data.frame(dplyr::ungroup(protein_df))
   
+  #save(df, file="test_df"); save(protein_df, file="test_protein_df")
+  #. load(file="test_df"); load(file="test_protein_df")
+  
   cat(file = stderr(), "function rollup_sum...end", "\n")
   return(protein_df)
 }
@@ -36,10 +42,13 @@ rollup_sum <- function(df){
 rollup_sum_peptide <- function(df, df_design){
   cat(file = stderr(), "function rollup_sum_peptide...", "\n")
   
+  #save(df, file="test_df"); save(df_design, file="test_df_design")
+  #.  load(file="test_df"); load(file="test_df_design")
+  
   df <- df |> dplyr::select(contains(c("Accession", "Description", "Name", "Genes", "Sequence", "PeptidePosition", df_design$ID))) |> 
     dplyr::mutate(Precursors = 1, .after = PeptidePosition)
   
-  peptide_df <- df |> dplyr::group_by(Accession, Description, Genes, Sequence, PeptidePosition) |> dplyr::summarise_all(list(sum))
+  peptide_df <- df |> dplyr::group_by(Accession, Description, Name, Genes, Sequence, PeptidePosition) |> dplyr::summarise_all(list(sum))
   peptide_df <- data.frame(dplyr::ungroup(peptide_df))
   
   cat(file = stderr(), "function rollup_sum_peptide...end", "\n")

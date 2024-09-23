@@ -36,7 +36,6 @@ rollup_apply_bg <- function(input_rollup_method, input_rollup_top, params) {
     table_name_out_peptide <- stringr::str_c("peptide_", norm)
     
     df <- RSQLite::dbReadTable(conn, table_name)
-    info_columns <- grep(df_design$ID[1], colnames(df)) - 1
 
     #rollup precursor/peptides
     protein_df <- rollup_selector(df, df_design, input_rollup_method, input_rollup_top, params)

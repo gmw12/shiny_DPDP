@@ -148,7 +148,7 @@ peptide_refilter_rollup <- function(df_filter_list, df_design, input_rollup_meth
   
   #need to add back info columns to missing for rollup
   df_missing <- cbind(df[,1:(ncol(df) - sample_count)], df_missing)
-  df_missing <- df_missing |> dplyr::select(contains(c("Accession", "Description", "Genes", df_design$ID))) |> 
+  df_missing <- df_missing |> dplyr::select(contains(c("Accession", "Description", "Name", "Genes", df_design$ID))) |> 
     dplyr::mutate(Precursors = 1, .after = Genes)
   
   #rollup data and missing
@@ -178,8 +178,8 @@ peptide_refilter_rollup <- function(df_filter_list, df_design, input_rollup_meth
 stat_add <- function(df, df_missing, params, comp_number, stats_comp, df_design) {
   cat(file = stderr(), "Function - stat_add...", "\n")
   
-  #save(df, file="statdf"); save(comp_number, file="statcompnumber"); save(stats_comp, file="statstatscomp"); save(df_design, file="statdfdesign");
-  #load(file="statdf"); load(file="statcompnumber"); load(file="statstatscomp"); load(file="statdfdesign")
+  save(df, file="statdf"); save(df_missing, file="statdfmissing"); save(comp_number, file="statcompnumber"); save(stats_comp, file="statstatscomp"); save(df_design, file="statdfdesign");
+  #load(file="statdf");  load(file="statdfmissing");load(file="statcompnumber"); load(file="statstatscomp"); load(file="statdfdesign")
   
   source("Shiny_Misc_Functions.R")
   source("Shiny_Stats_Functions.R")
@@ -243,24 +243,24 @@ stat_add <- function(df, df_missing, params, comp_number, stats_comp, df_design)
     # Final filters
     #missing filter, always on...
     filtered_mf <- which(df[[stringr::str_c(stats_comp$Name[comp_number], "_mf")]] < params$missing_factor)  
-    df <- df[-(filtered_mf),]
+    if(length(filtered_mf) > 0 ){ df <- df[-(filtered_mf),] }
   }
   
   if(params$stats_spqc_cv_filter & stats_comp$SPQC[comp_number] != 0) {
     filtered_spqc <- which(df[[stringr::str_c(params$comp_spqc, "_CV")]] > params$stats_spqc_cv_filter_factor)  
-    df <- df[-(filtered_spqc),]
+    if(length(filtered_spqc) > 0 ){ df <- df[-(filtered_spqc),] }
     }
   
   cat(file = stderr(), "stat_add...7", "\n")
   if(params$stats_comp_cv_filter) {
     filtered_onegroup <- which(df[[stringr::str_c(stats_comp$FactorsN[comp_number], "_CV")]] > params$stats_comp_cv_filter_factor & 
                                  df[[stringr::str_c(stats_comp$FactorsD[comp_number], "_CV")]] > params$stats_comp_cv_filter_factor)  
-    df <- df[-(filtered_onegroup),]
+    if(length(filtered_onegroup) > 0 ){ df <- df[-(filtered_onegroup),]}
     }
   
   if(params$stats_peptide_minimum) {
     filtered_min_peptide <- which(df$Precursors < params$stats_peptide_minimum_factor)
-    df <- df[-(filtered_min_peptide),]
+    if(length(filtered_min_peptide) > 0 ){ df <- df[-(filtered_min_peptide),] }
     }
   
   cat(file = stderr(), "stat_add...8", "\n")
@@ -300,17 +300,20 @@ create_imputed_df <- function(params) {
   
   info_columns <- ncol(df) - params$sample_number
   
-  df_protein_info <- df |> dplyr::select(contains(c("Accession", "Description", "Genes")))
+  cat(file = stderr(), "function create_imputed_df....1", "\n")
+  df_protein_info <- df |> dplyr::select(contains(c("Accession", "Description","Name", "Genes")))
   df <- df[(info_columns + 1):ncol(df)]
   
   df[df > 0] <- 1
   df[is.na(df)] <- 0
   
+  cat(file = stderr(), "function create_imputed_df....2", "\n")
   df_protein <- cbind(df_protein_info, df)
-  df_protein <- df_protein |> dplyr::group_by(Accession, Description, Genes) |> dplyr::summarise_all(list(sum))
+  df_protein <- df_protein |> dplyr::group_by(Accession, Description, Name, Genes) |> dplyr::summarise_all(list(sum))
   df_protein <- data.frame(dplyr::ungroup(df_protein))
   df_protein <- df_protein[4:ncol(df_protein)]
   
+  cat(file = stderr(), "function create_imputed_df....3", "\n")
   RSQLite::dbWriteTable(conn, "precursor_missing", df, overwrite = TRUE)
   RSQLite::dbWriteTable(conn, "protein_missing", df_protein, overwrite = TRUE)
   RSQLite::dbDisconnect(conn)

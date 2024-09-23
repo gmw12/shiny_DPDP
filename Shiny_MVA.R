@@ -162,9 +162,13 @@ stat_calc_bg <- function(params, comp_number, stats_comp, input_rollup_method, i
     df <- read_table_try(stats_comp$Table_Name[comp_number], params)
     #add imputed column
     if (params$raw_data_format != "protein"){
+      cat(file = stderr(), "raw format NOT protein...", "\n")
       df_list <- add_imputed_df(df, params, stats_comp, comp_number, "protein_missing")
       df <- df_list[[1]]
       df_missing <- df_list[[2]]
+    }else{
+      cat(file = stderr(), "raw format IS protein...", "\n")
+      df_missing <- ""
     }
   } else {
     cat(file = stderr(), "data IS refiltered at peptide/precursor level....", "\n")
