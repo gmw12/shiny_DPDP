@@ -640,3 +640,38 @@ test_df2 <- df_notlocal[df_notlocal$EG.PrecursorId == testp]
 
 zip(zipfile = 'testZip', files = str_c(getwd(), '/data'))
 getwd()
+
+
+#----------------------------------------------
+Simple_Excel <- function(df, sheetname, filename) {
+  cat(file=stderr(), stringr::str_c("Simple_Excel -> ", filename), "\n")
+  wb <- openxlsx::createWorkbook()
+  openxlsx::addWorksheet(wb, sheetname)
+  openxlsx::writeData(wb, sheet=1, df)  
+  openxlsx::saveWorkbook(wb, filename, overwrite = TRUE)
+}
+
+name = str_c(params$data_path, "eraseme")
+Simple_Excel(params, "stuff", file_name)
+create_dir(name)
+
+
+#----------------------------------------------------------------------------------------
+create_dir <- function(name){
+  cat(file = stderr(), "Function create_dir...", "\n")
+  if (fs::is_dir(name)) {
+    #added file delete, dir delete not working on customer shiny server
+    cat(file = stderr(), "dir exists, deleting...", "\n")
+    do.call(file.remove, list(list.files(name, full.names = TRUE)))
+    dir_delete(name)
+    dir_create(name)
+  }else{
+    dir_create(name)
+  }
+  name <- str_replace_all(name, "/", "//")
+  name <- str_c(name, "//")
+  cat(file = stderr(), str_c(name, " created...", "\n"))
+  
+  cat(file = stderr(), "Function create_dir...end", "\n\n")
+  return(name)
+}
