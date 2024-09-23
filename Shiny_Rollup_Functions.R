@@ -4,7 +4,7 @@ cat(file = stderr(), "Shiny_Rollup_Functions.R", "\n")
 rollup_selector <- function(df, df_design, input_rollup_method, input_rollup_topn, params){
   cat(file = stderr(), "function rollup_selector...", "\n")
   
-  save(df, file="test_df")
+  #save(df, file="test_df")
   #. load(file="test_df")
   
   df <- df |> dplyr::select(contains(c("Accession", "Description", "Name", "Genes", df_design$ID))) |> 

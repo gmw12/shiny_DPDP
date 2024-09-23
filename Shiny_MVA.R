@@ -172,7 +172,7 @@ stat_calc_bg <- function(params, comp_number, stats_comp, input_rollup_method, i
     }
   } else {
     cat(file = stderr(), "data IS refiltered at peptide/precursor level....", "\n")
-    table_name <- stringr::str_c("precursor_impute_", params$stat_norm)
+    table_name <- stringr::str_replace_all(stringr::str_c("precursor_impute_", params$stat_norm), " ", "")
     df <- read_table_try(table_name, params)  
     df_missing <- read_table_try("precursor_missing", params) 
     
