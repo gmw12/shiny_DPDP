@@ -3,6 +3,21 @@ cat(file = stderr(), "Shiny_Hide.R", "\n")
 hide_enable <- function(session, input, output) {
   cat(file = stderr(), "Function - hide_enable", "\n")
   
+  observe({
+    if (params$raw_data_format == "protein") {
+      updateCheckboxInput(session, "peptide_refilter", value = FALSE)
+      updateCheckboxInput(session, "peptide_missing_filter", value = FALSE)
+      params$peptide_refilter <<- FALSE
+      shinyjs::hide("peptide_missing_filter")
+      shinyjs::hide("peptide_missing_factor")
+      #session$sendCustomMessage(type = "manipulateMenuItem", message = list(action = "hide", tabName = "normalize"))
+    } else {
+      updateCheckboxInput(session, "peptide_refilter", value = TRUE)
+      updateCheckboxInput(session, "peptide_missing_filter", value = TRUE)
+      shinyjs::show("peptide_missing_filter")
+      shinyjs::show("peptide_missing_factor")
+    }
+  })
 
   observe({
     if (input$norm_type == "protein") {
