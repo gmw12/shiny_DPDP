@@ -503,7 +503,7 @@ precursor_to_precursor_bg <- function(params){
   
   if (ncol(df) != (n_col + params$sample_number))
   {
-    shinyalert("Oops!", "Number of columns extracted is not as expected", type = "error") 
+    shinyalert::shinyalert("Oops!", "Number of columns extracted is not as expected", type = "error") 
     cat(file = stderr(), "Number of columns extracted is not as expected", "\n")
   }
   

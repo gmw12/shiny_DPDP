@@ -1,15 +1,15 @@
 
-set_name <- "Precursor_Impute_F134NC_LFQ"
+set_name <- "10658_Precur_F234N73_Human_Sum"
 
 stats_df <- read_table_try('stats_comp', params)
 
-ecoli_spk <- c(5,10,20,30,40)
-human_spk <- c(50,50,50,50,50)
-yeast_spk <- c(45,40,30,20,10)
+ecoli_spk <- c(5,10,20,30,40,30,10)
+human_spk <- c(50,50,50,50,50,50,50)
+yeast_spk <- c(45,40,30,20,10,20,40)
 
-ecoli_comp <- c(45,45,45,45,45)
-human_comp <- c(50,50,50,50,50)
-yeast_comp <- c(5,5,5,5,5)
+ecoli_comp <- c(45,45,45,45,45,40,30)
+human_comp <- c(50,50,50,50,50,50,50)
+yeast_comp <- c(5,5,5,5,5,10,20)
 
 ecoli_FC <- -1/(ecoli_spk/ecoli_comp)  
 yeast_FC <- yeast_spk/yeast_comp
@@ -24,9 +24,11 @@ colnames(result_ecoli) <- col_names
 colnames(result_human) <- col_names
 colnames(result_yeast) <- col_names
 
-x <- 1
+x <- 0
 for (i in stats_df$Final_Table_Name){
   cat(file = stderr(), str_c("data = ", i), "\n")
+  x <- x + 1
+  
   df <- read_table_try(i, params)
   df_ecoli <- df[df$Name %like% "ECOLI", ]
   df_human <- df[df$Name %like% "HUMAN", ]
@@ -108,8 +110,27 @@ for (i in stats_df$Final_Table_Name){
   result_yeast$Acc30[x] <- length(find_fc)
   result_yeast$Acc30_pval[x] <- length(find_fc_pval)
 
+  hist_title <- stringr::str_c("Yeast: ", yeast_spk[x]," / ", yeast_comp[x])
+  hist(yeast_fc[,1], breaks = 1000, xlim = c(yeast_FC[x]-4, yeast_FC[x]+4), main=hist_title, xlab = i)
+
+  df <- data.frame(yeast_fc[,1])
+  colnames(df) <- c("fc")
+  p= ggplot(df, aes(x=fc)) + 
+    geom_histogram(aes(y=..density..), binwidth = 200, colour="black", fill="white")+
+    geom_density(alpha=.2, fill="#FF6666") +
+    labs(title=hist_title, x=i, y = "Count")
+  print(p)
   
-  x <- x + 1
+  hist_title <- stringr::str_c("Ecoli: ", ecoli_spk[x]," / ", ecoli_comp[x])
+  hist(ecoli_fc[,1], breaks = 1000, xlim = c(ecoli_FC[x]-4, ecoli_FC[x]+4), main=hist_title, xlab = i)
+  
+  df <- data.frame(ecoli_fc[,1])
+  colnames(df) <- c("fc")
+  p = ggplot(df, aes(x=fc)) + 
+    geom_histogram(aes(y=..density..), binwidth = 200, colour="black", fill="white")+
+    geom_density(alpha=.2, fill="#FF6666") +
+    labs(title=hist_title, x=i, y = "Count")
+  print(p)
 }
 
 final_result <- rbind(result_ecoli, result_human, result_yeast)

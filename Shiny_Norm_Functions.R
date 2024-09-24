@@ -29,8 +29,12 @@ tmm_normalize <- function(norm_data, data_to_norm, info_columns){
 }
 
 # global scaling value, sample loading normalization
-protein_normalize <- function(data_to_norm, info_columns){
-  protein_norm_raw <- data_to_norm[grepl(params$protein_norm_grep, data_to_norm$Accession, ignore.case = TRUE),]
+protein_normalize <- function(data_to_norm, info_columns, input_protein_norm_grep){
+  #save(data_to_norm, file="testd2n"); save(info_columns, file="testic"); save(input_protein_norm_grep, file="testing")
+  #load(file="testd2n"); load(file="testic"); load(file="testing")
+  cat(file = stderr(), "Function - protein_normalize...", "\n")
+  protein_norm_raw <- data_to_norm |> dplyr::filter(stringr::str_detect(Name, input_protein_norm_grep) )
+  #protein_norm_raw <- data_to_norm[grepl(params$protein_norm_grep, data_to_norm$Accession, ignore.case = TRUE),]
   protein_norm_raw <- protein_norm_raw[(info_columns + 1):ncol(protein_norm_raw)]
   annotation_data <- data_to_norm[1:info_columns]
   data_to_norm <- data_to_norm[(info_columns + 1):ncol(data_to_norm)]
@@ -38,6 +42,7 @@ protein_normalize <- function(data_to_norm, info_columns){
   norm_facs <- target / colSums(protein_norm_raw, na.rm = TRUE)
   data_out <- sweep(data_to_norm, 2, norm_facs, FUN = "*")
   data_out <- cbind(annotation_data, data_out)
+  cat(file = stderr(), "Function - protein_normalize...end", "\n")
   return(data_out)
 }
 

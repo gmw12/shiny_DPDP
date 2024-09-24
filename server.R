@@ -237,7 +237,7 @@ shinyServer(function(session, input, output) {
    
    norm_apply_widget_save(session, input, output)
    
-   norm_apply()
+   norm_apply(session, input, ouput)
    
    render_norm_apply_graphs(session, input, output)
    

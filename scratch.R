@@ -68,7 +68,7 @@ df2 <- read_table_try('protein_raw', params)
 test3 <- read_table('protein_sltmm', params)
 test4 <- read_table('protein_sltmm_final', params)
 df <- read_table(stats_comp$Final_Table_Name[1], params)
-
+data_to_norm <- read_table_try('precursor_filter', params)
 data_name <- 'protein_sltmm_Caskin1_Test_v_Caskin1_Ctrl_final'
 accession <- 'Q9JMG2'
 conn <- dbConnect(RSQLite::SQLite(), params$database_path) 

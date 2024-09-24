@@ -55,9 +55,8 @@ norm_filter_bg <- function(table_name, new_table_name, params) {
 }
 
 
-
 #--------------------------------------------------------------------------------------
-norm_apply <- function(){
+norm_apply <- function(session, input, output){
   cat(file = stderr(), "Function - norm_apply...", "\n")
   showModal(modalDialog("Normalizing data...", footer = NULL))
   
@@ -70,24 +69,24 @@ norm_apply <- function(){
     info_columns <- params$info_col_precursor
     new_table_name <- str_c("precursor_norm_", norm_type[1])
   } 
- 
+  
   #check if first normalization, if so then add impute only
   if (length(as.list(strsplit(params$norm_type, ",")[[1]])) == 2) {
     impute_table_name <- str_c("precursor_norm_", norm_type[2])
     impute_table_name <- stringr::str_replace_all(impute_table_name, " ", "")
     cat(file = stderr(), str_c("first pass adding impute only table... ", impute_table_name), "\n")
-
-    bg_normapply_impute <- callr::r_bg(func = norm_apply_bg, args = list(table_data, table_norm_data, impute_table_name, info_columns, params, norm_type[2]), stderr = str_c(params$error_path, "//error_normapplyimpute.txt"), supervise = TRUE)
+    
+    bg_normapply_impute <- callr::r_bg(func = norm_apply_bg, args = list(table_data, table_norm_data, impute_table_name, info_columns, params, norm_type[2], input$protein_norm_grep), stderr = str_c(params$error_path, "//error_normapplyimpute.txt"), supervise = TRUE)
     bg_normapply_impute$wait()
     print_stderr("error_normapplyimpute.txt")
     cat(file = stderr(), "first pass adding impute only table...end", "\n")
   }
   
   
-  bg_normapply <- callr::r_bg(func = norm_apply_bg, args = list(table_data, table_norm_data, new_table_name, info_columns, params, norm_type[1]), stderr = str_c(params$error_path, "//error_normapply.txt"), supervise = TRUE)
+  bg_normapply <- callr::r_bg(func = norm_apply_bg, args = list(table_data, table_norm_data, new_table_name, info_columns, params, norm_type[1], input$protein_norm_grep), stderr = str_c(params$error_path, "//error_normapply.txt"), supervise = TRUE)
   bg_normapply$wait()
   print_stderr("error_normapply.txt")
-
+  
   bg_normbar <- callr::r_bg(func = bar_plot, args = list(new_table_name, str_c("Precursor_",  norm_type[1]), params$qc_path, params), stderr = str_c(params$error_path, "//error_normbarplot.txt"), supervise = TRUE)
   bg_normbar$wait()
   print_stderr("error_normbarplot.txt")
@@ -98,7 +97,7 @@ norm_apply <- function(){
 
 
 #--------------------------------------------------------------------------------------
-norm_apply_bg <- function(table_data, table_norm_data, new_table_name, info_columns, params, norm_type) {
+norm_apply_bg <- function(table_data, table_norm_data, new_table_name, info_columns, params, norm_type, input_protein_norm_grep) {
   cat(file = stderr(), stringr::str_c("Function - norm_apply_bg...", norm_type), "\n")
   
   source('Shiny_Norm_Functions.R')
@@ -116,7 +115,7 @@ norm_apply_bg <- function(table_data, table_norm_data, new_table_name, info_colu
   }else if (norm_type == "sltmm") {
     df <- sl_normalize(norm_data, data_to_norm, info_columns)
   }else if (norm_type == "protein") {
-    df <- protein_normalize(data_to_norm, info_columns)
+    df <- protein_normalize(data_to_norm, info_columns, input_protein_norm_grep)
   }else if (norm_type == "ai") {
     df <- ai_normalize(data_to_norm, info_columns)
   }else if (norm_type == "ti") {
@@ -153,12 +152,12 @@ sl_normalize <- function(norm_data, data_to_norm, data_title, info_columns){
   annotation_data <- data_to_norm[1:info_columns]
   data_to_norm <- data_to_norm[(info_columns + 1):ncol(data_to_norm)]
   norm_data <- norm_data[(info_columns + 1):ncol(norm_data)]
-  excel_name <- "_Peptide_SL_Norm.xlsx"
+  #excel_name <- "_Peptide_SL_Norm.xlsx"
   target <- mean(colSums(norm_data, na.rm = TRUE))
   norm_facs <- target / colSums(norm_data,na.rm = TRUE)
   data_out <- sweep(data_to_norm, 2, norm_facs, FUN = "*")
   data_out <- cbind(annotation_data, data_out)
-  Simple_Excel(data_out, "data", str_c(dpmsr_set$file$extra_prefix, "_sl_norm.xlsx", collapse = " "))
+  #Simple_Excel(data_out, "data", str_c(dpmsr_set$file$extra_prefix, "_sl_norm.xlsx", collapse = " "))
   return(data_out)
 }
 
@@ -381,23 +380,25 @@ lr_normalize <- function(data_in, data_title, info_columns) {
 }
 
 
-# global scaling value, sample loading normalization
-protein_normalize <- function(data_to_norm, data_title, info_columns){
-  protein_norm_raw <- subset(data_to_norm, Accession %in% dpmsr_set$x$protein_norm_list)
-  protein_norm_raw <- protein_norm_raw[(info_columns + 1):(info_columns + dpmsr_set$y$sample_number)]
-  annotation_data <- data_to_norm[1:info_columns]
-  data_to_norm <- data_to_norm[(info_columns + 1):ncol(data_to_norm)]
-  #protein_norm_raw$missings <- rowSums(protein_norm_raw == 0.0)
-  #protein_norm_raw <- subset(protein_norm_raw, missings==0)
-  #protein_norm_raw <- protein_norm_raw[1:sample_number]
-  target <- mean(colSums(protein_norm_raw, na.rm = TRUE))
-  norm_facs <- target / colSums(protein_norm_raw, na.rm = TRUE)
-  data_out <- sweep(data_to_norm, 2, norm_facs, FUN = "*")
-  #data_out <- finish_norm(data_out, excel_name, data_title)
-  data_out <- cbind(annotation_data, data_out)
-  #Simple_Excel(data_out,  str_c(dpmsr_set$file$extra_prefix, "_protein_norm.xlsx", collapse = " "))
-  return(data_out)
-}
+# # global scaling value, sample loading normalization
+# protein_normalize <- function(data_to_norm, info_columns, input_protein_norm_grep){
+#   cat(file = stderr(), "Function - protein_normalize...", "\n")
+#   protein_norm_raw <- data_to_norm |> dplyr::filter(stringr::str_detect(Name, input_protein_norm_grep) )
+#   protein_norm_raw <- protein_norm_raw[,(info_columns + 1):ncol(protein_norm_raw)]
+#   annotation_data <- data_to_norm[,1:info_columns]
+#   data_to_norm <- data_to_norm[,(info_columns + 1):ncol(data_to_norm)]
+#   #protein_norm_raw$missings <- rowSums(protein_norm_raw == 0.0)
+#   #protein_norm_raw <- subset(protein_norm_raw, missings==0)
+#   #protein_norm_raw <- protein_norm_raw[1:sample_number]
+#   target <- mean(colSums(protein_norm_raw, na.rm = TRUE))
+#   norm_facs <- target / colSums(protein_norm_raw, na.rm = TRUE)
+#   data_out <- sweep(data_to_norm, 2, norm_facs, FUN = "*")
+#   #data_out <- finish_norm(data_out, excel_name, data_title)
+#   data_out <- cbind(annotation_data, data_out)
+#   #Simple_Excel(data_out,  str_c(dpmsr_set$file$extra_prefix, "_protein_norm.xlsx", collapse = " "))
+#   cat(file = stderr(), "Function - protein_normalize...end", "\n")
+#   return(data_out)
+# }
 
 
 #TMM Normalized 
