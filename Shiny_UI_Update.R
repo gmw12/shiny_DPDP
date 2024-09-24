@@ -486,6 +486,7 @@ update_stat_choices <- function(session, input, output){
   for (i in (1:9)) {
     compN <- str_c("comp_", i, "N")
     compD <- str_c("comp_", i, "D")
+    #cat(file = stderr(), stringr::str_c(compN, " ", compD, "  ", i), "\n\n")
     updatePickerInput(session, compN, choices = unique_groups) 
     updatePickerInput(session, compD, choices = unique_groups) 
   }
@@ -513,12 +514,12 @@ update_stat_comparisons <- function(session, input, output){
         updatePickerInput(session, inputId = compD, label = str_c("Denominator selected -> ", stats_comp$D[i]) )
         updateTextInput(session, inputId = str_c("comp",i,"_name"),  value = stats_comp$Name[i])
       }
-      for (i in ((nrow(stats_comp) + 1):9)) {
-        compN <- str_c("comp_", i, "N")
-        compD <- str_c("comp_", i, "D")
-        updatePickerInput(session, compN, selected = "-") 
-        updatePickerInput(session, compD, selected = "-") 
-      }
+      # for (i in ((nrow(stats_comp) + 1):9)) {
+      #   compN <- str_c("comp_", i, "N")
+      #   compD <- str_c("comp_", i, "D")
+      #   updatePickerInput(session, compN, selected = "-") 
+      #   updatePickerInput(session, compD, selected = "-") 
+      # }
     }
   } 
   

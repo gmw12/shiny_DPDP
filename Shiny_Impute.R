@@ -54,6 +54,12 @@ impute_apply_bg <- function(norm_type, params) {
     bg_name <- stringr::str_c('bg_impute_', norm)
     bg_impute <- get(bg_name)
     bg_impute$wait()
+    
+    bg_impute_list <- bg_impute$get_result()
+    new_table_name <- bg_impute_list[[1]]
+    df_impute <- bg_impute_list[[2]]
+    write_table_try(new_table_name, df_impute, params)
+    
     print_stderr2(stringr::str_c("error_", bg_name, ".txt"), params)
   }
   
@@ -87,8 +93,10 @@ impute_apply_bg2 <- function(norm, params, df_random, df_groups, df) {
   
   cat(file = stderr(), "Function - impute_apply_bg2...1", "\n")
   new_table_name <- stringr::str_c('precursor_impute_', norm)
-  write_table_try(new_table_name, df_impute, params)
+  #write_table_try(new_table_name, df_impute, params)
+  
   cat(file = stderr(), "Function - impute_apply_bg2...end", "\n")
+  return(list(new_table_name, df_impute))
 }
 
 
