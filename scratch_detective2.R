@@ -170,7 +170,7 @@ for (i in stats_df$Final_Table_Name){
   df <- data.frame(ecoli_fc[,1])
   colnames(df) <- c("fc")
   p = ggplot(df, aes(x=fc)) + 
-    geom_histogram(aes(y=..density..), binwidth = 200, colour="black", fill="white")+
+    geom_histogram(aes(y=after_stat(density)), binwidth = 200, colour="black", fill="white")+
     geom_density(alpha=.2, fill="#FF6666") +
     labs(title=hist_title, x=i, y = "Count")
   print(p)
