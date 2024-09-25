@@ -1,14 +1,15 @@
 
 set_name <- "10658_Precur_F234N73_Human_LFQ"
+source('Shiny_File.R')
 
 stats_df <- read_table_try('stats_comp', params)
 
-ecoli_spk = NULL
-human_spk = NULL
-yeast_spk = NULL
-ecoli_comp = NULL
-human_comp = NULL
-yeast_comp = NULL
+ecoli_N = NULL
+human_N = NULL
+yeast_N = NULL
+ecoli_D = NULL
+human_D = NULL
+yeast_D = NULL
 
 
 for (i in (1:nrow(stats_df))){
@@ -25,9 +26,9 @@ for (i in (1:nrow(stats_df))){
   find_H <- as.numeric(substr(stats_N, find_H[1]+1, find_Y[1]-1))
   find_Y <- as.numeric(substr(stats_N, find_Y[1]+1, end_N[1]))
   
-  ecoli_spk = c(ecoli_spk, find_E)
-  human_spk = c(human_spk, find_H)
-  yeast_spk = c(yeast_spk, find_Y)
+  ecoli_N = c(ecoli_N, find_E)
+  human_N = c(human_N, find_H)
+  yeast_N = c(yeast_N, find_Y)
   
   find_E <- str_locate(pattern = "E", stats_D)
   find_H <- str_locate(pattern = "H", stats_D)
@@ -38,25 +39,14 @@ for (i in (1:nrow(stats_df))){
   find_H <- as.numeric(substr(stats_D, find_H[1]+1, find_Y[1]-1))
   find_Y <- as.numeric(substr(stats_D, find_Y[1]+1, end_N[1]))
   
-  ecoli_comp = c(ecoli_comp, find_E)
-  human_comp = c(human_comp, find_H)
-  yeast_comp = c(yeast_comp, find_Y)
-  
-
+  ecoli_D = c(ecoli_D, find_E)
+  human_D = c(human_D, find_H)
+  yeast_D = c(yeast_D, find_Y)
 }
 
-
-# ecoli_spk <- c(5,10,20,30,40,30,10)
-# human_spk <- c(50,50,50,50,50,50,50)
-# yeast_spk <- c(45,40,30,20,10,20,40)
-# 
-# ecoli_comp <- c(45,45,45,45,45,40,30)
-# human_comp <- c(50,50,50,50,50,50,50)
-# yeast_comp <- c(5,5,5,5,5,10,20)
-
-ecoli_FC <- -1/(ecoli_spk/ecoli_comp)  
-yeast_FC <- yeast_spk/yeast_comp
-human_FC <- human_spk/human_comp
+ecoli_FC <- log(ecoli_N/ecoli_D,2) 
+yeast_FC <- log(yeast_N/yeast_D,2)
+human_FC <- log(human_N/human_D,2)
 
 result_ecoli <- data.frame(matrix(ncol=12, nrow = nrow(stats_df)))
 result_human <- data.frame(matrix(ncol=12, nrow = nrow(stats_df)))
@@ -77,16 +67,19 @@ for (i in stats_df$Final_Table_Name){
   df_human <- df[df$Name %like% "HUMAN", ]
   df_yeast <- df[df$Name %like% "YEAST", ]
   
-  ecoli_fc <- df_ecoli |> dplyr::select(contains('FC'), -contains('FC2'))
-  ecoli_fc$acc <- abs(ecoli_fc[,1]/ecoli_FC[x])
+  ecoli_fc <- df_ecoli |> dplyr::select(contains('FC2'))
+  ecoli_fc <- log(ecoli_fc,2)
+  ecoli_fc$acc <- ecoli_fc[,1]/ecoli_FC[x]
   ecoli_pval <- df_ecoli |> dplyr::select(contains('pval'))
   
-  human_fc <- df_human |> dplyr::select(contains('FC'), -contains('FC2'))
-  human_fc$acc <- abs(human_fc[,1]/human_FC[x])
+  human_fc <- df_human |> dplyr::select(contains('FC2'))
+  human_fc <- log(human_fc, 2)
+  human_fc$acc <- human_fc[,1]/human_FC[x]
   human_pval <- df_human |> dplyr::select(contains('pval'))
   
-  yeast_fc <- df_yeast |> dplyr::select(contains('FC'), -contains('FC2'))
-  yeast_fc$acc <- abs(yeast_fc[,1]/yeast_FC[x])
+  yeast_fc <- df_yeast |> dplyr::select(contains('FC2'))
+  yeast_fc <- log(yeast_fc,2)
+  yeast_fc$acc <- yeast_fc[,1]/yeast_FC[x]
   yeast_pval <- df_yeast |> dplyr::select(contains('pval'))
   
   result_ecoli$Organism[x] <- "Ecoli"
@@ -153,9 +146,28 @@ for (i in stats_df$Final_Table_Name){
   result_yeast$Acc30[x] <- length(find_fc)
   result_yeast$Acc30_pval[x] <- length(find_fc_pval)
 
-  hist_title <- stringr::str_c("Yeast: ", yeast_spk[x]," / ", yeast_comp[x])
-  hist(yeast_fc[,1], breaks = 1000, xlim = c(yeast_FC[x]-4, yeast_FC[x]+4), main=hist_title, xlab = i)
 
+  
+  hist_title <- stringr::str_c("Ecoli: ", ecoli_spk[x]," / ", ecoli_comp[x])
+  df <- data.frame(ecoli_fc[,1])
+  colnames(df) <- c("fc")
+  p = ggplot(df, aes(x=fc)) + 
+    geom_histogram(aes(y=after_stat(density)), binwidth = 200, colour="black", fill="white")+
+    geom_density(alpha=.2, fill="#FF6666") +
+    labs(title=hist_title, x=i, y = "Count") + xlim(ecoli_FC[x]-4, ecoli_FC[x]+4)
+  print(p)
+  
+  hist_title <- stringr::str_c("Human: ", human_spk[x]," / ", human_comp[x])
+  df <- data.frame(human_fc[,1])
+  colnames(df) <- c("fc")
+  p= ggplot(df, aes(x=fc)) + 
+    geom_histogram(aes(y=after_stat(density)), binwidth = 200, colour="black", fill="white")+
+    geom_density(alpha=.2, fill="#FF6666") +
+    labs(title=hist_title, x=i, y = "Count") + xlim(human_FC[x]-4, human_FC[x]+4)
+  print(p)
+  
+  
+  hist_title <- stringr::str_c("Yeast: ", yeast_spk[x]," / ", yeast_comp[x])
   df <- data.frame(yeast_fc[,1])
   colnames(df) <- c("fc")
   p= ggplot(df, aes(x=fc)) + 
@@ -164,19 +176,9 @@ for (i in stats_df$Final_Table_Name){
     labs(title=hist_title, x=i, y = "Count") + xlim(yeast_FC[x]-4, yeast_FC[x]+4)
   print(p)
   
-  hist_title <- stringr::str_c("Ecoli: ", ecoli_spk[x]," / ", ecoli_comp[x])
-  hist(ecoli_fc[,1], breaks = 1000, xlim = c(ecoli_FC[x]-4, ecoli_FC[x]+4), main=hist_title, xlab = i)
-  
-  df <- data.frame(ecoli_fc[,1])
-  colnames(df) <- c("fc")
-  p = ggplot(df, aes(x=fc)) + 
-    geom_histogram(aes(y=after_stat(density)), binwidth = 200, colour="black", fill="white")+
-    geom_density(alpha=.2, fill="#FF6666") +
-    labs(title=hist_title, x=i, y = "Count") + xlim(ecoli_FC[x]-4, ecoli_FC[x]+4)
-  print(p)
 }
 
-final_result <- rbind(result_ecoli, result_yeast)
+final_result <- rbind(result_ecoli, result_human, result_yeast)
 save(params, file=stringr::str_c(params$data_path, "params"))
 Simple_Excel(final_result, set_name, stringr::str_c(params$data_path, set_name, "_final_result.xlsx"))
 

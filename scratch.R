@@ -9,8 +9,6 @@ create_db <- function(db_name) {
   RSQLite::dbDisconnect(conn)
 }
 
-
-
 read_table <- function(table_name, params){
   conn <- dbConnect(RSQLite::SQLite(), params$database_path) 
   df <- dbReadTable(conn, table_name)
@@ -79,7 +77,8 @@ df_filter <- read_table_try('precursor_filter', params)
 common <- intersect(df_impute$PrecursorId, df_filter$PrecursorId)  
 df_test <- df_filter[common,] # give you common rows in data frame 2
 
-
+testme  <- read_table_try('params', params)
+testme$peptide_refilter
 
 query <- stringr::str_c("SELECT * FROM ", data_name, " WHERE Accession LIKE '", accession,"'") 
 query

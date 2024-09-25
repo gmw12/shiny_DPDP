@@ -568,7 +568,7 @@ source("Shiny_UI.R")
                     solidHeader = TRUE, collapsible = FALSE, align = "left", width = 2, height = 750,
                     numericInput("pvalue_cutoff", label = "Pvalue Cutoff", value = .05),
                     checkboxInput("pair_comp", label = "Pairwise Comparisons"),
-                    checkboxInput("checkbox_adjpval", label = "Include adjusted pvalue?"),
+                    checkboxInput("checkbox_adjpval", label = "Include adjusted pvalue?", value = TRUE),
                     hidden(selectInput("padjust_options", label = "p.adjust method", choices = list("holm", "hochberg", "hommel", "bonferroni", "BH", "BY", "fdr"), 
                                        selected = "fdr")),
                     numericInput("foldchange_cutoff", label = "Fold Change cutoff", value = 1.5),
@@ -579,7 +579,6 @@ source("Shiny_UI.R")
                     hidden(textInput("peptide_report_grep", label = "Report PTM grep", value = "Enter value here")),
                     checkboxInput("checkbox_report_accession", label = "Report Specific Accession(s) Only"),
                     hidden(textInput("report_accession", label = "Protein Accessions for Final Report", value = "Enter value"))
-                    
                 ),
                 
                 box(id = "stats_setup_box2", title = "Stats Setup...", status = "primary",

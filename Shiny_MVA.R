@@ -210,23 +210,24 @@ stat_calc_bg <- function(params, comp_number, stats_comp, input_rollup_method, i
 save_stat_options <- function(session, input, output, params) {
   cat(file = stderr(), "function save_stat_options...", "\n")
   
-  params$pvalue_cutoff <<- input$pvalue_cutoff
-  params$pair_comp <<- input$pair_comp
-  params$checkbox_adjpval <<- input$checkbox_adjpval
-  params$padjust_options <<- input$padjust_options
-  params$foldchange_cutoff <<- input$foldchange_cutoff
-  params$missing_factor <<- input$missing_factor
-  params$peptide_refilter <<- input$peptide_refilter
-  params$peptide_missing_filter <<- input$peptide_missing_filter
-  params$peptide_missing_factor <<- input$peptide_missing_factor
-  params$peptide_cv_filter <<- input$peptide_cv_filter
-  params$peptide_cv_factor <<- input$peptide_cv_factor
-  params$stats_spqc_cv_filter <<- input$ stats_spqc_cv_filter
-  params$stats_spqc_cv_filter_factor <<- input$stats_spqc_cv_filter_factor
-  params$stats_comp_cv_filter <<- input$stats_comp_cv_filter
-  params$stats_comp_cv_filter_factor <<- input$stats_comp_cv_filter_factor
+  params$pvalue_cutoff <- input$pvalue_cutoff
+  params$pair_comp <- input$pair_comp
+  params$checkbox_adjpval <- input$checkbox_adjpval
+  params$padjust_options <- input$padjust_options
+  params$foldchange_cutoff <- input$foldchange_cutoff
+  params$missing_factor <- input$missing_factor
+  params$peptide_refilter <- input$peptide_refilter
+  params$peptide_missing_filter <- input$peptide_missing_filter
+  params$peptide_missing_factor <- input$peptide_missing_factor
+  params$peptide_cv_filter <- input$peptide_cv_filter
+  params$peptide_cv_factor <- input$peptide_cv_factor
+  params$stats_spqc_cv_filter <- input$stats_spqc_cv_filter
+  params$stats_spqc_cv_filter_factor <- input$stats_spqc_cv_filter_factor
+  params$stats_comp_cv_filter <- input$stats_comp_cv_filter
+  params$stats_comp_cv_filter_factor <- input$stats_comp_cv_filter_factor
+  params <<- params
   
-  param_save_to_database()
+  write_table_try(params, params)
   
 }
 

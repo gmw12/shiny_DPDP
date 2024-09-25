@@ -12,13 +12,19 @@ hide_enable <- function(session, input, output) {
       shinyjs::hide("peptide_missing_factor")
       #session$sendCustomMessage(type = "manipulateMenuItem", message = list(action = "hide", tabName = "normalize"))
     } else {
-      updateCheckboxInput(session, "peptide_refilter", value = TRUE)
-      updateCheckboxInput(session, "peptide_missing_filter", value = TRUE)
       shinyjs::show("peptide_missing_filter")
       shinyjs::show("peptide_missing_factor")
     }
   })
 
+  observe({
+    if (input$rollup_method == "topn") {
+      shinyjs::show("rollup_topn")
+    } else {
+      shinyjs::hide("rollup_topn")
+    }
+  })
+  
   observe({
     if (input$norm_type == "protein") {
       shinyjs::show("protein_norm_grep")
@@ -26,6 +32,7 @@ hide_enable <- function(session, input, output) {
       shinyjs::hide("protein_norm_grep")
     }
   })
+  
   
   observe({
     if (params$data_source == "PD") {

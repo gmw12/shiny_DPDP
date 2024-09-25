@@ -305,7 +305,8 @@ update_widgets <- function(session, input, output, params) {
     updateNumericInput(session, "foldchange_cutoff", value = 1.5)
     updateNumericInput(session, "missing_factor", value = params$missing_factor)
     
-    updateCheckboxInput(session, "peptide_refilter", value = params$peptide_refilter)
+    cat(file = stderr(), stringr::str_c("Function - update_widgets... made it here!  ", as.logical(params$peptide_refilter)), "\n")
+    updateCheckboxInput(session, "peptide_refilter", value = as.logical(params$peptide_refilter))
     updateCheckboxInput(session, "peptide_missing_filter", value = params$peptide_missing_filter)
     updateNumericInput(session, "peptide_missing_factor", value = params$peptide_missing_factor)
     updateCheckboxInput(session, "peptide_cv_filter", value = params$peptide_cv_filter)
@@ -461,10 +462,11 @@ stat_widget_save <- function(session, input, output){
              "checkbox_limmapvalue", "checkbox_report_ptm", "peptide_report_grep", "checkbox_report_accession", "report_accession")
   
   for (name in names) {
-    params[[name]] <<- input[[name]]
+    params[[name]] <- input[[name]]
   }
 
-  param_save_to_database()
+  params <<- params
+  write_table_try(params, params)
   cat(file = stderr(), "Function - stat_widget_save...end", "\n")
 }
 
