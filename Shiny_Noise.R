@@ -48,6 +48,7 @@ noise_inflection_bg <- function(table_name, params){
   cat(file = stderr(), stringr::str_c("full ede inflection value = ", 2^df$vec[df$ID == floor(ipede[3])]), "\n")
   
   df2 <- df[ipede[3]:(nrow(df)),]
+  df2 = df2[(nrow(df2)/2):(nrow(df2)),]
   
   cc2 <- check_curve(df2$ID, df2$vec)
   cat(file = stderr(), stringr::str_c("inflection, check_curve = ", cc2$ctype), "\n")

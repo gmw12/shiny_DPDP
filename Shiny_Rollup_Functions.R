@@ -11,7 +11,7 @@ rollup_selector <- function(df, df_design, input_rollup_method, input_rollup_top
     dplyr::mutate(Precursors = 1, .after = Genes)
   
   #hard coded from above selection
-  info_columns <- 4
+  info_columns <- 5 # add 1 for Precursors
   
   if (input_rollup_method == "sum") {df <-  rollup_sum(df)}
     else if (input_rollup_method == "median") {df <-  rollup_median(df)}
@@ -24,6 +24,63 @@ rollup_selector <- function(df, df_design, input_rollup_method, input_rollup_top
   return(df)
 }
 
+#--------------------------------------------------------------------------------
+rollup_maxlfq <- function(peptide_data, info_columns){
+  cat(file = stderr(), "rollup_maxlfq triggered...", "\n")
+  require(iq)
+  
+  save(peptide_data, file="maxlfqpeptidedata"); save(info_columns, file="maxlfqinfocolumns")
+  #  load(file="maxlfqpeptidedata"); load(file="maxlfqinfocolumns")
+  
+  samples_columns <- ncol(peptide_data) - info_columns
+  
+  #group and sum data (summed samples will be over written below)
+  df <- peptide_data |> dplyr::group_by(Accession, Description, Name, Genes) |> dplyr::summarise_all(list(sum))
+  
+  #select data and log
+  df_data <- peptide_data[,(info_columns + 1):ncol(peptide_data)]
+  df_data[df_data == 0] <- NA
+  df_data <- log2(df_data)
+  
+  #build iq:maxlfq data input, build first sample manually then loop
+  peptide_data$id <- 1:nrow(peptide_data)
+  df_maxlfq <- data.frame(peptide_data$Accession)
+  sample_list <- colnames(peptide_data[info_columns + 1])
+  df_maxlfq$sample_list <- sample_list
+  quant <- df_data[,1]
+  df_maxlfq$quant <- quant
+  df_maxlfq$id <- peptide_data$id
+  colnames(df_maxlfq) <- c("protein_list", "sample_list", "quant", "id")
+  
+  for (i in 2:ncol(df_data)) {
+    df_temp <- data.frame(peptide_data$Accession)
+    sample_list <- colnames(peptide_data[info_columns + i])
+    df_temp$sample_list <- sample_list
+    quant <- df_data[,i]
+    df_temp$quant <- quant
+    df_temp$id <- peptide_data$id
+    colnames(df_temp) <- c("protein_list", "sample_list", "quant", "id") 
+    df_maxlfq <- rbind(df_maxlfq, df_temp)
+  }
+  
+  #remove missing values, iq functions below do not like them!
+  df_maxlfq <- df_maxlfq[!is.na(df_maxlfq$quant),]
+  
+  protein_table <- iq::fast_MaxLFQ(df_maxlfq)
+  result <- data.frame(2^protein_table$estimate)
+  
+  #save(result, file = "lfq3"); save(df, file = "lfq4")
+  #load(file="lfq3"); load(file="lfq4")
+  
+  #combine annotation data with protein rollup, (replacing summed data)
+  result <- result[order(row.names(result)),]
+  df <- df[order(df$Accession),]
+  rownames(df) <- NULL
+  
+  df[(info_columns + 1):ncol(df)] <- result
+  
+  return(df)  
+}
 #--------------------------------------------------------------------------------
 rollup_sum <- function(df){
   cat(file = stderr(), "function rollup_sum...", "\n")
@@ -148,66 +205,7 @@ rollup_topn <- function(df, topn_count){
 }
 
 
-#--------------------------------------------------------------------------------
-rollup_maxlfq <- function(peptide_data, info_columns){
-  cat(file = stderr(), "rollup_maxlfq triggered...", "\n")
-  require(iq)
-  
-  #peptide_data <<- peptide_data
-  #info_columns <<- info_columns
-  #peptide_data <- peptide_data[-20]
-  
-  samples_columns <- ncol(peptide_data) - info_columns
-  
-  #group and sum data (summed samples will be over written below)
-  #save(peptide_data, file="lfq1"); save(info_columns, file="lfq2")
-  #load(file="lfq1"); load(file="lfq2")
-  df <- peptide_data |> dplyr::group_by(Accession, Description, Name, Genes) |> dplyr::summarise_all(list(sum))
-  
-  #select data and log
-  df_data <- peptide_data[,(info_columns + 1):ncol(peptide_data)]
-  df_data[df_data == 0] <- NA
-  df_data <- log2(df_data)
-  
-  #build iq:maxlfq data input, build first sample manually then loop
-  peptide_data$id <- 1:nrow(peptide_data)
-  df_maxlfq <- data.frame(peptide_data$Accession)
-  sample_list <- colnames(peptide_data[info_columns + 1])
-  df_maxlfq$sample_list <- sample_list
-  quant <- df_data[,1]
-  df_maxlfq$quant <- quant
-  df_maxlfq$id <- peptide_data$id
-  colnames(df_maxlfq) <- c("protein_list", "sample_list", "quant", "id")
-  
-  for (i in 2:ncol(df_data)) {
-    df_temp <- data.frame(peptide_data$Accession)
-    sample_list <- colnames(peptide_data[info_columns + i])
-    df_temp$sample_list <- sample_list
-    quant <- df_data[,i]
-    df_temp$quant <- quant
-    df_temp$id <- peptide_data$id
-    colnames(df_temp) <- c("protein_list", "sample_list", "quant", "id") 
-    df_maxlfq <- rbind(df_maxlfq, df_temp)
-  }
-  
-  #remove missing values, iq functions below do not like them!
-  df_maxlfq <- df_maxlfq[!is.na(df_maxlfq$quant),]
-  
-  protein_table <- iq::fast_MaxLFQ(df_maxlfq)
-  result <- data.frame(2^protein_table$estimate)
 
-  #save(result, file = "lfq3"); save(df, file = "lfq4")
-  #load(file="lfq3"); load(file="lfq4")
-  
-  #combine annotation data with protein rollup, (replacing summed data)
-  result <- result[order(row.names(result)),]
-  df <- df[order(df$Accession),]
-  rownames(df) <- NULL
-
-  df[(info_columns + 1):ncol(df)] <- result
-  
-  return(df)  
-}
 
 
 #--------------------------------------------------------------------------------------

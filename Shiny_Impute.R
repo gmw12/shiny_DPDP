@@ -63,6 +63,7 @@ impute_apply_bg <- function(norm_type, params) {
     print_stderr2(stringr::str_c("error_", bg_name, ".txt"), params)
   }
   
+
   cat(file = stderr(), "Function - impute_apply_bg...end", "\n")
 }
 
@@ -74,6 +75,7 @@ impute_apply_bg2 <- function(norm, params, df_random, df_groups, df) {
   
   source('Shiny_Impute_Functions.R')
   source('Shiny_Norm_Functions.R')
+  source('Shiny_Filter.R')
   
   if (params$impute_type == "duke") {
     df_impute <- impute_duke(df, df_random, df_groups, params)
@@ -93,7 +95,7 @@ impute_apply_bg2 <- function(norm, params, df_random, df_groups, df) {
   
   cat(file = stderr(), "Function - impute_apply_bg2...1", "\n")
   new_table_name <- stringr::str_c('precursor_impute_', norm)
-  #write_table_try(new_table_name, df_impute, params)
+  #added to bg above to avoid database locking error...  write_table_try(new_table_name, df_impute, params)
   
   cat(file = stderr(), "Function - impute_apply_bg2...end", "\n")
   return(list(new_table_name, df_impute))

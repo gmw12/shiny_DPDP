@@ -133,7 +133,7 @@ set_sample_groups_bg <- function(session, input, output, params, check_design_so
       design_spqc <- design[design[[group_type]] == 'SPQC',]
       design <- design[design[[group_type]] != 'SPQC',]
       
-      design <- arrange(design, design[[group_type]], Replicate)
+      design <- dplyr::arrange(design, design[[group_type]], Replicate)
       design <- rbind(design, design_spqc)
       cat(file = stderr(), "The sample design was sorted alphabetically with SPQC at bottom", "\n")
     }

@@ -161,7 +161,7 @@ for (i in stats_df$Final_Table_Name){
   p= ggplot(df, aes(x=fc)) + 
     geom_histogram(aes(y=after_stat(density)), binwidth = 200, colour="black", fill="white")+
     geom_density(alpha=.2, fill="#FF6666") +
-    labs(title=hist_title, x=i, y = "Count")
+    labs(title=hist_title, x=i, y = "Count") + xlim(yeast_FC[x]-4, yeast_FC[x]+4)
   print(p)
   
   hist_title <- stringr::str_c("Ecoli: ", ecoli_spk[x]," / ", ecoli_comp[x])
@@ -172,7 +172,7 @@ for (i in stats_df$Final_Table_Name){
   p = ggplot(df, aes(x=fc)) + 
     geom_histogram(aes(y=after_stat(density)), binwidth = 200, colour="black", fill="white")+
     geom_density(alpha=.2, fill="#FF6666") +
-    labs(title=hist_title, x=i, y = "Count")
+    labs(title=hist_title, x=i, y = "Count") + xlim(ecoli_FC[x]-4, ecoli_FC[x]+4)
   print(p)
 }
 

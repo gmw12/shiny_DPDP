@@ -135,12 +135,12 @@ peptide_refilter_rollup <- function(df_filter_list, df_design, input_rollup_meth
   source('Shiny_Rollup_Functions.R')
   source('Shiny_MVA_Functions.R')
   
+  save(df_filter_list, file="prrdffilterlist"); save(df_design, file="prrdfdesign"); save(input_rollup_method, file="prrinputroolupmethod")
+  #  load(file="prrdffilterlist"); load(file="prrdfdesign"); load(file="prrinputroolupmethod")
+  
   #unpack lists to df's
   df <- df_filter_list[[1]]
   df_missing <- df_filter_list[[2]]
-  
-  #save(df, file="dfb")
-  #save(df_missing, file="df_missingb")
   
   #count samples
   sample_count <- ncol(df_missing)
@@ -150,13 +150,10 @@ peptide_refilter_rollup <- function(df_filter_list, df_design, input_rollup_meth
   df_missing <- cbind(df[,1:(ncol(df) - sample_count)], df_missing)
   df_missing <- df_missing |> dplyr::select(contains(c("Accession", "Description", "Name", "Genes", df_design$ID))) |> 
     dplyr::mutate(Precursors = 1, .after = Genes)
+  df_missing <- rollup_sum(df_missing)
   
   #rollup data and missing
   df <- rollup_selector(df, df_design, input_rollup_method, input_rollup_topn, params)
-  df_missing <- rollup_sum(df_missing)
-  
-  #save(df, file="df2b")
-  #save(df_missing, file="df_missing2b")
   
   #resort because maxlfq sorts data, while summing does not...
   df <- df[order(df$Accession), ]
@@ -178,7 +175,7 @@ peptide_refilter_rollup <- function(df_filter_list, df_design, input_rollup_meth
 stat_add <- function(df, df_missing, params, comp_number, stats_comp, df_design) {
   cat(file = stderr(), "Function - stat_add...", "\n")
   
-  #save(df, file="statdf"); save(df_missing, file="statdfmissing"); save(comp_number, file="statcompnumber"); save(stats_comp, file="statstatscomp"); save(df_design, file="statdfdesign");
+  save(df, file="statdf"); save(df_missing, file="statdfmissing"); save(comp_number, file="statcompnumber"); save(stats_comp, file="statstatscomp"); save(df_design, file="statdfdesign");
   #load(file="statdf");  load(file="statdfmissing");load(file="statcompnumber"); load(file="statstatscomp"); load(file="statdfdesign")
   
   source("Shiny_Misc_Functions.R")
@@ -193,7 +190,7 @@ stat_add <- function(df, df_missing, params, comp_number, stats_comp, df_design)
   sample_names <- c(df_design$Header2[str_to_numlist(stats_comp$N_loc[comp_number])],
                     df_design$Header2[str_to_numlist(stats_comp$D_loc[comp_number])])
   if (stats_comp$SPQC[comp_number] != 0) {
-    sample_names <- c(samlple_names, df_design$Header2[str_to_numlist(stats_comp$SPQC_loc[comp_number])])
+    sample_names <- c(sample_names, df_design$Header2[str_to_numlist(stats_comp$SPQC_loc[comp_number])])
   }
   colnames(df)[(ncol(df) - sample_count + 1):ncol(df)] <- sample_names
   colnames(df_samples) <- sample_names
@@ -311,7 +308,7 @@ create_imputed_df <- function(params) {
   df_protein <- cbind(df_protein_info, df)
   df_protein <- df_protein |> dplyr::group_by(Accession, Description, Name, Genes) |> dplyr::summarise_all(list(sum))
   df_protein <- data.frame(dplyr::ungroup(df_protein))
-  df_protein <- df_protein[4:ncol(df_protein)]
+  df_protein <- df_protein[5:ncol(df_protein)]
   
   cat(file = stderr(), "function create_imputed_df....3", "\n")
   RSQLite::dbWriteTable(conn, "precursor_missing", df, overwrite = TRUE)
@@ -341,9 +338,10 @@ reduce_imputed_df <- function(df) {
 #-------------------------------------------------------------------------------
 add_imputed_df <- function(df, params, stats_comp, comp_number, table_name) {
   cat(file = stderr(), "function add_imputed_df...", "\n")
-  conn <- RSQLite::dbConnect(RSQLite::SQLite(), params$database_path)
-  df_missing <- RSQLite::dbReadTable(conn, table_name)
-  RSQLite::dbDisconnect(conn)
+  source("Shiny_Misc_Functions.R")
+  source("Shiny_File.R")
+  
+  df_missing <- read_table_try(table_name, params)
   
   #select samples in comparison
   df_missing <- df_missing[, c(str_to_numlist(stats_comp$N_loc[comp_number]), str_to_numlist(stats_comp$D_loc[comp_number]), str_to_numlist(stats_comp$SPQC_loc[comp_number]))]
