@@ -241,13 +241,14 @@ stats_Final_Excel <- function(session, input, output, params) {
   
   file_dir <- stringr::str_c(params$data_path, input$stats_norm_type) 
   filename <- stringr::str_c(params$data_path, input$stats_norm_type, "//", input$final_stats_name)
+  filename_params <- stringr::str_c(params$data_path, input$stats_norm_type, "//", params$file_prefix, "_Parameters.xlsx")
   
   if (!fs::is_dir(file_dir)) {
     cat(file = stderr(), str_c("create_dir...", file_dir), "\n")
     dir_create(file_dir)
   }
   
-  bg_excel <- callr::r_bg(func = stats_Final_Excel_bg, args = list(file_dir, filename, params), stderr = stringr::str_c(params$error_path, "//error_finalexcel.txt"), supervise = TRUE)
+  bg_excel <- callr::r_bg(func = stats_Final_Excel_bg, args = list(file_dir, filename, filename_params, params), stderr = stringr::str_c(params$error_path, "//error_finalexcel.txt"), supervise = TRUE)
   bg_excel$wait()
   print_stderr("error_finalexcel.txt")
 
@@ -258,8 +259,8 @@ stats_Final_Excel <- function(session, input, output, params) {
 
 #----------------------------------------------------------------------------------------
 # create final excel documents
-stats_Final_Excel_bg <- function(file_dir, filename, params) {
-  cat(file = stderr(), "Creating Excel Output File...1", "\n")
+stats_Final_Excel_bg <- function(file_dir, filename, filename_params, params) {
+  cat(file = stderr(), "Function stats_Final_Excel_bg...", "\n")
   require(openxlsx)
 
   conn <- RSQLite::dbConnect(RSQLite::SQLite(), params$database_path)
@@ -299,6 +300,15 @@ stats_Final_Excel_bg <- function(file_dir, filename, params) {
   cat(file = stderr(), "writting excel to disk...", "\n")
   saveWorkbook(wb, filename, overwrite = TRUE)
   cat(file = stderr(), stringr::str_c("Creating Excel Output File...", filename), "\n")
+  
+  #save parameters
+  wb <- openxlsx::createWorkbook()
+  openxlsx::addWorksheet(wb, "Parameters")
+  openxlsx::writeData(wb, sheet=1, params)  
+  openxlsx::saveWorkbook(wb, filename_params, overwrite = TRUE)
+  
+  
+  cat(file = stderr(), "Function stats_Final_Excel_bg...", "\n")
 }
 
 #----------------------------------------------------------------------------------------

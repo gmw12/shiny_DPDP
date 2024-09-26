@@ -265,15 +265,18 @@ source("Shiny_UI.R")
                                       dropdownButton(
                                         fluidRow(
                                           column(width = 12, tags$h5("This filter compares the percentage contribution of a precursor to the protein
-                                                                     accross all samples.  If the percent standard deviation and intensity is above the 
-                                                                     threshold below then the precusor is removed.  The filter examines the highest intensity 
+                                                                     across all samples.  Values below minimum for consideration are set to NA.  If the 
+                                                                     percent standard deviation and average intensity is above the 
+                                                                     thresholds then the precusor is removed.  The filter examines the highest intensity 
                                                                      precursor first.  It is then removed from the filter calculation steps for the next
                                                                      abundant precursor.  Minimum of 3 precursors required."))
                                         ),
                                         fluidRow(
                                           column(width = 12, numericInput("precursor_quality_sd", label = "Percent SD cuttof", value = 50))),
                                         fluidRow(
-                                          column(width = 12, numericInput("precursor_quality_intensity", label = "Minimum Intensity", value = 500))),
+                                          column(width = 12, numericInput("precursor_quality_intensity", label = "Minimum Average Intensity", value = 500))),
+                                        fluidRow(
+                                          column(width = 12, numericInput("precursor_quality_min", label = "Minimum Intensity for Consideration", value = 200))),
                                         circle = TRUE, status = "danger", icon = icon("cogs"), width = "300px", size = "sm",
                                         tooltip = tooltipOptions(title = "Click to see misalignment options!")
                                       )

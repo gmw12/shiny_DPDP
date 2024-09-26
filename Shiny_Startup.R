@@ -189,6 +189,7 @@ create_default_params <- function() {
               "precursor_quality" = FALSE,
               "precursor_quality_sd" = 50,
               "precursor_quality_intensity" = 500,
+              "precursor_quality_min" = 100,
               "precursor_spqc_ratio" = FALSE,
               "precursor_spqc_accuracy" = 50,
               "precursor_spqc_intensity" = 500,

@@ -277,6 +277,10 @@ remove_duplicates <- function(data_in){
   precursor_quality <- function(df, params){
     cat(file = stderr(), "Function precusor_quality...", "\n")
     
+    #save(df, file="pfdf")
+    #   load(file="pfdf")
+    
+    
     protein_list <- unique(df$Accession)
     
     require(foreach)
@@ -287,37 +291,39 @@ remove_duplicates <- function(data_in){
     
     bad_df <- foreach(protein = protein_list, .combine = rbind) %dopar% {
       df2 <- df[df$Accession==protein,]
-      
       bad_list <- NULL
       bad_result <- NULL
       bad_average <- NULL
       if (nrow(df2) >= 3) {
         df3 <- df2[,(ncol(df2)-params$sample_number+1):ncol(df2)]
         row.names(df3) <- df2$PrecursorId
-        
+        df3[df3<params$precursor_quality_min] <- NA
+        df3 <- df3[rowSums(is.na(df3)) != ncol(df3), ]
         df3$average <- rowMeans(df3, na.rm = TRUE)
         df3 <- df3[order(df3$average, decreasing=TRUE),]
         prec_average <- unlist(df3$average)
         df3$average <- NULL
-        prec_rows <- min(2, nrow(df3) - 2) 
-        for (i in (1:nrow(df3))) {
-          if (prec_average[i] < params$precursor_quality_intensity) { break }
-          prec_sums <- colSums(df3, na.rm = TRUE)
-          prec_ratio <- unlist(df3[1,]) / prec_sums 
-          test <- sd(prec_ratio, na.rm = TRUE)/mean(prec_ratio, na.rm = TRUE) * 100
-          if (test > params$precursor_quality_sd) {
-            bad_list <- c(bad_list, row.names(df3)[1])
-            bad_result <- c(bad_result, test)
-            bad_average <- c(bad_average, prec_average[i])
-          }
-          df3 <- df3[-1,]
+        if (nrow(df3) >=3){
+          for (i in (1:nrow(df3))) {
+            if (prec_average[i] < as.numeric(params$precursor_quality_intensity)) { break }
+            if (sum(!is.na(df3[1,])) >= 3){
+              prec_sums <- colSums(df3, na.rm = TRUE)
+              prec_ratio <- unlist(df3[1,]) / prec_sums
+              test <- sd(prec_ratio, na.rm = TRUE)/mean(prec_ratio, na.rm = TRUE) * 100
+              if (test > params$precursor_quality_sd) {
+                bad_list <- c(bad_list, row.names(df3)[1])
+                bad_result <- c(bad_result, test)
+                bad_average <- c(bad_average, prec_average[i])
+                }
+              }
+              df3 <- df3[-1,]
+            }
         }
       }
-      
       temp_df <- data.frame(cbind(bad_list, bad_result, bad_average))
       temp_df
-
     }
+    
     stopCluster(cl) 
     
     df_final <- df[!(df$PrecursorId %in% bad_df$bad_list),]

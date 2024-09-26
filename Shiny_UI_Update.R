@@ -259,6 +259,7 @@ update_widgets <- function(session, input, output, params) {
     updateCheckboxInput(session, 'precursor_quality', value = params$precursor_quality) 
     updateNumericInput(session, 'precursor_quality_sd', value = params$precursor_quality_sd)
     updateNumericInput(session, 'precursor_quality_intensity', value = params$precursor_quality_intensity)
+    updateNumericInput(session, 'precursor_quality_min', value = params$precursor_quality_min)
     updateCheckboxInput(session, 'precursor_spqc_ratio', value = params$precursor_spqc_ratio) 
     updateNumericInput(session, 'precursor_spqc_intensity', value = params$precursor_spqc_intensity)
     updateNumericInput(session, 'precursor_spqc_accuracy', value = params$precursor_spqc_accuracy)
@@ -390,7 +391,7 @@ filter_widget_save <- function(session, input, output){
   
   names <- c('filter_min_measured_all', 'filter_x_percent', 'filter_x_percent_value', 'filter_cv', 'filter_cv_group', 'filter_cv_value',
              "checkbox_misaligned", "misaligned_cutoff", "misaligned_target", "intensity_cutoff_sd", "precursor_quality", "precursor_quality_sd",
-             "precursor_quality_intensity", "precursor_spqc_ratio", "precursor_spqc_intensity", "precursor_spqc_accuracy")
+             "precursor_quality_intensity", "precursor_quality_min", "precursor_spqc_ratio", "precursor_spqc_intensity", "precursor_spqc_accuracy")
   
   for (name in names) {
     params[[name]] <<- input[[name]]

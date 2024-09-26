@@ -148,7 +148,7 @@ for (i in stats_df$Final_Table_Name){
 
 
   
-  hist_title <- stringr::str_c("Ecoli: ", ecoli_spk[x]," / ", ecoli_comp[x])
+  hist_title <- stringr::str_c("Ecoli: ", ecoli_N[x]," / ", ecoli_D[x])
   df1 <- data.frame(ecoli_fc[,1])
   df1$type <- "Ecoli"
   colnames(df1) <- c("fc", "type")
@@ -159,7 +159,7 @@ for (i in stats_df$Final_Table_Name){
   #   labs(title=hist_title, x=i, y = "Count") + xlim(ecoli_FC[x]-4, ecoli_FC[x]+4)
   # print(p)
   
-  hist_title <- stringr::str_c("Human: ", human_spk[x]," / ", human_comp[x])
+  hist_title <- stringr::str_c("Human: ", human_N[x]," / ", human_D[x])
   df2 <- data.frame(human_fc[,1])
   df2$type <- "Human"
   colnames(df2) <- c("fc", "type")
@@ -170,7 +170,7 @@ for (i in stats_df$Final_Table_Name){
   #   labs(title=hist_title, x=i, y = "Count") + xlim(human_FC[x]-4, human_FC[x]+4)
   # print(p)
   
-  hist_title <- stringr::str_c("Combined: ", yeast_spk[x]," / ", yeast_comp[x])
+  hist_title <- stringr::str_c("Combined: ", yeast_N[x]," / ", yeast_D[x])
   df3 <- data.frame(yeast_fc[,1])
   df3$type <- "Yeast"
   colnames(df3) <- c("fc", "type")
