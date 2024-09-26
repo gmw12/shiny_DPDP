@@ -153,9 +153,25 @@ for (i in stats_df$Final_Table_Name){
   result_yeast$Acc30[x] <- length(find_fc)
   result_yeast$Acc30_pval[x] <- length(find_fc_pval)
 
+  hist_title <- stringr::str_c("Ecoli: ", ecoli_spk[x]," / ", ecoli_comp[x])
+  df <- data.frame(ecoli_fc[,1])
+  colnames(df) <- c("fc")
+  p = ggplot(df, aes(x=fc)) + 
+    geom_histogram(aes(y=after_stat(density)), binwidth = 200, colour="black", fill="white")+
+    geom_density(alpha=.2, fill="#FF6666") +
+    labs(title=hist_title, x=i, y = "Count") + xlim(ecoli_FC[x]-4, ecoli_FC[x]+4)
+  print(p)
+  
+  hist_title <- stringr::str_c("Human: ", human_spk[x]," / ", human_comp[x])
+  df <- data.frame(human_fc[,1])
+  colnames(df) <- c("fc")
+  p = ggplot(df, aes(x=fc)) + 
+    geom_histogram(aes(y=after_stat(density)), binwidth = 200, colour="black", fill="white")+
+    geom_density(alpha=.2, fill="#FF6666") +
+    labs(title=hist_title, x=i, y = "Count") + xlim(human_FC[x]-4, human_FC[x]+4)
+  print(p)
+  
   hist_title <- stringr::str_c("Yeast: ", yeast_spk[x]," / ", yeast_comp[x])
-  hist(yeast_fc[,1], breaks = 1000, xlim = c(yeast_FC[x]-4, yeast_FC[x]+4), main=hist_title, xlab = i)
-
   df <- data.frame(yeast_fc[,1])
   colnames(df) <- c("fc")
   p= ggplot(df, aes(x=fc)) + 
@@ -164,16 +180,8 @@ for (i in stats_df$Final_Table_Name){
     labs(title=hist_title, x=i, y = "Count") + xlim(yeast_FC[x]-4, yeast_FC[x]+4)
   print(p)
   
-  hist_title <- stringr::str_c("Ecoli: ", ecoli_spk[x]," / ", ecoli_comp[x])
-  hist(ecoli_fc[,1], breaks = 1000, xlim = c(ecoli_FC[x]-4, ecoli_FC[x]+4), main=hist_title, xlab = i)
+
   
-  df <- data.frame(ecoli_fc[,1])
-  colnames(df) <- c("fc")
-  p = ggplot(df, aes(x=fc)) + 
-    geom_histogram(aes(y=after_stat(density)), binwidth = 200, colour="black", fill="white")+
-    geom_density(alpha=.2, fill="#FF6666") +
-    labs(title=hist_title, x=i, y = "Count") + xlim(ecoli_FC[x]-4, ecoli_FC[x]+4)
-  print(p)
 }
 
 final_result <- rbind(result_ecoli, result_yeast)

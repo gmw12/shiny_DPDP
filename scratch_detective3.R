@@ -87,7 +87,7 @@ for (i in stats_df$Final_Table_Name){
   result_ecoli$Count[x] <- nrow(ecoli_fc)
   result_ecoli$FC_target[x] <- ecoli_FC[x]
   result_ecoli$AvgFC[x] <- colMeans(ecoli_fc)[1]
-  result_ecoli$Stdev[x] <- sd(unlist(ecoli_fc[,1]))
+  result_ecoli$Stdev[x] <- round(sd(unlist(ecoli_fc[,1])) ,3)
   find_pval <- which(ecoli_pval[,1] <= 0.05)
   
   result_human$Organism[x] <- "Human"
@@ -95,7 +95,7 @@ for (i in stats_df$Final_Table_Name){
   result_human$Count[x] <- nrow(human_fc)
   result_human$FC_target[x] <- human_FC[x]
   result_human$AvgFC[x] <- colMeans(human_fc)[1]
-  result_human$Stdev[x] <- sd(unlist(human_fc[,1]))
+  result_human$Stdev[x] <- round(sd(unlist(human_fc[,1])), 3)
   find_pval <- which(human_pval[,1] <= 0.05)
   
   result_yeast$Organism[x] <- "Yeast"
@@ -103,7 +103,7 @@ for (i in stats_df$Final_Table_Name){
   result_yeast$Count[x] <- nrow(yeast_fc)
   result_yeast$FC_target[x] <- yeast_FC[x]
   result_yeast$AvgFC[x] <- colMeans(yeast_fc)[1]
-  result_yeast$Stdev[x] <- sd(unlist(yeast_fc[,1]))
+  result_yeast$Stdev[x] <- round(sd(unlist(yeast_fc[,1])),2)
   find_pval <- which(yeast_pval[,1] <= 0.05)
   
   
@@ -149,31 +149,68 @@ for (i in stats_df$Final_Table_Name){
 
   
   hist_title <- stringr::str_c("Ecoli: ", ecoli_spk[x]," / ", ecoli_comp[x])
-  df <- data.frame(ecoli_fc[,1])
-  colnames(df) <- c("fc")
-  p = ggplot(df, aes(x=fc)) + 
-    geom_histogram(aes(y=after_stat(density)), binwidth = 200, colour="black", fill="white")+
-    geom_density(alpha=.2, fill="#FF6666") +
-    labs(title=hist_title, x=i, y = "Count") + xlim(ecoli_FC[x]-4, ecoli_FC[x]+4)
-  print(p)
+  df1 <- data.frame(ecoli_fc[,1])
+  df1$type <- "Ecoli"
+  colnames(df1) <- c("fc", "type")
+
+  # p = ggplot(df1, aes(x=fc)) + 
+  #   geom_histogram(aes(y=after_stat(density)), binwidth = 200, colour="black", fill="white")+
+  #   geom_density(alpha=.2, fill="#FF6666") +
+  #   labs(title=hist_title, x=i, y = "Count") + xlim(ecoli_FC[x]-4, ecoli_FC[x]+4)
+  # print(p)
   
   hist_title <- stringr::str_c("Human: ", human_spk[x]," / ", human_comp[x])
-  df <- data.frame(human_fc[,1])
-  colnames(df) <- c("fc")
-  p= ggplot(df, aes(x=fc)) + 
-    geom_histogram(aes(y=after_stat(density)), binwidth = 200, colour="black", fill="white")+
-    geom_density(alpha=.2, fill="#FF6666") +
-    labs(title=hist_title, x=i, y = "Count") + xlim(human_FC[x]-4, human_FC[x]+4)
-  print(p)
+  df2 <- data.frame(human_fc[,1])
+  df2$type <- "Human"
+  colnames(df2) <- c("fc", "type")
+
+  # p= ggplot(df2, aes(x=fc)) + 
+  #   geom_histogram(aes(y=after_stat(density)), binwidth = 200, colour="black", fill="white")+
+  #   geom_density(alpha=.2, fill="#FF6666") +
+  #   labs(title=hist_title, x=i, y = "Count") + xlim(human_FC[x]-4, human_FC[x]+4)
+  # print(p)
+  
+  hist_title <- stringr::str_c("Combined: ", yeast_spk[x]," / ", yeast_comp[x])
+  df3 <- data.frame(yeast_fc[,1])
+  df3$type <- "Yeast"
+  colnames(df3) <- c("fc", "type")
+  
+  # p= ggplot(df3, aes(x=fc)) + 
+  #   geom_histogram(aes(y=after_stat(density)), binwidth = 200, colour="black", fill="white")+
+  #   geom_density(alpha=.2, fill="#FF6666") +
+  #   labs(title=hist_title, x=i, y = "Count") + xlim(yeast_FC[x]-4, yeast_FC[x]+4)
+  # print(p)
   
   
-  hist_title <- stringr::str_c("Yeast: ", yeast_spk[x]," / ", yeast_comp[x])
-  df <- data.frame(yeast_fc[,1])
-  colnames(df) <- c("fc")
-  p= ggplot(df, aes(x=fc)) + 
-    geom_histogram(aes(y=after_stat(density)), binwidth = 200, colour="black", fill="white")+
-    geom_density(alpha=.2, fill="#FF6666") +
-    labs(title=hist_title, x=i, y = "Count") + xlim(yeast_FC[x]-4, yeast_FC[x]+4)
+  d1 <- density(df1[,1])
+  d2 <- density(df2[,1])
+  d3 <- density(df3[,1])
+  
+  peak_x1 <- round(d1$x[which.max(d1$y)],2) #Gives you the first highest Peak
+  intensity1 <- data.frame(d1[c("x", "y")])[c(F, diff(diff(d1$y)>=0)<0),]
+  peak_y1 <- max(intensity1$y)
+  
+  peak_x2 <- round(d2$x[which.max(d2$y)],2) #Gives you the first highest Peak
+  intensity2 <- data.frame(d2[c("x", "y")])[c(F, diff(diff(d2$y)>=0)<0),]
+  peak_y2 <- max(intensity2$y)
+  
+  peak_x3 <- round(d3$x[which.max(d3$y)],2) #Gives you the first highest Peak
+  intensity3 <- data.frame(d3[c("x", "y")])[c(F, diff(diff(d3$y)>=0)<0),]
+  peak_y3 <- max(intensity3$y)
+  
+  df_all <- rbind(df1, df2, df3)
+  
+  hist_title <- stringr::str_c("Combined: ", stats_df$FactorsN[x], " v ", stats_df$FactorsD[x])
+  p= ggplot(df_all, aes(x=fc, color=type, fill=type)) + 
+    geom_density(alpha=.2) + #, fill="lightgreen") +
+    labs(title=hist_title, x=i, y = "Density") + xlim(-5, 5) + ylim(0,5) +
+    geom_vline(xintercept=result_ecoli$FC_target[x], linetype="dotted") +
+    geom_vline(xintercept=result_human$FC_target[x], linetype="dotted") +
+    geom_vline(xintercept=result_yeast$FC_target[x], linetype="dotted") +
+    annotate("text", x=peak_x1, y=peak_y1+0.5, label=result_ecoli$Stdev[x], size=5, color="black")+ 
+    annotate("text", x=peak_x2, y=peak_y2+0.5, label=result_human$Stdev[x], size=5, color="black")+ 
+    annotate("text", x=peak_x3, y=peak_y3+0.5, label=result_yeast$Stdev[x], size=5, color="black")+ 
+    coord_flip()
   print(p)
   
 }
