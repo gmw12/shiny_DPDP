@@ -9,6 +9,8 @@ create_db <- function(db_name) {
   RSQLite::dbDisconnect(conn)
 }
 
+
+
 read_table <- function(table_name, params){
   conn <- dbConnect(RSQLite::SQLite(), params$database_path) 
   df <- dbReadTable(conn, table_name)
@@ -57,12 +59,11 @@ test_protein_missing <- read_table("protein_missing", params)
 stats_comp <- read_table("stats_comp", params)
 sample_groups <- read_table("sample_groups", params)
 
-df <- read_table('precursor_missing', params)
-df_missing <- read_table_try('precursor_missing', params)
-df_impute <- read_table_try('precursor_impute_protein', params)
-df <- read_table_try('precursor_filter', params)
+df <- read_table('protein_impute_EsxM_v_Control_final', params)
+df <- read_table_try('precursor_noise', params)
+df <- read_table_try('precursor_raw', params)
 df <- read_table_try('precursor_norm_sltmm', params)
-df1 <- read_table_try('protein_impute', params)
+df1 <- read_table_try('precursor_impute_protein', params)
 df2 <- read_table_try('protein_raw', params)
 test3 <- read_table('protein_sltmm', params)
 test4 <- read_table('protein_sltmm_final', params)
@@ -71,14 +72,6 @@ data_to_norm <- read_table_try('precursor_filter', params)
 data_name <- 'protein_sltmm_Caskin1_Test_v_Caskin1_Ctrl_final'
 accession <- 'Q9JMG2'
 conn <- dbConnect(RSQLite::SQLite(), params$database_path) 
-
-df_impute <- read_table_try('precursor_impute_protein', params)
-df_filter <- read_table_try('precursor_filter', params)
-common <- intersect(df_impute$PrecursorId, df_filter$PrecursorId)  
-df_test <- df_filter[common,] # give you common rows in data frame 2
-
-testme  <- read_table_try('params', params)
-testme$peptide_refilter
 
 query <- stringr::str_c("SELECT * FROM ", data_name, " WHERE Accession LIKE '", accession,"'") 
 query

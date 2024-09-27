@@ -135,7 +135,7 @@ stat_calc <- function(session, input, output){
   RSQLite::dbDisconnect(conn)
 
   for (comp_number in 1:nrow(stats_comp)) {
-    arg_list <- list(params, comp_number, stats_comp, input$rollup_method, input$rollup_topn)
+    arg_list <- list(params, comp_number, stats_comp, input$rollup_method, input$rollup_topn, input$maxlfq_scale)
     bg_stat_calc <- callr::r_bg(func = stat_calc_bg, args = arg_list, stderr = stringr::str_c(params$error_path, "//stat_calc.txt"), supervise = TRUE)
     bg_stat_calc$wait()
     print_stderr("stat_calc.txt")
@@ -150,11 +150,14 @@ stat_calc <- function(session, input, output){
 #----------------------------------------------------------------------------------------- 
 
 #create data frame for comparisons
-stat_calc_bg <- function(params, comp_number, stats_comp, input_rollup_method, input_rollup_topn){
+stat_calc_bg <- function(params, comp_number, stats_comp, input_rollup_method, input_rollup_topn, input_maxlfq_scale){
   cat(file = stderr(), "function stat_calc_bg....", "\n")
   source('Shiny_MVA_Functions.R')
   source('Shiny_File.R')
 
+  save(comp_number, file="stat1"); save(input_rollup_method, file="stat2");save(input_rollup_method, file="stat3");save(stats_comp, file="stat4");
+  #. load(file="stat1"); load(file="stat2");load(file="stat3");load(file="stat4");
+  
   df_design <- read_table_try("design", params) 
   
   if (!params$peptide_refilter) {
@@ -186,7 +189,7 @@ stat_calc_bg <- function(params, comp_number, stats_comp, input_rollup_method, i
     df_filter_list <- peptide_refilter(df_list, df_missing_list, params)
     
     #rollup, and unpack list
-    df_rollup_list <- peptide_refilter_rollup(df_filter_list, df_design, input_rollup_method, input_rollup_topn, params) 
+    df_rollup_list <- peptide_refilter_rollup(df_filter_list, df_design, input_rollup_method, input_rollup_topn, input_maxlfq_scale, params) 
     df <- df_rollup_list[[1]]
     df_missing <- df_rollup_list[[2]]
     

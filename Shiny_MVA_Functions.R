@@ -86,15 +86,18 @@ peptide_refilter <- function(df_list, df_missing_list, params) {
   df_info <- df_list[[1]]
   df_N <- df_list[[2]]
   df_D <- df_list[[3]]
-  df_SPQC <- df_list[[4]]
-  
-  df <- cbind(df_info, df_N, df_D, df_SPQC)
-  
   df_N_missing <- df_missing_list[[1]]
   df_D_missing <- df_missing_list[[2]]
-  df_SPQC_missing <- df_missing_list[[3]]
   
-  df_missing <- cbind(df_N_missing, df_D_missing, df_SPQC_missing)
+  if (params$comp_spqc != ""){
+    df_SPQC <- df_list[[4]]
+    df_SPQC_missing <- df_missing_list[[3]]
+    df <- cbind(df_info, df_N, df_D, df_SPQC)
+    df_missing <- cbind(df_N_missing, df_D_missing, df_SPQC_missing)
+  }else {
+    df <- cbind(df_info, df_N, df_D)
+    df_missing <- cbind(df_N_missing, df_D_missing)
+  }
   
   #find 100% imputed precursors/peptides for this specific comparision
   all_missing <- which((rowSums(df_N_missing) + rowSums(df_D_missing)) == 0)
@@ -115,10 +118,12 @@ peptide_refilter <- function(df_list, df_missing_list, params) {
   
   #reduce dataframes
   filtered_rows <- unique(sort(c(all_missing, missing_filter, cv_filter)))
-  cat(file = stderr(), stringr::str_c("Fitering ", length(filtered_rows), " rows"), "\n")
-  df <- df[-filtered_rows,]
-  df_missing <- df_missing[-filtered_rows,]
   
+  if (length(filtered_rows) >0) {
+    cat(file = stderr(), stringr::str_c("Fitering ", length(filtered_rows), " rows"), "\n")
+    df <- df[-filtered_rows,]
+    df_missing <- df_missing[-filtered_rows,]
+  }
   # df_missing <- reduce_imputed_df(df_missing)
   # sample_cols <- ncol(df_N) + ncol(df_D) + ncol(df_SPQC)
   # df <- tibble::add_column(df, df_missing, .after = (ncol(df) - sample_cols))
@@ -129,13 +134,13 @@ peptide_refilter <- function(df_list, df_missing_list, params) {
 }
 
 #-------------------------------------------------------------------------------
-peptide_refilter_rollup <- function(df_filter_list, df_design, input_rollup_method, input_rollup_topn, params) {
+peptide_refilter_rollup <- function(df_filter_list, df_design, input_rollup_method, input_rollup_topn, input_maxlfq_scale, params) {
   cat(file = stderr(), "Function - peptide_refilter_rollup...", "\n")
   
   source('Shiny_Rollup_Functions.R')
   source('Shiny_MVA_Functions.R')
   
-  save(df_filter_list, file="prrdffilterlist"); save(df_design, file="prrdfdesign"); save(input_rollup_method, file="prrinputroolupmethod")
+  #save(df_filter_list, file="prrdffilterlist"); save(df_design, file="prrdfdesign"); save(input_rollup_method, file="prrinputroolupmethod")
   #  load(file="prrdffilterlist"); load(file="prrdfdesign"); load(file="prrinputroolupmethod")
   
   #unpack lists to df's
@@ -153,7 +158,7 @@ peptide_refilter_rollup <- function(df_filter_list, df_design, input_rollup_meth
   df_missing <- rollup_sum(df_missing)
   
   #rollup data and missing
-  df <- rollup_selector(df, df_design, input_rollup_method, input_rollup_topn, params)
+  df <- rollup_selector(df, df_design, input_rollup_method, input_rollup_topn, input_maxlfq_scale, params)
   
   #resort because maxlfq sorts data, while summing does not...
   df <- df[order(df$Accession), ]

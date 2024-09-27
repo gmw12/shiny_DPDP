@@ -206,6 +206,7 @@ create_default_params <- function() {
               "meta_impute_na" = "",
               "rollup_method" = "sum",
               "rollup_topn" = 3,
+              "maxlfq_scale" = 0,
               "stat_norm" = "impute",
               "comp_spqc" =  "",
               "comp_number" = 1,

@@ -6,16 +6,10 @@ cat(file = stderr(), "Shiny_Impute_Functions.R", "\n")
 impute_duke <- function(df, df_random, df_groups, params) {
   cat(file = stderr(), "Function - impute_duke...", "\n")
 
+  #save(df, file="imputedf"); save(df_random, file="imputedfrandom"); save(df_groups, file="imputedfgroups")
+  #. load(file="imputedf"); load(file="imputedfrandom"); load(file="imputedfgroups")
+  
   source('Shiny_File.R')
-  
-  # write_table("temp_df", df, params)
-  # write_table("temp_df_random", df_random, params)
-  # write_table("temp_df_groups", df_groups, params)
-  # 
-  # df <- read_table("temp_df", params)
-  # df_random <- read_table("temp_df_random", params)
-  # df_groups <- read_table("temp_df_groups", params)
-  
   require(foreach)
   require(doParallel)
   cores <- detectCores()
@@ -116,39 +110,43 @@ impute_bottomx <- function(df, df_random, params){
   df <- df[(ncol(df) - params$sample_number + 1):ncol(df)] 
   df <- log(df,2)
   
-  #calc 100 bins for Bottom X%
-  data_dist <- as.vector(t(df_bottomx_data))
-  data_dist <- data_dist[!is.na(data_dist)]
-  data_dist <- data_dist[data_dist > 0]
-  data_dist <- data.frame(data_dist)
-  data_dist$bin <- dplyr::ntile(data_dist, 100)  
-  bottomx_min <- min(data_dist[data_dist$bin == 1,]$data_dist)
-  bottomx_max <- max(data_dist[data_dist$bin == as.numeric(params$bottom_x),]$data_dist)
-  
   find_na <- data.frame(which(is.na(df), arr.ind = TRUE))
   
-  #--
-  cl <- makeCluster(cores - 2)
-  registerDoParallel(cl)
+  if (nrow(find_na) > 0) {
+      
+    #calc 100 bins for Bottom X%
+    data_dist <- as.vector(t(df_bottomx_data))
+    data_dist <- data_dist[!is.na(data_dist)]
+    data_dist <- data_dist[data_dist > 0]
+    data_dist <- data.frame(data_dist)
+    data_dist$bin <- dplyr::ntile(data_dist, 100)  
+    bottomx_min <- min(data_dist[data_dist$bin == 1,]$data_dist)
+    bottomx_max <- max(data_dist[data_dist$bin == as.numeric(params$bottom_x),]$data_dist)
+    
   
-  parallel_result <- foreach(j = 1:nrow(find_na), .combine = c) %dopar% {
-    r <- find_na$row[j]
-    c <- find_na$col[j]
-    bottomx_min + (abs(as.numeric(df_random[r,c])) * (bottomx_max - bottomx_min))
+    #--
+    cl <- makeCluster(cores - 2)
+    registerDoParallel(cl)
+    
+    parallel_result <- foreach(j = 1:nrow(find_na), .combine = c) %dopar% {
+      r <- find_na$row[j]
+      c <- find_na$col[j]
+      bottomx_min + (abs(as.numeric(df_random[r,c])) * (bottomx_max - bottomx_min))
+    }
+    
+    stopCluster(cl) 
+    #--
+    
+    
+    find_na$result <- parallel_result
+    col_max <- max(find_na$col)
+    for (c in 1:col_max) {
+      swap_row <- find_na$row[find_na$col == c]
+      swap_result <- find_na$result[find_na$col == c]
+      df[swap_row, c] <- swap_result
+    }
   }
   
-  stopCluster(cl) 
-  #--
-  
-  
-  find_na$result <- parallel_result
-  col_max <- max(find_na$col)
-  for (c in 1:col_max) {
-    swap_row <- find_na$row[find_na$col == c]
-    swap_result <- find_na$result[find_na$col == c]
-    df[swap_row, c] <- swap_result
-  }
-
   df <- data.frame(2^df)
   df_impute <- cbind(df_impute, df)
   

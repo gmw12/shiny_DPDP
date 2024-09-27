@@ -488,6 +488,7 @@ source("Shiny_UI.R")
                            selectInput("rollup_topn", label = "topN rollup", width = 150,
                                        choices = list(1,2,3,4,5), 
                                        selected = 3),
+                           checkboxInput("maxlfq_scale", label = "Scale IQ_MaxLFQ Protein Output to summed protein intensities?", value = 0, width = 300),
                            br(),
                            br(),
                            actionButton("rollup_apply", label = "Apply Rollup", width = 300,

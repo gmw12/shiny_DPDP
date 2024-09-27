@@ -25,6 +25,15 @@ hide_enable <- function(session, input, output) {
     }
   })
   
+  
+  observe({
+    if (input$rollup_method == "iq_maxlfq") {
+      shinyjs::show("maxlfq_scale")
+    } else {
+      shinyjs::hide("maxlfq_scale")
+    }
+  })
+  
   observe({
     if (input$norm_type == "protein") {
       shinyjs::show("protein_norm_grep")

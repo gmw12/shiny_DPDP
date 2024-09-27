@@ -287,6 +287,7 @@ update_widgets <- function(session, input, output, params) {
     #Rollup---------------------------------------------------
     updateRadioButtons(session, "rollup_method", selected = params$rollup_method)
     updateSelectInput(session, "rollup_topn", selected = params$rollup_topn)
+    updateCheckboxInput(session, "maxlfq_scale", value = params$maxlfq_scale)
     
     #QC
     qc_norm_types <- as.list(strsplit(params$norm_type, ",")[[1]])
@@ -443,7 +444,7 @@ impute_apply_widget_save <- function(session, input, output){
 rollup_widget_save <- function(session, input, output){
   cat(file = stderr(), "Function - rollup_widget_save...", "\n")
   
-  names <- c("rollup_method", "rollup_topn")
+  names <- c("rollup_method", "rollup_topn", "maxlfq_scale")
   
   for (name in names) {
     params[[name]] <<- input[[name]]

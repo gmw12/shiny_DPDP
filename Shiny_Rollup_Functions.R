@@ -1,7 +1,7 @@
 cat(file = stderr(), "Shiny_Rollup_Functions.R", "\n")
 
 #--------------------------------------------------------------------------------
-rollup_selector <- function(df, df_design, input_rollup_method, input_rollup_topn, params){
+rollup_selector <- function(df, df_design, input_rollup_method, input_rollup_topn, input_maxlfq_scale, params){
   cat(file = stderr(), "function rollup_selector...", "\n")
   
   #save(df, file="test_df")
@@ -18,18 +18,18 @@ rollup_selector <- function(df, df_design, input_rollup_method, input_rollup_top
     else if (input_rollup_method == "median_polish") {df <-  rollup_median_polish(df, info_columns)}
     else if (input_rollup_method == "mean") {df <-  rollup_mean(df)}
     else if (input_rollup_method == "topn") {df <-  rollup_topn(df, input_rollup_topn)}
-    else if (input_rollup_method == "iq_maxlfq") {df <-  rollup_maxlfq(df, info_columns)}
+    else if (input_rollup_method == "iq_maxlfq") {df <-  rollup_maxlfq(df, info_columns, input_maxlfq_scale)}
   
   cat(file = stderr(), "function rollup_selector...end", "\n")
   return(df)
 }
 
 #--------------------------------------------------------------------------------
-rollup_maxlfq <- function(peptide_data, info_columns){
+rollup_maxlfq <- function(peptide_data, info_columns, input_maxlfq_scale){
   cat(file = stderr(), "rollup_maxlfq triggered...", "\n")
   require(iq)
   
-  save(peptide_data, file="maxlfqpeptidedata"); save(info_columns, file="maxlfqinfocolumns")
+  #save(peptide_data, file="maxlfqpeptidedata"); save(info_columns, file="maxlfqinfocolumns")
   #  load(file="maxlfqpeptidedata"); load(file="maxlfqinfocolumns")
   
   samples_columns <- ncol(peptide_data) - info_columns
@@ -77,8 +77,17 @@ rollup_maxlfq <- function(peptide_data, info_columns){
   df <- df[order(df$Accession),]
   rownames(df) <- NULL
   
+  if(input_maxlfq_scale) {
+    cat(file = stderr(), "rollup_maxlfq results scaled...", "\n")
+    df_average <- rowMeans(df[,(info_columns + 1):ncol(df)], na.rm = TRUE)
+    result_average <- rowMeans(result[,(info_columns + 1):ncol(result)], na.rm = TRUE)
+    scale_factor <- df_average/result_average
+    result <- result * scale_factor
+  }
+  
   df[(info_columns + 1):ncol(df)] <- result
   
+  cat(file = stderr(), "rollup_maxlfq triggered...end", "\n")
   return(df)  
 }
 #--------------------------------------------------------------------------------

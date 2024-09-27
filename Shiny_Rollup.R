@@ -6,7 +6,7 @@ rollup_apply <- function(session, input, output, params){
   showModal(modalDialog("Apply Rollup...", footer = NULL))
   
   cat(file = stderr(), stringr::str_c("rollup_method = ", input$rollup_method), "\n")
-  arg_list <- list(input$rollup_method, input$rollup_topn, params)
+  arg_list <- list(input$rollup_method, input$rollup_topn, input$maxlfq_scale, params)
   bg_rollup_apply <- callr::r_bg(func = rollup_apply_bg, args = arg_list, stderr = stringr::str_c(params$error_path, "//error_rollup_bg.txt"), supervise = TRUE)
   bg_rollup_apply$wait()
   print_stderr("error_rollup_bg.txt")
@@ -16,7 +16,7 @@ rollup_apply <- function(session, input, output, params){
 
 #--------------------------------------------------------------------
 
-rollup_apply_bg <- function(input_rollup_method, input_rollup_top, params) {
+rollup_apply_bg <- function(input_rollup_method, input_rollup_top, input_maxlfq_scale, params) {
   cat(file = stderr(), "Function - rollup_apply_bg...", "\n")
   
   source("Shiny_Rollup_Functions.R") 
@@ -38,7 +38,7 @@ rollup_apply_bg <- function(input_rollup_method, input_rollup_top, params) {
     df <- RSQLite::dbReadTable(conn, table_name)
 
     #rollup precursor/peptides
-    protein_df <- rollup_selector(df, df_design, input_rollup_method, input_rollup_top, params)
+    protein_df <- rollup_selector(df, df_design, input_rollup_method, input_rollup_top, input_maxlfq_scale, params)
     
     #rollup precursor to peptide
     peptide_df <- rollup_sum_peptide(df, df_design)
