@@ -1,6 +1,7 @@
 cat(file = stderr(), "Shiny_Data.R", "\n")
 
 #---------------------------------------------------------------------
+
 load_archive_file <- function(session, input, output){
   cat(file = stderr(), "Function load_archive_file...", "\n")
   showModal(modalDialog("Loading archive file...", footer = NULL))

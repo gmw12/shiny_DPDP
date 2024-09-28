@@ -230,7 +230,7 @@ save_stat_options <- function(session, input, output, params) {
   params$stats_comp_cv_filter_factor <- input$stats_comp_cv_filter_factor
   params <<- params
   
-  write_table_try(params, params)
+  write_table_try("params", params, params)
   
 }
 

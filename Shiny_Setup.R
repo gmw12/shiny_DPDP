@@ -1,8 +1,5 @@
 cat(file = stderr(), "Shiny_Setup.R", "\n")
 
-
-
-
 #---------------------------------------------------------------------
 create_parameter_table <- function(session, input, output){
   cat(file = stderr(), "\n",  "Function create_parameter_table", "\n")

@@ -468,7 +468,7 @@ stat_widget_save <- function(session, input, output){
   }
 
   params <<- params
-  write_table_try(params, params)
+  write_table_try("params", params, params)
   cat(file = stderr(), "Function - stat_widget_save...end", "\n")
 }
 
