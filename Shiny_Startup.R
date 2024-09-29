@@ -6,9 +6,10 @@ set_user <- function() {
   #set user to unkown to force app to find correct usr
   site_user <<- "unknown"
   volumes <<- "unknown"
+  database_dir <<- stringr::str_c(getwd(), "/database")
   
   while (site_user == "unknown") {
-    if (Sys.info()["sysname"] == "Darwin" ) {
+    if (Sys.info()["nodename"] == "oldmac") {
       volumes <<- c(dd = '/Users/gregwaitt/Documents/Data', wd = '.', Home = fs::path_home(),  getVolumes()())
       #version determines website content
       site_user <<- "dpmsr"
@@ -27,41 +28,141 @@ set_user <- function() {
     }else if (Sys.info()["nodename"] == "bob") {
       volumes <<- c(h1 = '/home/dpmsr/mnt/h_black1', h2 = '/home/dpmsr/mnt/h_black2', dc = 'home/dpmsr/mnt/RawData', wd = '.', Home = fs::path_home(), getVolumes()())
       site_user <<- "dpmsr"
-      params$python_path <<- "/home/dpmsr/anaconda3/envs/PDP/bin/python3"
+      python_path <<- "/home/dpmsr/anaconda3/envs/PDP/bin/python3"
     }else if (Sys.info()["nodename"] == "waittblack") {
       volumes <<- c(dd = '/data', wd = '.', Home = fs::path_home(), getVolumes()())
       site_user <<- "dpmsr"
-      params$python_path <<- "/home/dpmsr/anaconda3/envs/PDP/bin/python3"
+      python_path <<- "/home/dpmsr/anaconda3/envs/PDP/bin/python3"
     }else if (Sys.info()["nodename"] == "shiny-titan") {
       volumes <<- c(h1 = '/mnt/h_black1', h2 = '/mnt/h_black2', dc = '/mnt/RawData', wd = '.', Home = fs::path_home(), getVolumes()())
       site_user <<- "dpmsr"
-      params$python_path <<- "/home/user/anaconda3/envs/python38/bin/python3"
+      python_path <<- "/home/user/anaconda3/envs/python38/bin/python3"
     }else if (Sys.info()["nodename"] == "gregorys-mbp.lan") {
       volumes <<- c(h1 = '/Users/gregwaitt/Data', h2 = '/Users/gregwaitt/Cloud-Drive/R', dc = '/mnt/RawData', wd = '.', Home = fs::path_home(), getVolumes()())
       site_user <<- "dpmsr"
-      params$python_path <<- "/home/user/anaconda3/envs/python38/bin/python3"
+      python_path <<- "/home/user/anaconda3/envs/python38/bin/python3"
     }else{
       #for public website
       volumes <<- c(dd = '/data', wd = '.', Home = fs::path_home(), getVolumes()())
       site_user <<- "not_dpmsr"
+      database_dir <<- "/data/database"
     }
   }
   
   cat(file = stderr(), str_c("site_user set to -->  ", site_user), "\n")
   cat(file = stderr(), str_c("volumes --> ", volumes), "\n")
   
-  params$volumes <<- toString(volumes)
-  params$volumes_name <<- toString(names(volumes))
-  
-  cat(file = stderr(), "Function - set_user...end", "\n")
-  return(site_user)
+  cat(file = stderr(), "Function - set_user...end", "\n\n")
+  return()
 }
 
 #---------------------------------------------------------------------------------------------------------
 
+create_default_params <- function(volumes, python_path) {
+  cat(file = stderr(), "Function - create_default_params...", "\n")
+  
+  params <<- data.frame(
+    "volumes" = toString(volumes),
+    "volumes_name" = toString(names(volumes)),
+    "database_dir" = stringr::str_c(getwd(), "/database"),
+    "python_path" = python_path,
+    "database_path" = "", #stringr::str_c(getwd(), "/database"),
+    "design_path" = "",
+    "design_file" = "",
+    "data_source" = "",
+    "file_prefix" = str_c("project_", strftime(Sys.time(), format = "%m%d%y")),
+    "data_path" = "",
+    "data_file" = "",
+    "backup_path" = "",
+    "extra_path" = "",
+    "error_path" = "",
+    "qc_path" = "",
+    "string_path" = "",
+    "phos_path" = "",
+    "app_path" = "",
+    "python_path" = "",
+    "raw_data_format" = "", 
+    "current_data_format" = "",
+    "ptm" = FALSE, 
+    "data_table_format" = "", 
+    "primary_group" = "Full", 
+    "data_output" = "Protein", 
+    "norm_ptm" = FALSE, 
+    "norm_ptm_grep" = "Phospho",
+    "peptide_select" = 'razor', 
+    "multi_tmt" = FALSE, 
+    "use_isoform" = FALSE,
+    "sample_number" = 0,
+    "group_number" = 0,
+    "unique_groups" = "na",
+    "meta_precursor_raw" = 0,
+    "meta_peptide_raw" = 0,
+    "meta_protein_raw" = 0,
+    "meta_precursor_filter" = 0,
+    "meta_peptide_filter" = 0,
+    "meta_protein_filter" = 0,
+    "noise_type" = "none",
+    "noise_baseline_value" = 1,
+    "noise_inflection" = 0,
+    "noise_count" = 0,
+    "noise_total" = 0,
+    "filter_min_measured_all" = 2,
+    "filter_x_percent" = TRUE,
+    "filter_x_percent_value" = 50,
+    "filter_cv" = FALSE,
+    "filter_cv_group" = "SPQC",
+    "filter_cv_value" = 99,
+    "info_col_precursor" = 0,
+    "info_col_peptide" = 0,
+    "info_col_protein" = 0,
+    "intensity_cutoff" = 0,
+    "intensity_mean" = 1,
+    "intensity_cutoff_sd" = 0.5,
+    "missing_cutoff" = 50,
+    "checkbox_misaligned" = FALSE,
+    "misaligned_cutoff" = 50,
+    "misaligned_target" = "group",
+    "total_na" = 0,
+    "total_misaligned" = 0,
+    "precursor_quality" = FALSE,
+    "precursor_quality_sd" = 50,
+    "precursor_quality_intensity" = 500,
+    "precursor_quality_min" = 100,
+    "precursor_spqc_ratio" = FALSE,
+    "precursor_spqc_accuracy" = 50,
+    "precursor_spqc_intensity" = 500,
+    "norm_include" = FALSE,
+    "include_norm_grep" = "trypsin|keratin|casein", 
+    "norm_exclude" = FALSE,
+    "exclude_norm_grep" = "trypsin|keratin|casein",
+    "norm_type" = "impute",
+    "protein_norm_grep" = "",
+    "impute_type" = "duke",
+    "bottom_x" = 2,
+    "impute_ptm" = FALSE, 
+    "impute_ptm_grep" = "Phospho",
+    "meta_impute_na" = "",
+    "rollup_method" = "sum",
+    "rollup_topn" = 3,
+    "maxlfq_scale" = 0,
+    "stat_norm" = "impute",
+    "comp_spqc" =  "",
+    "comp_number" = 1,
+    "tax_choice" = "",
+    "string_species" = 0
+    
+  )
+  
+  cat(file = stderr(), "Function - create_default_params...end", "\n\n")
+}
 
-set_file_choosers <- function(session, input, output) {
+
+#---------------------------------------------------------------------------------------------------------
+
+
+set_file_choosers <- function(session, input, output, volumes) {
   cat(file = stderr(), "Function - set_file_choosers...", "\n")
+  cat(file = stderr(), stringr::str_c("Volumes ---> ", volumes), "\n")
   
   shinyFileChoose(input, 'sfb_design_file', session = session, roots = volumes, filetypes = c('', 'xlsx'))
   shinyFileChoose(input, 'sfb_data_file', session = session, roots = volumes, filetypes = c('', 'tsv', 'txt'))
@@ -80,7 +181,7 @@ app_startup <- function(session, input, output) {
   
 
   #Check if database file present
-  if (params$database_path != "na") {
+  if (params$database_path != "") {
     cat(file = stderr(), "params exists", "\n")
     loaded_database <- basename(params$database_path)
     loaded_prefix <- params$file_prefix
@@ -118,108 +219,8 @@ app_startup <- function(session, input, output) {
   output$loaded_database <- renderText(str_c("Loaded Database:  ", loaded_database))
   output$loaded_prefix <- renderText(str_c("Loaded File Prefix:  ", loaded_prefix))
   
-  cat(file = stderr(), "Function - app_startup...end", "\n")
+  cat(file = stderr(), "Function - app_startup...end", "\n\n")
 }
-
-#---------------------------------------------------------------------------------------------------------
-create_default_params <- function() {
-  cat(file = stderr(), "Function - create_default_params...", "\n")
-  
-  params <<- data.frame(
-              "database_path" = "",
-              "design_path" = "",
-              "design_file" = "",
-              "data_source" = "",
-              "file_prefix" = str_c("project_", strftime(Sys.time(), format = "%m%d%y")),
-              "data_path" = "",
-              "data_file" = "",
-              "volumes" = "",
-              "volumes_name" = "",
-              "backup_path" = "",
-              "extra_path" = "",
-              "error_path" = "",
-              "qc_path" = "",
-              "string_path" = "",
-              "phos_path" = "",
-              "app_path" = "",
-              "python_path" = "",
-              "raw_data_format" = "", 
-              "current_data_format" = "",
-              "ptm" = FALSE, 
-              "data_table_format" = "", 
-              "primary_group" = "Full", 
-              "data_output" = "Protein", 
-              "norm_ptm" = FALSE, 
-              "norm_ptm_grep" = "Phospho",
-              "peptide_select" = 'razor', 
-              "multi_tmt" = FALSE, 
-              "use_isoform" = FALSE,
-              "sample_number" = 0,
-              "group_number" = 0,
-              "unique_groups" = "na",
-              "meta_precursor_raw" = 0,
-              "meta_peptide_raw" = 0,
-              "meta_protein_raw" = 0,
-              "meta_precursor_filter" = 0,
-              "meta_peptide_filter" = 0,
-              "meta_protein_filter" = 0,
-              "noise_type" = "none",
-              "noise_baseline_value" = 1,
-              "noise_inflection" = 0,
-              "noise_count" = 0,
-              "noise_total" = 0,
-              "filter_min_measured_all" = 2,
-              "filter_x_percent" = TRUE,
-              "filter_x_percent_value" = 50,
-              "filter_cv" = FALSE,
-              "filter_cv_group" = "SPQC",
-              "filter_cv_value" = 99,
-              "info_col_precursor" = 0,
-              "info_col_peptide" = 0,
-              "info_col_protein" = 0,
-              "intensity_cutoff" = 0,
-              "intensity_mean" = 1,
-              "intensity_cutoff_sd" = 0.5,
-              "missing_cutoff" = 50,
-              "checkbox_misaligned" = FALSE,
-              "misaligned_cutoff" = 50,
-              "misaligned_target" = "group",
-              "total_na" = 0,
-              "total_misaligned" = 0,
-              "precursor_quality" = FALSE,
-              "precursor_quality_sd" = 50,
-              "precursor_quality_intensity" = 500,
-              "precursor_quality_min" = 100,
-              "precursor_spqc_ratio" = FALSE,
-              "precursor_spqc_accuracy" = 50,
-              "precursor_spqc_intensity" = 500,
-              "norm_include" = FALSE,
-              "include_norm_grep" = "trypsin|keratin|casein", 
-              "norm_exclude" = FALSE,
-              "exclude_norm_grep" = "trypsin|keratin|casein",
-              "norm_type" = "impute",
-              "protein_norm_grep" = "",
-              "impute_type" = "duke",
-              "bottom_x" = 2,
-              "impute_ptm" = FALSE, 
-              "impute_ptm_grep" = "Phospho",
-              "meta_impute_na" = "",
-              "rollup_method" = "sum",
-              "rollup_topn" = 3,
-              "maxlfq_scale" = 0,
-              "stat_norm" = "impute",
-              "comp_spqc" =  "",
-              "comp_number" = 1,
-              "tax_choice" = "",
-              "string_species" = 0
-
-  )
-  
-  cat(file = stderr(), "Function - create_default_params...end", "\n")
-}
-
-
-
 
 #-------------------------------------------------------------------
 named_list <- function(input_string) {
@@ -233,5 +234,6 @@ named_list <- function(input_string) {
   test <- unlist(test)
   
   names(named_list) <- c(test)
+  cat(file = stderr(), "Function named_list...end", "\n")
   return(named_list)
 }

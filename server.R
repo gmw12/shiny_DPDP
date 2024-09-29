@@ -7,14 +7,18 @@ source("Shiny_Setup.R")
 source("Shiny_Startup.R")
 
 if (!exists('params')) {
-  cat(file = stderr(), "params file does not exist...", "\n")
-  create_default_params() 
+  cat(file = stderr(), "initialize... params file does not exist...", "\n")
+  
+  #clear memory
+  rm(list = ls())
+  gc()
+  #.rs.restartR()
   
   #set user
   set_user()
-  
+
 } else {
-  cat(file = stderr(), "params file exists...", "\n")
+  cat(file = stderr(), "initialize... params file exists...", "\n")
 }
 
 shinyServer(function(session, input, output) {
@@ -22,31 +26,38 @@ shinyServer(function(session, input, output) {
   showModal(modalDialog("Loading app...", footer = NULL))
   
   source("Shiny_Source.R")
-  hide_enable(session, input, output)
-  set_comp_names(session, input,output)
   
-  #app start conditions
-  source('Shiny_UI_Update.R')
-  app_startup(session, input, output)
-
   #set file choosers
-  set_file_choosers(session, input, output)
+  set_file_choosers(session, input, output, volumes)
   
-  #update UI
-  ui_render_load_design(session, input, output)
-  
-  if (params$data_path != "")  {
-    create_design_table(session, input, output)
-    create_stats_design_table(session, input, output)
+  if (exists('params')) {
+    cat(file = stderr(), "params file exists...", "\n")
+    
+    #app start conditions
+    
+    source('Shiny_UI_Update.R')
+    app_startup(session, input, output)
+    
+    set_comp_names(session, input,output)
+    #update UI
+    ui_render_load_design(session, input, output)
+    
+    if (params$data_path != "")  {
+      create_design_table(session, input, output)
+      create_stats_design_table(session, input, output)
+    }
+    
+    if (table_exists("summary_cv"))  {create_cv_table(session, input, output, params)}
+    
+  }else {
+    
+    #fresh start, create default params
+    create_default_params(volumes, python_path) 
+    update_widgets(session, input, output, params)
   }
   
-  if (table_exists("summary_cv"))  {create_cv_table(session, input, output, params)}
+  hide_enable(session, input, output)
   removeModal()
-  
-  # observe({
-  #   browser_info <<- (shinybrowser::get_all_info())
-  #   height_factor <<- browser_info$dimensions$height / 1200
-  # })
   #------------------------------------------------------------------------------------------------------  
   #Load design file
   observeEvent(input$sfb_design_file, {
@@ -54,10 +65,10 @@ shinyServer(function(session, input, output) {
     cat(file = stderr(), "\n\n", "sfb_design_file button clicked...", "\n")
     
     if (is.list(input$sfb_design_file)) {
-      
+
       #load design from excel, create database
       load_design_file(session, input, output)
-
+      
       #set file locations
       file_set()
       
@@ -106,16 +117,16 @@ shinyServer(function(session, input, output) {
     cat(file = stderr(), "\n\n","sfb_archive_file button clicked...", "\n")
     
     if (is.list(input$sfb_archive_file)) {
-      
+      cat(file = stderr(), "\n\n","sfb_archive_file button clicked...1", "\n")
       #read data files
-      load_archive_file(session, input, output)
+      archive_name <- load_archive_file(session, input, output)
       
-      output$archive_file_name <- renderText({get_data_file_name()})
+      output$archive_file_name <- renderText({archive_name})
       
       #update UI
       ui_render_load_data(session, input, output)
       ui_render_load_design(session, input, output)
-      
+      cat(file = stderr(), "\n\n","sfb_archive_file button clicked...end", "\n")
     }
     
   }) 
@@ -394,7 +405,7 @@ shinyServer(function(session, input, output) {
       create_plot(session, input, output, params, plot_number = 2) 
     }
     
-    cat(file = stderr(), "create_stats_plots2...end", "\n")
+    cat(file = stderr(), "create_stats_plots2...end", "\n\n")
   })     
 
   
@@ -404,7 +415,7 @@ shinyServer(function(session, input, output) {
     
     create_stats_data_table(session, input, output, params)
     
-    cat(file = stderr(), "stats_data_show clicked...end" , "\n")
+    cat(file = stderr(), "stats_data_show clicked...end" , "\n\n")
   })
   
   #-------------------------------------------------------------------------------------------------------------  
@@ -413,7 +424,7 @@ shinyServer(function(session, input, output) {
     
     stats_data_save_excel(session, input, output, params)
     
-    cat(file = stderr(), "stats_data_save clicked...end" , "\n")
+    cat(file = stderr(), "stats_data_save clicked...end" , "\n\n")
   })
   
   #-------------------------------------------------------------------------------------------------------------  
@@ -456,11 +467,11 @@ shinyServer(function(session, input, output) {
 #-------------------------------------------------------------------------------------------------------------  
   
   observeEvent(input$create_stats_oneprotein_plots, { 
-    cat(file = stderr(), "stats_data_show clicked..." , "\n")
+    cat(file = stderr(), "create_stats_oneprotein_plots..." , "\n")
     
     create_stats_oneprotein_plots(session, input, output, params)
     
-    cat(file = stderr(), "stats_data_show clicked...end" , "\n")
+    cat(file = stderr(), "create_stats_oneprotein_plots...end" , "\n")
     
   })
   

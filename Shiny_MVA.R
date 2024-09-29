@@ -135,7 +135,7 @@ stat_calc <- function(session, input, output){
   RSQLite::dbDisconnect(conn)
 
   for (comp_number in 1:nrow(stats_comp)) {
-    arg_list <- list(params, comp_number, stats_comp, input$rollup_method, input$rollup_topn, input$maxlfq_scale)
+    arg_list <- list(params, comp_number, stats_comp)
     bg_stat_calc <- callr::r_bg(func = stat_calc_bg, args = arg_list, stderr = stringr::str_c(params$error_path, "//stat_calc.txt"), supervise = TRUE)
     bg_stat_calc$wait()
     print_stderr("stat_calc.txt")
@@ -150,12 +150,12 @@ stat_calc <- function(session, input, output){
 #----------------------------------------------------------------------------------------- 
 
 #create data frame for comparisons
-stat_calc_bg <- function(params, comp_number, stats_comp, input_rollup_method, input_rollup_topn, input_maxlfq_scale){
+stat_calc_bg <- function(params, comp_number, stats_comp){
   cat(file = stderr(), "function stat_calc_bg....", "\n")
   source('Shiny_MVA_Functions.R')
   source('Shiny_File.R')
 
-  save(comp_number, file="stat1"); save(input_rollup_method, file="stat2");save(input_rollup_method, file="stat3");save(stats_comp, file="stat4");
+  #save(comp_number, file="stat1"); save(stats_comp, file="stat4");
   #. load(file="stat1"); load(file="stat2");load(file="stat3");load(file="stat4");
   
   df_design <- read_table_try("design", params) 
@@ -189,7 +189,7 @@ stat_calc_bg <- function(params, comp_number, stats_comp, input_rollup_method, i
     df_filter_list <- peptide_refilter(df_list, df_missing_list, params)
     
     #rollup, and unpack list
-    df_rollup_list <- peptide_refilter_rollup(df_filter_list, df_design, input_rollup_method, input_rollup_topn, input_maxlfq_scale, params) 
+    df_rollup_list <- peptide_refilter_rollup(df_filter_list, df_design, params) 
     df <- df_rollup_list[[1]]
     df_missing <- df_rollup_list[[2]]
     
@@ -319,7 +319,8 @@ create_stats_data_table <- function(session, input, output, params) {
   cat(file = stderr(), "Function create_stats_data_table...", "\n")
   showModal(modalDialog("Creating stats data table...", footer = NULL))  
 
-  arg_list <- list(input$stats_norm_type, input$stats_select_data_comp, input$stats_add_filters, input$stats_data_topn, input$stats_data_accession, input$stats_data_description, params)
+  arg_list <- list(input$stats_norm_type, input$stats_select_data_comp, input$stats_add_filters, 
+                   input$stats_data_topn, input$stats_data_accession, input$stats_data_description, params)
   
   bg_create_stats_data_table <- callr::r_bg(func = create_stats_data_table_bg, args = arg_list, stderr = str_c(params$error_path, "//error_create_stats_data_table.txt"), supervise = TRUE)
   bg_create_stats_data_table$wait()
@@ -370,6 +371,8 @@ create_stats_data_table_bg <- function(input_stats_norm_type, input_stats_select
   
   #confirm data exists in database
   data_name <- stringr::str_c("protein_", input_stats_norm_type, "_", input_stats_select_data_comp, "_final")
+  cat(file = stderr(), stringr::str_c("data_name --> ", data_name), "\n")
+  
   if (data_name %in% list_tables(params)) {
     cat(file = stderr(), stringr::str_c(data_name, " is in database"), "\n") 
     

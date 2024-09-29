@@ -84,12 +84,10 @@ source("Shiny_UI.R")
               
               box(title = "Start from Previous Analysis", status = "primary", solidHeader = TRUE, collapsible = FALSE, align = "center", width = 12, height = 200,
                   tags$h3("Select database file"),
-                  fluidRow(align = "center", shinyFilesButton('sfb_archive_file', label = 'Select Database File', title = 'Please select database file', multiple = FALSE,
+                  fluidRow(align = "center", shinyFilesButton('sfb_archive_file', label = 'Select Archive/Zip File', title = 'Please select zip file', multiple = FALSE,
                                    style = "color: #fff; background-color: #337ab7; border-color: #2e6da4")),
                   span(textOutput("archive_file_name"), style = "color:blue; font-size:16px")
               ),
-              
-              
               
              )),
             

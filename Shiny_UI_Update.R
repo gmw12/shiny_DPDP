@@ -19,7 +19,7 @@ ui_render_load_design <- function(session, input, output) {
   output$design_file_name <- renderText({params$design_file})
   
   #removeModal()
-
+  cat(file = stderr(), "Function ui_render_load_design...end", "\n\n")
   }
 
 #-------------------------------------------------------------------------------------------
@@ -173,10 +173,11 @@ render_impute_graphs <- function(session, input, output) {
   }, deleteFile = FALSE)
   
   if ("missing_values" %in% list_tables(params)) {
+    cat(file = stderr(), "Creating impute table...", "\n")
     create_impute_table(session, input, output, params)
   }
   
-  cat(file = stderr(), "Function render_impute_graphs...end", "\n")  
+  cat(file = stderr(), "Function render_impute_graphs...end", "\n\n")  
 }
 
 #-------------------------------------------------------------------------------------------
@@ -447,10 +448,11 @@ rollup_widget_save <- function(session, input, output){
   names <- c("rollup_method", "rollup_topn", "maxlfq_scale")
   
   for (name in names) {
-    params[[name]] <<- input[[name]]
+    params[[name]] <- input[[name]]
   }
   
-  param_save_to_database()
+  write_table_try("params", params, params)
+  params <<- params
   
 }
 

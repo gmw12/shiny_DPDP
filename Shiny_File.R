@@ -50,7 +50,7 @@ file_set <- function(){
   params$string_path <<- create_dir(str_c(params$data_path, "String"))
   params$phos_path <<- create_dir(str_c(params$data_path, "Phos"))
   params$app_path <<- create_dir(str_c(params$data_path, "Backup/App"))
-  
+
   param_save_to_database()
   
   #archive code with data
@@ -85,7 +85,22 @@ create_dir <- function(name){
   cat(file = stderr(), "Function create_dir...end", "\n\n")
   return(name)
 }
+#----------------------------------------------------------------------------------------
+create_dir_only <- function(name){
+  cat(file = stderr(), "Function create_dir_only...", "\n")
+  if (fs::is_dir(name)) {
+    #added file delete, dir delete not working on customer shiny server
+    cat(file = stderr(), "dir exists...", "\n")
+  }else{
+    dir_create(name)
+    name <- str_replace_all(name, "/", "//")
+    name <- str_c(name, "//")
+    cat(file = stderr(), str_c(name, " created...", "\n"))
+  }
 
+  cat(file = stderr(), "Function create_dir_only...end", "\n\n")
+  return(name)
+}
 #--------------------------------------------------------------
 
 excel_to_db <- function(excel_path, table_name, database_path){
@@ -144,10 +159,11 @@ param_save_to_database <- function(){
 
 #----------------------------------------------------------------------------------------
 table_exists <- function(table_name){
-  cat(file = stderr(), "Function - table exists", "\n")
+  cat(file = stderr(), "Function - table exists...", "\n")
   conn <- dbConnect(RSQLite::SQLite(), params$database_path)
   tables_list <- dbListTables(conn)
   RSQLite::dbDisconnect(conn)
+  cat(file = stderr(), stringr::str_c("Function - table exists...end, ", table_name, "  ", table_name %in% tables_list), "\n")
   return(table_name %in% tables_list)
 }
 #-----------------------------------------------------------------------------------------

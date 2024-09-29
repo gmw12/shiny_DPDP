@@ -91,7 +91,7 @@ create_impute_table <- function(session, input, output, params){
   print_stderr("error_imputetable.txt")
 
   impute_DT <- bg_imputetable$get_result()
-  output$impute_meta_table <-  DT::renderDataTable(impute_DT)
+  output$impute_meta_table <- DT::renderDataTable(impute_DT)
   
   cat(file = stderr(), "Function create_impute_table...end", "\n")
 }

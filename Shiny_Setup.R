@@ -30,7 +30,7 @@ load_parameters <- function(session, input, output){
 
 #---------------------------------------------------------------------
 load_design_file <- function(session, input, output){
-  cat(file = stderr(), "Function load_design_file", "\n")
+  cat(file = stderr(), "Function load_design_file...", "\n")
   showModal(modalDialog("Loading design file...", footer = NULL))
   
   design_sbf <- parseFilePaths(volumes, input$sfb_design_file)
@@ -44,13 +44,11 @@ load_design_file <- function(session, input, output){
   params$data_path <<- str_c(params$design_path, input$file_prefix, "/")
   database_dir <- str_c(getwd(), "/database/")
   params$database_path <<- str_c(database_dir, input$file_prefix, ".db")
+  params$error_path <<- create_dir(str_c(params$data_path, "Error"))
   
   #create working directory for 
   create_dir(params$data_path)
   create_dir(database_dir)
-  
-  #create error directory for background
-  params$error_path <<- str_c(params$data_path, "Error")
   create_dir(params$error_path)
   
   cat(file = stderr(), str_c("loading design file from ", params$design_path), "\n")

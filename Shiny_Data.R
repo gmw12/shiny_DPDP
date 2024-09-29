@@ -5,26 +5,42 @@ cat(file = stderr(), "Shiny_Data.R", "\n")
 load_archive_file <- function(session, input, output){
   cat(file = stderr(), "Function load_archive_file...", "\n")
   showModal(modalDialog("Loading archive file...", footer = NULL))
+
+  archive_sfb <- parseFilePaths(volumes, input$sfb_archive_file)
+  save(archive_sfb, file = "testarchive_sfb")
+  # load(file = "testarchive_sfb")
   
-  arg_list <- list(input$sfb_data_file)
-  load_archive_data <- callr::r_bg(func = load_archive_file_bg, args = arg_list, stderr = str_c(params$error_path, "//error_load_archive_data.txt"), supervise = TRUE)
-  load_archive_data$wait()
-  print_stderr("error_archive_data.txt")
+  archive_path <- str_extract(archive_sfb$datapath, "^/.*/")
+  archive_zip <- archive_sfb$datapath
+
+  archive_name <- basename(archive_sfb$datapath)
+  create_dir(database_dir)
+ 
+  utils::unzip(zipfile = archive_zip, exdir = database_dir)
+
+  zip_files <- list.files(path = database_dir, recursive = TRUE) 
+  for (zip_name in zip_files){
+    if (tools::file_ext(zip_name) == "db"){
+      break
+    }
+  }
   
+  database_path <- stringr::str_c(database_dir, "/", zip_name)
+  #load params file
+  if (file.exists(stringr::str_c(database_dir, "/params"))){
+    load(file=stringr::str_c(database_dir, "/params"))
+  }else{
+    conn <- RSQLite::dbConnect(RSQLite::SQLite(), database_path) 
+    params <- RSQLite::dbReadTable(conn, "params")
+    RSQLite::dbDisconnect(conn)
+  }
+  
+  params <<- params
   removeModal()
   cat(file = stderr(), "Function load_archive_file...end", "\n")
+  return(archive_zip)
 }
 
-#---------------------------------------------------------------------
-load_archive_file_bg <- function(input_sfb_data_file){
-  cat(file = stderr(), "Function load_archive_file_bg...", "\n")
-  
-  data_sfb <- parseFilePaths(volumes, input_sfb_data_file)
-  data_path <- str_extract(data_sfb$datapath, "^/.*/")
-  params$data_file <- basename(data_sfb$datapath)
-  
-  cat(file = stderr(), "Function load_archive_file_bg...end", "\n")
-}
 
 #---------------------------------------------------------------------
 load_data_file <- function(session, input, output, params){

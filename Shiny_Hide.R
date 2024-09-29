@@ -8,10 +8,12 @@ hide_enable <- function(session, input, output) {
       updateCheckboxInput(session, "peptide_refilter", value = FALSE)
       updateCheckboxInput(session, "peptide_missing_filter", value = FALSE)
       params$peptide_refilter <<- FALSE
+      shinyjs::hide("peptide_refilter")
       shinyjs::hide("peptide_missing_filter")
       shinyjs::hide("peptide_missing_factor")
-      protein_menu(session, input, output)
+      #protein_menu(session, input, output)
     } else {
+      shinyjs::show("peptide_refilter")
       shinyjs::show("peptide_missing_filter")
       shinyjs::show("peptide_missing_factor")
     }
