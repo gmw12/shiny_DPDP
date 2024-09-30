@@ -275,7 +275,7 @@ zip_data_save <- function(session, input, output, params){
 zip_data_save_bg <- function(input_archive_data_filename, params){
   cat(file = stderr(), "Function - zip_data_save_bg...", "\n")
 
-  filename <- stringr::str_c(params$data_path, "params")
+  filename <- stringr::str_c(params$database_dir, "/params")
   save(params, file=filename)
   
   filename <- stringr::str_c(params$data_path, input_archive_data_filename)

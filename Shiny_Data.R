@@ -5,28 +5,30 @@ cat(file = stderr(), "Shiny_Data.R", "\n")
 load_archive_file <- function(session, input, output){
   cat(file = stderr(), "Function load_archive_file...", "\n")
   showModal(modalDialog("Loading archive file...", footer = NULL))
-
+  
   archive_sfb <- parseFilePaths(volumes, input$sfb_archive_file)
   #save(archive_sfb, file = "testarchive_sfb")
   # load(file = "testarchive_sfb")
   
   archive_path <- str_extract(archive_sfb$datapath, "^/.*/")
   archive_zip <- archive_sfb$datapath
-
+  
   archive_name <- basename(archive_sfb$datapath)
   create_dir(database_dir)
- 
+  
   utils::unzip(zipfile = archive_zip, exdir = database_dir)
-
+  
+  system("chmod -R 777 /home/erik/Shiny_DPDP/database")
+  
   # section will load params file from db if not present
   zip_files <- list.files(path = database_dir, recursive = TRUE) 
-  for (zip_name in zip_files){
-    if (tools::file_ext(zip_name) == "db"){
+  for (file_name in zip_files){
+    if (tools::file_ext(file_name) == "db"){
       break
     }
   }
   
-  database_path <- stringr::str_c(database_dir, "/", zip_name)
+  database_path <- stringr::str_c(database_dir, "/", file_name)
   #load params file
   if (file.exists(stringr::str_c(database_dir, "/params"))){
     load(file=stringr::str_c(database_dir, "/params"))
@@ -36,12 +38,14 @@ load_archive_file <- function(session, input, output){
     RSQLite::dbDisconnect(conn)
   }
   
+  params$database_dir <- database_dir
+  params$database_path <- stringr::str_c(database_dir, "/", file_name)
+  
   params <<- params
   removeModal()
   cat(file = stderr(), "Function load_archive_file...end", "\n")
   return(archive_zip)
 }
-
 
 #---------------------------------------------------------------------
 load_data_file <- function(session, input, output, params){
