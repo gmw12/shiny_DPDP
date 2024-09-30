@@ -34,8 +34,6 @@ shinyServer(function(session, input, output) {
     cat(file = stderr(), "params file exists...", "\n")
     
     #app start conditions
-    
-    source('Shiny_UI_Update.R')
     app_startup(session, input, output)
     
     set_comp_names(session, input,output)
@@ -118,7 +116,8 @@ shinyServer(function(session, input, output) {
     
     if (is.list(input$sfb_archive_file)) {
       cat(file = stderr(), "\n\n","sfb_archive_file button clicked...1", "\n")
-      #read data files
+      
+      #copy zip file contents to database dir, load params
       archive_name <- load_archive_file(session, input, output)
       
       output$archive_file_name <- renderText({archive_name})
@@ -126,6 +125,12 @@ shinyServer(function(session, input, output) {
       #update UI
       ui_render_load_data(session, input, output)
       ui_render_load_design(session, input, output)
+      app_startup(session, input, output)
+      set_comp_names(session, input,output)
+      create_design_table(session, input, output)
+      create_stats_design_table(session, input, output)
+      if (table_exists("summary_cv"))  {create_cv_table(session, input, output, params)}
+      
       cat(file = stderr(), "\n\n","sfb_archive_file button clicked...end", "\n")
     }
     

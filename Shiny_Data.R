@@ -7,7 +7,7 @@ load_archive_file <- function(session, input, output){
   showModal(modalDialog("Loading archive file...", footer = NULL))
 
   archive_sfb <- parseFilePaths(volumes, input$sfb_archive_file)
-  save(archive_sfb, file = "testarchive_sfb")
+  #save(archive_sfb, file = "testarchive_sfb")
   # load(file = "testarchive_sfb")
   
   archive_path <- str_extract(archive_sfb$datapath, "^/.*/")
@@ -18,6 +18,7 @@ load_archive_file <- function(session, input, output){
  
   utils::unzip(zipfile = archive_zip, exdir = database_dir)
 
+  # section will load params file from db if not present
   zip_files <- list.files(path = database_dir, recursive = TRUE) 
   for (zip_name in zip_files){
     if (tools::file_ext(zip_name) == "db"){

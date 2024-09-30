@@ -373,12 +373,15 @@ create_stats_data_table_bg <- function(input_stats_norm_type, input_stats_select
   data_name <- stringr::str_c("protein_", input_stats_norm_type, "_", input_stats_select_data_comp, "_final")
   cat(file = stderr(), stringr::str_c("data_name --> ", data_name), "\n")
   
+  stats_comp <- read_table_try("stats_comp", params)
+  
   if (data_name %in% list_tables(params)) {
     cat(file = stderr(), stringr::str_c(data_name, " is in database"), "\n") 
     
     #load data
     df <- read_table_try(data_name, params)
-    stats_comp <- read_table_try("stats_comp", params)
+  }else {
+    cat(file = stderr(), stringr::str_c(data_name, " is NOT in database"), "\n") 
   }
   
   comp_number <- which(stats_comp$Name == input_stats_select_data_comp)

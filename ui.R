@@ -274,7 +274,7 @@ source("Shiny_UI.R")
                                         fluidRow(
                                           column(width = 12, numericInput("precursor_quality_intensity", label = "Minimum Average Intensity", value = 500))),
                                         fluidRow(
-                                          column(width = 12, numericInput("precursor_quality_min", label = "Minimum Intensity for Consideration", value = 200))),
+                                          column(width = 12, numericInput("precursor_quality_min", label = "Minimum Intensity for Consideration", value = 300))),
                                         circle = TRUE, status = "danger", icon = icon("cogs"), width = "300px", size = "sm",
                                         tooltip = tooltipOptions(title = "Click to see misalignment options!")
                                       )

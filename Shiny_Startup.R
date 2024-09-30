@@ -127,7 +127,7 @@ create_default_params <- function(volumes, python_path) {
     "precursor_quality" = FALSE,
     "precursor_quality_sd" = 50,
     "precursor_quality_intensity" = 500,
-    "precursor_quality_min" = 100,
+    "precursor_quality_min" = 300,
     "precursor_spqc_ratio" = FALSE,
     "precursor_spqc_accuracy" = 50,
     "precursor_spqc_intensity" = 500,
@@ -178,8 +178,8 @@ set_file_choosers <- function(session, input, output, volumes) {
 
 app_startup <- function(session, input, output) {
   cat(file = stderr(), "Function - app_startup", "\n")
+  source('Shiny_UI_Update.R')
   
-
   #Check if database file present
   if (params$database_path != "") {
     cat(file = stderr(), "params exists", "\n")
