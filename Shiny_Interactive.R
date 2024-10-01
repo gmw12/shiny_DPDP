@@ -300,9 +300,9 @@ interactive_heatmap <- function(session, input, output, df, namex, groupx, comp_
 {
   cat(file = stderr(), "interactive_heatmap..." , "\n")
   if (site_user == "dpmsr") {
-    heatmap_filename <- "erasemyheatmap.png"
+    heatmap_filename <- stringr::str_c(params$database_dir, "/erasemyheatmap.png") #"erasemyheatmap.png"
   }else{
-    heatmap_filename <- stringr::str_c(params$data_path, "/erasemyheatmap.png")
+    heatmap_filename <- stringr::str_c(params$database_dir, "/erasemyheatmap.png")
   }
   
   #if norm by protein one protein will have 0 stdev - which will crash the calc...

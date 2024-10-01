@@ -17,8 +17,9 @@ load_archive_file <- function(session, input, output){
   create_dir(database_dir)
   
   utils::unzip(zipfile = archive_zip, exdir = database_dir)
-  
-  system("chmod -R 777 /home/erik/Shiny_DPDP/database")
+  if(Sys.getenv("USER") == "erik") {
+    system("chmod -R 777 /home/erik/Shiny_DPDP/database")
+  }
   
   # section will load params file from db if not present
   zip_files <- list.files(path = database_dir, recursive = TRUE) 
