@@ -33,16 +33,20 @@ load_design_file <- function(session, input, output){
   cat(file = stderr(), "Function load_design_file...", "\n")
   showModal(modalDialog("Loading design file...", footer = NULL))
   
+  params$file_prefix <<- input$file_prefix
+  
   design_sbf <- parseFilePaths(volumes, input$sfb_design_file)
   params$design_path <<- str_extract(design_sbf$datapath, "^/.*/")
   params$design_file <<- design_sbf$datapath
   
   # set root data dir
   volumes <<- c(dd = params$design_path, volumes)
+  cat(file = stderr(), stringr::str_c("Adding default data directory --> "), "\n")
+  cat(file = stderr(), stringr::str_c(volumes), "\n")
   
   #Global set of data and database paths
   params$data_path <<- str_c(params$design_path, input$file_prefix, "/")
-  database_dir <- str_c(getwd(), "/database/")
+  database_dir <<- str_c(getwd(), "/database/")
   params$database_path <<- str_c(database_dir, input$file_prefix, ".db")
   params$error_path <<- create_dir(str_c(params$data_path, "Error"))
   
@@ -60,7 +64,7 @@ load_design_file <- function(session, input, output){
   gc(verbose = getOption("verbose"), reset = FALSE, full = TRUE)
   
   #save paramater table to database
-  param_save_to_database()
+  write_table_try("params", params, params)
   
   cat(file = stderr(), "Function load_design_file...end", "\n")
   removeModal()

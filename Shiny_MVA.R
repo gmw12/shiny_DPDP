@@ -320,7 +320,7 @@ create_stats_data_table <- function(session, input, output, params) {
   showModal(modalDialog("Creating stats data table...", footer = NULL))  
 
   arg_list <- list(input$stats_norm_type, input$stats_select_data_comp, input$stats_add_filters, 
-                   input$stats_data_topn, input$stats_data_accession, input$stats_data_description, params)
+                   input$stats_search_field, input$stats_data_description, params)
   
   bg_create_stats_data_table <- callr::r_bg(func = create_stats_data_table_bg, args = arg_list, stderr = str_c(params$error_path, "//error_create_stats_data_table.txt"), supervise = TRUE)
   bg_create_stats_data_table$wait()
@@ -362,8 +362,8 @@ create_stats_data_table <- function(session, input, output, params) {
 }
 
 #----------------------------------------------------------------------------------------
-create_stats_data_table_bg <- function(input_stats_norm_type, input_stats_select_data_comp, input_stats_add_filters, input_stats_data_topn,
-                                       input_stats_data_accession, input_stats_data_description, params) {
+create_stats_data_table_bg <- function(input_stats_norm_type, input_stats_select_data_comp, input_stats_add_filters, input_stats_search_field,
+                                       input_stats_data_description, params) {
   cat(file = stderr(), "Function create_stats_data_table_bg...", "\n")
   source('Shiny_File.R')
   source('Shiny_Tables.R')
@@ -390,7 +390,7 @@ create_stats_data_table_bg <- function(input_stats_norm_type, input_stats_select
   spqc_number <- as.integer(stats_comp$SPQC[comp_number])
   
   #filter data for display
-  df <- stats_data_table_filter(df, sample_number, start_sample_col, input_stats_add_filters, input_stats_data_topn, input_stats_data_accession, input_stats_data_description)
+  df <- stats_data_table_filter(df, sample_number, start_sample_col, input_stats_add_filters, input_stats_search_field, input_stats_data_description)
   
   if (params$data_output == "Protein") {
     stats_DT <- protein_table(df, start_sample_col, sample_number, spqc_number)

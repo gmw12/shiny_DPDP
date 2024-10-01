@@ -59,6 +59,7 @@ test_protein_missing <- read_table("protein_missing", params)
 stats_comp <- read_table("stats_comp", params)
 sample_groups <- read_table("sample_groups", params)
 
+test <- read_table('params', params)
 df <- read_table('protein_impute_EsxM_v_Control_final', params)
 df <- read_table_try('precursor_noise', params)
 df <- read_table_try('precursor_raw', params)

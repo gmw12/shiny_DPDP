@@ -121,7 +121,7 @@ create_default_params <- function(volumes, python_path) {
     "missing_cutoff" = 50,
     "checkbox_misaligned" = FALSE,
     "misaligned_cutoff" = 50,
-    "misaligned_target" = "group",
+    "misaligned_target" = "dataset",
     "total_na" = 0,
     "total_misaligned" = 0,
     "precursor_quality" = FALSE,

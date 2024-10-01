@@ -249,7 +249,7 @@ source("Shiny_UI.R")
                                         ),
                                         fluidRow(
                                           column(width = 12, selectInput("misaligned_target", label = "Remove misalignment from group or dataset?", 
-                                                                         choices = list("group", "dataset"), selected = "SPQC"))
+                                                                         choices = list("group", "dataset"), selected = "dataset"))
                                         ),
                                         circle = TRUE, status = "danger", icon = icon("cogs"), width = "300px", size = "sm",
                                         tooltip = tooltipOptions(title = "Click to see misalignment options!")
@@ -734,7 +734,7 @@ source("Shiny_UI.R")
               fluidRow( 
                 box(id = "stats_data_parameters", title = "Data Parameters...", status = "primary",
                     solidHeader = TRUE, collapsible = FALSE, align = "left", width = 12, height = 125,
-                  column(width =3, offset =0,
+                  column(width =2, offset =0,
                          selectInput("stats_select_data_comp", label = "comparison", 
                                      choices = list("Choice 1" = 1, "Choice 2" = 2, "Choice 3" = 3), 
                                      selected = 1),
@@ -742,15 +742,15 @@ source("Shiny_UI.R")
                   column(width =1, offset =0,
                         checkboxInput("stats_add_filters", label="Apply stat filters (from setup)?", value = 0)
                   ),
-                  column(width =1, offset =0,  
-                         numericInput("stats_data_topn", label="TopN", value = 0, width = 100)
+                  column(width =2, offset =0,
+                         selectInput("stats_search_field", label = "Search Header", 
+                                     choices = list("Accession" = "accession", "Description" = "description", 
+                                                    "Name" = "name", "Genes" = "genes", "TopN" = "topn"), 
+                                     selected = "accession"),
                   ),
-                  column(width =1, offset =0,
-                         textInput("stats_data_accession", label="Accession", value = "0", width = 100)
-                  ),
-                  column(width =1, offset =0,
-                         textInput("stats_data_description", label="Description", value = "0", width = 200)
-                  ),
+                   column(width =2, offset =0,
+                          textInput("stats_data_description", label="Description", value = "", width = 200)
+                   ),
 
                   column(width =1, offset =0,
                          br(),
@@ -1181,6 +1181,19 @@ tabItem(tabName = "admin",
                  br(),
                  actionButton("archive_data", label = "Save Data", width = 100,
                               style="color: #fff; background-color: #337ab7; border-color: #2e6da4"),
+                 br(),
+                 br(),
+                 br(),
+                 br(),
+                 br(),
+                 br(),
+                 br(),
+                 br(),
+                 br(),
+                 br(),
+                 br(),
+                 actionButton("clean_environment", label = "Clean Environment", width = 100,
+                              style="color: #fff; background-color: #337ab7; border-color: #2e6da4")
           )
         )
 )

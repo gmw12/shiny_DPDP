@@ -362,8 +362,8 @@ add_imputed_df <- function(df, params, stats_comp, comp_number, table_name) {
 
 # data table filter ------------------------------------------------------
 
-stats_data_table_filter <- function(df, sample_number, start_sample_col, input_stats_add_filters, input_stats_data_topn,
-                                    input_stats_data_accession, input_stats_data_description) {
+stats_data_table_filter <- function(df, sample_number, start_sample_col, input_stats_add_filters, input_stats_search_field,
+                                    input_stats_data_description) {
   cat(file = stderr(), "Function stats_data_table_filter...", "\n")
   
   if (dplyr::is.grouped_df(df)) {df <- ungroup(df)}
@@ -374,21 +374,29 @@ stats_data_table_filter <- function(df, sample_number, start_sample_col, input_s
   
   cat(file = stderr(), "stats_data_table_filter... 1", "\n")
   
-  if (input_stats_data_topn != 0 ) {
+  if (input_stats_search_field == "topn" & input_stats_data_description != "" ) {
     df$sum <- rowSums(df[start_sample_col:(start_sample_col + sample_number -1)])
     df <- df[order(-df$sum),]                      
-    df <- df[1:input_stats_data_topn,]
+    df <- df[1:as.numeric(input_stats_data_description),]
     df$sum <- NULL
   }
   
   cat(file = stderr(), "stats_data_table_filter... 2", "\n")
   
-  if (input_stats_data_accession != "0" ) {
-    df <- df[grep(as.character(input_stats_data_accession), df$Accession), ]
+  if (input_stats_search_field == "accession" & input_stats_data_description != "" ) {
+    df <- df[grep(as.character(input_stats_data_description), df$Accession), ]
   }
   
-  if (input_stats_data_description != "0") {
+  if (input_stats_search_field == "description" & input_stats_data_description != "" ) {
     df <- df[grep(as.character(input_stats_data_description), df$Description), ]
+  }
+  
+  if (input_stats_search_field == "genes" & input_stats_data_description != "" ) {
+    df <- df[grep(as.character(input_stats_data_description), df$Genes), ]
+  }
+  
+  if (input_stats_search_field == "name" & input_stats_data_description != "" ) {
+    df <- df[grep(as.character(input_stats_data_description), df$Name), ]
   }
   
   df_colnames <- colnames(df)

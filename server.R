@@ -12,7 +12,7 @@ if (!exists('params')) {
   #clear memory
   rm(list = ls())
   gc()
-  #.rs.restartR()
+  #   .rs.restartR()
   
   #set user
   set_user()
@@ -349,6 +349,8 @@ shinyServer(function(session, input, output) {
     
     check_comp_names(session, input, output)
 
+    update_widgets_stats(session, input, output, params)
+    
     if (is.null(input$comp_spqc)) {
       shinyalert("SPQC", "No SPQC group was selected!", type = "warning")
     }
@@ -605,7 +607,16 @@ shinyServer(function(session, input, output) {
     cat(file = stderr(), "archive_data clicked...end" , "\n")
   })
 
-  
+  #-------------------------------------------------------------------------------------------------------------  
+  observeEvent(input$clean_slate, { 
+    cat(file = stderr(), "clean_slate clicked..." , "\n")
+    
+    #clear memory
+    rm(list = ls())
+    gc()
+    .rs.restartR()
+    session$reload() 
+  }) 
   
   
       

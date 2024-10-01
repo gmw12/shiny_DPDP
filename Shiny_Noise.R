@@ -57,16 +57,26 @@ noise_inflection_bg <- function(table_name, params){
   ipede2 = ede(df2$ID, df2$vec, cc2$index)
   cat(file = stderr(), stringr::str_c("ipede2 = ", ipede2[3]), "\n")
   
-  if (is.na(ipede2[3])) {
-    for (i in (1:100)){
-      df2 = df2[(nrow(df2)/10):(nrow(df2)),]
+  # test inflection point, if above threshold need to calc again
+  test <- 0
+  if(!is.na(ipede2[3])) {
+    test <- round(2^df2$vec[df2$ID == floor(ipede2[3])], digits = 2)
+    cat(file = stderr(), stringr::str_c("noise test = ", test), "\n")
+  }
+  
+  if (is.na(ipede2[3]) | test > 50) {
+    for (i in (1:10)){
+      df2 = df2[(nrow(df2)/2):(nrow(df2)),]
       cc2 <- check_curve(df2$ID, df2$vec)
       cat(file = stderr(), stringr::str_c("rerun ", i, "  inflection, check_curve = ", cc2$ctype), "\n")
       cat(file = stderr(), stringr::str_c("inflection, index = ", cc2$index), "\n")
       
       ipede2 = ede(df2$ID, df2$vec, cc2$index)
       cat(file = stderr(), stringr::str_c("ipede2 = ", ipede2[3]), "\n")
-      if (!is.na(ipede2[3])) { break } 
+      if (!is.na(ipede2[3])) { 
+        test <- round(2^df2$vec[df2$ID == floor(ipede2[3])], digits = 2)
+        if (test < 50 ) {break} 
+        } 
     }
   }
     

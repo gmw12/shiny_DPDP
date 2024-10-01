@@ -16,6 +16,7 @@ ui_render_load_design <- function(session, input, output) {
   }
   output$data_ptm <- renderText({str_c("PTM?:  ", params_ptm)})
   
+  output$file_prefix <- renderText({params$file_prefix})
   output$design_file_name <- renderText({params$design_file})
   
   #removeModal()
