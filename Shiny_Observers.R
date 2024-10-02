@@ -47,6 +47,7 @@ observe_plot_type1 <- function(session, input, output){
     cat(file = stderr(), "Observe plot_type1...", "\n")
   
     if (input$plot_type1 == "Bar") {
+      cat(file = stderr(), stringr::str_c("Observed: Bar plot") , "\n")
       output$stats_plots1 <- renderUI({
         create_stats_bar_ui(plot_number=1)
       })

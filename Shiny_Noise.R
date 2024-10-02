@@ -20,8 +20,67 @@ noise_inflection <- function(session, input, output, params){
   removeModal()
 }
 
+
 #----------------------------------------------------------------------------------------
 noise_inflection_bg <- function(table_name, params){
+  cat(file = stderr(), "Function - noise_inflection_bg...", "\n")
+  
+  conn <- RSQLite::dbConnect(RSQLite::SQLite(), params$database_path)
+  df <- RSQLite::dbReadTable(conn, table_name)
+  
+  df <- df[(ncol(df) - params$sample_number + 1):ncol(df)]
+  
+  vec <- unlist(df, use.names = FALSE)
+  vec <- vec[vec > 1]
+  vec <- sort(vec[!is.na(vec)], decreasing = TRUE)
+  vec <- log(vec, 2)
+  
+  df <- data.frame(vec)
+  df$ID <- seq.int(nrow(df))
+  
+  df2 <- df[seq(1, nrow(df), 100),]
+  df2$ID <- seq.int(nrow(df2))
+  rownames(df2) <- NULL
+  
+  df_row <- nrow(df2)
+  for (i in (1:100)) {
+    m <- (df2$vec[df_row] - df2$vec[df_row-20]) / (df2$ID[df_row] - df2$ID[df_row - 20]) *1000
+    df_row <- df_row - 10
+    noise <- df2$vec[df_row]
+    if (m > -4) {
+      cat(file = stderr(), stringr::str_c("m --> ", m, "   noise --> ", noise), "\n")
+      break
+      }
+  }
+  
+  params$noise_inflection <- round(2^noise, digits = 2)
+
+  # count data points below inflection 
+  params$noise_count <- length(which(df$vec < noise)) 
+  params$noise_total <- nrow(df)
+  cat(file = stderr(), stringr::str_c("noise data points to be removed = ", params$noise_count, " out of ", nrow(df)), "\n")
+  
+  
+  RSQLite::dbWriteTable(conn, "params", params, overwrite = TRUE)
+  RSQLite::dbDisconnect(conn)
+  
+  ggplot2::ggplot(df2, ggplot2::aes(x = ID, y = vec)) +
+    ggplot2::geom_point(ggplot2::aes(colour = "blue") ) +
+    ggplot2::theme_minimal() +
+    ggplot2::theme(legend.position = "none") +
+    ggplot2::geom_vline(xintercept = df_row) +
+    ggplot2::labs(title = stringr::str_c("Dataset Values - Inflection = ", params$noise_inflection), x =
+                    'Count', y = "Intensity") +
+    ggplot2::theme(plot.title = ggplot2::element_text(hjust = 0.5))
+  ggplot2::ggsave(stringr::str_c(params$qc_path, "Inflection_Point.png"), width = 8, height = 6)
+  
+  
+  cat(file = stderr(), stringr::str_c("noise_inflection_bg... end"), "\n")
+  return()
+}
+
+#----------------------------------------------------------------------------------------
+backup_noise_inflection_bg <- function(table_name, params){
   cat(file = stderr(), "Function - noise_inflection_bg...", "\n")
   
   library(inflection)
@@ -47,8 +106,10 @@ noise_inflection_bg <- function(table_name, params){
   cat(file = stderr(), stringr::str_c("full ede inflection = ", ipede[3]), "\n")
   cat(file = stderr(), stringr::str_c("full ede inflection value = ", 2^df$vec[df$ID == floor(ipede[3])]), "\n")
   
+  #   params$noise_inflection <- round(2^df$vec[df$ID == floor(ipede[3])], digits = 2)
+  
   df2 <- df[ipede[3]:(nrow(df)),]
-  #df2 = df2[(nrow(df2)/2):(nrow(df2)),]
+  #   df2 = df2[(nrow(df2)/):(nrow(df2)),]
   
   cc2 <- check_curve(df2$ID, df2$vec)
   cat(file = stderr(), stringr::str_c("inflection, check_curve = ", cc2$ctype), "\n")

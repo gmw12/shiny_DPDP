@@ -766,7 +766,13 @@ order_rename_columns <- function(){
     bg_order <- callr::r_bg(func = order_rename_columns_bg, args = list("precursor_start", params), stderr = str_c(params$error_path, "//error_orderrename.txt"), supervise = TRUE)
     bg_order$wait()
     print_stderr("error_orderrename.txt")
-    params$info_col_precursor <<- bg_order$get_result()
+    bg_order_list <- bg_order$get_result()
+    params$info_col_precursor <<- bg_order_list[[1]]
+    Sample_ID_alert <- bg_order_list[[2]]
+  }
+  
+  if (Sample_ID_alert) {
+    shinyalert("Oops!", "Sample ID order does not match sample list!", type = "error")
   }
   
   cat(file = stderr(), "order_rename_columns end", "\n\n")
@@ -777,11 +783,18 @@ order_rename_columns <- function(){
 # Rearrange columns if raw data is psm, PD does not organize
 order_rename_columns_bg <- function(table_name, params) {
   cat(file = stderr(), "Function order_columns_bg...", "\n")
+  source('Shiny_Data.R')
   
   conn <- RSQLite::dbConnect(RSQLite::SQLite(), params$database_path)
   df <- RSQLite::dbReadTable(conn, table_name)
   design <- RSQLite::dbReadTable(conn, "design")
+
+  #save(df, file = "testdf"); save(design, file="testdesign")
+  #  load(file = "testdf"); load(file="testdesign")
   
+  #confirm sample ID's
+  Sample_ID_alert <- check_sample_id(df, design, params)
+    
   info_columns <- ncol(df) - params$sample_number
   annotate_df <- df[, 1:(ncol(df) - params$sample_number)]
   df <- df[, (ncol(df) - params$sample_number + 1):ncol(df)]
@@ -789,7 +802,7 @@ order_rename_columns_bg <- function(table_name, params) {
   
   #make sure data is numeric
   df <- dplyr::mutate_all(df, function(x) as.numeric(as.character(x)))
-  
+
   colnames(df) <- design$Header1
   df <- cbind(annotate_df, df)
   
@@ -797,7 +810,40 @@ order_rename_columns_bg <- function(table_name, params) {
   RSQLite::dbDisconnect(conn)
   
   cat(file = stderr(), "order columns end", "\n")
-  return(info_columns)
+  return(list(info_columns, Sample_ID_alert))
 }
 
-
+#----------------------------------------------------------------------------------------
+check_sample_id <- function(df, design, params) {
+  cat(file = stderr(), "Function check_sample_id...", "\n")
+  
+  sample_ids <- design[order(design$Raw_Order),]$ID
+  sample_ids <- gsub("_.+", "", sample_ids)
+  
+  if (params$data_source == "SP") {
+    if (params$raw_data_format == "Protein") {
+      test_data <- colnames(df |> dplyr::select(contains("Quantity")))
+    }else if (params$raw_data_format == "Precursor" || params$raw_data_format == "Precursor_PTM") {
+      test_data <- colnames(df |> dplyr::select(contains("TotalQuantity")))
+    }else {
+      test_data <- colnames(df |> dplyr::select(contains("Quantity")))
+    }
+  }else{
+    test_data <- colnames(df |> dplyr::select(contains("Abundance.F")))
+  }
+  
+  
+  cat(file = stderr(), "check_sample_id...1", "\n")
+  Sample_ID_alert <- FALSE
+  for (i in 1:length(sample_ids)) {
+    confirm_id <- grepl(sample_ids[i], test_data[i])
+    if (!confirm_id) {
+      cat(file = stderr(), str_c("count=", i, "  ", sample_ids[i], " vs ", test_data[i]), "\n")
+      Sample_ID_alert <- TRUE
+      #shinyalert("Oops!", "Sample ID order does not match sample list!", type = "error")
+    }
+  }
+  
+  cat(file = stderr(), "Function check_sample_id...end", "\n")
+  return(Sample_ID_alert)
+}

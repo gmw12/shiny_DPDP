@@ -178,7 +178,7 @@ render_impute_graphs <- function(session, input, output) {
     create_impute_table(session, input, output, params)
   }
   
-  cat(file = stderr(), "Function render_impute_graphs...end", "\n\n")  
+  cat(file = stderr(), "Function render_impute_graphs...end", "\n")  
 }
 
 #-------------------------------------------------------------------------------------------

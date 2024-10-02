@@ -1,3 +1,7 @@
+#clear memory
+rm(list = ls())
+gc()
+.rs.restartR()
 
 params$database_path <- stringr::str_c(getwd(),"/database/test.db")
 params$database_path <- stringr::str_c("/Users/gregwaitt/Data/test.db")
@@ -676,3 +680,130 @@ create_dir <- function(name){
   cat(file = stderr(), "Function create_dir...end", "\n\n")
   return(name)
 }
+
+
+
+
+
+
+
+
+df2 <- df[seq(1, nrow(df), 100),]
+df2$ID <- seq.int(nrow(df2))
+rownames(df2) <- NULL
+
+df_row <- nrow(df2)
+for (i in (1:100)) {
+  m <- (df2$vec[df_row] - df2$vec[df_row-20]) / (df2$ID[df_row] - df2$ID[df_row - 20]) *1000
+  df_row <- df_row - 10
+  noise <- round(2^df2$vec[df_row], digits = 2)
+  cat(file = stderr(), stringr::str_c("i <- ", i, "m<- ", m, "   noise <- ", noise), "\n")
+  if (m > -4) {break}
+}
+
+params$noise_inflection <- noise
+
+ggplot2::ggplot(df2, ggplot2::aes(x = ID, y = vec)) +
+  ggplot2::geom_point(ggplot2::aes(colour = "blue") ) +
+  ggplot2::theme_minimal() +
+  ggplot2::theme(legend.position = "none") +
+  ggplot2::geom_vline(xintercept = df_row) +
+  ggplot2::labs(title = stringr::str_c("Dataset Values - Inflection = ", params$noise_inflection), x =
+                  'Count', y = "Intensity") +
+  ggplot2::theme(plot.title = ggplot2::element_text(hjust = 0.5))
+
+
+
+
+
+
+
+
+
+plotdf <- df[seq(1, nrow(df), 100),]
+
+df2 <- df2[as.integer(nrow(df2)*.995):(nrow(df2)),]
+#   df2 = df2[(nrow(df2)/):(nrow(df2)),]
+
+cc2 <- check_curve(df2$ID, df2$vec)
+cat(file = stderr(), stringr::str_c("inflection, check_curve = ", cc2$ctype), "\n")
+cat(file = stderr(), stringr::str_c("inflection, index = ", cc2$index), "\n")
+
+ipede2 = ede(df2$ID, df2$vec, cc2$index)
+cat(file = stderr(), stringr::str_c("ipede2 = ", ipede2[3]), "\n")
+
+params$noise_inflection <- round(2^df2$vec[df2$ID == floor(ipede2[3])], digits = 2)
+
+ggplot2::ggplot(df3, ggplot2::aes(x = ID, y = vec)) +
+  ggplot2::geom_point(ggplot2::aes(colour = "blue") ) +
+  ggplot2::theme_minimal() +
+  ggplot2::theme(legend.position = "none") +
+  ggplot2::geom_vline(xintercept = ipede2[3]) +
+  ggplot2::labs(title = stringr::str_c("Dataset Values - Inflection = ", params$noise_inflection), x =
+                  'Count', y = "Intensity") +
+  ggplot2::theme(plot.title = ggplot2::element_text(hjust = 0.5))
+
+ggplot2::ggplot(plotdf, ggplot2::aes(x = ID, y = vec)) +
+  ggplot2::geom_point(ggplot2::aes(colour = "blue") ) +
+  ggplot2::theme_minimal() +
+  ggplot2::theme(legend.position = "none") +
+  ggplot2::geom_vline(xintercept = ipede2[3]) +
+  ggplot2::labs(title = stringr::str_c("Dataset Values - Inflection = ", params$noise_inflection), x =
+                  'Count', y = "Intensity") +
+  ggplot2::theme(plot.title = ggplot2::element_text(hjust = 0.5))
+
+loess()
+erase <- loess(vec ~ ID, df)
+
+# test inflection point, if above threshold need to calc again
+test <- 0
+if(!is.na(ipede2[3])) {
+  test <- round(2^df2$vec[df2$ID == floor(ipede2[3])], digits = 2)
+  cat(file = stderr(), stringr::str_c("noise test = ", test), "\n")
+}
+
+if (is.na(ipede2[3]) | test > 50) {
+  for (i in (1:10)){
+    df2 = df2[(nrow(df2)/2):(nrow(df2)),]
+    cc2 <- check_curve(df2$ID, df2$vec)
+    cat(file = stderr(), stringr::str_c("rerun ", i, "  inflection, check_curve = ", cc2$ctype), "\n")
+    cat(file = stderr(), stringr::str_c("inflection, index = ", cc2$index), "\n")
+    
+    ipede2 = ede(df2$ID, df2$vec, cc2$index)
+    cat(file = stderr(), stringr::str_c("ipede2 = ", ipede2[3]), "\n")
+    if (!is.na(ipede2[3])) { 
+      test <- round(2^df2$vec[df2$ID == floor(ipede2[3])], digits = 2)
+      if (test < 50 ) {break} 
+    } 
+  }
+}
+
+cat(file = stderr(), stringr::str_c("ede inflection = ", ipede2[3]), "\n")
+cat(file = stderr(), stringr::str_c("ede inflection value = ", 2^df2$vec[df2$ID == floor(ipede2[3])]), "\n")
+
+params$noise_inflection <- round(2^df2$vec[df2$ID == floor(ipede2[3])], digits = 2)
+
+# count data points below inflection 
+params$noise_count = nrow(df) - floor(ipede2[3])
+params$noise_total = nrow(df)
+cat(file = stderr(), stringr::str_c("noise data points to be removed = ", params$noise_count, " out of ", nrow(df)), "\n")
+
+plotdf <- df[seq(1, nrow(df), 10),]
+
+RSQLite::dbWriteTable(conn, "params", params, overwrite = TRUE)
+RSQLite::dbDisconnect(conn)
+
+ggplot2::ggplot(plotdf, ggplot2::aes(x = ID, y = vec)) +
+  ggplot2::geom_point(ggplot2::aes(colour = "blue") ) +
+  ggplot2::theme_minimal() +
+  ggplot2::theme(legend.position = "none") +
+  ggplot2::geom_vline(xintercept = ipede2[3]) +
+  ggplot2::labs(title = stringr::str_c("Dataset Values - Inflection = ", params$noise_inflection), x =
+                  'Count', y = "Intensity") +
+  ggplot2::theme(plot.title = ggplot2::element_text(hjust = 0.5))
+
+
+
+
+
+

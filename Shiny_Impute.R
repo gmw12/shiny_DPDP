@@ -21,7 +21,7 @@ impute_apply <- function(session, input, output) {
   
   
   removeModal()
-  cat(file = stderr(), stringr::str_c("Function - impute_apply...end (completed in ", Sys.time() - start, ")") , "\n\n")
+  cat(file = stderr(), stringr::str_c("Function - impute_apply...end (completed in ", Sys.time() - start, ")") , "\n")
 }
 
 #----------------------------------------------------------------------------------------------------

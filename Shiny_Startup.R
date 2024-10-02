@@ -26,7 +26,7 @@ set_user <- function() {
       volumes <<- c(dd = '/home/dpmsr/shared', wd = '.', Home = fs::path_home(), getVolumes()())
       site_user <<- "dpmsr"
     }else if (Sys.info()["nodename"] == "bob") {
-      volumes <<- c(h1 = '/home/dpmsr/mnt/h_black1', h2 = '/home/dpmsr/mnt/h_black2', dc = 'home/dpmsr/mnt/RawData', wd = '.', Home = fs::path_home(), getVolumes()())
+      volumes <<- c(dd = '/home/dpmsr/mnt/h_black2', h1 = '/home/dpmsr/mnt/h_black1', h2 = '/home/dpmsr/mnt/h_black2', dc = 'home/dpmsr/mnt/RawData', wd = '.', Home = fs::path_home(), getVolumes()())
       site_user <<- "dpmsr"
       python_path <<- "/home/dpmsr/anaconda3/envs/PDP/bin/python3"
     }else if (Sys.info()["nodename"] == "waittblack") {
@@ -34,11 +34,11 @@ set_user <- function() {
       site_user <<- "dpmsr"
       python_path <<- "/home/dpmsr/anaconda3/envs/PDP/bin/python3"
     }else if (Sys.info()["nodename"] == "shiny-titan") {
-      volumes <<- c(h1 = '/mnt/h_black1', h2 = '/mnt/h_black2', dc = '/mnt/RawData', wd = '.', Home = fs::path_home(), getVolumes()())
+      volumes <<- c(dd = '/mnt/h_black2', h1 = '/mnt/h_black1', h2 = '/mnt/h_black2', dc = '/mnt/RawData', wd = '.', Home = fs::path_home(), getVolumes()())
       site_user <<- "dpmsr"
       python_path <<- "/home/user/anaconda3/envs/python38/bin/python3"
     }else if (Sys.info()["nodename"] == "gregorys-mbp.lan") {
-      volumes <<- c(h1 = '/Users/gregwaitt/Data', h2 = '/Users/gregwaitt/Cloud-Drive/R', dc = '/mnt/RawData', wd = '.', Home = fs::path_home(), getVolumes()())
+      volumes <<- c(dd = '/Users/gregwaitt/Data', dd2 = '/Users/gregwaitt/Cloud-Drive/R', dc = '/mnt/RawData', wd = '.', Home = fs::path_home(), getVolumes()())
       site_user <<- "dpmsr"
       python_path <<- "/home/user/anaconda3/envs/python38/bin/python3"
     }else{
@@ -165,13 +165,23 @@ set_file_choosers <- function(session, input, output, volumes) {
   cat(file = stderr(), stringr::str_c("Volumes ---> ", volumes), "\n")
   
   shinyFileChoose(input, 'sfb_design_file', session = session, roots = volumes, filetypes = c('', 'xlsx'))
-  shinyFileChoose(input, 'sfb_data_file', session = session, roots = volumes, filetypes = c('', 'tsv', 'txt'))
+  #shinyFileChoose(input, 'sfb_data_file', session = session, roots = volumes, filetypes = c('', 'tsv', 'txt'))
   shinyFileChoose(input, 'sfb_archive_file', session = session, roots = volumes, filetypes = c('', 'zip'))
   
-  cat(file = stderr(), "Function - set_file_choosers...end", "\n")
+  cat(file = stderr(), "Function - set_file_choosers...end", "\n\n")
 }
 
+#---------------------------------------------------------------------------------------------------------
 
+
+set_file_choosers_data <- function(session, input, output, volumes) {
+  cat(file = stderr(), "Function - set_file_choosers_reset...", "\n")
+  cat(file = stderr(), stringr::str_c("Volumes ---> ", volumes), "\n")
+  
+  shinyFileChoose(input, 'sfb_data_file', session = session, roots = volumes, filetypes = c('', 'tsv', 'txt'))
+  
+  cat(file = stderr(), "Function - set_file_choosers_reset...end", "\n")
+}
 
 #---------------------------------------------------------------------------------------------------------
 
@@ -204,11 +214,7 @@ app_startup <- function(session, input, output) {
       
     #update Widgets
     update_widgets(session, input, output, params)
-    
-    #observers
-    observe_comp_names(session, input, output)
-    observe_plot_type1(session, input, output)   
-    observe_plot_type2(session, input, output)  
+
     
   }else{
     loaded_database <- "none"
@@ -218,6 +224,12 @@ app_startup <- function(session, input, output) {
 
   output$loaded_database <- renderText(str_c("Loaded Database:  ", loaded_database))
   output$loaded_prefix <- renderText(str_c("Loaded File Prefix:  ", loaded_prefix))
+  
+  #observers
+  observe_comp_names(session, input, output)
+  observe_plot_type1(session, input, output)   
+  observe_plot_type2(session, input, output)  
+  
   
   cat(file = stderr(), "Function - app_startup...end", "\n\n")
 }

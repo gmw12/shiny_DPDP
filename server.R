@@ -31,12 +31,11 @@ shinyServer(function(session, input, output) {
   set_file_choosers(session, input, output, volumes)
   
   if (exists('params')) {
-    cat(file = stderr(), "params file exists...", "\n")
+    cat(file = stderr(), "params file exists...", "\n\n")
     
-    #app start conditions
-    app_startup(session, input, output)
-    
+    #set comp names throughout app
     set_comp_names(session, input,output)
+    
     #update UI
     ui_render_load_design(session, input, output)
     
@@ -52,10 +51,20 @@ shinyServer(function(session, input, output) {
     #fresh start, create default params
     create_default_params(volumes, python_path) 
     update_widgets(session, input, output, params)
+    
+
   }
   
+  #app start conditions
+  app_startup(session, input, output)
+  
   hide_enable(session, input, output)
+  
+  #load menu
+  load_menu(session, input, output)
+  
   removeModal()
+  
   #------------------------------------------------------------------------------------------------------  
   #Load design file
   observeEvent(input$sfb_design_file, {
@@ -80,6 +89,9 @@ shinyServer(function(session, input, output) {
       #backup design table
       design_sbf <- parseFilePaths(volumes, input$sfb_design_file)
       save_data(design_sbf$datapath)
+      
+      #reset default dd for data
+      set_file_choosers_data(session, input, output, volumes) 
       
     }
 
@@ -149,9 +161,9 @@ shinyServer(function(session, input, output) {
    # Organize raw data into selected columns and info column names
    prepare_data(session, input, output, params)
    
-   # order columns and rename sample column names
+   # order columns and rename sample column names, check sample ID
    order_rename_columns()
-   
+
    if (params$raw_data_format != "protein") {
      # gather info on raw data for ui
      meta_data("raw")
@@ -280,7 +292,7 @@ shinyServer(function(session, input, output) {
    impute_create_plots(session, input, output, params)
    render_impute_graphs(session, input, output)
    
-   cat(file = stderr(), "impute parameters clicked...end", "\n")
+   cat(file = stderr(), "impute parameters clicked...end", "\n\n")
  })
  
   #------------------------------------------------------------------------------------------------------   
@@ -290,7 +302,7 @@ shinyServer(function(session, input, output) {
     
     impute_apply(session, input, output)
     
-    cat(file = stderr(), "impute_apply clicked...end", "\n")
+    cat(file = stderr(), "impute_apply clicked...end", "\n\n")
   })
  
   #------------------------------------------------------------------------------------------------------   
@@ -309,7 +321,7 @@ shinyServer(function(session, input, output) {
     create_cv_table(session, input, output, params)
     render_qc_graphs(session, input, output)
     
-    cat(file = stderr(), "rollup_apply clicked...end", "\n")
+    cat(file = stderr(), "rollup_apply clicked...end", "\n\n")
   }) 
  
   
