@@ -48,8 +48,10 @@ hide_enable <- function(session, input, output) {
   observe({
     if (input$norm_type == "protein") {
       shinyjs::show("protein_norm_grep")
+      shinyjs::show("protein_norm_search_field")
     } else {
       shinyjs::hide("protein_norm_grep")
+      shinyjs::hide("protein_norm_search_field")
     }
   })
   

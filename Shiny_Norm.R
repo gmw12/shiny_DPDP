@@ -76,14 +76,14 @@ norm_apply <- function(session, input, output){
     impute_table_name <- stringr::str_replace_all(impute_table_name, " ", "")
     cat(file = stderr(), str_c("first pass adding impute only table... ", impute_table_name), "\n")
     
-    bg_normapply_impute <- callr::r_bg(func = norm_apply_bg, args = list(table_data, table_norm_data, impute_table_name, info_columns, params, norm_type[2], input$protein_norm_grep), stderr = str_c(params$error_path, "//error_normapplyimpute.txt"), supervise = TRUE)
+    bg_normapply_impute <- callr::r_bg(func = norm_apply_bg, args = list(table_data, table_norm_data, impute_table_name, info_columns, params, norm_type[2]), stderr = str_c(params$error_path, "//error_normapplyimpute.txt"), supervise = TRUE)
     bg_normapply_impute$wait()
     print_stderr("error_normapplyimpute.txt")
     cat(file = stderr(), "first pass adding impute only table...end", "\n")
   }
   
   
-  bg_normapply <- callr::r_bg(func = norm_apply_bg, args = list(table_data, table_norm_data, new_table_name, info_columns, params, norm_type[1], input$protein_norm_grep), stderr = str_c(params$error_path, "//error_normapply.txt"), supervise = TRUE)
+  bg_normapply <- callr::r_bg(func = norm_apply_bg, args = list(table_data, table_norm_data, new_table_name, info_columns, params, norm_type[1]), stderr = str_c(params$error_path, "//error_normapply.txt"), supervise = TRUE)
   bg_normapply$wait()
   print_stderr("error_normapply.txt")
   
@@ -97,7 +97,7 @@ norm_apply <- function(session, input, output){
 
 
 #--------------------------------------------------------------------------------------
-norm_apply_bg <- function(table_data, table_norm_data, new_table_name, info_columns, params, norm_type, input_protein_norm_grep) {
+norm_apply_bg <- function(table_data, table_norm_data, new_table_name, info_columns, params, norm_type) {
   cat(file = stderr(), stringr::str_c("Function - norm_apply_bg...", norm_type), "\n")
   
   source('Shiny_Norm_Functions.R')
@@ -115,7 +115,7 @@ norm_apply_bg <- function(table_data, table_norm_data, new_table_name, info_colu
   }else if (norm_type == "sltmm") {
     df <- sl_normalize(norm_data, data_to_norm, info_columns)
   }else if (norm_type == "protein") {
-    df <- protein_normalize(data_to_norm, info_columns, input_protein_norm_grep)
+    df <- protein_normalize(data_to_norm, info_columns, params)
   }else if (norm_type == "ai") {
     df <- ai_normalize(data_to_norm, info_columns)
   }else if (norm_type == "ti") {

@@ -355,26 +355,40 @@ source("Shiny_UI.R")
                        )
                       ) 
                     ),
+                
                   column(width = 4,
                     box(id = "norm_box", title = "Normalization strategy...", status = "primary",
                           solidHeader = TRUE, collapsible = FALSE, align = "left", width = 12, height = 230, 
-                      selectInput("norm_type", label = "Select normalization strategy",
-                                         choices = list("Sample Loading - Total" = "sl",
-                                                        "Trimmed Mean" = "tmm",
-                                                        "Sample Loading Trimmed Mean" = "sltmm",
-                                                        "Protein" = "protein",
-                                                        "DirectLFQ" = "directlfq",
-                                                        "Quantile" = "quantile",
-                                                        "Linear Regression" = "lr",
-                                                        "LOESS" = "loess",
-                                                        "VSN" = "vsn",
-                                                        "Median of Total Intensity" = "mti",
-                                                        "Median Intensity" = "mi",
-                                                        "Average Intensity" = "ai"), selected = "SLTMM"),
-                      textInput("protein_norm_grep", label = "Protein Acession", value = ""),
-                      fluidRow(align = "center", actionButton("norm_apply", label = "Apply Normalization",
-                                                                     style = "color: #fff; background-color: #337ab7; border-color: #2e6da4"))
-                         )
+                      fluidRow(
+                        column(width = 6,
+                          selectInput("norm_type", label = "Select normalization strategy",
+                                           choices = list("Sample Loading - Total" = "sl",
+                                                          "Trimmed Mean" = "tmm",
+                                                          "Sample Loading Trimmed Mean" = "sltmm",
+                                                          "Protein" = "protein",
+                                                          "DirectLFQ" = "directlfq",
+                                                          "Quantile" = "quantile",
+                                                          "Linear Regression" = "lr",
+                                                          "LOESS" = "loess",
+                                                          "VSN" = "vsn",
+                                                          "Median of Total Intensity" = "mti",
+                                                          "Median Intensity" = "mi",
+                                                          "Average Intensity" = "ai"), selected = "SLTMM")),
+                        column(width = 6,
+                          br(),
+                          actionButton("norm_apply", label = "Apply Normalization",
+                                       style = "color: #fff; background-color: #337ab7; border-color: #2e6da4")
+                        )),
+                      fluidRow(
+                        column(width = 4,
+                        selectInput("protein_norm_search_field", label = "Search Header", 
+                                    choices = list("Accession" = "accession", "Description" = "description", 
+                                                   "Name" = "name", "Genes" = "genes"), 
+                                    selected = "accession")),
+                        column(width = 8,
+                        textInput("protein_norm_grep", label = "Norm grep (sep=|, no space)", value = ""))
+                      )
+                    )
                     )
                 
               ),

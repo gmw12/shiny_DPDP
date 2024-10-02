@@ -28,13 +28,22 @@ tmm_normalize <- function(norm_data, data_to_norm, info_columns){
   return(data_out)
 }
 
+#------------------------------------------------------------------------------------------------
 # global scaling value, sample loading normalization
-protein_normalize <- function(data_to_norm, info_columns, input_protein_norm_grep){
+protein_normalize <- function(data_to_norm, info_columns, params){
   #save(data_to_norm, file="testd2n"); save(info_columns, file="testic"); save(input_protein_norm_grep, file="testing")
   #load(file="testd2n"); load(file="testic"); load(file="testing")
   cat(file = stderr(), "Function - protein_normalize...", "\n")
-  protein_norm_raw <- data_to_norm |> dplyr::filter(stringr::str_detect(Name, input_protein_norm_grep) )
-  #protein_norm_raw <- data_to_norm[grepl(params$protein_norm_grep, data_to_norm$Accession, ignore.case = TRUE),]
+  
+  #protein_norm_raw <- data_to_norm |> dplyr::filter(stringr::str_detect(Name, input_protein_norm_grep) )
+  
+  if(params$protein_norm_search_field == "accession") {search_col <- "Accession"}
+  if(params$protein_norm_search_field == "description") {search_col <- "Description"}
+  if(params$protein_norm_search_field == "name") {search_col <- "Name"}
+  if(params$protein_norm_search_field == "genes") {search_col <- "Genes"}
+  
+  protein_norm_raw <- data_to_norm[grepl(params$protein_norm_grep, data_to_norm[[search_col]], ignore.case = TRUE),]
+  
   protein_norm_raw <- protein_norm_raw[(info_columns + 1):ncol(protein_norm_raw)]
   annotation_data <- data_to_norm[1:info_columns]
   data_to_norm <- data_to_norm[(info_columns + 1):ncol(data_to_norm)]
@@ -42,10 +51,14 @@ protein_normalize <- function(data_to_norm, info_columns, input_protein_norm_gre
   norm_facs <- target / colSums(protein_norm_raw, na.rm = TRUE)
   data_out <- sweep(data_to_norm, 2, norm_facs, FUN = "*")
   data_out <- cbind(annotation_data, data_out)
+  
+  cat(file = stderr(), stringr::str_c("Column --> ", search_col, "      grep ---> ", params$protein_norm_grep), "\n")
   cat(file = stderr(), "Function - protein_normalize...end", "\n")
   return(data_out)
 }
 
+
+#------------------------------------------------------------------------------------------------
 # average global scaling value, sample loading normalization
 ai_normalize <- function(norm_data, data_to_norm, info_columns){
   annotation_data <- data_to_norm[1:info_columns]

@@ -425,8 +425,16 @@ norm_apply_widget_save <- function(session, input, output){
   norm_type <- as.list(strsplit(norm_type, ",")[[1]])
   norm_type <- unique(norm_type)
   params$norm_type <<- toString(norm_type)
+  
+  names <- c("norm_include", "norm_include_grep", "norm_exclude", "norm_exclude_grep", "norm_ptp", "norm_ptm_grep",
+             "protein_norm_search_field", "protein_norm_grep")
 
+  for (name in names) {
+    params[[name]] <<- input[[name]]
+  }
+  
   param_save_to_database()
+  cat(file = stderr(), "Function - norm_apply_widget_save...end", "\n")
 }
 
 #-----------------------------------------------------------------------------------
@@ -440,6 +448,7 @@ impute_apply_widget_save <- function(session, input, output){
   }
   
   param_save_to_database()
+  cat(file = stderr(), "Function - impute_apply_widget_save...end", "\n")
 }
 
 #-----------------------------------------------------------------------------------

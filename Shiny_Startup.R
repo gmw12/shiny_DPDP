@@ -137,6 +137,7 @@ create_default_params <- function(volumes, python_path) {
     "exclude_norm_grep" = "trypsin|keratin|casein",
     "norm_type" = "impute",
     "protein_norm_grep" = "",
+    "protein_norm_search_field" = "",
     "impute_type" = "duke",
     "bottom_x" = 2,
     "impute_ptm" = FALSE, 
