@@ -9,30 +9,17 @@ source("Shiny_UI.R")
     #shinybrowser::detect(),
     sidebarMenu(
       menuItem("Welcome", tabName = "welcome", selected = TRUE),
-      menuItem("Load", tabName = "load"),
-      menuItem("Parameters", tabName = "parameters"),
-      menuItem("Noise", tabName = "noise"),
-      menuItem("Filter", tabName = "filter"),
-      menuItem("Normalize", tabName = "normalize"),
-      menuItem("Impute", tabName = "impute"),
-      menuItem("Rollup", tabName = "rollup"),
-      menuItem("QC", tabName = "qc"),
-      menuItem("Stats", tabName = "stats", startExpanded = FALSE,
-               menuItem("Setup", tabName = "stats_setup"),
-               menuItem("Comparisons", tabName = "stats_compare"),
-               menuItem("Graphs", tabName = "stats_plots"),
-               menuItem("Data", tabName = "stats_data"),
-               menuItem("Protein Plots", tabName = "stats_protein_plots")),
-      menuItem("Pathway", tabName = "pathway", startExpanded = FALSE,
-               menuItem("Setup", tabName = "pathway_setup"),
-               menuItem("Wiki Pathways", tabName = "pathway_wiki"),
-               menuItem("Go Profile", tabName = "pathway_go_profile"),
-               menuItem("Go Analysis", tabName = "pathway_go_analysis"),
-               menuItem("Go Volcano", tabName = "pathway_go_volcano"),
-               menuItem("StringDB", tabName = "pathway_string"),
-               menuItem("StringDB Enrich", tabName = "pathway_string_enrich")
-               ),
-      menuItem("Admin", tabName = "admin")
+      menuItemOutput("menu_load"),
+      menuItemOutput("menu_parameters"),
+      menuItemOutput("menu_noise"),
+      menuItemOutput("menu_filter"),
+      menuItemOutput("menu_normalize"),
+      menuItemOutput("menu_impute"),
+      menuItemOutput("menu_rollup"),
+      menuItemOutput("menu_qc"),
+      menuItemOutput("menu_stats"),
+      menuItemOutput("menu_pathway"),
+      menuItemOutput("menu_admin")
     )
   )
 
