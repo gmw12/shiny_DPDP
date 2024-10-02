@@ -116,6 +116,9 @@ shinyServer(function(session, input, output) {
       ui_render_load_data(session, input, output)
       ui_render_load_design(session, input, output)
       
+      #re-load menu
+      load_menu(session, input, output)
+      
     }
 
   }) 
