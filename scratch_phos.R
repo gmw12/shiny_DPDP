@@ -29,6 +29,30 @@ for (c in colnames(df)) {
   df[[c]] <- test
 }
 cat(file = stderr(), stringr::str_c("time = ", Sys.time() - start), "\n")
+#------------------
+
+test_df <- data.frame(df_local$EG.ModifiedSequence)
+test_df$mods <- stringr::str_match_all(test_df$df_local.EG.ModifiedSequence, "\\[\\s*(.*?)\\s*\\]")
+
+
+#-----------------------------
+
+local_file <- "/Users/gregwaitt/data/20240914_164026_10546_Daichi_Phos_081224_Report_local.tsv"
+df_local <- data.table::fread(file = local_file, header = TRUE, stringsAsFactors = FALSE, sep = "\t")
+local_phos <- which(grepl("Phospho", df_local$EG.ModifiedSequence))
+df_local_phos <- df_local[local_phos,]
+df_local_non_phos <- df_local[-local_phos,]
+
+
+
+notlocal_file <- "/Users/gregwaitt/data/20240914_164026_10546_Daichi_Phos_081224_Report_notlocal.tsv"
+df_notlocal <- data.table::fread(file = notlocal_file, header = TRUE, stringsAsFactors = FALSE, sep = "\t")
+notlocal_phos <- which(grepl("Phospho", df_notlocal$EG.ModifiedSequence))
+df_notlocal_phos <- df_notlocal[notlocal_phos,]
+df_notlocal_non_phos <- df_notlocal[-notlocal_phos,]
+
+
+df <- df_notlocal |> dplyr::select(contains('PTMProbabilities')) 
 
 
 require(foreach)
@@ -56,14 +80,19 @@ parallel_result <- data.frame(parallel_result)
 colnames(parallel_result) <-  colnames(df)
 df2 <- parallel_result
 df2[df2=="Filtered"] <- ""
+df2$max_local <- apply(df2, 1, max)
 df2$phos <- grepl("Phospho", df_notlocal$EG.ModifiedSequence)
 df2$precursorID <- df_notlocal$EG.PrecursorId
 
 df2$duplicates <- duplicated(df2$precursorID)
 
-df2$max_local <- apply(df2, 1, max)
+test_dup <- which(df2$duplicates == "TRUE")
+
 to_delete <- which(df2$phos == "TRUE" & df2$max_local < 0.75)
 df_notlocal2 <- df_notlocal[-to_delete]
+
+#-----
+
 
 df_test <- df_notlocal[df_notlocal$EG.PrecursorId %in% unlist(df_local$EG.PrecursorId)]
 
