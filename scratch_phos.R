@@ -1,7 +1,7 @@
-local_file <- "/Users/gregwaitt/data/20240914_164026_10546_Daichi_Phos_081224_Report_local.tsv"
+local_file <- "/Users/gregwaitt/data/local_PTManlaysis_3modlocal.tsv"
 df_local <- data.table::fread(file = local_file, header = TRUE, stringsAsFactors = FALSE, sep = "\t")
 
-notlocal_file <- "/Users/gregwaitt/data/20240914_164026_10546_Daichi_Phos_081224_Report_notlocal.tsv"
+notlocal_file <- "/Users/gregwaitt/data/nolocal_PTManlaysis_3modlocal.tsv"
 df_notlocal <- data.table::fread(file = notlocal_file, header = TRUE, stringsAsFactors = FALSE, sep = "\t")
 df <- df_notlocal |> dplyr::select(contains('PTMProbabilities')) 
 
@@ -32,24 +32,76 @@ cat(file = stderr(), stringr::str_c("time = ", Sys.time() - start), "\n")
 #------------------
 
 test_df <- data.frame(df_local$EG.ModifiedSequence)
-test_df$mods <- stringr::str_match_all(test_df$df_local.EG.ModifiedSequence, "\\[\\s*(.*?)\\s*\\]")
+colnames(test_df) <- c("ModSeq")
+test_df$mods <- stringr::str_match_all(test_df$ModSeq, "\\[\\s*(.*?)\\s*\\]")
+#str_replace(x, pattern = ".*-(.)-.*", replacement = "\\1") 
+
+test_df$ModSeq[33]
+test_df$mods <- str_replace(test_df$ModSeq, pattern = "^.*?\\[", replacement = "") 
+test_df$mods[33]
+#.+(\\.+)$
+test_df$mods2 <- str_replace(test_df$mods, pattern = "\\](?:.(?!\\]))+$", replacement = "") 
+test_df$mods2[33]
+
+test_df$mods3 <- gsub("\\].*?\\[", ", ", test_df$mods2)
+test_df$mods3[33]
+
+str_replace(test_df$mod2[33], pattern = "\\](.*)\\[", replacement = ", ")
+stringr::str_locate_all(test_df$ModSeq[33], "\\[")
+stringr::str_locate_all(test_df$ModSeq[33], "\\]")
+
+gsub("\\].*?\\[", ", ", test_df$mods2[33])
+
+
+test <- data.frame(df_local$EG.PrecursorId)
+test$nomod <- gsub("\\[.*?\\]", "", test$df_local.EG.PrecursorId)
 
 
 #-----------------------------
-
-local_file <- "/Users/gregwaitt/data/20240914_164026_10546_Daichi_Phos_081224_Report_local.tsv"
+#local_file <- "/Users/gregwaitt/data/20240914_164026_10546_Daichi_Phos_081224_Report_local.tsv"
+local_file <- "/mnt/h_black2/x10546/local_PTManlaysis_3modlocal.tsv"
 df_local <- data.table::fread(file = local_file, header = TRUE, stringsAsFactors = FALSE, sep = "\t")
 local_phos <- which(grepl("Phospho", df_local$EG.ModifiedSequence))
 df_local_phos <- df_local[local_phos,]
 df_local_non_phos <- df_local[-local_phos,]
 
 
-
-notlocal_file <- "/Users/gregwaitt/data/20240914_164026_10546_Daichi_Phos_081224_Report_notlocal.tsv"
+#notlocal_file <- "/Users/gregwaitt/data/20240914_164026_10546_Daichi_Phos_081224_Report_notlocal.tsv"
+notlocal_file <- "/mnt/h_black2/x10546/nolocal_PTManlaysis_3modlocal.tsv"
 df_notlocal <- data.table::fread(file = notlocal_file, header = TRUE, stringsAsFactors = FALSE, sep = "\t")
 notlocal_phos <- which(grepl("Phospho", df_notlocal$EG.ModifiedSequence))
 df_notlocal_phos <- df_notlocal[notlocal_phos,]
 df_notlocal_non_phos <- df_notlocal[-notlocal_phos,]
+
+
+#find values not in both df's
+df_unique <- subset(df_notlocal_non_phos, !(EG.PrecursorId %in% df_local_non_phos$EG.PrecursorId))
+nrow(df_notlocal_non_phos)-nrow(df_local_non_phos)
+
+
+
+
+
+
+df_notlocal_non_phos$nomod <- gsub("\\[.*?\\]", "", df_notlocal_non_phos$EG.PrecursorId)
+temp <- str_replace(df_notlocal_non_phos$EG.ModifiedSequence, pattern = "^.*?\\[", replacement = "") 
+temp <- str_replace(temp, pattern = "\\](?:.(?!\\]))+$", replacement = "") 
+temp <- gsub("\\].*?\\[", ", ", temp)
+df_notlocal_non_phos$mods <- gsub("_.*?_", "", temp)
+
+df_notlocal_non_phos$sort <- paste(df_notlocal_non_phos$nomod, df_notlocal_non_phos$mods, sep = "-")
+
+df_qvalue <- df_notlocal_non_phos |> dplyr::select(contains('Qvalue')) 
+df_qvalue[df_qvalue== "Filtered"] <- ""
+df_qvalue <- mutate_all(df_qvalue, function(x) as.numeric(as.character(x)))
+df_qvalue$min <- apply(df_qvalue, 1, FUN = min, na.rm = TRUE)
+
+df_notlocal_non_phos$minQvalue <- df_qvalue$min
+df_notlocal_non_phos <- df_notlocal_non_phos[order(df_notlocal_non_phos$sort)]
+df_notlocal_non_phos$duplicates <- duplicated(df_notlocal_non_phos$sort)
+test_dup <- which(df_notlocal_non_phos$duplicates == "TRUE")
+
+
 
 
 df <- df_notlocal |> dplyr::select(contains('PTMProbabilities')) 
