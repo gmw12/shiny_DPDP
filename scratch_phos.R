@@ -33,8 +33,8 @@ cat(file = stderr(), stringr::str_c("time = ", Sys.time() - start), "\n")
 
 test_df <- data.frame(df_local$EG.ModifiedSequence)
 test_df$mods <- stringr::str_match_all(test_df$df_local.EG.ModifiedSequence, "\\[\\s*(.*?)\\s*\\]")
-
-
+test_df$mods <- stringr::str_match_all(test_df$df_local.EG.ModifiedSequence, "(?<=\\[).*(?=\\])")
+test_df$mods2 <- gsub("\\[[^>]+\\]", "", test_df$mods)
 #-----------------------------
 
 local_file <- "/Users/gregwaitt/data/20240914_164026_10546_Daichi_Phos_081224_Report_local.tsv"
