@@ -165,3 +165,139 @@ length(list3)
 testp <- list3[3]
 test_df1 <- df_local[df_local$EG.PrecursorId == testp]
 test_df2 <- df_notlocal[df_notlocal$EG.PrecursorId == testp]
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+#--------------------------------------------------------------------------------------------------
+notlocal_file <- "/mnt/h_black2/x10546/nolocal_PTManlaysis_3modlocal.tsv"
+df <- data.table::fread(file = notlocal_file, header = TRUE, stringsAsFactors = FALSE, sep = "\t")
+phos_which <- which(grepl("Phospho", df$EG.ModifiedSequence))
+df_phos <- df[phos_which,]
+df_non <- df[-phos_which,]
+
+df_phos_prob <- df_phos |> dplyr::select(contains('PTMProbabilities [Phospho')) 
+df_non_prob <- df_non |> dplyr::select(contains('PTMProbabilities [Oxidation'), contains('PTMProbabilities [Carbamidomethyl')) 
+
+#--
+reduce_prob <- function(df){
+  require(foreach)
+  require(doParallel)
+  cores <- detectCores()
+  cl <- makeCluster(cores - 2)
+  registerDoParallel(cl)
+  
+  df[df=="Filtered"] <- ""
+
+parallel_result <- foreach(c = colnames(df), .combine = cbind) %dopar% {
+#for (c in colnames(df)){
+    test <- df[[c]]
+    find_rows <- which(stringr::str_detect(test, ";"))
+    for (r in find_rows) {
+      if (grepl(";", test[r])) {
+        test[r] <- max(strsplit(test[r], ";") |> unlist() |> as.numeric())
+      }
+    }
+    test
+  }
+  stopCluster(cl) 
+  
+  parallel_result <- data.frame(parallel_result)
+
+  max_result  <- apply(parallel_result, 1, FUN = max, na.rm = TRUE)
+  
+  #df <- tibble::add_column(df, max_result, .after="EG.PrecursorID")
+  
+  return(max_result)  
+}
+
+#--
+extract_mods <- function(x){
+  temp <- str_replace(x, pattern = "^.*?\\[", replacement = "") 
+  temp <- str_replace(temp, pattern = "\\](?:.(?!\\]))+$", replacement = "") 
+  temp <- gsub("\\].*?\\[", ", ", temp)
+  temp <- gsub("_.*?_", "", temp)
+return(temp)
+}
+
+#--
+remove_mods <- function(x){
+  temp <- gsub("\\[.*?\\]", "", x)
+  return(temp)
+}
+#--
+
+Localized <- as.numeric(reduce_prob(df_phos_prob))
+df_phos <- tibble::add_column(df_phos, Localized, .after="EG.PrecursorId")
+
+PrecursorId_nomod <- remove_mods(df_phos$EG.PrecursorId)
+ModifiedSequence_nomod <- remove_mods(df_phos$EG.ModifiedSequence)
+mods_only <- extract_mods(df_phos$EG.ModifiedSequence)
+
+new_PrecursorID <- paste(PrecursorId_nomod, mods_only, sep = "[")
+new_PrecursorID <- paste(new_PrecursorID, "]", sep = "")
+
+new_ModifiedSeqence <- paste(ModifiedSequence_nomod, mods_only, sep = "[")
+new_ModifiedSeqence <- paste(new_ModifiedSeqence, "]", sep = "")
+
+to_rename <- which(df_phos$Localized < 0.75)
+
+df_phos$EG.PrecursorId[to_rename] <- new_PrecursorID[to_rename]
+df_phos$EG.ModifiedSequence[to_rename] <- new_ModifiedSeqence[to_rename]
+
+
+Localized <- as.numeric(reduce_prob(df_non_prob))
+df_non <- tibble::add_column(df_non, Localized, .after="EG.PrecursorId")
+to_remove <- which(df_non$Localized < 0.75)
+df_non <- df_non[-to_remove,]
+df_non$Localized <- ""
+
+df_final <- rbind(df_phos, df_non)
+
+df_final_test1 <- df_final |> dplyr::select(contains('Accessions'), contains('ModifiedSequence'), contains("Localized")) 
+df_final_test2 <- df_final |> dplyr::select(contains('Accessions'), contains('PrecursorId'), contains("Localized")) 
+
+df_final_peptide1 <- df_final_test1 |> dplyr::group_by(PG.ProteinAccessions, EG.ModifiedSequence) |> dplyr::summarise_all(list(max))
+df_final_peptide2 <- df_final_test2 |> dplyr::group_by(PG.ProteinAccessions, EG.PrecursorId) |> dplyr::summarise_all(list(max))
+
+
+
+
+
+
+
+
+
+
+
+
+df_phos_sort <- data.frame(df_phos$EG.PrecursorId)
+colnames(df_phos_sort) <- "PrecursorID"
+df_phos_sort$NoMod <- remove_mods(df_phos)
+df_phos_sort$Mods <- extract_mods(df_phos)
+df_phos_sort$Test <- paste(df_phos_sort$NoMod, df_phos_sort$Mods, sep = "[")
+df_phos_sort$Test <- paste(df_phos_sort$Test, "]", sep = "")
+df_phos_sort$Test2 <- paste(df_phos$PEP.StrippedSequence, df_phos_sort$Mods, sep = "[")
+df_phos_sort$Test2 <- paste(df_phos_sort$Test2, "]", sep = "")
+df_phos_sort$local <- as.numeric(reduce_prob(df_phos_prob))
+
+df_phos_sort <- df_phos_sort[order(df_phos_sort$Test, -df_phos_sort$local),]
+df_phos_sort$dup1 <- duplicated(df_phos_sort$Test)
+df_phos_sort$dup2 <- duplicated(df_phos_sort$Test)
+
+to_remove <- which(df_phos_sort$local < 0.75 & df_phos_sort$dup1==TRUE)
+df_phos_sort$remove <- ""
+df_phos_sort$remove[to_remove] <- "Remove"
+
+df_phos_sort <- df_phos_sort[order(as.numeric(rownames(df_phos_sort))),]
