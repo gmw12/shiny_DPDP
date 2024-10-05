@@ -263,10 +263,18 @@ bar_plot <- function(table_name, plot_title, plot_dir, params) {
   df <- RSQLite::dbReadTable(conn, table_name)
   RSQLite::dbDisconnect(conn)
   
+  plot_filename <- plot_title
+  
+  if (params$ptm) {
+    df <- df[which(grepl(params$ptm_grep, df$Sequence)),]
+    df <- df[which(df$Localized >= params$ptm_local),]
+    plot_title <- paste(plot_title, "_PTM", sep = "")
+  }
+  
   df <- df[(ncol(df) - params$sample_number + 1):ncol(df)]
   df <- df |>  dplyr::mutate(across(!where(is.numeric), as.numeric))
   
-  bar_plot2(table_name, plot_title, plot_dir, params, df)
+  bar_plot2(table_name, plot_title, plot_filename, plot_dir, params, df)
   
   cat(file = stderr(), "Function bar_plot...end", "\n")
   return("done")
@@ -274,7 +282,7 @@ bar_plot <- function(table_name, plot_title, plot_dir, params) {
 
 
 #Bar plot2-------------------------------------------------
-bar_plot2 <- function(table_name, plot_title, plot_dir, params, df) {
+bar_plot2 <- function(table_name, plot_title, plot_filename, plot_dir, params, df) {
   cat(file = stderr(), "Function bar_plot2", "\n")
   
   conn2 <- RSQLite::dbConnect(RSQLite::SQLite(), params$database_path)
@@ -290,7 +298,7 @@ bar_plot2 <- function(table_name, plot_title, plot_dir, params, df) {
   df2$Total_Intensity <- datay
   colnames(df2) <- c("Sample", "Total_Intensity")
   df2$Sample <- factor(df2$Sample, levels = df2$Sample)
-  file_name <- stringr::str_c(plot_dir, plot_title, "_barplot.png")
+  file_name <- stringr::str_c(plot_dir, plot_filename, "_barplot.png")
   ymax <- max(datay)
   ggplot2::ggplot(data = df2, ggplot2::aes(x = Sample, y = Total_Intensity)) +
     ggplot2::geom_bar(stat = "identity", fill = design$colorlist) + ggplot2::theme_classic() + 
@@ -318,12 +326,20 @@ box_plot <- function(table_name, plot_title, plot_dir, params) {
   df <- RSQLite::dbReadTable(conn, table_name)
   RSQLite::dbDisconnect(conn)
   
+  plot_filename <- plot_title
+  
+  if (params$ptm) {
+    df <- df[which(grepl(params$ptm_grep, df$Sequence)),]
+    df <- df[which(df$Localized >= params$ptm_local),]
+    plot_title <- paste(plot_title, "_PTM", sep = "")
+  }
+  
   df <- df[(ncol(df) - params$sample_number + 1):ncol(df)]
   colnames(df) <- design$Label
   
   df <- df |>  dplyr::mutate(across(!where(is.numeric), as.numeric))
   
-  png(filename = stringr::str_c(plot_dir, plot_title, "_boxplot.png"), width = 400, height = 250)
+  png(filename = stringr::str_c(plot_dir, plot_filename, "_boxplot.png"), width = 400, height = 250)
   data_box <- log2(df)
   data_box[data_box == -Inf ] <- NA
   graphics::boxplot(data_box, 
@@ -342,7 +358,7 @@ box_plot <- function(table_name, plot_title, plot_dir, params) {
 
 
 #Histogram for total intensity-------------------------------------------------
-histogram_plot <- function(table_name, plottitle, params)
+histogram_plot <- function(table_name, plot_title, params)
 {
   start <- Sys.time()
   cat(file = stderr(), "Function histogram_plot...", "\n")
@@ -352,6 +368,15 @@ histogram_plot <- function(table_name, plottitle, params)
   conn <- RSQLite::dbConnect(RSQLite::SQLite(), params$database_path)
   df <- RSQLite::dbReadTable(conn, table_name)
   df_groups <- RSQLite::dbReadTable(conn, "sample_groups")
+  
+  plot_filename <- plot_title
+  
+  if (params$ptm) {
+    df <- df[which(grepl(params$ptm_grep, df$Sequence)),]
+    df <- df[which(df$Localized >= params$ptm_local),]
+    plot_title <- paste(plot_title, "_PTM", sep = "")
+  }
+
   
   df <- df[(ncol(df) - params$sample_number + 1):ncol(df)]
   title <- as.character(params$file_prefix)
@@ -431,7 +456,7 @@ histogram_plot <- function(table_name, plottitle, params)
       ggplot2::geom_vline(ggplot2::aes(xintercept = (x_mean + x_stdev))) +
       ggplot2::geom_vline(ggplot2::aes(xintercept = (x_mean - x_stdev))) +
       ggplot2::geom_vline(ggplot2::aes(xintercept = bottomX_max), color = 'coral') +
-      ggplot2::ggtitle(plottitle) +
+      ggplot2::ggtitle(plot_title) +
       ggplot2::xlab("log intensity") +
       ggplot2::ylab("Count") +
       ggplot2::annotation_custom(my_legend1) + 
@@ -440,7 +465,7 @@ histogram_plot <- function(table_name, plottitle, params)
       ggplot2::annotation_custom(my_legend3) +
       ggplot2::annotation_custom(my_legend4) +
       ggplot2::annotation_custom(my_legend5) 
-    ggplot2::ggsave(stringr::str_c(plot_dir, plottitle, ".png"), width = 5, height = 6)
+    ggplot2::ggsave(stringr::str_c(plot_dir, plot_filename, ".png"), width = 5, height = 6)
 
 
   

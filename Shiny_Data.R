@@ -300,7 +300,27 @@ meta_data_bg <- function(table_name, data_format, params){
     params[[peptide_name]] <- length(unique(df$Sequence))
     params[[protein_name]] <- length(unique(df$Accession))
   }
-  
+
+  if (params$ptm) {
+    phos_which <- which(grepl(params$ptm_grep, df$Sequence))
+    df_other <- df[-phos_which,]
+    df_phos <- df[phos_which,]
+    df_phos_local <- df_phos[which(df_phos$Localized >= params$ptm_local),]
+    df_other_local <- df_other[-which(df_other$Localized <= params$ptm_local & df_other$Localized > 0),]
+    params$ptm_total <- length(unique(df_phos$Sequence))
+    params$ptm_total_local <- length(unique(df_phos_local$Sequence))
+    params$other_total <- length(unique(df_other$Sequence))
+    params$other_local <- length(unique(df_other_local$Sequence))
+    
+    df_phos <- df_phos[,(ncol(df_phos)- params$sample_number+1):ncol(df_phos)]
+    df_other <- df_other[,(ncol(df_other)- params$sample_number+1):ncol(df_other)]
+    df_phos_local <- df_phos_local[,(ncol(df_phos_local)- params$sample_number+1):ncol(df_phos_local)]
+    df_other_local <- df_other_local[,(ncol(df_other_local)- params$sample_number+1):ncol(df_other_local)]
+    
+    params$ptm_enrich <- round(sum(df_phos, na.rm = TRUE) / (sum(df_other, na.rm = TRUE) + sum(df_phos, na.rm = TRUE)), 2)
+    params$ptm_enrich_local <- round(sum(df_phos_local, na.rm = TRUE) / (sum(df_other_local, na.rm = TRUE) + sum(df_phos_local, na.rm = TRUE)), 2)
+  }
+
   RSQLite::dbWriteTable(conn, "params", params, overwrite = TRUE)
   RSQLite::dbDisconnect(conn)
   

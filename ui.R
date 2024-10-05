@@ -102,6 +102,10 @@ source("Shiny_UI.R")
                                 selected = "Protein", width = 300),
 
                 checkboxInput("ptm", label = "PTM Analysis?", value = 0, width = 300),
+                
+                textInput("ptm_grep", label = "PTM grep", value = "Phospho", width = 300),
+                
+                numericInput("ptm_local", label = "PTM localization min", value = 0.75, width = 300),
                   
                 checkboxInput("multi_tmt", label = "SPQC Normalized TMT sets"),
                   
@@ -135,7 +139,14 @@ source("Shiny_UI.R")
                       column(width = 12,
                         span(textOutput("meta_parameters_precursor_raw"), style = "color:blue; font-size:16px"),
                         span(textOutput("meta_parameters_peptide_raw"), style = "color:blue; font-size:16px"),
-                        span(textOutput("meta_parameters_protein_raw"), style = "color:blue; font-size:16px"))
+                        span(textOutput("meta_parameters_protein_raw"), style = "color:blue; font-size:16px"),
+                        br(),
+                        br(),
+                        span(textOutput("meta_parameters_precursor_phos_all"), style = "color:blue; font-size:16px"),
+                        span(textOutput("meta_parameters_precursor_phos_local"), style = "color:blue; font-size:16px"),
+                        span(textOutput("meta_parameters_precursor_phos_percent"), style = "color:blue; font-size:16px"),
+                        span(textOutput("meta_parameters_precursor_phos_local_percent"), style = "color:blue; font-size:16px")
+                        )
                     )
                     )))
           )

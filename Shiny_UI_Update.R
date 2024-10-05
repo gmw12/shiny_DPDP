@@ -43,13 +43,18 @@ ui_render_parameters <- function(session, input, output) {
   
     render_parameters_graphs(session, input, output)
   
-    output$meta_parameters_precursor_raw <- renderText({str_c('Raw Precursors:  ', params$meta_precursor_raw)})
-    output$meta_parameters_peptide_raw <- renderText({str_c('Raw Peptides:  ', params$meta_peptide_raw)})
-    output$meta_parameters_protein_raw <- renderText({str_c('Raw Protein:  ', params$meta_protein_raw)})
+    output$meta_parameters_precursor_raw <- renderText({str_c('Raw Precursors:  ', params$meta_precursor_start)})
+    output$meta_parameters_peptide_raw <- renderText({str_c('Raw Peptides:  ', params$meta_peptide_start)})
+    output$meta_parameters_protein_raw <- renderText({str_c('Raw Protein:  ', params$meta_protein_start)})
 
-    output$meta_filter_precursor_raw <- renderText({str_c('Raw Precursors:  ', params$meta_precursor_raw)})
-    output$meta_filter_peptide_raw <- renderText({str_c('Raw Peptides:  ', params$meta_peptide_raw)})
-    output$meta_filter_protein_raw <- renderText({str_c('Raw Protein:  ', params$meta_protein_raw)})
+    output$meta_filter_precursor_raw <- renderText({str_c('Raw Precursors:  ', params$meta_precursor_start)})
+    output$meta_filter_peptide_raw <- renderText({str_c('Raw Peptides:  ', params$meta_peptide_start)})
+    output$meta_filter_protein_raw <- renderText({str_c('Raw Protein:  ', params$meta_protein_start)})
+    
+    output$meta_parameters_precursor_phos_all <- renderText({str_c('Phos Precursors:  ', params$ptm_total)})
+    output$meta_parameters_precursor_phos_local <- renderText({str_c('Phos Local Precursors:  ', params$ptm_total_local)})
+    output$meta_parameters_precursor_phos_percent <- renderText({str_c('Phos Enrich:  ', params$ptm_enrich)})
+    output$meta_parameters_precursor_phos_local_percent <- renderText({str_c('Phos Local Enrich:  ', params$ptm_enrich_local )}) 
     
     cat(file = stderr(), "Function ui_render_parameters...end", "\n")
 }
@@ -388,7 +393,7 @@ update_widgets_stats <- function(session, input, output, params){
 parameter_widget_save <- function(session, input, output){
   cat(file = stderr(), "Function - parameter_widget_save...", "\n")
   
-  names <- c('primary_group', 'data_output', 'ptm', 'multi_tmt', 'peptide_select', 'use_isoform')
+  names <- c('primary_group', 'data_output', 'ptm', 'ptm_grep', 'ptm_local', 'multi_tmt', 'peptide_select', 'use_isoform')
   
   for (name in names) {
     params[[name]] <<- input[[name]]

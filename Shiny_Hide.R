@@ -18,6 +18,18 @@ hide_enable <- function(session, input, output) {
       shinyjs::show("peptide_missing_factor")
     }
   })
+  
+  observe({
+    if (input$data_output == "Protein") {
+      shinyjs::hide("ptm")
+      shinyjs::hide("ptm_grep")
+      shinyjs::hide("ptm_local")
+    } else {
+      shinyjs::show("ptm")
+      shinyjs::show("ptm_grep")
+      shinyjs::show("ptm_local")
+    }
+  })
 
   observe({
     if (input$impute_type == "duke") {

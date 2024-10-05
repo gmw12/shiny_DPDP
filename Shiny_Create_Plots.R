@@ -13,7 +13,7 @@ parameter_create_plots <- function(sesion, input, output, params){
   print_stderr("error_boxplot.txt")
 
   wait_cycle <- 0
-  while (!file.exists(str_c(params$qc_path,"Precursor_Start_barplot.png"))) {
+  while (!file.exists(str_c(params$qc_path, "Precursor_Start_barplot.png"))) {
     if (wait_cycle < 10) {
       Sys.sleep(0.5)
       wait_cycle <- wait_cycle + 1

@@ -84,6 +84,8 @@ create_default_params <- function(volumes, python_path) {
     "raw_data_format" = "", 
     "current_data_format" = "",
     "ptm" = FALSE, 
+    "ptm_grep" = "Phospho",
+    "ptm_local" = 0.75,
     "data_table_format" = "", 
     "primary_group" = "Full", 
     "data_output" = "Protein", 

@@ -171,7 +171,7 @@ shinyServer(function(session, input, output) {
 
    if (params$raw_data_format != "protein") {
      # gather info on raw data for ui
-     meta_data("raw")
+     meta_data("start")
      
      # create graphs
      parameter_create_plots(sesion, input, output, params)
