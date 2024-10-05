@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 
 
 #--------------------------------------------------------------------------------------------------
@@ -116,6 +117,8 @@ df_final_peptide2 <- df_final_test2 |> dplyr::group_by(PG.ProteinAccessions, EG.
 
 
 
+=======
+>>>>>>> f4d49cd458d43aa4ce75106a7ffa40fb16581cd1
 local_file <- "/Users/gregwaitt/data/local_PTManlaysis_3modlocal.tsv"
 df_local <- data.table::fread(file = local_file, header = TRUE, stringsAsFactors = FALSE, sep = "\t")
 
