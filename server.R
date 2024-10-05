@@ -119,6 +119,8 @@ shinyServer(function(session, input, output) {
       #re-load menu
       load_menu(session, input, output)
       
+      #update with auto detected params
+      update_widgets_parameters(session, input, output, params)
     }
 
   }) 

@@ -43,14 +43,18 @@ noise_inflection_bg <- function(table_name, params){
   rownames(df2) <- NULL
   
   df_row <- nrow(df2)
+  m_change <- 0
   for (i in (1:100)) {
     m <- (df2$vec[df_row] - df2$vec[df_row-20]) / (df2$ID[df_row] - df2$ID[df_row - 20]) *1000
+    if(i > 1) {m_change <- m_start/m}
     df_row <- df_row - 10
     noise <- df2$vec[df_row]
-    if (m > -4) {
-      cat(file = stderr(), stringr::str_c("m --> ", m, "   noise --> ", noise), "\n")
+    #if (m > -4) {
+    if (m_change > 10) {
+      cat(file = stderr(), stringr::str_c("m --> ", m, "   noise --> ", noise, "   m_change ---> ", m_change), "\n")
       break
-      }
+    }
+    if (i==1) {m_start <- m}
   }
   
   params$noise_inflection <- round(2^noise, digits = 2)

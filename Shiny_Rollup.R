@@ -75,7 +75,7 @@ stat_prep_rollup <- function(session, input, output){
 
 #--- collapse precursor to peptide-------------------------------------------------------------
 collapse_precursor_raw <- function(precursor_data, info_columns = 0, stats = FALSE, params) {
-  cat(file = stderr(), "precursor rollup_sum triggered...", "\n")
+  cat(file = stderr(), "function collapse_precursor_raw...", "\n")
   
   #drop columns 
   precursor_data$PrecursorId <- NULL
@@ -95,17 +95,63 @@ collapse_precursor_raw <- function(precursor_data, info_columns = 0, stats = FAL
   columns = names(precursor_data)[1:info_columns]
   
   peptide_data <- precursor_data |>
-    dplyr::group_by_at(dplyr::vars(one_of(columns))) |>
+    dplyr::group_by_at(dplyr::vars(all_of(columns))) |>
     dplyr::summarise_all(list(sum))
   
   peptide_data <- data.frame(dplyr::ungroup(peptide_data))
   
-  cat(file = stderr(), "precursor rollup_sum triggered...end", "\n")
+  cat(file = stderr(), "function collapse_precursor_raw...", "\n")
   return(peptide_data)
   
 }
 
+#--- collapse precursor to peptide-------------------------------------------------------------
+collapse_precursor_ptm_raw <- function(precursor_data, info_columns = 0, stats = FALSE, params) {
+  cat(file = stderr(), "function collapse_precursor_ptm_raw...", "\n")
+  
+  #.   precursor_data <- df
+  
+  localized_data <- precursor_data |> dplyr::select(-contains('Quantity'))
 
+  #drop columns 
+  precursor_data$PrecursorId <- NULL
+  precursor_data$Detected_Imputed <- NULL
+  precursor_data$ProteinPTMLocations <- NULL
+  precursor_data$Localized <- NULL
+  
+  if (info_columns == 0) {
+    info_columns <- ncol(precursor_data) - params$sample_number
+  }
+  
+  if (stats == TRUE) {
+    info_columns = info_columns - 2
+  }
+  
+  #save sample column number to reset info columns below
+  sample_columns <- ncol(precursor_data) - info_columns
+  
+  columns = names(precursor_data)[1:info_columns]
+  
+  peptide_data <- precursor_data |>
+    dplyr::group_by_at(dplyr::vars(all_of(columns))) |>
+    dplyr::summarise_all(list(sum))
+
+  localized_data <- localized_data |>
+    dplyr::group_by_at(dplyr::vars(all_of(columns))) |>
+    dplyr::summarise_all(list(max))
+  
+  localized_data <- localized_data |> dplyr::group_by(Sequence) |> dplyr::summarise_all(list(max))
+    
+  peptide_data <- data.frame(dplyr::ungroup(peptide_data))
+  localized_data <- data.frame(dplyr::ungroup(localized_data))
+  Localized <- localized_data$Localized
+  
+  peptide_data <- tibble::add_column(peptide_data, Localized, .after="Sequence")
+  
+  cat(file = stderr(), "function collapse_precursor_ptm_raw...end", "\n")
+  return(peptide_data)
+  
+}
 
 #--- collapse peptide to protein-------------------------------------------------------------
 collapse_peptide <- function(peptide_data, info_columns=0, stats=FALSE, impute=FALSE){
