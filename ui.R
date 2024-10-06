@@ -348,19 +348,21 @@ source("Shiny_UI.R")
                           solidHeader = TRUE, collapsible = FALSE, align = "left", width = 12, height = 230,
                       fluidRow(
                         column(width = 4,
-                          checkboxInput("norm_include", label = "Include only grep for norm (trypsin|keratin|casein)"),
-                          textInput("include_norm_grep", label = "Filter Include grep", value = "trypsin|keratin|casein"),
-                        ),
+                          selectInput("norm_exclude", label = "Exclude from Normalization", 
+                            choices = list("Not_Used" = "not_used", "Accession" = "accession", "Description" = "description", 
+                              "Name" = "name", "Genes" = "genes", "Sequence" = "sequence"), selected = "not_used"),
+                          textInput("norm_exclude_grep", label = "Norm exclude grep (sep=|, no space)", value = "trypsin|keratin|casein")),
+                        column(width = 4, 
+                          selectInput("norm_include", label = "Include only for Normalization", 
+                            choices = list("Not_Used"= "not_used", "Accession" = "accession", "Description" = "description", 
+                              "Name" = "name", "Genes" = "genes", "Sequence" = "sequence"), selected = "description"),
+                               textInput("norm_include_grep", label = "Norm include grep (sep=|, no space)", value = "Phospho")),
+                          #checkboxInput("norm_include", label = "Include only grep for norm (trypsin|keratin|casein)"),
+                          #textInput("include_norm_grep", label = "Filter Include grep", value = "trypsin|keratin|casein"),
                         column(width = 4,
-                          checkboxInput("norm_exclude", label = "Exclude grep from norm (trypsin|keratin|casein)", value = TRUE),
-                          textInput("exclude_norm_grep", label = "Filter Exclude grep", value = "trypsin|keratin|casein"),
-                        ),
-                        column(width = 4,
-                          checkboxInput("norm_ptm", label = "Normalize on PTM?", value = FALSE, width = 300),
-                          textInput("norm_ptm_grep", label = "Normalize PTM grep", value = "Phospho", width = 300),
-                        ),
-                       
-                       fluidRow(align = "center", actionButton("norm_parameters", label = "Apply Normalizaton Parameters",
+                          #checkboxInput("norm_exclude", label = "Exclude grep from norm (trypsin|keratin|casein)", value = TRUE),
+                          #textInput("exclude_norm_grep", label = "Filter Exclude grep", value = "trypsin|keratin|casein"),
+                         actionButton("norm_parameters", label = "Apply Normalizaton Parameters",
                                                                style = "color: #fff; background-color: #337ab7; border-color: #2e6da4"))
                        
                        )

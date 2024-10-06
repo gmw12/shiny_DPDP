@@ -280,10 +280,10 @@ update_widgets <- function(session, input, output, params) {
     updateNumericInput(session, 'precursor_spqc_accuracy', value = params$precursor_spqc_accuracy)
     
     #Norm---------------------------------------------------
-    updateCheckboxInput(session, 'norm_exclude', value = params$norm_exclude) 
-    updateTextInput(session, "exclude_norm_grep", value = params$exclude_norm_grep)
-    updateCheckboxInput(session, 'norm_include', value = params$norm_include) 
-    updateTextInput(session, "include_norm_grep", value = params$include_norm_grep)
+    updateSelectInput(session, 'norm_exclude', selected = params$norm_exclude) 
+    updateTextInput(session, "norm_exclude_grep", value = params$norm_exclude_grep)
+    updateSelectInput(session, 'norm_include', selected = params$norm_include) 
+    updateTextInput(session, "norm_include_grep", value = params$norm_include_grep)
     updateCheckboxInput(session, 'norm_ptm', value = params$norm_ptm) 
     updateTextInput(session, "ptm_norm_grep", value = params$ptm_norm_grep)
     if (params$norm_type != "") {
