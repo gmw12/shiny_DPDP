@@ -182,7 +182,10 @@ shinyServer(function(session, input, output) {
     # since skipping portion of app, need to load widgets for stats
      ui_render_parameters(session, input, output)
      update_stat_choices(session, input, output)
-  }
+   }
+   
+   #re-load menu
+   load_menu(session, input, output)
  })
 
   #------------------------------------------------------------------------------------------------------  
@@ -306,6 +309,11 @@ shinyServer(function(session, input, output) {
     cat(file = stderr(), "impute_apply clicked", "\n")
     
     impute_apply(session, input, output)
+    
+    #rollup/sum to peptide if PTM analysis (skipping rollup menuItem)
+    if(params$ptm) {
+      rollup_apply(session, input, output, params)
+    }
     
     cat(file = stderr(), "impute_apply clicked...end", "\n\n")
   })

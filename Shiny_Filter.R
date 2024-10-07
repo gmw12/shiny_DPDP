@@ -37,24 +37,32 @@ filter_data_bg <- function(table_name, new_table_name, params){
   
   step0 <- filter_stats(df)
   
-  # Step 1 remove peptides/proteins below minimum count requirement overall 
-  cat(file = stderr(), "step 1, remove below minimum...", "\n")
+  # Step 1 if PTM isolate to modificatin of interest 
+  cat(file = stderr(), "step 0, isolate to PTM...", "\n")
+  if (params$ptm) {
+    df <- df[grepl(params$ptm_grep, df$Sequence, ignore.case = TRUE),]
+    step1 <- filter_stats(df)
+    cat(file = stderr(), stringr::str_c("step 1 - ", step0[[1]]-step1[[1]], " ", step0[[2]]-step1[[2]], " ", step0[[3]]-step1[[3]]), "\n")
+  }
+  
+  # Step 2 remove peptides/proteins below minimum count requirement overall 
+  cat(file = stderr(), "step 2, remove below minimum...", "\n")
   df <- minimum_filter(df, info_columns, total_columns, params)
-  step1 <- filter_stats(df)
-  cat(file = stderr(), stringr::str_c("step 1 - ", step0[[1]]-step1[[1]], " ", step0[[2]]-step1[[2]], " ", step0[[3]]-step1[[3]]), "\n")
+  step2 <- filter_stats(df)
+  cat(file = stderr(), stringr::str_c("step 1 - ", step1[[1]]-step2[[1]], " ", step1[[2]]-step2[[2]], " ", step1[[3]]-step2[[3]]), "\n")
   
   
-  # Step 2 remove peptides/proteins below minimum count requirement in groups 
+  # Step 3 remove peptides/proteins below minimum count requirement in groups 
   cat(file = stderr(), "step 2, remove below minimum group requirement...", "\n")
   if (params$filter_x_percent) {
     df <- filter_min_group(df, sample_groups, info_columns, total_columns, params)
   }
-  step2 <- filter_stats(df)
-  cat(file = stderr(), stringr::str_c("step 2 - ", step1[[1]]-step2[[1]], " ", step1[[2]]-step2[[2]], " ", step1[[3]]-step2[[3]]), "\n")
+  step3 <- filter_stats(df)
+  cat(file = stderr(), stringr::str_c("step 4 - ", step2[[1]]-step3[[1]], " ", step2[[2]]-step3[[2]], " ", step2[[3]]-step3[[3]]), "\n")
   
   
-  #Step 3 optional misaligned filter
-  cat(file = stderr(), "step 3, misaligned filter...", "\n")
+  #Step 4 optional misaligned filter
+  cat(file = stderr(), "step 4, misaligned filter...", "\n")
   misaligned_count <- 0
   misaligned_rows_total <- NULL
   
@@ -89,23 +97,23 @@ filter_data_bg <- function(table_name, new_table_name, params){
       df <- df[-misaligned_rows_total,]
       }
   }
+  step4 <- filter_stats(df)
+  cat(file = stderr(), stringr::str_c("step 4 - ", step3[[1]]-step4[[1]], " ", step3[[2]]-step4[[2]], " ", step3[[3]]-step4[[3]]), "\n")
   
-  step3 <- filter_stats(df)
-  cat(file = stderr(), stringr::str_c("step 3 - ", step2[[1]]-step3[[1]], " ", step2[[2]]-step3[[2]], " ", step2[[3]]-step3[[3]]), "\n")
   
-  # Step 4, reapply first 2 filters in case misalignment filter creates new canidates 
-  cat(file = stderr(), "step 4, remove below minimum group requirement...", "\n")
+  # Step 5, reapply first 2 filters in case misalignment filter creates new canidates 
+  cat(file = stderr(), "step 5, remove below minimum group requirement...", "\n")
   df <- minimum_filter(df, info_columns, total_columns,params)
   if (params$filter_x_percent) {
     filter_min_group(df, sample_groups, info_columns, total_columns, params)
   }
   
-  step4 <- filter_stats(df)
-  cat(file = stderr(), stringr::str_c("step 4 - ", step3[[1]]-step4[[1]], " ", step3[[2]]-step4[[2]], " ", step3[[3]]-step4[[3]]), "\n")
+  step5 <- filter_stats(df)
+  cat(file = stderr(), stringr::str_c("step 5 - ", step4[[1]]-step5[[1]], " ", step4[[2]]-step5[[2]], " ", step4[[3]]-step5[[3]]), "\n")
   
   
   
-  #Step 5 optional filter by cv of specific sample group
+  #Step 6 optional filter by cv of specific sample group
   cat(file = stderr(), "step 5, cv minimum...", "\n")
   if (params$filter_cv) {
     cat(file = stderr(), stringr::str_c("filter by cv"), "\n")
@@ -115,26 +123,26 @@ filter_data_bg <- function(table_name, new_table_name, params){
     df <- subset(df, df$filterCV < params$filter_cv_value)
     df <- df[-ncol(df)]
   }
-  step5 <- filter_stats(df)
-  cat(file = stderr(), stringr::str_c("step 5 - ", step4[[1]]-step5[[1]], " ", step4[[2]]-step5[[2]], " ", step4[[3]]-step5[[3]]), "\n")
-  
-  
-  # Step 6, precursor quality filter 
-  cat(file = stderr(), "step 6 - Precursor Quality Filter...", "\n")
-  if (params$precursor_quality) {
-    df <- precursor_quality(df, params)
-  }
   step6 <- filter_stats(df)
   cat(file = stderr(), stringr::str_c("step 6 - ", step5[[1]]-step6[[1]], " ", step5[[2]]-step6[[2]], " ", step5[[3]]-step6[[3]]), "\n")
   
   
-  # Step 7, spqc ratio filter 
+  # Step 7, precursor quality filter 
+  cat(file = stderr(), "step 6 - Precursor Quality Filter...", "\n")
+  if (params$precursor_quality) {
+    df <- precursor_quality(df, params)
+  }
+  step7 <- filter_stats(df)
+  cat(file = stderr(), stringr::str_c("step 7 - ", step6[[1]]-step7[[1]], " ", step6[[2]]-step7[[2]], " ", step6[[3]]-step7[[3]]), "\n")
+  
+  
+  # Step 8, spqc ratio filter 
   cat(file = stderr(), "step 7 - SPQC Ratio Filter...", "\n")
   if (params$precursor_spqc_ratio) {
     df <- precursor_spqc_quality(df, info_columns, params)
   }
-  step7 <- filter_stats(df)
-  cat(file = stderr(), stringr::str_c("step 7 - ", step6[[1]]-step7[[1]], " ", step6[[2]]-step7[[2]], " ", step6[[3]]-step7[[3]]), "\n")
+  step8 <- filter_stats(df)
+  cat(file = stderr(), stringr::str_c("step 8 - ", step7[[1]]-step8[[1]], " ", step7[[2]]-step8[[2]], " ", step7[[3]]-step8[[3]]), "\n")
   
   
   
@@ -151,11 +159,11 @@ filter_data_bg <- function(table_name, new_table_name, params){
     df <- dplyr::distinct(df, PrecursorId, .keep_all = TRUE)
   }
 
-  step8 <- filter_stats(df)
-  cat(file = stderr(), stringr::str_c("step 8 - ", step7[[1]]-step8[[1]], " ", step7[[2]]-step8[[2]], " ", step7[[3]]-step8[[3]]), "\n")
+  step9 <- filter_stats(df)
+  cat(file = stderr(), stringr::str_c("step 9 - ", step8[[1]]-step9[[1]], " ", step8[[2]]-step9[[2]], " ", step8[[3]]-step9[[3]]), "\n")
   
     
-  cat(file = stderr(), "step 9 - create missing.values table for impute page...", "\n")
+  cat(file = stderr(), "step 10 - create missing.values table for impute page...", "\n")
   df_samples <- df[(info_columns + 1):ncol(df)]
   missing.values <- df_samples |>
     tidyr::gather(key = "key", value = "val") |>

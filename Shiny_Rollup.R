@@ -5,7 +5,7 @@ rollup_apply <- function(session, input, output, params){
   cat(file = stderr(), "Function - rollup_apply...", "\n")
   showModal(modalDialog("Apply Rollup...", footer = NULL))
   
-  cat(file = stderr(), stringr::str_c("rollup_method = ", input$rollup_method), "\n")
+  cat(file = stderr(), stringr::str_c("rollup_method = ", params$rollup_method), "\n")
   arg_list <- list(params)
   bg_rollup_apply <- callr::r_bg(func = rollup_apply_bg, args = arg_list, stderr = stringr::str_c(params$error_path, "//error_rollup_bg.txt"), supervise = TRUE)
   bg_rollup_apply$wait()
@@ -35,14 +35,22 @@ rollup_apply_bg <- function(params) {
     
     df <- RSQLite::dbReadTable(conn, table_name)
 
-    #rollup precursor/peptides
-    protein_df <- rollup_selector(df, df_design, params)
+    if(params$data_output == "Protein") {
+      #rollup precursor/peptides
+      protein_df <- rollup_selector(df, df_design, params)
+      #rollup precursor to peptide
+      peptide_df <- rollup_sum_peptide(df, df_design)
+      RSQLite::dbWriteTable(conn, table_name_out, protein_df, overwrite = TRUE)
+      RSQLite::dbWriteTable(conn, table_name_out_peptide, peptide_df, overwrite = TRUE)
+    }
     
-    #rollup precursor to peptide
-    peptide_df <- rollup_sum_peptide(df, df_design)
-
-    RSQLite::dbWriteTable(conn, table_name_out, protein_df, overwrite = TRUE)
-    RSQLite::dbWriteTable(conn, table_name_out_peptide, peptide_df, overwrite = TRUE)
+    if(params$data_output == "Peptide" & params$ptm) {
+      #rollup precursor ptm
+      source('Shiny_Rollup.R')
+      peptide_df <- collapse_precursor_ptm_raw(df, info_columns = 0, stats = FALSE, params)
+      RSQLite::dbWriteTable(conn, table_name_out_peptide, peptide_df, overwrite = TRUE)
+    }
+    
   }
   
   RSQLite::dbDisconnect(conn)

@@ -7,6 +7,7 @@ rollup_selector <- function(df, df_design, params){
   #save(df, file="test_df")
   #. load(file="test_df")
   
+  
   df <- df |> dplyr::select(contains(c("Accession", "Description", "Name", "Genes", df_design$ID))) |> 
     dplyr::mutate(Precursors = 1, .after = Genes)
   

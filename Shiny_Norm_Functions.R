@@ -3,7 +3,7 @@ cat(file = stderr(), "Shiny_Norm_Functions.R", "\n")
 #--------------------------------------------------------------------------------------
 # global scaling value, sample loading normalization
 sl_normalize <- function(norm_data, data_to_norm, info_columns){
-  cat(file = stderr(), stringr::str_c("sl_normalize...", "\n"))
+  cat(file = stderr(), "SL normalize started...", "\n")
   annotation_data <- data_to_norm[1:info_columns]
   data_to_norm <- data_to_norm[(info_columns + 1):ncol(data_to_norm)]
   norm_data <- norm_data[(info_columns + 1):ncol(norm_data)]
@@ -11,9 +11,11 @@ sl_normalize <- function(norm_data, data_to_norm, info_columns){
   norm_facs <- target / colSums(norm_data,na.rm = TRUE)
   data_out <- sweep(data_to_norm, 2, norm_facs, FUN = "*")
   data_out <- cbind(annotation_data, data_out)
+  cat(file = stderr(), "SL normalize started...end", "\n")
   return(data_out)
 }
 
+#-----------------------------------------------------------------------------------------------------
 #TMM Normalized 
 tmm_normalize <- function(norm_data, data_to_norm, info_columns){
   cat(file = stderr(), "TMM normalize started...", "\n")
@@ -27,6 +29,59 @@ tmm_normalize <- function(norm_data, data_to_norm, info_columns){
   cat(file = stderr(), "TMM normalize complete", "\n")
   return(data_out)
 }
+
+#---------------------------------------------------------------------------------------
+#TMM Normalized 
+norm_filter_exclude_include <- function(df, params){
+  cat(file = stderr(), "Function norm_filter_include_exclude...", "\n")
+  #if exclude checked then remove selection from data
+  if (params$norm_exclude != "not_used") {
+    cat(file = stderr(), stringr::str_c("Norm exclude filter = ", params$norm_exclude_grep), "\n")
+    if (params$norm_exclude == "accession") {
+      df <- df[!grepl(params$norm_exclude_grep, df$Accession, ignore.case = TRUE),]
+    }
+    if (params$norm_exclude == "description") {
+      df <- df[!grepl(params$norm_exclude_grep, df$Description, ignore.case = TRUE),]
+    }
+    if (params$norm_exclude == "name") {
+      df <- df[!grepl(params$norm_exclude_grep, df$Name, ignore.case = TRUE),]
+    }
+    if (params$norm_exclude == "genes") {
+      df <- df[!grepl(params$norm_exclude_grep, df$Genes, ignore.case = TRUE),]
+    }
+    if (params$norm_exclude == "sequence") {
+      df <- df[!grepl(params$norm_exclude_grep, df$Sequence, ignore.case = TRUE),]
+    }
+  }
+  
+  #if include checked then remove selection from data
+  if (params$norm_include != "not_used") {
+    cat(file = stderr(), stringr::str_c("Norm include filter = ", params$norm_include_grep), "\n")
+    if (params$norm_include == "accession") {
+      df <- df[grepl(params$norm_include_grep, df$Accession, ignore.case = TRUE),]
+    }
+    if (params$norm_include == "description") {
+      df <- df[grepl(params$norm_include_grep, df$Description, ignore.case = TRUE),]
+    }
+    if (params$norm_include == "name") {
+      df <- df[grepl(params$norm_include_grep, df$Name, ignore.case = TRUE),]
+    }
+    if (params$norm_include == "genes") {
+      df <- df[grepl(params$norm_include_grep, df$Genes, ignore.case = TRUE),]
+    }
+    if (params$norm_include == "sequence") {
+      df <- df[grepl(params$norm_include_grep, df$Sequence, ignore.case = TRUE),]
+    }
+  }
+  
+  # if ptm norm checked then only use selected data
+  # if (params$norm_ptm) {
+  #   df <- df[grep(params$norm_ptm_grep, df$Sequence, ignore.case = TRUE),]
+  # }
+  cat(file = stderr(), "Function norm_filter_include_exclude...end", "\n")
+  return(df)
+}
+
 
 #------------------------------------------------------------------------------------------------
 # global scaling value, sample loading normalization
@@ -181,3 +236,82 @@ lr_normalize <- function(data_in, info_columns, params) {
   data_out <- cbind(annotation_data, data_out)
   return(data_out)
 }
+
+
+#--------------------------------------------------------------------------------------
+# DirectLFQ from Mann ()
+directlfq_normalize <- function(data_to_norm, data_title){
+  cat(file = stderr(), str_c("directlfq_normalize...", data_title), "\n")
+  
+  #data_to_norm <- dpmsr_set$data$data_to_norm
+  
+  info_columns <- ncol(data_to_norm) - dpmsr_set$y$sample_number
+  info_column_names <- colnames(data_to_norm)[1:info_columns]
+  sample_number <- ncol(data_to_norm) - info_columns
+  
+  #group and sum data (summed samples will be over written below)
+  df <- data_to_norm %>% dplyr::select(Accession, Description, Genes)
+  df <- cbind(df, data_to_norm[,(info_columns + 1):ncol(data_to_norm)])
+  df$Peptides <- 1
+  df <- df %>% group_by(Accession, Description, Genes) %>% summarise_all(list(sum))
+  peptide_count <- df$Peptides
+  df$Peptides <- NULL
+  excel_name <- "_Peptide_DirectLFQ_Norm.xlsx"
+  
+  require(reticulate)
+  use_python(python_path)     
+  #"/home/dpmsr/miniconda3/envs/directlfq/bin/python3")
+  directlfq <- import("directlfq.lfq_manager")
+  
+  protein <- data_to_norm$Accession
+  df_data <- add_column(data_to_norm, protein, .before = 1)
+  
+  if (dpmsr_set$x$data_source == "PD") {
+    ion <- str_c(df_data$Sequence, "_", df_data$Modifications, "_", 1:nrow(df_data))
+  }else if (dpmsr_set$x$data_source == "SP") {
+    ion <- df_data$PrecursorId
+  }
+  
+  df_data <- add_column(df_data, ion, .after = 1)
+  
+  data_in <- df_data[, !(names(df_data) %in% info_column_names)]
+  
+  directlfq_file <- str_c(dpmsr_set$file$extra_dir, "directlfq.aq_reformat.tsv")
+  directlfq_norm_file <- str_c(dpmsr_set$file$extra_dir, "directlfq.aq_reformat.tsv.ion_intensities.tsv")
+  directlfq_protein_file <- str_c(dpmsr_set$file$extra_dir, "directlfq.aq_reformat.tsv.protein_intensities.tsv")
+  write.table(data_in, file = directlfq_file, sep = "\t", row.names = FALSE)
+  
+  directlfq$run_lfq(directlfq_file)
+  data_out <- Simple_fread((directlfq_norm_file))
+  
+  data_out <- df_data[1:(info_columns + 2)] %>% left_join(data_out, by = "ion")
+  data_out <- data_out[, !(names(data_out) %in% c("ion", "protein.x", "protein.y"))]
+  data_out[data_out == 0] <- NA
+  
+  Simple_Excel(data_out, "data", str_c(dpmsr_set$file$extra_prefix, "_directlfq_norm.xlsx", collapse = " "))
+  dpmsr_set$data$directlfq$directlfq_norm <<- data_out
+  
+  #save protein level data
+  protein_out <- Simple_fread((directlfq_protein_file))
+  colnames(protein_out)[which(names(protein_out) == "protein")] <- "Accession"
+  
+  protein_out <- df[1:(ncol(df) - sample_number)] %>% left_join(protein_out, by = "Accession")
+  protein_out <- protein_out[, !(names(protein_out) %in% c("V1"))]
+  protein_out[protein_out == 0] <- NA
+  
+  protein_out <- add_column(protein_out, peptide_count, .after = "Genes")
+  colnames(protein_out)[which(names(protein_out) == "peptide_count")] <- "Peptides"
+  
+  protein_out <- add_column(protein_out, dpmsr_set$data$protein_missing, .after = "Peptides")
+  colnames(protein_out)[which(names(protein_out) == "dpmsr_set$data$protein_missing")] <- "Detected_Imputed"
+  
+  dpmsr_set$data$directlfq$directlfq_protein <<- protein_out
+  
+  #remove files
+  file.remove(directlfq_file)
+  file.remove(directlfq_norm_file)
+  file.remove(directlfq_protein_file)
+  
+  return(ungroup(data_out))
+}
+

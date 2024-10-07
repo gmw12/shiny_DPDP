@@ -65,11 +65,14 @@ sample_groups <- read_table("sample_groups", params)
 
 test <- read_table('params', params)
 df <- read_table('protein_impute_EsxM_v_Control_final', params)
+df_norm_data <- read_table_try('precursor_normdata', params)
+df <- read_table_try('precursor_noise', params)
+df <- read_table('precursor_filter', params)
 df <- read_table_try('precursor_noise', params)
 df <- read_table_try('precursor_raw', params)
 df <- read_table_try('precursor_start', params)
 df <- read_table_try('precursor_norm_sltmm', params)
-df1 <- read_table_try('precursor_impute_protein', params)
+df1 <- read_table_try('precursor_impute_sltmm', params)
 df2 <- read_table_try('protein_raw', params)
 test3 <- read_table('protein_sltmm', params)
 test4 <- read_table('protein_sltmm_final', params)
@@ -807,4 +810,14 @@ ggplot2::ggplot(plotdf, ggplot2::aes(x = ID, y = vec)) +
 
 
 
+df <- read_table('precursor_filter', params)
+df <- read_table('precursor_normdata', params)
 
+df_data <- df[,10:ncol(df)]
+sum_all <- sum(df_data, na.rm = TRUE)
+
+df_phos <- df[grepl(params$norm_include_grep, df$Sequence, ignore.case = TRUE),]
+df_phos_data <- df_phos[,10:ncol(df_phos)]
+sum_phos <- sum(df_phos_data, na.rm = TRUE)
+
+sum_phos/sum_all

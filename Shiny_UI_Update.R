@@ -112,8 +112,10 @@ render_noise_graphs <- function(session, input, output) {
   #showModal(modalDialog("Rendering noise graph...", footer = NULL))
   
   output$noise_total <- renderText({str_c('Total data points:  ', params$noise_total)})
-  output$noise_count <- renderText({str_c('Noise data points:  ', params$noise_count)})
-  output$noise_percent <- renderText({str_c('Percent noise:  ', round((params$noise_count/params$noise_total*100), digits = 2) )})
+  output$dynamic_noise_count <- renderText({str_c('Dynamic noise data points:  ', params$dynamic_noise_count)})
+  output$custom_noise_count <- renderText({str_c('Custom noise data points:  ', params$custom_noise_count)})
+  output$dynamic_noise_percent <- renderText({str_c('Dynamic percent noise:  ', round((params$dynamic_noise_count/params$noise_total*100), digits = 2) )})
+  output$custom_noise_percent <- renderText({str_c('Custom percent noise:  ', round((params$custom_noise_count/params$noise_total*100), digits = 2) )})
   output$noise_inflection <- renderText({str_c('Inflection point:  ', params$noise_inflection)})
   
   output$noise_plot <- renderImage({
@@ -438,7 +440,7 @@ filter_widget_save <- function(session, input, output){
 norm_widget_save <- function(session, input, output){
   cat(file = stderr(), "Function - norm_widget_save...", "\n")
   
-  names <- c("norm_exclude", "exclude_norm_grep", "norm_include", "include_norm_grep", "norm_ptm", "norm_ptm_grep")
+  names <- c("norm_exclude", "norm_exclude_grep", "norm_include", "norm_include_grep", "norm_ptm", "norm_ptm_grep")
   
   for (name in names) {
     params[[name]] <<- input[[name]]

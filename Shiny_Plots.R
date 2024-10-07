@@ -258,16 +258,16 @@ bar_plot <- function(table_name, plot_title, plot_dir, params) {
   cat(file = stderr(), "Function bar_plot", "\n")
   
   source("Shiny_Plots.R")
-  
+
   conn <- RSQLite::dbConnect(RSQLite::SQLite(), params$database_path)
   df <- RSQLite::dbReadTable(conn, table_name)
   RSQLite::dbDisconnect(conn)
   
+  cat(file = stderr(), stringr::str_c("table --> ",table_name, "   rows --> ", nrow(df)), "\n")
+  
   plot_filename <- plot_title
   
   if (params$ptm) {
-    df <- df[which(grepl(params$ptm_grep, df$Sequence)),]
-    df <- df[which(df$Localized >= params$ptm_local),]
     plot_title <- paste(plot_title, "_PTM", sep = "")
   }
   
@@ -329,8 +329,6 @@ box_plot <- function(table_name, plot_title, plot_dir, params) {
   plot_filename <- plot_title
   
   if (params$ptm) {
-    df <- df[which(grepl(params$ptm_grep, df$Sequence)),]
-    df <- df[which(df$Localized >= params$ptm_local),]
     plot_title <- paste(plot_title, "_PTM", sep = "")
   }
   
@@ -372,8 +370,6 @@ histogram_plot <- function(table_name, plot_title, params)
   plot_filename <- plot_title
   
   if (params$ptm) {
-    df <- df[which(grepl(params$ptm_grep, df$Sequence)),]
-    df <- df[which(df$Localized >= params$ptm_local),]
     plot_title <- paste(plot_title, "_PTM", sep = "")
   }
 

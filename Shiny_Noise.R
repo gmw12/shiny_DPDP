@@ -6,6 +6,8 @@ noise_inflection <- function(session, input, output, params){
   cat(file = stderr(), "Function - noise_inflection...", "\n")
   showModal(modalDialog("Applying noise parameters...", footer = NULL))
   
+  params$noise_baseline_value <<- input$noise_baseline_value
+  
   if (params$raw_data_format == "precursor") {
     cat(file = stderr(), "remove noise precursor...", "\n")
     bg_inflection <- callr::r_bg(func = noise_inflection_bg, args = list("precursor_start", params), stderr = str_c(params$error_path, "//error_inflection.txt"), supervise = TRUE)
@@ -60,10 +62,12 @@ noise_inflection_bg <- function(table_name, params){
   params$noise_inflection <- round(2^noise, digits = 2)
 
   # count data points below inflection 
-  params$noise_count <- length(which(df$vec < noise)) 
+  params$dynamic_noise_count <- length(which(df$vec < noise)) 
   params$noise_total <- nrow(df)
-  cat(file = stderr(), stringr::str_c("noise data points to be removed = ", params$noise_count, " out of ", nrow(df)), "\n")
+  custom_noise <- log(params$noise_baseline_value, 2)
+  params$custom_noise_count <- length(which(df$vec < custom_noise)) 
   
+  cat(file = stderr(), stringr::str_c("noise data points to be removed = ", params$noise_count, " out of ", nrow(df)), "\n")
   
   RSQLite::dbWriteTable(conn, "params", params, overwrite = TRUE)
   RSQLite::dbDisconnect(conn)
@@ -73,8 +77,11 @@ noise_inflection_bg <- function(table_name, params){
     ggplot2::theme_minimal() +
     ggplot2::theme(legend.position = "none") +
     ggplot2::geom_vline(xintercept = df_row) +
+    ggplot2::annotate("text", x=(df_row-200), y=10, label="Dynamic", angle=90)+
+    ggplot2::geom_hline(yintercept = custom_noise) +
+    ggplot2::annotate("text", x=10, y=(custom_noise+1), label="Custom", angle=0)+
     ggplot2::labs(title = stringr::str_c("Dataset Values - Inflection = ", params$noise_inflection), x =
-                    'Count', y = "Intensity") +
+                    'Count', y = custom_noise, "Intensity") +
     ggplot2::theme(plot.title = ggplot2::element_text(hjust = 0.5))
   ggplot2::ggsave(stringr::str_c(params$qc_path, "Inflection_Point.png"), width = 8, height = 6)
   

@@ -196,12 +196,17 @@ source("Shiny_UI.R")
                          box(title = "Noise Meta Data", status = "primary", solidHeader = TRUE, collapsible = FALSE, width = 12, height = 750,
                              fluidRow(
                                column(width = 12, 
-                                      span(textOutput("noise_total"), style = "color:blue; font-size:16px"),
-                                      span(textOutput("noise_count"), style = "color:blue; font-size:16px"),
-                                      span(textOutput("noise_percent"), style = "color:blue; font-size:16px"),
-                                      br(),
-                                      br(),
                                       span(textOutput("noise_inflection"), style = "color:blue; font-size:16px"),
+                                      br(),
+                                      span(textOutput("noise_total"), style = "color:blue; font-size:16px"),
+                                      br(),
+                                      br(),
+                                      span(textOutput("dynamic_noise_count"), style = "color:blue; font-size:16px"),
+                                      span(textOutput("dynamic_noise_percent"), style = "color:blue; font-size:16px"),
+                                      br(),
+                                      br(),
+                                      span(textOutput("custom_noise_count"), style = "color:blue; font-size:16px"),
+                                      span(textOutput("custom_noise_percent"), style = "color:blue; font-size:16px")
                                     ))
                          ))
                 )
@@ -350,7 +355,7 @@ source("Shiny_UI.R")
                         column(width = 4,
                           selectInput("norm_exclude", label = "Exclude from Normalization", 
                             choices = list("Not_Used" = "not_used", "Accession" = "accession", "Description" = "description", 
-                              "Name" = "name", "Genes" = "genes", "Sequence" = "sequence"), selected = "not_used"),
+                              "Name" = "name", "Genes" = "genes", "Sequence" = "sequence"), selected = "description"),
                           textInput("norm_exclude_grep", label = "Norm exclude grep (sep=|, no space)", value = "trypsin|keratin|casein")),
                         column(width = 4, 
                           selectInput("norm_include", label = "Include only for Normalization", 
@@ -360,6 +365,10 @@ source("Shiny_UI.R")
                           #checkboxInput("norm_include", label = "Include only grep for norm (trypsin|keratin|casein)"),
                           #textInput("include_norm_grep", label = "Filter Include grep", value = "trypsin|keratin|casein"),
                         column(width = 4,
+                               br(),
+                               br(),
+                               br(),
+                          
                           #checkboxInput("norm_exclude", label = "Exclude grep from norm (trypsin|keratin|casein)", value = TRUE),
                           #textInput("exclude_norm_grep", label = "Filter Exclude grep", value = "trypsin|keratin|casein"),
                          actionButton("norm_parameters", label = "Apply Normalizaton Parameters",
@@ -378,7 +387,7 @@ source("Shiny_UI.R")
                                            choices = list("Sample Loading - Total" = "sl",
                                                           "Trimmed Mean" = "tmm",
                                                           "Sample Loading Trimmed Mean" = "sltmm",
-                                                          "Protein" = "protein",
+                                                          #"Protein" = "protein",
                                                           "DirectLFQ" = "directlfq",
                                                           "Quantile" = "quantile",
                                                           "Linear Regression" = "lr",

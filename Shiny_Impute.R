@@ -89,7 +89,9 @@ impute_apply_bg2 <- function(norm, params, df_random, df_groups, df) {
   if (norm == "sltmm") {
     cat(file = stderr(), "sltmm found, apply tmm norm now ...", "\n")
     info_columns <- ncol(df_impute) - params$sample_number
-    norm_data <-  read_table_try("precursor_normdata", params)
+    #need to re-create norm_data
+    norm_data <- norm_filter_exclude_include(df_impute, params)
+    #norm_data <-  read_table_try("precursor_normdata", params)
     df_impute <- tmm_normalize(norm_data, df_impute, info_columns)
   }
   
@@ -99,55 +101,6 @@ impute_apply_bg2 <- function(norm, params, df_random, df_groups, df) {
   
   cat(file = stderr(), "Function - impute_apply_bg2...end", "\n")
   return(list(new_table_name, df_impute))
-}
-
-
-#----------------------------------------------------------------------------------------------------
-
-old_apply_impute <- function(session, input, output){
-  cat(file = stderr(), "apply_impute function...1", "\n")
-  
-  # save set of random numbers to be used for impute, if reimpute numbers the same
-  set.seed(123)
-  #get number of missing values
-  total_missing <- table(is.na(dpmsr_set$data$normalized$impute))
-  cat(file = stderr(), str_c(total_missing[2], " missing values"), "\n")
-  dpmsr_set$y$rand_impute <<- runif(total_missing[2]*2, min = -1, max = 1)
-  cat(file = stderr(), "created random number dataframe", "\n")
-  dpmsr_set$y$rand_count <<- 1
-  
-  cat(file = stderr(), "apply_impute function...2", "\n")
-  ncores <- detectCores()
-  cat(file = stderr(), str_c("ncores = ", ncores), "\n")
-  if (is.na(ncores) | ncores < 1) {ncores <- 1}
-  norm_list <- dpmsr_set$y$norm_list
-  dpmsr_set$data$impute <<- mclapply(norm_list, impute_parallel, mc.cores = ncores)
-  #need to complete TMM norms after imputation ()
-  
-  cat(file = stderr(), "apply_impute function...3", "\n")
-  #check that the parallel processing went through, if not do it again one at a time
-  check_impute_parallel(norm_list)
-  
-  #check if directlfq norm was run and impute the protein level data
-  check_impute_protein_directlfq()
-  
-  norm_list2 <- dpmsr_set$y$norm_list2
-  
-  info_columns <- ncol(dpmsr_set$data$impute$impute) - dpmsr_set$y$sample_number
-  
-  cat(file = stderr(), "apply_impute function...4", "\n")
-  if (2 %in% dpmsr_set$y$norm_list2)
-  {dpmsr_set$data$impute$tmm <<- tmm_normalize(dpmsr_set$data$impute$impute, "TMM_Norm", info_columns)
-  }
-  cat(file = stderr(), "apply_impute function...5", "\n")
-  if (3 %in% dpmsr_set$y$norm_list2)
-  {dpmsr_set$data$impute$sltmm <<- tmm_normalize(dpmsr_set$data$impute$sl, "SLTMM_Norm", info_columns)
-  }
-  cat(file = stderr(), "apply_impute function...6", "\n")
-  if (11 %in% dpmsr_set$y$norm_list2)
-  {dpmsr_set$data$impute$protein <<- protein_normalize(dpmsr_set$data$impute$impute, "Protein_Norm", info_columns)
-  }
-  cat(file = stderr(), "apply_impute function...end", "\n")
 }
 
 
