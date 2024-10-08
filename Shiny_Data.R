@@ -629,7 +629,8 @@ precursor_to_precursor_ptm_bg <- function(params){
   df$Localized[is.na(df$Localized)] <- ""
   
   #save copy of raw peptide (from precursor start)
-  raw_peptide <- collapse_precursor_ptm_raw(df, params$sample_number, info_columns = 0, stats = FALSE, add_miss = FALSE, df_missing = NULL, params)
+  raw_peptide_list <- collapse_precursor_ptm_raw(df, params$sample_number, info_columns = 0, stats = FALSE, add_miss = FALSE, df_missing = NULL, params)
+  raw_peptide <- raw_peptide_list[[1]]
   
   RSQLite::dbWriteTable(conn, "precursor_start", df, overwrite = TRUE)
   RSQLite::dbWriteTable(conn, "raw_peptide", raw_peptide, overwrite = TRUE)

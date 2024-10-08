@@ -50,7 +50,8 @@ rollup_apply_bg <- function(params) {
       source('Shiny_Rollup.R')
       table_name_out_peptide_ptm <- stringr::str_c("peptide_impute_", norm)
       df_missing <- read_table_try("precursor_missing", params)
-      peptide_df <- collapse_precursor_ptm_raw(df, params$sample_number, info_columns = 0, stats = FALSE, add_miss = TRUE, df_missing, params)
+      peptide_df_list <- collapse_precursor_ptm_raw(df, params$sample_number, info_columns = 0, stats = FALSE, add_miss = TRUE, df_missing, params)
+      peptide_df <- peptide_df_list[[1]]
       RSQLite::dbWriteTable(conn, table_name_out_peptide_ptm, peptide_df, overwrite = TRUE)
     }
     
@@ -183,10 +184,13 @@ collapse_precursor_ptm_raw <- function(precursor_data, sample_columns, info_colu
     colnames(peptide_data)[info_columns+3] <- "Detected_Imputed"
   }
   
-  
   cat(file = stderr(), "function collapse_precursor_ptm_raw...end", "\n")
-  return(peptide_data)
   
+  if (add_miss) {
+    return(list(peptide_data, df_missing_peptide))
+  } else {
+    return(peptide_data)
+  }
 }
 
 

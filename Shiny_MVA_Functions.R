@@ -176,7 +176,9 @@ precursor_refilter_rollup <- function(df_filter_list, df_design, params) {
     df <- tibble::add_column(df, df_missing_summary, .after = (ncol(df) - sample_count))
     
   }else{
-    df <- collapse_precursor_ptm_raw(df, sample_count, info_columns, stats=FALSE, add_miss=TRUE, df_missing, params) 
+    df_list <- collapse_precursor_ptm_raw(df, sample_count, info_columns, stats=FALSE, add_miss=TRUE, df_missing, params)
+    df <- df_list[[1]]
+    df_missing >- df_list[[2]]
   }
 
   cat(file = stderr(), "Function - precursor_refilter_rollup...end", "\n")  
@@ -188,8 +190,8 @@ precursor_refilter_rollup <- function(df_filter_list, df_design, params) {
 stat_add <- function(df, df_missing, params, comp_number, stats_comp, df_design) {
   cat(file = stderr(), "Function - stat_add...", "\n")
   
-  #save(df, file="statdf"); save(df_missing, file="statdfmissing"); save(comp_number, file="statcompnumber"); save(stats_comp, file="statstatscomp"); save(df_design, file="statdfdesign");
-  #load(file="statdf");  load(file="statdfmissing");load(file="statcompnumber"); load(file="statstatscomp"); load(file="statdfdesign")
+  save(df, file="x1"); save(df_missing, file="x2"); save(comp_number, file="x3"); save(stats_comp, file="x4"); save(df_design, file="x5");
+  #   load(file="x1");  load(file="x2");load(file="x3"); load(file="x4"); load(file="x5")
   
   source("Shiny_Misc_Functions.R")
   source("Shiny_Stats_Functions.R")
