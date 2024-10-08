@@ -143,7 +143,7 @@ qc_protein_plots <- function(session, input, output, params){
 
   plot_title <- str_c(qc_accession, '_', qc_norm_type)
   
-  bg_qcprotein <- callr::r_bg(func = qc_protein_plots_bg, args = list(table_name, plot_title, qc_accession, params), stderr = str_c(params$error_path, "//error_qcprotein.txt"), supervise = TRUE)
+  bg_qcprotein <- callr::r_bg(func = qc_protein_plots_bg, args = list(table_name, plot_title, qc_accession, params$qc_path, params), stderr = str_c(params$error_path, "//error_qcprotein.txt"), supervise = TRUE)
   bg_qcprotein$wait()
   print_stderr("error_qcprotein.txt")
   
@@ -159,18 +159,20 @@ qc_protein_plots <- function(session, input, output, params){
 #------------------------------------------------------------------------------------------------
 
 #create bar plots for specific protein
-qc_protein_plots_bg <- function(table_name, plot_title, qc_accession, params){
+qc_protein_plots_bg <- function(table_name, plot_title, qc_accession, plot_dir, params){
   cat(file = stderr(), stringr::str_c("function qc_protein_plots_bg..."), "\n")
   
   source("Shiny_Plots.R")
+  source("Shiny_File.R")
+    
+  save(table_name, file="z1"); save(plot_title, file="z2"); save(plot_dir, file="z3"); save(qc_accession, file="z4")
+  #  load(file="z1"); load(file="z2"); load(file="z3"); load(file="z4")
   
-  conn <- RSQLite::dbConnect(RSQLite::SQLite(), params$database_path)
-  df <- RSQLite::dbReadTable(conn, table_name)
-  RSQLite::dbDisconnect(conn)
-  
+  df <- read_table_try(table_name, params)
+
   df <- df[df$Accession %in% qc_accession,]
   
-  bar_plot2(table_name, plot_title, params$qc_path, params, df)
+  bar_plot2(table_name, plot_title, plot_title, params$qc_path, params, df)
 
   cat(file = stderr(), stringr::str_c("function qc_protein_plots_bg...end"), "\n")
 }

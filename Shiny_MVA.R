@@ -5,9 +5,10 @@ cat(file = stderr(), "Shiny_MVA.R", "\n")
 check_comp_names <- function(session, input, output){
   cat(file = stderr(), "function check_comp_names....", "\n")
   showModal(modalDialog("Setting Stat groups...", footer = NULL))  
+  source('Shiny_File.R')
   
-  table_name <- str_c("protein_", input$stats_norm_type)
-  table_name_peptide <- str_c("peptide_", input$stats_norm_type)
+  table_name <- str_c("protein_impute_", input$stats_norm_type)
+  table_name_peptide <- str_c("peptide_impute_", input$stats_norm_type)
   table_name <- gsub(" ", "", table_name, fixed = TRUE)
   table_name_peptide <- gsub(" ", "", table_name_peptide, fixed = TRUE) 
   
@@ -18,9 +19,7 @@ check_comp_names <- function(session, input, output){
   #create df to store comparision info
   stats_comp <- data.frame(matrix(ncol = 13, nrow = 0))
 
-  conn <- RSQLite::dbConnect(RSQLite::SQLite(), params$database_path)
-  RSQLite::dbWriteTable(conn, "stats_comp", stats_comp, overwrite = TRUE)
-  RSQLite::dbDisconnect(conn)
+  write_table_try("stats_comp", stats_comp, params)
   
   for (comp_number in 1:input$comp_number) {
     factorsN <- input[[stringr::str_c('comp_',comp_number,'N')]]
@@ -31,9 +30,7 @@ check_comp_names <- function(session, input, output){
     print_stderr("stat_groups.txt")
   }
   
-  conn <- RSQLite::dbConnect(RSQLite::SQLite(), params$database_path)
-  stats_comp <- RSQLite::dbReadTable(conn, "stats_comp")
-  RSQLite::dbDisconnect(conn)
+  stats_comp <- read_table_try("stats_comp", params)
   
   for (comp_number in 1:input$comp_number) {
     cat(file = stderr(), str_c("name length = ", nchar(stats_comp$Name[comp_number]) ), "\n")
@@ -60,7 +57,13 @@ check_comp_names_bg <- function(params, table_name, table_name_peptide, comp_num
   conn <- RSQLite::dbConnect(RSQLite::SQLite(), params$database_path)
   df_design <- RSQLite::dbReadTable(conn, "design")
   stats_comp <- RSQLite::dbReadTable(conn, "stats_comp")
-  stats_data <- RSQLite::dbReadTable(conn, table_name)
+  
+  if (params$data_output == "Protein") {
+    stats_data <- RSQLite::dbReadTable(conn, table_name)
+  }else {
+    stats_data <- RSQLite::dbReadTable(conn, table_name_peptide)
+  }
+  
   
   #reduce dataframe to data only
   stats_data_info <- stats_data[1:(ncol(stats_data) - params$sample_number)]
@@ -156,6 +159,7 @@ stat_calc_bg <- function(params, comp_number, stats_comp){
   source('Shiny_File.R')
 
   #save(comp_number, file="stat1"); save(stats_comp, file="stat4");
+  # stats_comp <- read_table_try("stats_comp", params); comp_number = 1
   #. load(file="stat1"); load(file="stat2");load(file="stat3");load(file="stat4");
   
   df_design <- read_table_try("design", params) 
@@ -186,10 +190,10 @@ stat_calc_bg <- function(params, comp_number, stats_comp){
     df_missing_list <- stat_create_comp_missing_df(df_missing, stats_comp$FactorsN[comp_number], stats_comp$FactorsD[comp_number], params, df_design)
     
     #refilter precursors/peptides
-    df_filter_list <- peptide_refilter(df_list, df_missing_list, params)
+    df_filter_list <- precursor_refilter(df_list, df_missing_list, params)
     
     #rollup, and unpack list
-    df_rollup_list <- peptide_refilter_rollup(df_filter_list, df_design, params) 
+    df_rollup_list <- precursor_refilter_rollup(df_filter_list, df_design, params) 
     df <- df_rollup_list[[1]]
     df_missing <- df_rollup_list[[2]]
     

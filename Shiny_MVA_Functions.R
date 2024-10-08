@@ -76,8 +76,8 @@ stat_create_comp_missing_df <- function(df, factorsN, factorsD, params, df_desig
 
 #----------------------------------------------------------------------------------
 
-peptide_refilter <- function(df_list, df_missing_list, params) {
-  cat(file = stderr(), "Function - peptide_refilter...", "\n")
+precursor_refilter <- function(df_list, df_missing_list, params) {
+  cat(file = stderr(), "Function - precursor_refilter...", "\n")
   
   source('Shiny_MVA_Functions.R')
   source('Shiny_Stats_Functions.R')
@@ -130,18 +130,19 @@ peptide_refilter <- function(df_list, df_missing_list, params) {
 
   return(list(df, df_missing))
   
-  cat(file = stderr(), "Function - peptide_refilter...end", "\n")
+  cat(file = stderr(), "Function - precursor_refilter...end", "\n")
 }
 
 #-------------------------------------------------------------------------------
-peptide_refilter_rollup <- function(df_filter_list, df_design, params) {
-  cat(file = stderr(), "Function - peptide_refilter_rollup...", "\n")
+precursor_refilter_rollup <- function(df_filter_list, df_design, params) {
+  cat(file = stderr(), "Function - precursor_refilter_rollup...", "\n")
   
+  source('Shiny_Rollup.R')
   source('Shiny_Rollup_Functions.R')
   source('Shiny_MVA_Functions.R')
   
-  #save(df_filter_list, file="prrdffilterlist"); save(df_design, file="prrdfdesign"); 
-  #  load(file="prrdffilterlist"); load(file="prrdfdesign"); 
+  save(df_filter_list, file="y1"); save(df_design, file="y2"); 
+  #  load(file="y1"); load(file="y2"); 
   
   
   #unpack lists to df's
@@ -152,27 +153,33 @@ peptide_refilter_rollup <- function(df_filter_list, df_design, params) {
   sample_count <- ncol(df_missing)
   info_columns <- ncol(df) - sample_count
   
-  #need to add back info columns to missing for rollup
-  df_missing <- cbind(df[,1:(ncol(df) - sample_count)], df_missing)
-  df_missing <- df_missing |> dplyr::select(contains(c("Accession", "Description", "Name", "Genes", df_design$ID))) |> 
-    dplyr::mutate(Precursors = 1, .after = Genes)
-  df_missing <- rollup_sum(df_missing)
-  
-  #rollup data and missing
-  df <- rollup_selector(df, df_design, params)
-  
-  #resort because maxlfq sorts data, while summing does not...
-  df <- df[order(df$Accession), ]
-  df_missing <- df_missing[order(df_missing$Accession), ]
-  row.names(df) <- NULL
-  row.names(df_missing) <- NULL
-  
-  #add missing column to data
-  df_missing <- df_missing[, (ncol(df_missing) - sample_count + 1):ncol(df_missing)]
-  df_missing_summary <- reduce_imputed_df(df_missing)
-  df <- tibble::add_column(df, df_missing_summary, .after = (ncol(df) - sample_count))
-  
-  cat(file = stderr(), "Function - peptide_refilter_rollup...end", "\n")  
+  if (params$data_output == "Protein") {
+    #need to add back info columns to missing for rollup
+    df_missing <- cbind(df[,1:(ncol(df) - sample_count)], df_missing)
+    
+    df_missing <- df_missing |> dplyr::select(contains(c("Accession", "Description", "Name", "Genes", df_design$ID))) |> 
+      dplyr::mutate(Precursors = 1, .after = Genes)
+    
+    #rollup data and missing
+    df <- rollup_selector(df, df_design, params)
+    df_missing <- rollup_sum(df_missing)
+    
+    #resort because maxlfq sorts data, while summing does not...
+    df <- df[order(df$Accession), ]
+    df_missing <- df_missing[order(df_missing$Accession), ]
+    row.names(df) <- NULL
+    row.names(df_missing) <- NULL
+    
+    #add missing column to data
+    df_missing <- df_missing[, (ncol(df_missing) - sample_count + 1):ncol(df_missing)]
+    df_missing_summary <- reduce_imputed_df(df_missing)
+    df <- tibble::add_column(df, df_missing_summary, .after = (ncol(df) - sample_count))
+    
+  }else{
+    df <- collapse_precursor_ptm_raw(df, sample_count, info_columns, stats=FALSE, add_miss=TRUE, df_missing, params) 
+  }
+
+  cat(file = stderr(), "Function - precursor_refilter_rollup...end", "\n")  
   return(list(df, df_missing))
 }
 

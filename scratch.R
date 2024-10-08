@@ -74,6 +74,7 @@ df <- read_table_try('precursor_start', params)
 df <- read_table_try('precursor_norm_sltmm', params)
 precursor_data <- read_table_try('precursor_impute_sltmm', params)
 df1 <- read_table_try('peptide_impute_sltmm', params)
+df1f <- read_table_try('peptide_impute_sltmm_final', params)
 dfm <- read_table_try('precursor_missing', params)
 test3 <- read_table('protein_sltmm', params)
 test4 <- read_table('protein_sltmm_final', params)
@@ -822,3 +823,9 @@ df_phos_data <- df_phos[,10:ncol(df_phos)]
 sum_phos <- sum(df_phos_data, na.rm = TRUE)
 
 sum_phos/sum_all
+
+
+t1 <- df_filter_list[[1]]
+t2 <- df_filter_list[[2]]
+t3 <- df_list[[3]]
+t4 <- df_list[[4]]

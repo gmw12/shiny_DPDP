@@ -20,6 +20,7 @@ rollup_apply_bg <- function(params) {
   cat(file = stderr(), "Function - rollup_apply_bg...", "\n")
   
   source("Shiny_Rollup_Functions.R") 
+  source("Shiny_File.R")
   
   norm_type <- as.list(strsplit(params$norm_type, ",")[[1]])
 
@@ -48,7 +49,8 @@ rollup_apply_bg <- function(params) {
       #rollup precursor ptm
       source('Shiny_Rollup.R')
       table_name_out_peptide_ptm <- stringr::str_c("peptide_impute_", norm)
-      peptide_df <- collapse_precursor_ptm_raw(df, info_columns = 0, stats = FALSE, add_miss = TRUE, params)
+      df_missing <- read_table_try("precursor_missing", params)
+      peptide_df <- collapse_precursor_ptm_raw(df, params$sample_number, info_columns = 0, stats = FALSE, add_miss = TRUE, df_missing, params)
       RSQLite::dbWriteTable(conn, table_name_out_peptide_ptm, peptide_df, overwrite = TRUE)
     }
     
@@ -115,61 +117,70 @@ collapse_precursor_raw <- function(precursor_data, info_columns = 0, stats = FAL
 }
 
 #--- collapse precursor to peptide-------------------------------------------------------------
-collapse_precursor_ptm_raw <- function(precursor_data, info_columns, stats, add_miss, params) {
+collapse_precursor_ptm_raw <- function(precursor_data, sample_columns, info_columns, stats, add_miss, df_missing, params) {
   cat(file = stderr(), "function collapse_precursor_ptm_raw...", "\n")
   
   #.   precursor_data <- df
+  save(precursor_data, file="z1");save(info_columns, file="z2");save(stats, file="z3");save(add_miss, file="z4");save(df_missing, file="z5");save(sample_columns, file="z6")
+  #  load(file="z1");load(file="z2");load(file="z3");load(file="z4");load(file="z5");  load(file="z6")
   
-  localized_data <- precursor_data |> dplyr::select(-contains('Quantity'))
+  localized_data <- precursor_data$Localized
 
   #drop columns 
+  col_count <- ncol(precursor_data)
   precursor_data$PrecursorId <- NULL
   precursor_data$Detected_Imputed <- NULL
   precursor_data$ProteinPTMLocations <- NULL
   precursor_data$Localized <- NULL
+  col_count <- col_count - ncol(precursor_data)
   
   if (info_columns == 0) {
-    info_columns <- ncol(precursor_data) - params$sample_number
+    info_columns <- ncol(precursor_data) - sample_columns
+  } else {
+    info_columns <- info_columns - col_count
   }
   
   if (stats == TRUE) {
     info_columns = info_columns - 2
   }
   
-  #save sample column number to reset info columns below
-  sample_columns <- ncol(precursor_data) - info_columns
-  
   columns = names(precursor_data)[1:info_columns]
   
+  #setting info columns the same so that all rollups group the same way
+  localized_data <- cbind(precursor_data[1:info_columns], localized_data)
+  precursor_count_df <- precursor_data[1:info_columns]
+  df_missing <- cbind(precursor_data[1:info_columns], df_missing)
+  
+  #rollup data and ungroup
   peptide_data <- precursor_data |>
-    dplyr::group_by_at(dplyr::vars(all_of(columns))) |>
-    dplyr::summarise_all(list(sum))
+    dplyr::group_by_at(dplyr::vars(all_of(columns))) |> dplyr::summarise_all(list(sum))
 
   localized_data <- localized_data |>
-    dplyr::group_by_at(dplyr::vars(all_of(columns))) |>
-    dplyr::summarise_all(list(max))
-  
-  localized_data <- localized_data |> dplyr::group_by(Sequence) |> dplyr::summarise_all(list(max))
+    dplyr::group_by_at(dplyr::vars(all_of(columns))) |> dplyr::summarise_all(list(max))
     
   peptide_data <- data.frame(dplyr::ungroup(peptide_data))
   localized_data <- data.frame(dplyr::ungroup(localized_data))
-  Localized <- localized_data$Localized
+  Localized <- localized_data$localized_data
   
   peptide_data <- tibble::add_column(peptide_data, Localized, .after="Sequence")
+
+  precursor_count_df$Precusors <- 1
+  precursor_count_df <- precursor_count_df |>
+    dplyr::group_by_at(dplyr::vars(all_of(columns))) |> dplyr::summarise_all(list(sum))
+  Precursors <- precursor_count_df$Precusors
   
+  peptide_data <- tibble::add_column(peptide_data, Precursors, .after="Sequence")
+    
   if (add_miss) {
     cat(file = stderr(), "adding imputed column...", "\n")
-    source('Shiny_File.R')
     source('Shiny_MVA_Functions.R')
-    df_missing <- read_table_try("precursor_missing", params)
-    
-    df_missing <- cbind(precursor_data$Sequence, df_missing)
-    colnames(df_missing) <- c("Sequence", colnames(df_missing)[2:ncol(df_missing)])
-    df_missing_peptide <- df_missing |> dplyr::group_by(Sequence) |> dplyr::summarise_all(list(sum))
+    df_missing_peptide <- df_missing |>
+      dplyr::group_by_at(dplyr::vars(all_of(columns))) |> dplyr::summarise_all(list(sum))
     df_missing_peptide <- data.frame(dplyr::ungroup(df_missing_peptide))
-    df_missing_peptide$Sequence <- NULL
+    df_missing_peptide <- df_missing_peptide[(info_columns+1):ncol(df_missing_peptide)]
     imputed <- reduce_imputed_df(df_missing_peptide) 
-    peptide_data <- tibble::add_column(peptide_data, imputed$Detected_Imputed, .after=info_columns)
+    peptide_data <- tibble::add_column(peptide_data, imputed$Detected_Imputed, .after=(info_columns+2))
+    colnames(peptide_data)[info_columns+3] <- "Detected_Imputed"
   }
   
   

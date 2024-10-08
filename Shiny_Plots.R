@@ -285,9 +285,8 @@ bar_plot <- function(table_name, plot_title, plot_dir, params) {
 bar_plot2 <- function(table_name, plot_title, plot_filename, plot_dir, params, df) {
   cat(file = stderr(), "Function bar_plot2", "\n")
   
-  conn2 <- RSQLite::dbConnect(RSQLite::SQLite(), params$database_path)
-  design <- RSQLite::dbReadTable(conn2, "design")
-  RSQLite::dbDisconnect(conn2)
+  source('Shiny_File.R')  
+  design <- read_table_try("design", params)
   
   df <- df[(ncol(df) - params$sample_number + 1):ncol(df)]
   df <- df |>  dplyr::mutate(across(!where(is.numeric), as.numeric))

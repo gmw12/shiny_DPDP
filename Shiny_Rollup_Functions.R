@@ -7,7 +7,6 @@ rollup_selector <- function(df, df_design, params){
   #save(df, file="test_df")
   #. load(file="test_df")
   
-  
   df <- df |> dplyr::select(contains(c("Accession", "Description", "Name", "Genes", df_design$ID))) |> 
     dplyr::mutate(Precursors = 1, .after = Genes)
   
@@ -97,7 +96,7 @@ rollup_sum <- function(df){
   
   protein_df <- df |> dplyr::group_by(Accession, Description, Name, Genes) |> dplyr::summarise_all(list(sum))
   protein_df <- data.frame(dplyr::ungroup(protein_df))
-  
+
   #save(df, file="test_df"); save(protein_df, file="test_protein_df")
   #. load(file="test_df"); load(file="test_protein_df")
   
