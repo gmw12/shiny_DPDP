@@ -257,8 +257,8 @@ update_widgets <- function(session, input, output, params) {
     updateCheckboxInput(session, 'ptm', value = params$ptm)
     updateCheckboxInput(session, 'norm_ptm', value = params$norm_ptm)
     updateTextInput(session, 'norm_ptm_grep', value = params$norm_ptm_grep)
-    updateCheckboxInput(session, 'impute_ptm', value = params$impute_ptm)
-    updateTextInput(session, 'impute_ptm_grep', value = params$impute_ptm_grep)
+    # updateCheckboxInput(session, 'impute_ptm', value = params$impute_ptm)
+    # updateTextInput(session, 'impute_ptm_grep', value = params$impute_ptm_grep)
     updateSelectInput(session, 'peptide_select', selected = params$peptide_select)
     updateCheckboxInput(session, 'multi_tmt', value = params$multi_tmt)
     updateCheckboxInput(session, 'use_isoform', value = params$use_isoform)
@@ -300,8 +300,8 @@ update_widgets <- function(session, input, output, params) {
     
     #Impute---------------------------------------------------
     updateSelectInput(session, "impute_type", selected = params$impute_type)
-    updateCheckboxInput(session, 'impute_ptm', value = params$impute_ptm) 
-    updateTextInput(session, "ptm_impute_grep", value = params$ptm_impute_grep)
+    # updateCheckboxInput(session, 'impute_ptm', value = params$impute_ptm) 
+    # updateTextInput(session, "ptm_impute_grep", value = params$ptm_impute_grep)
     updateNumericInput(session, 'bottom_x', value = params$bottom_x)
     updateNumericInput(session, 'missing_cutoff', value = params$missing_cutoff)
     #updateSelectInput(session, "impute_plot_norm", named_list(params$norm_type))
@@ -478,7 +478,7 @@ norm_apply_widget_save <- function(session, input, output){
 impute_apply_widget_save <- function(session, input, output){
   cat(file = stderr(), "Function - impute_apply_widget_save...", "\n")
   
-  names <- c("impute_type", "impute_ptm", "impute_ptm_grep", "bottom_x", "missing_cutoff")
+  names <- c("impute_type",  "bottom_x", "missing_cutoff") #"impute_ptm", "impute_ptm_grep",
   
   for (name in names) {
     params[[name]] <<- input[[name]]

@@ -150,7 +150,8 @@ collapse_precursor_ptm_raw <- function(precursor_data, sample_columns, info_colu
   #setting info columns the same so that all rollups group the same way
   localized_data <- cbind(precursor_data[1:info_columns], localized_data)
   precursor_count_df <- precursor_data[1:info_columns]
-  df_missing <- cbind(precursor_data[1:info_columns], df_missing)
+  
+  if(!is.null(df_missing)) {df_missing <- cbind(precursor_data[1:info_columns], df_missing)}
   
   #rollup data and ungroup
   peptide_data <- precursor_data |>
@@ -189,7 +190,7 @@ collapse_precursor_ptm_raw <- function(precursor_data, sample_columns, info_colu
   if (add_miss) {
     return(list(peptide_data, df_missing_peptide))
   } else {
-    return(peptide_data)
+    return(list(peptide_data, df_missing))
   }
 }
 

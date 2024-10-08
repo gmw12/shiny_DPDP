@@ -63,7 +63,12 @@ create_plot_bg <- function(comp_string, input_stats_norm_type, params, plot_numb
   source("Shiny_Interactive.R")
   
   #confirm data exists in database
-  data_name <- stringr::str_c("protein_", input_stats_norm_type)
+  if(params$data_output == "Protein") {
+    data_name <- stringr::str_c("protein_", input_stats_norm_type)
+  }else {
+    data_name <- stringr::str_c("peptide_impute_", input_stats_norm_type)
+  }
+  
   if (data_name %in% list_tables(params)) {
     cat(file = stderr(), stringr::str_c(data_name, " is in database"), "\n") 
     
@@ -182,7 +187,14 @@ create_volcano_bg <- function(stats_plot_comp, input_stats_norm_type, input_chec
   source('Shiny_File.R')
   
   #confirm data exists in database
-  data_name <- stringr::str_c("protein_", input_stats_norm_type, "_", stats_plot_comp, "_final")
+  if(params$data_output == "Protein") {
+    data_name <- stringr::str_c("protein_", input_stats_norm_type, "_", stats_plot_comp, "_final")
+  }else {
+    data_name <- stringr::str_c("peptide_impute_", input_stats_norm_type, "_", stats_plot_comp, "_final")
+  }
+  
+  
+  
   if (data_name %in% list_tables(params)) {
     cat(file = stderr(), stringr::str_c(data_name, " is in database"), "\n") 
     

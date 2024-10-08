@@ -207,7 +207,11 @@ stat_calc_bg <- function(params, comp_number, stats_comp){
   #add stats to df
   df <- stat_add(df, df_missing, params, comp_number, stats_comp, df_design) 
   
-  stats_out_name <- stringr::str_c(stats_comp$Table_Name[comp_number], "_final")
+  if(params$data_output == "Protein") {
+    stats_out_name <- stringr::str_c(stats_comp$Final_Table_Name[comp_number])
+  }else{
+    stats_out_name <- stringr::str_c(stats_comp$Final_Table_Name_Peptide[comp_number])
+  }
   write_table_try(stats_out_name, df, params)
   
   cat(file = stderr(), "function stat_calc_bg....end", "\n")

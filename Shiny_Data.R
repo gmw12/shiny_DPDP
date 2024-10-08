@@ -355,9 +355,9 @@ impute_meta_data_bg <- function(table_name, params){
   df_groups <- RSQLite::dbReadTable(conn, "sample_groups")
   
   #filter data if imputation stats based on modification data only
-  if (params$impute_ptm) {
-    df <- df[grep(params$impute_ptm_grep, df$Sequence, ignore.case = TRUE),]
-  }
+  # if (params$impute_ptm) {
+  #   df <- df[grep(params$impute_ptm_grep, df$Sequence, ignore.case = TRUE),]
+  # }
   
   df <- df[(ncol(df) - params$sample_number + 1):ncol(df)]
   df <- log(df,2)

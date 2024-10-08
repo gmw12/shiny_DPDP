@@ -26,6 +26,7 @@ source("Shiny_UI.R")
   body <- dashboardBody(
     useShinyjs(),
     tabItems(
+      
       tabItem(tabName = "welcome",
         fluidRow(
           column(width = 12, align = "center",
@@ -74,8 +75,7 @@ source("Shiny_UI.R")
                   fluidRow(align = "center", shinyFilesButton('sfb_archive_file', label = 'Select Archive/Zip File', title = 'Please select zip file', multiple = FALSE,
                                    style = "color: #fff; background-color: #337ab7; border-color: #2e6da4")),
                   span(textOutput("archive_file_name"), style = "color:blue; font-size:16px")
-              ),
-              
+              )
              )),
             
           
@@ -384,7 +384,6 @@ source("Shiny_UI.R")
                     box(id = "norm_box", title = "Normalization strategy...", status = "primary",
                           solidHeader = TRUE, collapsible = FALSE, align = "left", width = 12, height = 230, 
                       fluidRow(
-                        column(width = 6,
                           selectInput("norm_type", label = "Select normalization strategy",
                                            choices = list("Sample Loading - Total" = "sl",
                                                           "Trimmed Mean" = "tmm",
@@ -398,23 +397,21 @@ source("Shiny_UI.R")
                                                           "Median of Total Intensity" = "mti",
                                                           "Median Intensity" = "mi",
                                                           "Average Intensity" = "ai"), selected = "SLTMM")),
-                        column(width = 6,
+                        fluidRow(
                           br(),
                           actionButton("norm_apply", label = "Apply Normalization",
                                        style = "color: #fff; background-color: #337ab7; border-color: #2e6da4")
-                        )),
-                      fluidRow(
-                        column(width = 4,
-                        selectInput("protein_norm_search_field", label = "Search Header", 
-                                    choices = list("Accession" = "accession", "Description" = "description", 
-                                                   "Name" = "name", "Genes" = "genes"), 
-                                    selected = "accession")),
-                        column(width = 8,
-                        textInput("protein_norm_grep", label = "Norm grep (sep=|, no space)", value = ""))
-                      )
+                        ))
+                      # fluidRow(
+                      #   column(width = 4,
+                      #   selectInput("protein_norm_search_field", label = "Search Header",
+                      #               choices = list("Accession" = "accession", "Description" = "description",
+                      #                              "Name" = "name", "Genes" = "genes"),
+                      #               selected = "accession")),
+                      #   column(width = 8,
+                      #   textInput("protein_norm_grep", label = "Norm grep (sep=|, no space)", value = ""))
+                      # )
                     )
-                    )
-                
               ),
               
               fluidRow(
@@ -452,15 +449,14 @@ source("Shiny_UI.R")
                        
                        box(id = "duke_param_box", title = "Impute parameters...", status = "primary",
                            solidHeader = TRUE, collapsible = FALSE, align = "left", width = 12, height = 350,
-                           fluidRow(
-                            column(width = 6, checkboxInput("impute_ptm", label = "Impute Distribution based on PTM?", value = 0, width = 300)),
-                            column(width = 6, textInput("impute_ptm_grep", label = "Impute PTM grep", value = "Phospho", width = 300))
-                           ),
+                           # fluidRow(
+                           #  column(width = 6, checkboxInput("impute_ptm", label = "Impute Distribution based on PTM?", value = 0, width = 300)),
+                           #  column(width = 6, textInput("impute_ptm_grep", label = "Impute PTM grep", value = "Phospho", width = 300))
+                           # ),
                            fluidRow(
                              column(width = 12,
                               numericInput("bottom_x", label = "Bottom X%", value = "2"),
-                              numericInput("missing_cutoff", label = "%minimum  measured values in group to allow imputation in measured range", value = 50, width = '100%'),
-      
+                              numericInput("missing_cutoff", label = "%minimum  measured values in group to allow imputation in measured range", value = 50, width = '100%')
                               )
                             )
                        ),
@@ -517,8 +513,7 @@ source("Shiny_UI.R")
                            actionButton("rollup_apply", label = "Apply Rollup", width = 300,
                                         style = "color: #fff; background-color: #337ab7; border-color: #2e6da4")
                        )
-                ),
-
+                )
               )),    
   
       
@@ -553,7 +548,7 @@ source("Shiny_UI.R")
                                textInput("qc_plot_accession", label = "Protein Accession", value = "P00330", width = 300)),
                             column(width = 3,
                                    selectInput("qc_norm_type", label = "Select normalization strategy", width = 300,
-                                               choices = list("impute" = "impute"), selected = "impute"),
+                                               choices = list("impute" = "impute"), selected = "impute")
                                    ),
                             column(width = 3,
                                actionButton("qc_protein_plot_apply", label = "Show Plot", width = 300,
@@ -561,7 +556,7 @@ source("Shiny_UI.R")
                           ),
                           fluidRow(
                                br(),
-                               column(width = 6, imageOutput("qc_protein_barplot")),
+                               column(width = 6, imageOutput("qc_protein_barplot"))
                           )
                         ),
 
@@ -571,7 +566,7 @@ source("Shiny_UI.R")
                                         textInput("spike_plot_accession", label = "Protein Accession", value = "P02662,P02663", width = 300)),
                                  column(width = 3,
                                         selectInput("spike_norm_type", label = "Select normalization strategy", width = 300,
-                                                    choices = list("impute" = "impute"), selected = "impute"),
+                                                    choices = list("impute" = "impute"), selected = "impute")
                                  ),
                                  column(width = 3,
                                         actionButton("qc_spike_plot_apply", label = "Show Plot", width = 300,
@@ -580,7 +575,7 @@ source("Shiny_UI.R")
                                fluidRow(
                                  rHandsontableOutput("qc_spike_table"),
                                  br(),
-                                 column(width = 6, imageOutput("spike_protein_barplot")),
+                                 column(width = 6, imageOutput("spike_protein_barplot"))
                                )
                               )
                 )
@@ -762,7 +757,7 @@ source("Shiny_UI.R")
                   column(width =2, offset =0,
                          selectInput("stats_select_data_comp", label = "comparison", 
                                      choices = list("Choice 1" = 1, "Choice 2" = 2, "Choice 3" = 3), 
-                                     selected = 1),
+                                     selected = 1)
                   ),
                   column(width =1, offset =0,
                         checkboxInput("stats_add_filters", label="Apply stat filters (from setup)?", value = 0)
@@ -771,7 +766,7 @@ source("Shiny_UI.R")
                          selectInput("stats_search_field", label = "Search Header", 
                                      choices = list("Accession" = "accession", "Description" = "description", 
                                                     "Name" = "name", "Genes" = "genes", "TopN" = "topn"), 
-                                     selected = "accession"),
+                                     selected = "accession")
                   ),
                    column(width =2, offset =0,
                           textInput("stats_data_description", label="Description", value = "", width = 200)
@@ -788,7 +783,7 @@ source("Shiny_UI.R")
                   column(width =1, offset =0,
                          br(),
                          actionButton("stats_data_save", label = "Save Data", width = 100,
-                                      style="color: #fff; background-color: #337ab7; border-color: #2e6da4"),
+                                      style="color: #fff; background-color: #337ab7; border-color: #2e6da4")
                   ),
                   column(width = 1, offset = 0,
                          br(),
@@ -855,7 +850,7 @@ source("Shiny_UI.R")
                      column(width =1, offset =0,
                             br(),
                             actionButton("stats_oneprotein_data_save", label = "Save Data", width = 100,
-                                         style="color: #fff; background-color: #337ab7; border-color: #2e6da4"),
+                                         style="color: #fff; background-color: #337ab7; border-color: #2e6da4")
                      ),
                      column(width =1, offset =0,
                             br(),
@@ -1143,7 +1138,7 @@ source("Shiny_UI.R")
                 br(),
                 br(),
                 br(),
-                downloadButton(label =  "Download Plot", 'download_string_plot'),
+                downloadButton(label =  "Download Plot", 'download_string_plot')
               ),
             
             box(id = "string_plot", title = "StringDB Plot...", status = "primary",
@@ -1228,12 +1223,7 @@ tabItem(tabName = "admin",
 #---------------------------------------------------------------------
       
       
-      
-      
-      
-      
-      
-      
+ 
       
         
     )

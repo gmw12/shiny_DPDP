@@ -51,6 +51,9 @@ list_tables(params)
 mv <- read_table("missing_values", params)
 
 df_peptide <- read_table("peptide_sltmm_Caskin1_Test_v_Caskin1_Ctrl_final", params)
+df2 <- read_table("peptide_impute_sltmm_final", params)
+df2 <- read_table("peptide_impute_sltmm", params)
+
 testme2 <- read_table("precursor_missing", params)
 df_design <- read_table("design", params)
 test <- read_table("design", params)
@@ -64,7 +67,7 @@ stats_comp <- read_table("stats_comp", params)
 sample_groups <- read_table("sample_groups", params)
 
 test <- read_table('params', params)
-df <- read_table('protein_impute_EsxM_v_Control_final', params)
+df1 <- read_table("peptide_impute_sltmm_Lrrk2_v_Control_final", params)
 df_norm_data <- read_table_try('precursor_normdata', params)
 df <- read_table_try('precursor_noise', params)
 df <- read_table('precursor_filter', params)

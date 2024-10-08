@@ -178,7 +178,7 @@ precursor_refilter_rollup <- function(df_filter_list, df_design, params) {
   }else{
     df_list <- collapse_precursor_ptm_raw(df, sample_count, info_columns, stats=FALSE, add_miss=TRUE, df_missing, params)
     df <- df_list[[1]]
-    df_missing >- df_list[[2]]
+    df_missing <- df_list[[2]]
   }
 
   cat(file = stderr(), "Function - precursor_refilter_rollup...end", "\n")  

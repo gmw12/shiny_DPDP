@@ -94,15 +94,17 @@ impute_bottomx <- function(df, df_random, params){
   df_impute <- df[1:(ncol(df) - params$sample_number)]
   
   #Use all data for distribution or only ptm
-  if (as.logical(params$impute_ptm)) {
-    if ("Modifications" %in% colnames(df)) {
-      df_bottomx_data <- df[grep(params$impute_ptm_grep, df$Modifications),]
-    } else {
-      df_bottomx_data <- df[grep(params$impute_ptm_grep, df$Sequence),]
-    }  
-  } else {
-    df_bottomx_data <- df
-  }
+  # if (as.logical(params$impute_ptm)) {
+  #   if ("Modifications" %in% colnames(df)) {
+  #     df_bottomx_data <- df[grep(params$impute_ptm_grep, df$Modifications),]
+  #   } else {
+  #     df_bottomx_data <- df[grep(params$impute_ptm_grep, df$Sequence),]
+  #   }  
+  # } else {
+  #   df_bottomx_data <- df
+  # }
+  
+  df_bottomx_data <- df
   
   df_bottomx_data <- df_bottomx_data[(ncol(df_bottomx_data) - params$sample_number + 1):ncol(df_bottomx_data)] 
   df_bottomx_data <- log(df_bottomx_data,2)
