@@ -313,6 +313,10 @@ shinyServer(function(session, input, output) {
     #rollup/sum to peptide if PTM analysis (skipping rollup menuItem)
     if(params$ptm) {
       rollup_apply(session, input, output, params)
+      #start qc stats
+      qc_stats(session, input, output, params)
+      create_cv_table(session, input, output, params)
+      render_qc_graphs(session, input, output)
     }
     
     cat(file = stderr(), "impute_apply clicked...end", "\n\n")

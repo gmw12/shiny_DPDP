@@ -98,6 +98,7 @@ create_default_params <- function(volumes, python_path) {
     "group_number" = 0,
     "unique_groups" = "na",
     "meta_precursor_raw" = 0,
+    "meta_precursor_ptm" = 0,
     "meta_peptide_raw" = 0,
     "meta_protein_raw" = 0,
     "meta_precursor_filter" = 0,

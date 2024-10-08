@@ -51,8 +51,9 @@ ui_render_parameters <- function(session, input, output) {
     output$meta_filter_peptide_raw <- renderText({str_c('Raw Peptides:  ', params$meta_peptide_start)})
     output$meta_filter_protein_raw <- renderText({str_c('Raw Protein:  ', params$meta_protein_start)})
     
-    output$meta_parameters_precursor_phos_all <- renderText({str_c('Phos Precursors:  ', params$ptm_total)})
-    output$meta_parameters_precursor_phos_local <- renderText({str_c('Phos Local Precursors:  ', params$ptm_total_local)})
+    output$meta_parameters_precursor_ptm <- renderText({str_c('PTM Precursors:  ', params$ptm_precursors)})
+    output$meta_parameters_precursor_phos_all <- renderText({str_c('Phos Unique Sequences:  ', params$ptm_total)})
+    output$meta_parameters_precursor_phos_local <- renderText({str_c('Phos Unique Local Sequences:  ', params$ptm_total_local)})
     output$meta_parameters_precursor_phos_percent <- renderText({str_c('Phos Enrich:  ', params$ptm_enrich)})
     output$meta_parameters_precursor_phos_local_percent <- renderText({str_c('Phos Local Enrich:  ', params$ptm_enrich_local )}) 
     
@@ -212,7 +213,11 @@ render_qc_graphs <- function(session, input, output) {
            function(x) {
              norm <- norm_type[x]
              norm <- stringr::str_replace_all(norm, " ", "")
-             plot_name <- str_c(params$qc_path, "protein_", norm, "_barplot.png")
+             if (params$data_output == "Protein") {
+               plot_name <- str_c(params$qc_path, "protein_impute_", norm, "_barplot.png")
+             } else if (params$data_output == "Peptide") {
+               plot_name <- str_c(params$qc_path, "peptide_impute_", norm, "_barplot.png")
+             }
              output_name <- str_c("qc_norm_comp", x)
              output[[output_name]] <- renderImage({
                list(src = plot_name, contentType = 'image/png', width = 300, height = 300, alt = "this is alt text")

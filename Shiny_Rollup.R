@@ -28,14 +28,13 @@ rollup_apply_bg <- function(params) {
   
   for (norm in norm_type) {
     norm <- stringr::str_replace_all(norm, " ", "")
-    
     table_name <- stringr::str_c("precursor_impute_", norm)
-    table_name_out <- stringr::str_c("protein_", norm)
-    table_name_out_peptide <- stringr::str_c("peptide_", norm)
-    
     df <- RSQLite::dbReadTable(conn, table_name)
 
     if(params$data_output == "Protein") {
+      cat(file = stderr(), "Output type is protein", "\n")
+      table_name_out <- stringr::str_c("protein_", norm)
+      table_name_out_peptide <- stringr::str_c("peptide_", norm)
       #rollup precursor/peptides
       protein_df <- rollup_selector(df, df_design, params)
       #rollup precursor to peptide
@@ -45,10 +44,12 @@ rollup_apply_bg <- function(params) {
     }
     
     if(params$data_output == "Peptide" & params$ptm) {
+      cat(file = stderr(), "Output type is peptide/ptm", "\n")
       #rollup precursor ptm
       source('Shiny_Rollup.R')
-      peptide_df <- collapse_precursor_ptm_raw(df, info_columns = 0, stats = FALSE, params)
-      RSQLite::dbWriteTable(conn, table_name_out_peptide, peptide_df, overwrite = TRUE)
+      table_name_out_peptide_ptm <- stringr::str_c("peptide_impute_", norm)
+      peptide_df <- collapse_precursor_ptm_raw(df, info_columns = 0, stats = FALSE, add_miss = TRUE, params)
+      RSQLite::dbWriteTable(conn, table_name_out_peptide_ptm, peptide_df, overwrite = TRUE)
     }
     
   }
@@ -114,7 +115,7 @@ collapse_precursor_raw <- function(precursor_data, info_columns = 0, stats = FAL
 }
 
 #--- collapse precursor to peptide-------------------------------------------------------------
-collapse_precursor_ptm_raw <- function(precursor_data, info_columns = 0, stats = FALSE, params) {
+collapse_precursor_ptm_raw <- function(precursor_data, info_columns, stats, add_miss, params) {
   cat(file = stderr(), "function collapse_precursor_ptm_raw...", "\n")
   
   #.   precursor_data <- df
@@ -156,10 +157,74 @@ collapse_precursor_ptm_raw <- function(precursor_data, info_columns = 0, stats =
   
   peptide_data <- tibble::add_column(peptide_data, Localized, .after="Sequence")
   
+  if (add_miss) {
+    cat(file = stderr(), "adding imputed column...", "\n")
+    source('Shiny_File.R')
+    source('Shiny_MVA_Functions.R')
+    df_missing <- read_table_try("precursor_missing", params)
+    
+    df_missing <- cbind(precursor_data$Sequence, df_missing)
+    colnames(df_missing) <- c("Sequence", colnames(df_missing)[2:ncol(df_missing)])
+    df_missing_peptide <- df_missing |> dplyr::group_by(Sequence) |> dplyr::summarise_all(list(sum))
+    df_missing_peptide <- data.frame(dplyr::ungroup(df_missing_peptide))
+    df_missing_peptide$Sequence <- NULL
+    imputed <- reduce_imputed_df(df_missing_peptide) 
+    peptide_data <- tibble::add_column(peptide_data, imputed$Detected_Imputed, .after=info_columns)
+  }
+  
+  
   cat(file = stderr(), "function collapse_precursor_ptm_raw...end", "\n")
   return(peptide_data)
   
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 #--- collapse peptide to protein-------------------------------------------------------------
 collapse_peptide <- function(peptide_data, info_columns=0, stats=FALSE, impute=FALSE){

@@ -307,6 +307,7 @@ meta_data_bg <- function(table_name, data_format, params){
     df_phos <- df[phos_which,]
     df_phos_local <- df_phos[which(df_phos$Localized >= params$ptm_local),]
     df_other_local <- df_other[-which(df_other$Localized <= params$ptm_local & df_other$Localized > 0),]
+    params$ptm_precursors <- nrow(df_phos)
     params$ptm_total <- length(unique(df_phos$Sequence))
     params$ptm_total_local <- length(unique(df_phos_local$Sequence))
     params$other_total <- length(unique(df_other$Sequence))
@@ -628,7 +629,7 @@ precursor_to_precursor_ptm_bg <- function(params){
   df$Localized[is.na(df$Localized)] <- ""
   
   #save copy of raw peptide (from precursor start)
-  raw_peptide <- collapse_precursor_ptm_raw(df, info_columns = 0, stats = FALSE, params)
+  raw_peptide <- collapse_precursor_ptm_raw(df, info_columns = 0, stats = FALSE, add_miss = FALSE, params)
   
   RSQLite::dbWriteTable(conn, "precursor_start", df, overwrite = TRUE)
   RSQLite::dbWriteTable(conn, "raw_peptide", raw_peptide, overwrite = TRUE)

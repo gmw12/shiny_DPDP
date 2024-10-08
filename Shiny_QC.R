@@ -59,9 +59,9 @@ qc_stats_bg <- function(params){
     norm <- stringr::str_replace_all(norm, " ", "")
     
     if (params$data_output == "Protein") {
-      table_name <- stringr::str_c('protein_', norm)
+      table_name <- stringr::str_c('protein_impute_', norm)
     } else if (params$data_output == "Peptide") {
-      table_name <- stringr::str_c('peptide_', norm)
+      table_name <- stringr::str_c('peptide_impute_', norm)
     }
     
     df <- RSQLite::dbReadTable(conn, table_name)
@@ -111,8 +111,13 @@ norm_comp_plot_bg <- function(params){
   
   for (norm in norm_type) {
     norm <- stringr::str_replace_all(norm, " ", "")
-    table_name <- stringr::str_c('protein_', norm)
-
+    
+    if (params$data_output == "Protein") {
+      table_name <- stringr::str_c('protein_impute_', norm)
+    } else if (params$data_output == "Peptide") {
+      table_name <- stringr::str_c('peptide_impute_', norm)
+    }
+    
     bar_plot(table_name, table_name, params$qc_path, params) 
   }
   
@@ -130,7 +135,12 @@ qc_protein_plots <- function(session, input, output, params){
   
   cat(file = stderr(), stringr::str_c(qc_norm_type, "   ", qc_accession), "\n")
   
-  table_name <- str_c("protein_", qc_norm_type)
+  if (params$data_output == "Protein") {
+    table_name <- stringr::str_c('protein_impute_', qc_norm_type)
+  } else if (params$data_output == "Peptide") {
+    table_name <- stringr::str_c('peptide_impute_', qc_norm_type)
+  }
+
   plot_title <- str_c(qc_accession, '_', qc_norm_type)
   
   bg_qcprotein <- callr::r_bg(func = qc_protein_plots_bg, args = list(table_name, plot_title, qc_accession, params), stderr = str_c(params$error_path, "//error_qcprotein.txt"), supervise = TRUE)
@@ -173,7 +183,12 @@ qc_spike_plots <- function(session, input, output, params){
   qc_norm_type <- stringr::str_replace_all(input$spike_norm_type, " ", "") 
   qc_accession <- input$spike_plot_accession
   
-  table_name <- str_c("protein_", qc_norm_type)
+  if (params$data_output == "Protein") {
+    table_name <- stringr::str_c('protein_impute_', qc_norm_type)
+  } else if (params$data_output == "Peptide") {
+    table_name <- stringr::str_c('peptide_impute_', qc_norm_type)
+  }
+
   plot_title <- str_c('QC_Spike_', qc_norm_type)
   
   cat(file = stderr(), stringr::str_c(qc_norm_type, "   ", qc_accession), "\n")

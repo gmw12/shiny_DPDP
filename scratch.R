@@ -72,8 +72,9 @@ df <- read_table_try('precursor_noise', params)
 df <- read_table_try('precursor_raw', params)
 df <- read_table_try('precursor_start', params)
 df <- read_table_try('precursor_norm_sltmm', params)
-df1 <- read_table_try('precursor_impute_sltmm', params)
-df2 <- read_table_try('protein_raw', params)
+precursor_data <- read_table_try('precursor_impute_sltmm', params)
+df1 <- read_table_try('peptide_impute_sltmm', params)
+dfm <- read_table_try('precursor_missing', params)
 test3 <- read_table('protein_sltmm', params)
 test4 <- read_table('protein_sltmm_final', params)
 df <- read_table(stats_comp$Final_Table_Name[1], params)
@@ -809,14 +810,14 @@ ggplot2::ggplot(plotdf, ggplot2::aes(x = ID, y = vec)) +
 
 
 
-
+df <- read_table_try('precursor_start', params)
 df <- read_table('precursor_filter', params)
 df <- read_table('precursor_normdata', params)
 
 df_data <- df[,10:ncol(df)]
 sum_all <- sum(df_data, na.rm = TRUE)
 
-df_phos <- df[grepl(params$norm_include_grep, df$Sequence, ignore.case = TRUE),]
+df_phos <- df[grepl(params$ptm_grep, df$Sequence, ignore.case = TRUE),]
 df_phos_data <- df_phos[,10:ncol(df_phos)]
 sum_phos <- sum(df_phos_data, na.rm = TRUE)
 

@@ -26,6 +26,7 @@ hide_enable <- function(session, input, output) {
       shinyjs::hide("ptm_local")
       shinyjs::hide("meta_parameters_precursor_phos_all")
       shinyjs::hide("meta_parameters_precursor_phos_local")
+      shinyjs::hide("meta_parameters_precursor_ptm")
       shinyjs::hide("meta_parameters_precursor_phos_percent")
       shinyjs::hide("meta_parameters_precursor_phos_local_percent")
       updateRadioButtons(session, "rollup_method", label = NULL,
@@ -37,6 +38,7 @@ hide_enable <- function(session, input, output) {
       shinyjs::show("ptm_grep")
       shinyjs::show("ptm_local")
       shinyjs::show("meta_parameters_precursor_phos_all")
+      shinyjs::show("meta_parameters_precursor_ptm")
       shinyjs::show("meta_parameters_precursor_phos_local")
       shinyjs::show("meta_parameters_precursor_phos_percent")
       shinyjs::show("meta_parameters_precursor_phos_local_percent")
