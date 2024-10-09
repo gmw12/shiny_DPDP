@@ -377,8 +377,16 @@ create_stats_data_table_bg <- function(input_stats_norm_type, input_stats_select
   source('Shiny_Tables.R')
   source('Shiny_MVA_Functions.R')
   
+  save(input_stats_norm_type, file="z5"); save(input_stats_select_data_comp, file="z4"); save(input_stats_add_filters, file="z3"); save(input_stats_search_field, file="z2"); save(input_stats_data_description, file="z1");
+  #  load(file="z5"); load(file="z4"); load(file="z3"); load(file="z2"); load(file="z1");
+  
   #confirm data exists in database
-  data_name <- stringr::str_c("protein_", input_stats_norm_type, "_", input_stats_select_data_comp, "_final")
+  if (params$data_output == "Protein") {
+    data_name <- stringr::str_c("protein_", input_stats_norm_type, "_", input_stats_select_data_comp, "_final")
+  } else {
+    data_name <- stringr::str_c("peptide_impute_", input_stats_norm_type, "_", input_stats_select_data_comp, "_final")
+  }
+  
   cat(file = stderr(), stringr::str_c("data_name --> ", data_name), "\n")
   
   stats_comp <- read_table_try("stats_comp", params)
@@ -392,6 +400,7 @@ create_stats_data_table_bg <- function(input_stats_norm_type, input_stats_select
     cat(file = stderr(), stringr::str_c(data_name, " is NOT in database"), "\n") 
   }
   
+  cat(file = stderr(), "Function create_stats_data_table_bg...1", "\n")
   comp_number <- which(stats_comp$Name == input_stats_select_data_comp)
   sample_number <- as.integer(stats_comp$N[comp_number]) + as.integer(stats_comp$D[comp_number])
   start_sample_col <- min(grep(stats_comp$FactorsN[comp_number], names(df)), grep(stats_comp$FactorsD[comp_number], names(df)))
@@ -400,6 +409,7 @@ create_stats_data_table_bg <- function(input_stats_norm_type, input_stats_select
   #filter data for display
   df <- stats_data_table_filter(df, sample_number, start_sample_col, input_stats_add_filters, input_stats_search_field, input_stats_data_description)
   
+  cat(file = stderr(), "Function create_stats_data_table_bg...2", "\n")
   if (params$data_output == "Protein") {
     stats_DT <- protein_table(df, start_sample_col, sample_number, spqc_number)
   }else{
@@ -712,3 +722,174 @@ oneprotein_data_save_excel_bg <- function(input_stats_norm_type,  input_stats_on
   cat(file = stderr(), "Function oneprotein_data_save_excel_bg...end", "\n")
   
 }
+
+
+#-------------------------------------------------------------------------------------------------------------  
+create_stats_onepeptide_plots <- function(session, input, output, params) {
+  cat(file = stderr(), "Function create_stats_onepeptide_plots...", "\n")
+  showModal(modalDialog("Creating stats onepeptide plots...", footer = NULL))  
+  
+  df_design <- read_table("design", params)
+  stats_comp <- read_table("stats_comp", params)
+  
+  arg_list <- list(input$stats_norm_type, input$stats_oneprotein_plot_comp, input$stats_oneprotein_accession, input$stats_oneprotein_plot_spqc,
+                   input$stats_use_zscore, df_design, stats_comp, params)
+  
+  create_stats_oneprotein_plots <- callr::r_bg(func = create_stats_oneprotein_plots_bg , args = arg_list, stderr = str_c(params$error_path, "//error_create_stats_oneprotein_plots.txt"), supervise = TRUE)
+  create_stats_oneprotein_plots$wait()
+  print_stderr("error_create_stats_oneprotein_plots.txt")
+  
+  cat(file = stderr(), "Function create_stats_oneprotein_plots...1", "\n")
+  bg_plot_list <- create_stats_oneprotein_plots$get_result()
+  df <- bg_plot_list[[1]]
+  namex <- bg_plot_list[[2]]
+  color_list <- bg_plot_list[[3]]
+  peptide_pos_lookup <- bg_plot_list[[4]]
+  grouped_color_list <- bg_plot_list[[5]]
+  new_df <- bg_plot_list[[6]]
+  df_peptide <- bg_plot_list[[7]]
+  options_DT <- bg_plot_list[[8]]
+  
+  interactive_barplot(session, input, output, df, namex, color_list, "stats_oneprotein_barplot", input$stats_oneprotein_plot_comp, plot_number=1)
+  
+  interactive_grouped_barplot(session, input, output, new_df, input$stats_oneprotein_plot_comp, grouped_color_list)
+  
+  output$oneprotein_peptide_table <-  DT::renderDataTable(df_peptide, rownames = FALSE, extensions = c("FixedColumns"), 
+                                                          selection = 'single', options=options_DT,
+                                                          callback = DT::JS('table.page(3).draw(false);')
+  )
+  
+  output$download_stats_oneprotein_data_save <- downloadHandler(
+    file = function(){
+      input$stats_oneprotein_data_filename
+    },
+    content = function(file){
+      fullname <- stringr::str_c(params$data_path, input$stats_norm_type, "//", input$stats_oneprotein_data_filename)
+      cat(file = stderr(), stringr::str_c("download_stats_oneprotein_data fullname = ", fullname), "\n")
+      file.copy(fullname, file)
+    }
+  )
+  
+  
+  cat(file = stderr(), "Function create_stats_oneprotein_plots...end", "\n")
+  removeModal()
+  
+}
+
+#---------------------------------------------------------------------
+observeEvent(input$create_stats_onepeptide_plots, { 
+  cat(file = stderr(), "create_stats_onepeptide_plots...", "\n")
+  
+  comp_test <- try(which(dpmsr_set$data$stats[[input$stats_onepeptide_plot_comp]] == input$stats_onepeptide_accession), silent =TRUE)
+  comp_string <- input$stats_onepeptide_plot_comp
+  comp_number <- which(dpmsr_set$y$stats$groups$comp_name == comp_string)
+  
+  cat(file = stderr(), "create_stats_onepeptide_plots...1", "\n")
+  cat(file = stderr(), str_c("comp_number = ", comp_number, " -v- ",  length(dpmsr_set$y$stats$groups$comp_name)  ) , "\n")
+  check_qc <- TRUE
+  
+  #test for all.samples v qc and adding qc
+  # if(input$stats_onepeptide_plot_spqc & comp_number==length(dpmsr_set$y$stats$groups$comp_name)) {
+  #   cat(file = stderr(), "Reset SPQC", "\n")
+  #   updateCheckboxInput(session, "stats_onepeptide_plot_spqc",  value = FALSE)
+  #   check_qc <- FALSE
+  # }
+  
+  #test for SPQC group already in comparison, if so turn off and warn
+  cat(file = stderr(), "create_stats_onepeptide_plots...2", "\n")
+  if(input$stats_onepeptide_plot_spqc & grepl(dpmsr_set$y$stats$comp_spqc, dpmsr_set$y$stats$groups$comp_name[comp_number]) ) {
+    cat(file = stderr(), "Reset SPQC", "\n")
+    updateCheckboxInput(session, "stats_onepeptide_plot_spqc",  value = FALSE)
+    check_qc <- FALSE
+  }
+  
+  cat(file = stderr(), "create_stats_onepeptide_plots...3", "\n")
+  if (length(comp_test)!=0 & check_qc){  
+    
+    df_list <- onepeptide_data(session, input, output)
+    #df_peptide in df_list
+    for(j in names(df_list)){assign(j, df_list[[j]]) }
+    
+    cat(file = stderr(), "create_stats_onepeptide_plots...4", "\n")
+    interactive_barplot(session, input, output, df, namex, color_list, "stats_onepeptide_barplot", comp_string)
+    
+    peptide_pos_lookup <-  peptide_position_lookup(session, input, output, as.character(input$stats_onepeptide_accession))
+    grouped_color <- unique(color_list)
+    #interactive_grouped_peptide_barplot(session, input, output, comp_string, df_peptide, info_columns, comp_name, peptide_pos_lookup, grouped_color)
+    interactive_grouped_peptide_barplot(session, input, output, comp_string, df_peptide, info_columns, input$stats_onepeptide_plot_comp, peptide_pos_lookup, grouped_color)
+    
+    cat(file = stderr(), "create_stats_onepeptide_plots...5", "\n")
+    sample_col_numbers <- seq(from=12, to = ncol(df_peptide) )
+    df_peptide <- cbind(df_peptide, df_peptide_stats)
+    
+    df_peptide <- merge(df_peptide, peptide_pos_lookup, by=(c("Accession", "Sequence"))    )
+    df_peptide$Start <- as.numeric(df_peptide$Start)
+    df_peptide$Stop <- as.numeric(df_peptide$Stop)
+    df_peptide<- df_peptide %>% dplyr::select(Stop, everything())
+    df_peptide <- df_peptide %>% dplyr::select(Start, everything())
+    df_peptide <- df_peptide[order(df_peptide$Start, df_peptide$Stop), ]
+    
+    cat(file = stderr(), "create_stats_onepeptide_plots...6", "\n")
+    onepeptide_peptide_DT <-  DT::datatable(df_peptide,
+                                            rownames = FALSE,
+                                            extensions = c("FixedColumns"), #, "Buttons"),
+                                            options=list(
+                                              #dom = 'Bfrtipl',
+                                              autoWidth = TRUE,
+                                              scrollX = TRUE,
+                                              scrollY=500,
+                                              scrollCollapse=TRUE,
+                                              columnDefs = list(list(targets = c(0,1), visibile = TRUE, "width"='30', className = 'dt-center'),
+                                                                list(targets = c(2), visible = TRUE, "width"='20', className = 'dt-center'),
+                                                                list(
+                                                                  targets = c(5),
+                                                                  width = '250',
+                                                                  render = JS(
+                                                                    "function(data, type, row, meta) {",
+                                                                    "return type === 'display' && data.length > 35 ?",
+                                                                    "'<span title=\"' + data + '\">' + data.substr(0, 35) + '...</span>' : data;",
+                                                                    "}")
+                                                                ),
+                                                                list(
+                                                                  targets = c(6),
+                                                                  width = '150',
+                                                                  render = JS(
+                                                                    "function(data, type, row, meta) {",
+                                                                    "return type === 'display' && data.length > 35 ?",
+                                                                    "'<span title=\"' + data + '\">' + data.substr(0, 35) + '...</span>' : data;",
+                                                                    "}")
+                                                                ),
+                                                                list(
+                                                                  targets = c(10),
+                                                                  width = '100',
+                                                                  render = JS(
+                                                                    "function(data, type, row, meta) {",
+                                                                    "return type === 'display' && data.length > 20 ?",
+                                                                    "'<span title=\"' + data + '\">' + data.substr(0, 20) + '...</span>' : data;",
+                                                                    "}")
+                                                                )
+                                              ),
+                                              ordering = TRUE,
+                                              orderClasses= TRUE,
+                                              fixedColumns = list(leftColumns = 2),
+                                              pageLength = 100, lengthMenu = c(10,50,100,200)),
+                                            #buttons=c('copy', 'csv', 'excelHtml5', 'pdf')),
+                                            callback = JS('table.page(3).draw(false);'
+                                            ))
+    
+    onepeptide_peptide_DT <- onepeptide_peptide_DT %>%  formatRound(columns=c(sample_col_numbers), digits=2)
+    
+    output$onepeptide_peptide_table<-  DT::renderDataTable({onepeptide_peptide_DT })
+    
+    
+  }else{
+    shinyalert("Oops!", "No Accession or SPQC add error", type = "error")
+  }
+  removeModal()
+  cat(file = stderr(), "create_stats_onepeptide_plots...end", "\n")
+  
+})
+
+
+
+

@@ -408,6 +408,7 @@ stats_data_table_filter <- function(df, sample_number, start_sample_col, input_s
     df <- df[grep(as.character(input_stats_data_description), df$Name), ]
   }
   
+  cat(file = stderr(), "stats_data_table_filter... 3", "\n")
   df_colnames <- colnames(df)
   df_colnames <- gsub("_v_", " v ", df_colnames)
   df_colnames <- gsub("_FC", " FC", df_colnames)

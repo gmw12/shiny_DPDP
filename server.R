@@ -511,8 +511,21 @@ shinyServer(function(session, input, output) {
     
   })
   
-
-  #-------------------------------------------------------------------------------------------------------------
+  #-------------------------------------------------------------------------------------------------------------  
+  
+  observeEvent(input$create_stats_onepeptide_plots, { 
+    cat(file = stderr(), "create_stats_onepeptide_plots..." , "\n")
+    
+    create_stats_onepeptide_plots(session, input, output, params)
+    
+    cat(file = stderr(), "create_stats_onepeptide_plots...end" , "\n")
+    
+  })
+  
+#---------------------------------------------------------------------------------------------------------
+ 
+  
+#-------------------------------------------------------------------------------------------------------------
   observeEvent(input$set_pathway, {
     cat(file = stderr(), "set_pathway clicked..." , "\n")
     

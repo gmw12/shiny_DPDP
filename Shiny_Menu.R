@@ -139,7 +139,7 @@ load_menu_peptide <- function(session, input, output) {
              menuItem("Comparisons", tabName = "stats_compare"),
              menuItem("Graphs", tabName = "stats_plots"),
              menuItem("Data", tabName = "stats_data"),
-             menuItem("Protein Plots", tabName = "stats_protein_plots"))
+             menuItem("Peptide Plots", tabName = "stats_peptide_plots"))
   })
 
   output$menu_admin <- renderMenu({ 

@@ -234,6 +234,72 @@ protein_table <- function(df, start_sample_col, sample_number, spqc_number){
 
 #------------------------------------------------------------------------------------------------------------------
 
+peptide_table <- function(df, start_sample_col, sample_number, spqc_number){
+  cat(file = stderr(), "Function peptide_table...", "\n")
+  require('DT')
+  source('Shiny_Misc_Functions.R')
+  
+  df <- round_columns(df,  rep(start_sample_col:(start_sample_col + sample_number + spqc_number - 1)), 1)
+  df <- round_columns(df, "pval", 7)
+  df <- round_columns(df, "cv_cols", 2)
+  df <- round_columns(df, "fc_cols", 2)
+  
+  options <- list(
+    selection = 'single',
+    #dom = 'Bfrtipl',
+    autoWidth = TRUE,
+    scrollX = TRUE,
+    scrollY = 500,
+    scrollCollapse = TRUE,
+    columnDefs = list(
+      list(
+        targets = c(0),
+        visibile = TRUE,
+        "width" = '30',
+        className = 'dt-center'
+      ),
+      list(
+        targets = c(2),
+        visible = TRUE,
+        "width" = '20',
+        className = 'dt-center'
+      ),
+      list(
+        targets = c(1),
+        width = '250',
+        render = JS(
+          "function(data, type, row, meta) {",
+          "return type === 'display' && data.length > 35 ?",
+          "'<span title=\"' + data + '\">' + data.substr(0, 35) + '...</span>' : data;",
+          "}"
+        )
+      ),
+      list(
+        targets = c(3),
+        width = '100',
+        render = JS(
+          "function(data, type, row, meta) {",
+          "return type === 'display' && data.length > 20 ?",
+          "'<span title=\"' + data + '\">' + data.substr(0, 20) + '...</span>' : data;",
+          "}"
+        )
+      )
+    ),
+    ordering = TRUE,
+    orderClasses = TRUE,
+    fixedColumns = list(leftColumns = 1),
+    pageLength = 10,
+    lengthMenu = c(10, 50, 100, 200)
+    #formatRound(columns = c(sample_col_numbers + 1), digits = 0)
+  )
+  
+  cat(file = stderr(), "Function peptide_table...end", "\n")
+  return(list(df, options))   
+}
+
+
+#------------------------------------------------------------------------------------------------------------------
+
 protein_peptide_table <- function(df_peptide, peptide_pos_lookup, start_sample_col_peptide){
   cat(file = stderr(), "Function protein_table...", "\n")
   require('DT')
@@ -380,10 +446,7 @@ protein_table_backup <- function(df){
 
 #--------------------------------
 
-
-
-
-peptide_table <- function(session, input, output, filter_df){
+peptide_table_backup <- function(session, input, output, filter_df){
   require('DT')
   
   pval_cols <- colnames(filter_df %>% dplyr::select(contains("pval") ) )
