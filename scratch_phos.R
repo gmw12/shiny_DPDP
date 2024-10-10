@@ -1,3 +1,38 @@
+#notlocal_file <- "/Users/gregwaitt/data/nolocal_PTManlaysis_3modlocal.tsv"
+notlocal_file <- "/mnt/h_black2/X10546/local_PTManlaysis_3modlocal.tsv"
+df <- data.table::fread(file = notlocal_file, header = TRUE, stringsAsFactors = FALSE, sep = "\t", fill = TRUE)
+
+phos_which <- which(grepl("Phospho", df$EG.ModifiedSequence))
+df_phos <- df[phos_which,]
+
+df_test <- data.frame(cbind(df_phos$PEP.PeptidePosition, df_phos$EG.ProteinPTMLocations))
+colnames(df_test) <- c("PeptidePosition", "ProteinPTMLocations")
+
+df_test$ProLoc <- ""
+
+for (i in (1:nrow(df_phos))) {
+  test <- stringr::str_split(df_test$ProteinPTMLocations[i], ",")
+  test <- unlist(test)
+  keep <- c()
+  for (l in (1:length(test))) {
+    test2 <- gsub("[\\(\\)]", "", test[l])
+    if (substring(test2, 1, 1) == "S" | substring(test2, 1, 1) == "T" | substring(test2, 1, 1) == "Y" ) {
+      residue <- as.numeric(gsub("[^0-9]", "", test2)) - as.numeric(df_test$PeptidePosition[i])
+      keep <- c(keep, residue)
+    }  
+  }
+  if(length(keep) > 0) {df_test$ProLoc[i] <- list(keep)}
+}
+
+
+
+
+
+
+
+
+
+
 
 
 
