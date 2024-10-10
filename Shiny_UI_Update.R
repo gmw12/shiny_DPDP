@@ -214,7 +214,7 @@ render_qc_graphs <- function(session, input, output) {
              norm <- norm_type[x]
              norm <- stringr::str_replace_all(norm, " ", "")
              if (params$data_output == "Protein") {
-               plot_name <- str_c(params$qc_path, "protein_impute_", norm, "_barplot.png")
+               plot_name <- str_c(params$qc_path, "protein_", norm, "_barplot.png")
              } else if (params$data_output == "Peptide") {
                plot_name <- str_c(params$qc_path, "peptide_impute_", norm, "_barplot.png")
              }

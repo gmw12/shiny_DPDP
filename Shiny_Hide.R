@@ -1,7 +1,7 @@
 cat(file = stderr(), "Shiny_Hide.R", "\n")
 
 hide_enable <- function(session, input, output) {
-  cat(file = stderr(), "Function - hide_enable", "\n")
+  cat(file = stderr(), "Function - hide_enable...", "\n")
 
   observe({
     if (params$raw_data_format == "protein") {
@@ -193,5 +193,5 @@ hide_enable <- function(session, input, output) {
   })
     
 
-  
+  cat(file = stderr(), "Function - hide_enable...end", "\n")
 }

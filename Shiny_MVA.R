@@ -7,7 +7,7 @@ check_comp_names <- function(session, input, output){
   showModal(modalDialog("Setting Stat groups...", footer = NULL))  
   source('Shiny_File.R')
   
-  table_name <- str_c("protein_impute_", input$stats_norm_type)
+  table_name <- str_c("protein_", input$stats_norm_type)
   table_name_peptide <- str_c("peptide_impute_", input$stats_norm_type)
   table_name <- gsub(" ", "", table_name, fixed = TRUE)
   table_name_peptide <- gsub(" ", "", table_name_peptide, fixed = TRUE) 
@@ -777,7 +777,7 @@ create_stats_onepeptide_plots <- function(session, input, output, params) {
 }
 
 #---------------------------------------------------------------------
-observeEvent(input$create_stats_onepeptide_plots, { 
+stupid <- function() { 
   cat(file = stderr(), "create_stats_onepeptide_plots...", "\n")
   
   comp_test <- try(which(dpmsr_set$data$stats[[input$stats_onepeptide_plot_comp]] == input$stats_onepeptide_accession), silent =TRUE)
@@ -888,7 +888,7 @@ observeEvent(input$create_stats_onepeptide_plots, {
   removeModal()
   cat(file = stderr(), "create_stats_onepeptide_plots...end", "\n")
   
-})
+}
 
 
 

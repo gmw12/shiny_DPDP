@@ -199,24 +199,31 @@ stat_add <- function(df, df_missing, params, comp_number, stats_comp, df_design)
   sample_count <- as.numeric(stats_comp$Total[comp_number])
   df_samples <- df[,(ncol(df) - sample_count + 1):ncol(df)]
   
-  #fix sample names
   cat(file = stderr(), "stat_add...1", "\n")
   
-  sample_names <- c(df_design$Header2[str_to_numlist(stats_comp$N_loc[comp_number])],
-                    df_design$Header2[str_to_numlist(stats_comp$D_loc[comp_number])])
+  #fix sample names
+  sample_names <- c(df_design$Header2[str_to_numlist(stats_comp$N_loc[comp_number])], 
+                      df_design$Header2[str_to_numlist(stats_comp$D_loc[comp_number])])
+  name_order <- c(stats_comp$N_loc, stats_comp$D_loc)
+  
   if (stats_comp$SPQC[comp_number] != 0) {
     sample_names <- c(sample_names, df_design$Header2[str_to_numlist(stats_comp$SPQC_loc[comp_number])])
+    name_order <- c(name_order, stats_comp$SPQC_loc)
   }
+  sample_names <- sample_names[str_to_numlist(name_order)]
+  
   colnames(df)[(ncol(df) - sample_count + 1):ncol(df)] <- sample_names
   colnames(df_samples) <- sample_names
   
   cat(file = stderr(), "stat_add...2", "\n")
   
-  df_N <- df_samples |> dplyr::select(starts_with(stats_comp$FactorsN[comp_number]))
-  df_D <- df_samples |> dplyr::select(starts_with(stats_comp$FactorsD[comp_number]))
+  df_N <- df_samples[,str_to_numlist(stats_comp$N_loc[comp_number])]
+  df_D <- df_samples[,str_to_numlist(stats_comp$D_loc[comp_number])]
   if (stats_comp$SPQC[comp_number] != 0) {
-    df_SPQC <- df_samples |> dplyr::select(starts_with(params$comp_spqc))
+    df_SPQC <- df_samples[,str_to_numlist(stats_comp$SPQC_loc[comp_number])]
   }
+  
+  
   
   if (params$raw_data_format != "protein"){
     df_N_missing <- df_missing |> dplyr::select(starts_with(stats_comp$FactorsN[comp_number]))

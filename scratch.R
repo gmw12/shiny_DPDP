@@ -50,9 +50,9 @@ list_tables(params)
 
 mv <- read_table("missing_values", params)
 
-df_peptide <- read_table("peptide_sltmm_Caskin1_Test_v_Caskin1_Ctrl_final", params)
-df2 <- read_table("peptide_impute_sltmm_final", params)
-df2 <- read_table("peptide_impute_sltmm", params)
+df1 <- read_table("peptide_impute_sltmm_Control_v_Lrrk2_final", params)
+df2 <- read_table("peptide_impute_sltmm_Lrrk2_v_Control_final", params)
+df3 <- read_table("peptide_impute_sltmm", params)
 
 testme2 <- read_table("precursor_missing", params)
 df_design <- read_table("design", params)

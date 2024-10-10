@@ -59,7 +59,7 @@ qc_stats_bg <- function(params){
     norm <- stringr::str_replace_all(norm, " ", "")
     
     if (params$data_output == "Protein") {
-      table_name <- stringr::str_c('protein_impute_', norm)
+      table_name <- stringr::str_c('protein_', norm)
     } else if (params$data_output == "Peptide") {
       table_name <- stringr::str_c('peptide_impute_', norm)
     }
@@ -136,7 +136,7 @@ qc_protein_plots <- function(session, input, output, params){
   cat(file = stderr(), stringr::str_c(qc_norm_type, "   ", qc_accession), "\n")
   
   if (params$data_output == "Protein") {
-    table_name <- stringr::str_c('protein_impute_', qc_norm_type)
+    table_name <- stringr::str_c('protein_', qc_norm_type)
   } else if (params$data_output == "Peptide") {
     table_name <- stringr::str_c('peptide_impute_', qc_norm_type)
   }
@@ -186,7 +186,7 @@ qc_spike_plots <- function(session, input, output, params){
   qc_accession <- input$spike_plot_accession
   
   if (params$data_output == "Protein") {
-    table_name <- stringr::str_c('protein_impute_', qc_norm_type)
+    table_name <- stringr::str_c('protein_', qc_norm_type)
   } else if (params$data_output == "Peptide") {
     table_name <- stringr::str_c('peptide_impute_', qc_norm_type)
   }
