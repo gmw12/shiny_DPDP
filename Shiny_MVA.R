@@ -377,7 +377,7 @@ create_stats_data_table_bg <- function(input_stats_norm_type, input_stats_select
   source('Shiny_Tables.R')
   source('Shiny_MVA_Functions.R')
   
-  save(input_stats_norm_type, file="z5"); save(input_stats_select_data_comp, file="z4"); save(input_stats_add_filters, file="z3"); save(input_stats_search_field, file="z2"); save(input_stats_data_description, file="z1");
+  # save(input_stats_norm_type, file="z5"); save(input_stats_select_data_comp, file="z4"); save(input_stats_add_filters, file="z3"); save(input_stats_search_field, file="z2"); save(input_stats_data_description, file="z1");
   #  load(file="z5"); load(file="z4"); load(file="z3"); load(file="z2"); load(file="z1");
   
   #confirm data exists in database

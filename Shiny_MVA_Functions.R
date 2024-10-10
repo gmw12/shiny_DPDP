@@ -141,7 +141,7 @@ precursor_refilter_rollup <- function(df_filter_list, df_design, params) {
   source('Shiny_Rollup_Functions.R')
   source('Shiny_MVA_Functions.R')
   
-  save(df_filter_list, file="y1"); save(df_design, file="y2"); 
+  #save(df_filter_list, file="y1"); save(df_design, file="y2"); 
   #  load(file="y1"); load(file="y2"); 
   
   
@@ -190,7 +190,7 @@ precursor_refilter_rollup <- function(df_filter_list, df_design, params) {
 stat_add <- function(df, df_missing, params, comp_number, stats_comp, df_design) {
   cat(file = stderr(), "Function - stat_add...", "\n")
   
-  save(df, file="x1"); save(df_missing, file="x2"); save(comp_number, file="x3"); save(stats_comp, file="x4"); save(df_design, file="x5");
+  #save(df, file="x1"); save(df_missing, file="x2"); save(comp_number, file="x3"); save(stats_comp, file="x4"); save(df_design, file="x5");
   #   load(file="x1");  load(file="x2");load(file="x3"); load(file="x4"); load(file="x5")
   
   source("Shiny_Misc_Functions.R")

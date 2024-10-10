@@ -122,7 +122,7 @@ collapse_precursor_ptm_raw <- function(precursor_data, sample_columns, info_colu
   cat(file = stderr(), "function collapse_precursor_ptm_raw...", "\n")
   
   #.   precursor_data <- df
-  save(precursor_data, file="z1");save(info_columns, file="z2");save(stats, file="z3");save(add_miss, file="z4");save(df_missing, file="z5");save(sample_columns, file="z6")
+  #save(precursor_data, file="z1");save(info_columns, file="z2");save(stats, file="z3");save(add_miss, file="z4");save(df_missing, file="z5");save(sample_columns, file="z6")
   #  load(file="z1");load(file="z2");load(file="z3");load(file="z4");load(file="z5");  load(file="z6")
   
   localized_data <- precursor_data$Localized

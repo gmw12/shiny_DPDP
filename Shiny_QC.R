@@ -165,7 +165,7 @@ qc_protein_plots_bg <- function(table_name, plot_title, qc_accession, plot_dir, 
   source("Shiny_Plots.R")
   source("Shiny_File.R")
     
-  save(table_name, file="z1"); save(plot_title, file="z2"); save(plot_dir, file="z3"); save(qc_accession, file="z4")
+  #save(table_name, file="z1"); save(plot_title, file="z2"); save(plot_dir, file="z3"); save(qc_accession, file="z4")
   #  load(file="z1"); load(file="z2"); load(file="z3"); load(file="z4")
   
   df <- read_table_try(table_name, params)
