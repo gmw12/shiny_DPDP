@@ -4,9 +4,11 @@ df <- data.table::fread(file = notlocal_file, header = TRUE, stringsAsFactors = 
 
 phos_which <- which(grepl("Phospho", df$EG.ModifiedSequence))
 df_phos <- df[phos_which,]
+df_phos_prob <- df_phos |> dplyr::select(contains('PTMProbabilities [Phospho')) 
+df_phos_prob[df_phos_prob=="Filtered"] <- ""
 
-df_test <- data.frame(cbind(df_phos$PEP.PeptidePosition, df_phos$EG.ProteinPTMLocations))
-colnames(df_test) <- c("PeptidePosition", "ProteinPTMLocations")
+df_test <- data.frame(cbind(df_phos$EG.ModifiedSequence, df_phos$PEP.PeptidePosition, df_phos$EG.ProteinPTMLocations))
+colnames(df_test) <- c("ModifiedSequence", "PeptidePosition", "ProteinPTMLocations")
 
 df_test$ProLoc <- ""
 
@@ -24,11 +26,11 @@ for (i in (1:nrow(df_phos))) {
   if(length(keep) > 0) {df_test$ProLoc[i] <- list(keep)}
 }
 
+test <- substring(df_test$ModifiedSequence[1], 2, (df_test$ProLoc[[1]]+2))
+test <- gsub("[^STY]", "", test)
+test <- nchar(test)
 
-
-
-
-
+df_phos_prob$rs <- rowSums(df_phos_prob)
 
 
 
