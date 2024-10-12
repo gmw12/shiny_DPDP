@@ -4,65 +4,98 @@ df <- data.table::fread(file = notlocal_file, header = TRUE, stringsAsFactors = 
 
 phos_which <- which(grepl("Phospho", df$EG.ModifiedSequence))
 df_phos <- df[phos_which,]
-df_phos_prob <- df_phos |> dplyr::select(contains('PTMProbabilities [Phospho')) 
-df_phos_prob[df_phos_prob=="Filtered"] <- ""
 
-df_test <- data.frame(cbind(df_phos$PEP.StrippedSequence, df_phos$EG.ModifiedSequence, df_phos$PEP.PeptidePosition, df_phos$EG.ProteinPTMLocations))
-colnames(df_test) <- c("Sequence", "ModSequence", "PeptidePosition", "ProteinPTMLocations")
+df2 <- find_local(df_phos)
 
-df_test$ProLoc <- ""
+find_local <- function (df_phos) {
+  require(foreach)
+  require(doParallel)
+  cores <- detectCores()
+  cl <- makeCluster(cores - 2)
+  registerDoParallel(cl)
+  
+  #Step 1 consolicate localization into one list of max local for each position
+  #create df of just probabilities
+  df_phos_prob <- df_phos |> dplyr::select(contains('PTMProbabilities [Phospho')) 
+  df_phos_prob[df_phos_prob=="Filtered"] <- ""
 
-df_test$test <- gsub("\\[Phospho \\(STY\\)\\]", "*", df_test$ModSequence)
-df_test$test <- gsub("_", "", df_test$test)
-df_test$test <- gsub("\\[.*?\\]", "", df_test$test)
-df_test$test <- gsub("[^STY*]", "", df_test$test)
+  df_local <- data.frame(cbind(df_phos$PEP.StrippedSequence, df_phos$EG.ModifiedSequence, df_phos$PEP.PeptidePosition, df_phos$EG.ProteinPTMLocations))
+  colnames(df_local) <- c("Sequence", "ModSequence", "PeptidePosition", "ProteinPTMLocations")
 
+  #Step 2 reduce modified sequence to STY with phos residue marked with *
+  df_local$phos_seq <- gsub("\\[Phospho \\(STY\\)\\]", "*", df_local$ModSequence)
+  df_local$phos_seq <- gsub("_", "", df_local$phos_seq)
+  df_local$phos_seq <- gsub("\\[.*?\\]", "", df_local$phos_seq)
+  df_local$phos_seq <- gsub("[^STY*]", "", df_local$phos_seq)
+  
 
-phos_list <- c()
-for (r in (1:nrow(df_test))) {
-  phos_count <- stringr::str_count(df_test$test[r], "\\*")
-  temp_list <- c()
-  if (phos_count >= 1) {
-    phos_loc <- stringr::str_locate_all(df_test$test[r], "\\*")
-    for(c in (1:phos_count)){
-      temp_list <- c(temp_list, (phos_loc[[1]][[c]] - c))
+  #phos_list <- c()
+  parallel_result1 <- foreach(r = 1:nrow(df_local), .combine = c) %dopar% {
+  #for (r in (1:nrow(df_local))) {
+    phos_count <- stringr::str_count(df_local$phos_seq[r], "\\*")
+    temp_list <- c()
+    if (phos_count >= 1) {
+      phos_loc <- stringr::str_locate_all(df_local$phos_seq[r], "\\*")
+      for(c in (1:phos_count)){
+        temp_list <- c(temp_list, (phos_loc[[1]][[c]] - c))
+      }
     }
+    list(temp_list)
   }
-  phos_list <- c(phos_list, list(temp_list))
-}
 
-df_test$test2 <- phos_list
-
-require(foreach)
-require(doParallel)
-cores <- detectCores()
-cl <- makeCluster(cores - 2)
-registerDoParallel(cl)
+  df_local$phos_res <- parallel_result1
 
 
+  parallel_result2 <- foreach(r = 1:nrow(df_phos_prob), .combine = c) %dopar% {
+    first_value <- FALSE
+    for (c in (1:ncol(df_phos_prob))) {
+      if (!first_value) { 
+        temp1 <- unlist(stringr::str_split(df_phos_prob[[r,c]], ";")) |> as.numeric() 
+        if (!is.na(temp1[[1]])) {
+          first_value <- TRUE
+        }
+      }else {
+        temp2 <- unlist(stringr::str_split(df_phos_prob[[r,c]], ";")) |> as.numeric()
+        if (!is.na(temp2[[1]])) {
+          temp1 <- pmax(temp1, temp2)
+        }
+      }
+    }
+    list(temp1)
+  }
 
-parallel_result <- foreach(r = 1:nrow(df_phos_prob), .combine = c) %dopar% {
-  first_value <- FALSE
-  for (c in (1:ncol(df_phos_prob))) {
-    if (!first_value) { 
-      temp1 <- unlist(stringr::str_split(df_phos_prob[[r,c]], ";")) |> as.numeric() 
-      if (!is.na(temp1[[1]])) {
-        first_value <- TRUE
+  df_local$pr <- parallel_result2
+  df_local$local <- ""
+  df_local$local2 <- ""
+  
+  parallel_result3 <- foreach(r = 1:nrow(df_local), .combine = rbind) %dopar% {
+  #for (r in (1:nrow(df_local))) {
+    prob <- unlist(df_local$pr[r])
+    residue <- unlist(df_local$phos_res[r])
+    local <- c()
+    for (c in length(residue)) {
+      local <- c(local, prob[residue]) 
+    }
+    if (max(local) >= 0.75) {
+      if (min(local) >= 0.75) {
+        local2 <- "Y"
+      } else {
+        local2 <- "P"
       }
     }else {
-      temp2 <- unlist(stringr::str_split(df_phos_prob[[r,c]], ";")) |> as.numeric()
-      if (!is.na(temp2[[1]])) {
-        temp1 <- pmax(temp1, temp2)
-      }
+      local2 <- "N"
     }
+    #df_local$local[r] <- list(local)
+    list(local, local2)
   }
-  list(temp1)
+
+  stopCluster(cl) 
+
+  colnames(parallel_result3) <- c("Local", "Local2")
+  row.names(parallel_result3) <- NULL
+  
+  return(parallel_result3)
 }
-stopCluster(cl) 
-
-
-
-df_test$pr <- parallel_result
 
 
 
@@ -72,31 +105,31 @@ df_test$pr <- parallel_result
 
 
 for (r in (1:nrow(df_phos))) {
-  test <- stringr::str_split(df_test$ProteinPTMLocations[r], "[;]")
+  test <- stringr::str_split(df_local$ProteinPTMLocations[r], "[;]")
   test <- stringr::str_split(test[[1]], "[,]")
   test <- unlist(test)
   keep <- c()
   for (l in (1:length(test))) {
     test2 <- gsub("[\\(\\)]", "", test[l])
     if (substring(test2, 1, 1) == "S" | substring(test2, 1, 1) == "T" | substring(test2, 1, 1) == "Y" ) {
-      pp <- stringr::str_split(df_test$PeptidePosition[r], "[,;]")
-      residue <- as.numeric(gsub("[^0-9]", "", test2)) - as.numeric(df_test$PeptidePosition[r])
+      pp <- stringr::str_split(df_local$PeptidePosition[r], "[,;]")
+      residue <- as.numeric(gsub("[^0-9]", "", test2)) - as.numeric(df_local$PeptidePosition[r])
       keep <- c(keep, residue)
     }  
   }
-  if(length(keep) > 0) {df_test$ProLoc[r] <- list(keep)}
+  if(length(keep) > 0) {df_local$ProLoc[r] <- list(keep)}
 }
 
-which(is.na(df_test$ProLoc))
+which(is.na(df_local$ProLoc))
 
 
 loc_list <- c()
-for (r in (1:nrow(df_test))) {
-  test <- df_test$ProLoc[r]
+for (r in (1:nrow(df_local))) {
+  test <- df_local$ProLoc[r]
   loc <- c()
   for (i in (1:length(test))) {
-    test2 <- df_test$ProLoc[[r]][[i]]
-    test2 <- substr(df_test$Sequence[r], 1, (as.numeric(test2)+1) )
+    test2 <- df_local$ProLoc[[r]][[i]]
+    test2 <- substr(df_local$Sequence[r], 1, (as.numeric(test2)+1) )
     test2 <- gsub("[^STY]", "", test2)
     residue <- nchar(test2)
     loc <- c(loc, parallel_result[[r]][[residue]])
@@ -430,7 +463,7 @@ df_notlocal2 <- df_notlocal[-to_delete]
 #-----
 
 
-df_test <- df_notlocal[df_notlocal$EG.PrecursorId %in% unlist(df_local$EG.PrecursorId)]
+df_local <- df_notlocal[df_notlocal$EG.PrecursorId %in% unlist(df_local$EG.PrecursorId)]
 
 testme <- df_local[grepl("AVDDIP", df_local$EG.PrecursorId)]
 
@@ -585,3 +618,87 @@ df_phos_sort$remove <- ""
 df_phos_sort$remove[to_remove] <- "Remove"
 
 df_phos_sort <- df_phos_sort[order(as.numeric(rownames(df_phos_sort))),]
+
+
+
+
+
+keep <- localized_data
+
+
+local_unique <- data.frame(unique(localized_data$Sequence))
+local_unique$Local <- ""
+local_unique$Local2 <- ""
+colnames(local_unique) <- c("Sequence", "Local", "Local2")
+
+bugs <- c()
+bugs2 <- c()
+
+for (i in (1:nrow(local_unique))) {
+  test_df <- localized_data[localized_data$Sequence == local_unique$Sequence[i],]
+  if(nrow(test_df) > 1) {
+    bugs <- c(bugs,local_unique$Sequence[i] )
+    local_unique$Local[i] <- pmax(test_df$Local)[[1]]
+    if(length(unlist(test_df$Local[1])) > 1) { bugs2 <- c(bugs2,local_unique$Sequence[i] )}
+  }else {
+    local_unique$Local[i] <- test_df$Local
+  } 
+}
+
+bugs2[1]
+tesme2 <- localized_data[localized_data$Sequence %in% bugs2,]
+
+
+test_seq = bugs2[1]
+test_df <- localized_data[localized_data$Sequence == test_seq,]
+
+#.   "DSPSVQNFSNPHEPWNR"
+
+local_unique <- data.frame(unique(localized_data$Sequence))
+local_unique$Local <- ""
+local_unique$Local2 <- ""
+colnames(local_unique) <- c("Sequence", "Local", "Local2")
+
+for (i in (1:nrow(local_unique))) {
+  
+  if(grepl("Phospho", local_unique$Sequence[i])) {
+  
+    test_df <- localized_data[localized_data$Sequence == local_unique$Sequence[i],]
+  
+    if(nrow(test_df) > 1) {
+      first_value <- TRUE
+      for (r in (1:nrow(test_df))) {
+        if (first_value) { 
+          temp1 <- unlist(test_df$Local[r]) |> as.numeric()
+          if (!is.na(temp1[[1]])) {
+            first_value <- FALSE
+          }
+        }else {
+          temp2 <- unlist(test_df$Local[r]) |> as.numeric()
+          if (!is.na(temp2[[1]])) {
+            temp1 <- pmax(temp1, temp2)
+          }
+        }
+      }
+    }else {
+      temp1 <- unlist(test_df$Local[1]) |> as.numeric()
+    }
+    
+    if (max(temp1) >= 0.75) {
+      if (min(temp1) >= 0.75) {
+        local2 <- "Y"
+      } else {
+        local2 <- "P"
+      }
+    }else {
+      local2 <- "N"
+    }
+    
+    local_unique$Local[i] <- list(temp1) 
+    local_unique$Local2[i] <- local2
+  }
+  
+}
+
+
+

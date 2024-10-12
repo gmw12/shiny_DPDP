@@ -125,14 +125,15 @@ collapse_precursor_ptm_raw <- function(precursor_data, sample_columns, info_colu
   #save(precursor_data, file="z1");save(info_columns, file="z2");save(stats, file="z3");save(add_miss, file="z4");save(df_missing, file="z5");save(sample_columns, file="z6")
   #  load(file="z1");load(file="z2");load(file="z3");load(file="z4");load(file="z5");  load(file="z6")
   
-  localized_data <- precursor_data$Localized
+  localized_data <- precursor_data |> dplyr::select("Local", "Local2")
 
   #drop columns 
   col_count <- ncol(precursor_data)
   precursor_data$PrecursorId <- NULL
   precursor_data$Detected_Imputed <- NULL
   precursor_data$ProteinPTMLocations <- NULL
-  precursor_data$Localized <- NULL
+  precursor_data$Local <- NULL
+  precursor_data$Local2 <- NULL
   col_count <- col_count - ncol(precursor_data)
   
   if (info_columns == 0) {
@@ -148,7 +149,8 @@ collapse_precursor_ptm_raw <- function(precursor_data, sample_columns, info_colu
   columns = names(precursor_data)[1:info_columns]
   
   #setting info columns the same so that all rollups group the same way
-  localized_data <- cbind(precursor_data[1:info_columns], localized_data)
+  localized_data <- cbind(precursor_data$Sequence, localized_data)
+  colnames(localized_data) <- c("Sequence", "Local", "Local2")
   precursor_count_df <- precursor_data[1:info_columns]
   
   if(!is.null(df_missing)) {df_missing <- cbind(precursor_data[1:info_columns], df_missing)}

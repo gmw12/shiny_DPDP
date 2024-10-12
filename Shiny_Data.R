@@ -589,7 +589,6 @@ precursor_to_precursor_ptm_bg <- function(params){
   df <- RSQLite::dbReadTable(conn, "precursor_raw")
   
   df_phos_prob <- df |> dplyr::select(contains('PTMProbabilities..Phospho')) 
-  df_other_prob <- df |> dplyr::select(contains('PTMProbabilities..Oxidation'), contains('PTMProbabilities..Carbamidomethyl')) 
   
   df_colnames <- c("Accession", "Description", "Name", "Genes", "Organisms", "Sequence", "PrecursorId", "PeptidePosition", "ProteinPTMLocations")  
   n_col <- length(df_colnames)
@@ -615,18 +614,17 @@ precursor_to_precursor_ptm_bg <- function(params){
   
   phos_which <- which(grepl("Phospho", df$Sequence))
   df_phos <- df[phos_which,]
-  df_other <- df[-phos_which,]
   df_phos_prob <- df_phos_prob[phos_which,]
-  df_other_prob <- df_other_prob[-phos_which,]
+  df_other <- df[-phos_which,]
   
-  Localized <- as.numeric(localize_summary(df_phos_prob))
-  df_phos <- tibble::add_column(df_phos, Localized, .after="PrecursorId")
-  
-  Localized <- as.numeric(localize_summary(df_other_prob))
-  df_other <- tibble::add_column(df_other, Localized, .after="PrecursorId")
+  local_df <- data.frame(localize_summary(df_phos, df_phos_prob))
+  df_phos <- tibble::add_column(df_phos, "Local2" = local_df$Local2, .after="PrecursorId")
+  df_phos <- tibble::add_column(df_phos, "Local" = local_df$Local, .after="PrecursorId")
+
+  df_other <- tibble::add_column(df_other, "Local2"= "" , .after="PrecursorId")
+  df_other <- tibble::add_column(df_other, "Local" = "", .after="PrecursorId")
   
   df <- rbind(df_phos, df_other)
-  df$Localized[is.na(df$Localized)] <- ""
   
   #save copy of raw peptide (from precursor start)
   raw_peptide_list <- collapse_precursor_ptm_raw(df, params$sample_number, info_columns = 0, stats = FALSE, add_miss = FALSE, df_missing = NULL, params)
@@ -640,7 +638,101 @@ precursor_to_precursor_ptm_bg <- function(params){
 }
 
 #----------------------------------------------------------------------------------------
-localize_summary <- function(df){
+localize_summary <- function(df_phos, df_phos_prob){
+  cat(file = stderr(), "Function localize_summary...", "\n")
+
+  require(foreach)
+  require(doParallel)
+  cores <- detectCores()
+  cl <- makeCluster(cores - 2)
+  registerDoParallel(cl)
+  
+  #Step 1 consolicate localization into one list of max local for each position
+  #create df of just probabilities
+  df_phos_prob[df_phos_prob=="Filtered"] <- ""
+  
+  df_local <- data.frame(cbind(df_phos$Sequence, df_phos$PeptidePosition, df_phos$ProteinPTMLocations))
+  colnames(df_local) <- c("ModSequence", "PeptidePosition", "ProteinPTMLocations")
+  
+  df_local$Stripped <- gsub("\\[.*?\\]", "", df_local$ModSequence)
+  df_local$Stripped <- gsub("_", "", df_local$Stripped)
+  
+  #Step 2 reduce modified sequence to STY with phos residue marked with *
+  df_local$phos_seq <- gsub("\\[Phospho \\(STY\\)\\]", "*", df_local$ModSequence)
+  df_local$phos_seq <- gsub("_", "", df_local$phos_seq)
+  df_local$phos_seq <- gsub("\\[.*?\\]", "", df_local$phos_seq)
+  df_local$phos_seq <- gsub("[^STY*]", "", df_local$phos_seq)
+  
+
+  parallel_result1 <- foreach(r = 1:nrow(df_local), .combine = c) %dopar% {
+    phos_count <- stringr::str_count(df_local$phos_seq[r], "\\*")
+    temp_list <- c()
+    if (phos_count >= 1) {
+      phos_loc <- stringr::str_locate_all(df_local$phos_seq[r], "\\*")
+      for(c in (1:phos_count)){
+        temp_list <- c(temp_list, (phos_loc[[1]][[c]] - c))
+      }
+    }
+    list(temp_list)
+  }
+  
+  df_local$phos_res <- parallel_result1
+  
+  
+  parallel_result2 <- foreach(r = 1:nrow(df_phos_prob), .combine = c) %dopar% {
+    first_value <- FALSE
+    for (c in (1:ncol(df_phos_prob))) {
+      if (!first_value) { 
+        temp1 <- unlist(stringr::str_split(df_phos_prob[[r,c]], ";")) |> as.numeric() 
+        if (!is.na(temp1[[1]])) {
+          first_value <- TRUE
+        }
+      }else {
+        temp2 <- unlist(stringr::str_split(df_phos_prob[[r,c]], ";")) |> as.numeric()
+        if (!is.na(temp2[[1]])) {
+          temp1 <- pmax(temp1, temp2)
+        }
+      }
+    }
+    list(temp1)
+  }
+  
+  df_local$pr <- parallel_result2
+  df_local$local <- ""
+  df_local$local2 <- ""
+  
+  parallel_result3 <- foreach(r = 1:nrow(df_local), .combine = rbind) %dopar% {
+    prob <- unlist(df_local$pr[r])
+    residue <- unlist(df_local$phos_res[r])
+    local <- c()
+    for (c in length(residue)) {
+      local <- c(local, prob[residue]) 
+    }
+    if (max(local) >= 0.75) {
+      if (min(local) >= 0.75) {
+        local2 <- "Y"
+      } else {
+        local2 <- "P"
+      }
+    }else {
+      local2 <- "N"
+    }
+
+    list(local, local2)
+  }
+  
+  stopCluster(cl) 
+  
+  colnames(parallel_result3) <- c("Local", "Local2")
+  row.names(parallel_result3) <- NULL
+
+  cat(file = stderr(), "Function localize_summary...end", "\n")
+  return(parallel_result3) 
+}
+
+
+#----------------------------------------------------------------------------------------
+localize_summary_trash <- function(df){
   cat(file = stderr(), "Function localize_summary...", "\n")
   #--
   require(foreach)
@@ -672,6 +764,8 @@ localize_summary <- function(df){
   cat(file = stderr(), "Function localize_summary...end", "\n")
   return(max_result)  
 }
+
+
 #----------------------------------------------------------------------------------------
 sp_protein_to_protein_bg <- function(params){
   cat(file = stderr(), "Function sp_protein_to_protein_bg...", "\n")

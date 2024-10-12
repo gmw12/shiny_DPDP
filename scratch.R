@@ -4,7 +4,7 @@ gc()
 .rs.restartR()
 
 params$database_path <- stringr::str_c(getwd(),"/database/test.db")
-params$database_path <- stringr::str_c("/Users/gregwaitt/Data/test.db")
+database_path <- stringr::str_c("/Users/gregwaitt/Data/project_101224.db")
 
 create_db(params$database_path)
 
@@ -73,7 +73,7 @@ df <- read_table_try('precursor_noise', params)
 df <- read_table('precursor_filter', params)
 df <- read_table_try('precursor_noise', params)
 df <- read_table_try('precursor_raw', params)
-df <- read_table_try('precursor_start', params)
+df_start <- read_table_try('precursor_start', params)
 df <- read_table_try('precursor_norm_sltmm', params)
 precursor_data <- read_table_try('precursor_impute_sltmm', params)
 df1 <- read_table_try('peptide_impute_sltmm', params)
