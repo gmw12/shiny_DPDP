@@ -1,5 +1,5 @@
-#notlocal_file <- "/Users/gregwaitt/data/nolocal_PTManlaysis_3modlocal.tsv"
-notlocal_file <- "/mnt/h_black2/X10546/local_PTManlaysis_3modlocal.tsv"
+notlocal_file <- "/Users/gregwaitt/data/nolocal_PTManlaysis_3modlocal.tsv"
+#notlocal_file <- "/mnt/h_black2/X10546/local_PTManlaysis_3modlocal.tsv"
 df <- data.table::fread(file = notlocal_file, header = TRUE, stringsAsFactors = FALSE, sep = "\t", fill = TRUE)
 
 phos_which <- which(grepl("Phospho", df$EG.ModifiedSequence))
@@ -7,31 +7,157 @@ df_phos <- df[phos_which,]
 df_phos_prob <- df_phos |> dplyr::select(contains('PTMProbabilities [Phospho')) 
 df_phos_prob[df_phos_prob=="Filtered"] <- ""
 
-df_test <- data.frame(cbind(df_phos$EG.ModifiedSequence, df_phos$PEP.PeptidePosition, df_phos$EG.ProteinPTMLocations))
-colnames(df_test) <- c("ModifiedSequence", "PeptidePosition", "ProteinPTMLocations")
+df_test <- data.frame(cbind(df_phos$PEP.StrippedSequence, df_phos$EG.ModifiedSequence, df_phos$PEP.PeptidePosition, df_phos$EG.ProteinPTMLocations))
+colnames(df_test) <- c("Sequence", "ModSequence", "PeptidePosition", "ProteinPTMLocations")
 
 df_test$ProLoc <- ""
 
-for (i in (1:nrow(df_phos))) {
-  test <- stringr::str_split(df_test$ProteinPTMLocations[i], ",")
+df_test$test <- gsub("\\[Phospho \\(STY\\)\\]", "*", df_test$ModSequence)
+df_test$test <- gsub("_", "", df_test$test)
+df_test$test <- gsub("\\[.*?\\]", "", df_test$test)
+df_test$test <- gsub("[^STY*]", "", df_test$test)
+
+
+phos_list <- c()
+for (r in (1:nrow(df_test))) {
+  phos_count <- stringr::str_count(df_test$test[r], "\\*")
+  temp_list <- c()
+  if (phos_count >= 1) {
+    phos_loc <- stringr::str_locate_all(df_test$test[r], "\\*")
+    for(c in (1:phos_count)){
+      temp_list <- c(temp_list, (phos_loc[[1]][[c]] - c))
+    }
+  }
+  phos_list <- c(phos_list, list(temp_list))
+}
+
+df_test$test2 <- phos_list
+
+require(foreach)
+require(doParallel)
+cores <- detectCores()
+cl <- makeCluster(cores - 2)
+registerDoParallel(cl)
+
+
+
+parallel_result <- foreach(r = 1:nrow(df_phos_prob), .combine = c) %dopar% {
+  first_value <- FALSE
+  for (c in (1:ncol(df_phos_prob))) {
+    if (!first_value) { 
+      temp1 <- unlist(stringr::str_split(df_phos_prob[[r,c]], ";")) |> as.numeric() 
+      if (!is.na(temp1[[1]])) {
+        first_value <- TRUE
+      }
+    }else {
+      temp2 <- unlist(stringr::str_split(df_phos_prob[[r,c]], ";")) |> as.numeric()
+      if (!is.na(temp2[[1]])) {
+        temp1 <- pmax(temp1, temp2)
+      }
+    }
+  }
+  list(temp1)
+}
+stopCluster(cl) 
+
+
+
+df_test$pr <- parallel_result
+
+
+
+
+
+
+
+
+for (r in (1:nrow(df_phos))) {
+  test <- stringr::str_split(df_test$ProteinPTMLocations[r], "[;]")
+  test <- stringr::str_split(test[[1]], "[,]")
   test <- unlist(test)
   keep <- c()
   for (l in (1:length(test))) {
     test2 <- gsub("[\\(\\)]", "", test[l])
     if (substring(test2, 1, 1) == "S" | substring(test2, 1, 1) == "T" | substring(test2, 1, 1) == "Y" ) {
-      residue <- as.numeric(gsub("[^0-9]", "", test2)) - as.numeric(df_test$PeptidePosition[i])
+      pp <- stringr::str_split(df_test$PeptidePosition[r], "[,;]")
+      residue <- as.numeric(gsub("[^0-9]", "", test2)) - as.numeric(df_test$PeptidePosition[r])
       keep <- c(keep, residue)
     }  
   }
-  if(length(keep) > 0) {df_test$ProLoc[i] <- list(keep)}
+  if(length(keep) > 0) {df_test$ProLoc[r] <- list(keep)}
 }
 
-test <- substring(df_test$ModifiedSequence[1], 2, (df_test$ProLoc[[1]]+2))
-test <- gsub("[^STY]", "", test)
-test <- nchar(test)
+which(is.na(df_test$ProLoc))
 
-df_phos_prob$rs <- rowSums(df_phos_prob)
 
+loc_list <- c()
+for (r in (1:nrow(df_test))) {
+  test <- df_test$ProLoc[r]
+  loc <- c()
+  for (i in (1:length(test))) {
+    test2 <- df_test$ProLoc[[r]][[i]]
+    test2 <- substr(df_test$Sequence[r], 1, (as.numeric(test2)+1) )
+    test2 <- gsub("[^STY]", "", test2)
+    residue <- nchar(test2)
+    loc <- c(loc, parallel_result[[r]][[residue]])
+  }
+  loc_list <- c(loc_list, list(loc))
+}
+
+  
+
+
+
+
+
+
+require(foreach)
+require(doParallel)
+cores <- detectCores()
+cl <- makeCluster(cores - 2)
+registerDoParallel(cl)
+
+
+
+parallel_result <- foreach(r = 1:nrow(df_phos_prob), .combine = c) %dopar% {
+    first_value <- FALSE
+    for (c in (1:ncol(df_phos_prob))) {
+      if (!first_value) { 
+        temp1 <- unlist(stringr::str_split(df_phos_prob[[r,c]], ";")) |> as.numeric() 
+        if (!is.na(temp1[[1]])) {
+          first_value <- TRUE
+        }
+      }else {
+        temp2 <- unlist(stringr::str_split(df_phos_prob[[r,c]], ";")) |> as.numeric()
+        if (!is.na(temp2[[1]])) {
+          temp1 <- pmax(temp1, temp2)
+        }
+      }
+    }
+    list(temp1)
+  }
+stopCluster(cl) 
+  
+  
+  
+temp_list <- c()
+for (r in (1:nrow(df_phos_prob))) {
+  first_value <- FALSE
+  for (c in (1:ncol(df_phos_prob))) {
+    if (!first_value) { 
+      temp1 <- unlist(stringr::str_split(df_phos_prob[[r,c]], ";")) |> as.numeric() 
+      if (!is.na(temp1[[1]])) {
+        first_value <- TRUE
+      }
+    }else {
+        temp2 <- unlist(stringr::str_split(df_phos_prob[[r,c]], ";")) |> as.numeric()
+        if (!is.na(temp2[[1]])) {
+          temp1 <- pmax(temp1, temp2)
+        }
+    }
+  }
+  temp_list <- c(temp_list, list(temp1))
+}
 
 
 
