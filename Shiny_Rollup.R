@@ -121,8 +121,8 @@ collapse_precursor_raw <- function(precursor_data, info_columns = 0, stats = FAL
 collapse_precursor_ptm_raw <- function(precursor_data, sample_columns, info_columns, stats, add_miss, df_missing, params) {
   cat(file = stderr(), "function collapse_precursor_ptm_raw...", "\n")
   
-  #.   precursor_data <- df
-  #save(precursor_data, file="z1");save(info_columns, file="z2");save(stats, file="z3");save(add_miss, file="z4");save(df_missing, file="z5");save(sample_columns, file="z6")
+  #.   precursor_data <- df; sample_columns <- params$sample_number; info_columns = 0, add_
+  save(precursor_data, file="z1");save(info_columns, file="z2");save(stats, file="z3");save(add_miss, file="z4");save(df_missing, file="z5");save(sample_columns, file="z6")
   #  load(file="z1");load(file="z2");load(file="z3");load(file="z4");load(file="z5");  load(file="z6")
   
   localized_data <- precursor_data |> dplyr::select("Local", "Local2")
@@ -158,16 +158,26 @@ collapse_precursor_ptm_raw <- function(precursor_data, sample_columns, info_colu
   #rollup data and ungroup
   peptide_data <- precursor_data |>
     dplyr::group_by_at(dplyr::vars(all_of(columns))) |> dplyr::summarise_all(list(sum))
-
-  localized_data <- localized_data |>
-    dplyr::group_by_at(dplyr::vars(all_of(columns))) |> dplyr::summarise_all(list(max))
-    
   peptide_data <- data.frame(dplyr::ungroup(peptide_data))
-  localized_data <- data.frame(dplyr::ungroup(localized_data))
-  Localized <- localized_data$localized_data
   
-  peptide_data <- tibble::add_column(peptide_data, Localized, .after="Sequence")
-
+  local_rollup_df <- rollup_local(localized_data, params)
+  
+  local_rollup_df <- local_rollup_df[match(peptide_data$Sequence, local_rollup_df$Sequence),]
+  
+  numlist_to_string <- function(x) {
+    return(toString(paste(unlist(x$Local) |> as.character() |> paste(collapse = ","))))
+  }
+  
+  numlist_to_string2 <- function(x) {
+    return(toString(paste(unlist(x$Local2) |> as.character() |> paste(collapse = ","))))
+  }
+  
+  local_rollup_df$Local <- apply(local_rollup_df, 1, numlist_to_string)
+  local_rollup_df$Local2 <- apply(local_rollup_df, 1, numlist_to_string2)
+  
+  peptide_data <- tibble::add_column(peptide_data, "Local2"=local_rollup_df$Local2, .after="Sequence")
+  peptide_data <- tibble::add_column(peptide_data, "Local"=local_rollup_df$Local, .after="Sequence")
+  
   precursor_count_df$Precusors <- 1
   precursor_count_df <- precursor_count_df |>
     dplyr::group_by_at(dplyr::vars(all_of(columns))) |> dplyr::summarise_all(list(sum))
@@ -192,11 +202,83 @@ collapse_precursor_ptm_raw <- function(precursor_data, sample_columns, info_colu
   if (add_miss) {
     return(list(peptide_data, df_missing_peptide))
   } else {
-    return(list(peptide_data, df_missing))
+    return(list(peptide_data, data.frame()))
   }
 }
 
-
+#------------------------------------------------------------
+rollup_local <- function(localized_data, params) {
+  cat(file = stderr(), "Function rollup_local...", "\n")
+  
+  require(foreach)
+  require(doParallel)
+  cores <- detectCores()
+  cl <- makeCluster(cores - 2)
+  registerDoParallel(cl)
+  
+  local_unique <- data.frame(unique(localized_data$Sequence))
+  local_unique$Local <- ""
+  local_unique$Local2 <- ""
+  colnames(local_unique) <- c("Sequence", "Local", "Local2")
+  
+  #for (i in (1:nrow(local_unique))) {
+  parallel_result <- foreach(i = 1:nrow(local_unique), .combine = rbind) %dopar% { 
+    if(grepl("Phospho", local_unique$Sequence[i])) {
+      
+      test_df <- localized_data[localized_data$Sequence == local_unique$Sequence[i],]
+      
+      if(nrow(test_df) > 1) {
+        first_value <- TRUE
+        for (r in (1:nrow(test_df))) {
+          if (first_value) { 
+            temp1 <- unlist(test_df$Local[r]) |> as.numeric()
+            if (!is.na(temp1[[1]])) {
+              first_value <- FALSE
+            }
+          }else {
+            temp2 <- unlist(test_df$Local[r]) |> as.numeric()
+            if (!is.na(temp2[[1]])) {
+              temp1 <- pmax(temp1, temp2)
+            }
+          }
+        }
+      }else {
+        temp1 <- unlist(test_df$Local[1]) |> as.numeric()
+      }
+      
+      if (max(temp1) >= params$ptm_local) {
+        if (min(temp1) >= params$ptm_local) {
+          local2 <- "Y"
+        } else {
+          local2 <- "P"
+        }
+      }else {
+        local2 <- "N"
+      }
+      
+      #local_unique$Local[i] <- list(temp1) 
+      #local_unique$Local2[i] <- local2
+      
+    }else {
+      temp1 <- ""
+      local2 <- ""
+    }
+    
+    #local_unique$Local[i] <- list(temp1) 
+    #local_unique$Local2[i] <- local2
+    list(temp1, local2)
+  }
+  
+  stopCluster(cl) 
+  
+  parallel_result <- data.frame(parallel_result)
+  parallel_result <- cbind(local_unique$Sequence, parallel_result)
+  colnames(parallel_result) <- c("Sequence", "Local", "Local2")
+  row.names(parallel_result) <- NULL
+  
+  cat(file = stderr(), "Function rollup_local...end", "\n")
+  return(parallel_result)
+}
 
 
 
@@ -360,7 +442,6 @@ collapse_peptide_setup <- function(peptide_data, info_columns, directlfq=FALSE){
   cat(file = stderr(), "finished collapse_peptide_setup...", "\n")
   return(peptide_data)
 } 
-
 
 
 

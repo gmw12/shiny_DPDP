@@ -652,53 +652,77 @@ tesme2 <- localized_data[localized_data$Sequence %in% bugs2,]
 test_seq = bugs2[1]
 test_df <- localized_data[localized_data$Sequence == test_seq,]
 
-#.   "DSPSVQNFSNPHEPWNR"
+start_time <- Sys.time()
+testme <- rollup_local(localized_data)
+Sys.time() - start_time
 
-local_unique <- data.frame(unique(localized_data$Sequence))
-local_unique$Local <- ""
-local_unique$Local2 <- ""
-colnames(local_unique) <- c("Sequence", "Local", "Local2")
-
-for (i in (1:nrow(local_unique))) {
+rollup_local <- function(localized_data) {
   
-  if(grepl("Phospho", local_unique$Sequence[i])) {
+  require(foreach)
+  require(doParallel)
+  cores <- detectCores()
+  cl <- makeCluster(cores - 2)
+  registerDoParallel(cl)
   
-    test_df <- localized_data[localized_data$Sequence == local_unique$Sequence[i],]
+  local_unique <- data.frame(unique(localized_data$Sequence))
+  local_unique$Local <- ""
+  local_unique$Local2 <- ""
+  colnames(local_unique) <- c("Sequence", "Local", "Local2")
   
-    if(nrow(test_df) > 1) {
-      first_value <- TRUE
-      for (r in (1:nrow(test_df))) {
-        if (first_value) { 
-          temp1 <- unlist(test_df$Local[r]) |> as.numeric()
-          if (!is.na(temp1[[1]])) {
-            first_value <- FALSE
-          }
-        }else {
-          temp2 <- unlist(test_df$Local[r]) |> as.numeric()
-          if (!is.na(temp2[[1]])) {
-            temp1 <- pmax(temp1, temp2)
+  #for (i in (1:nrow(local_unique))) {
+  parallel_result <- foreach(i = 1:nrow(local_unique), .combine = rbind) %dopar% { 
+    if(grepl("Phospho", local_unique$Sequence[i])) {
+    
+      test_df <- localized_data[localized_data$Sequence == local_unique$Sequence[i],]
+    
+      if(nrow(test_df) > 1) {
+        first_value <- TRUE
+        for (r in (1:nrow(test_df))) {
+          if (first_value) { 
+            temp1 <- unlist(test_df$Local[r]) |> as.numeric()
+            if (!is.na(temp1[[1]])) {
+              first_value <- FALSE
+            }
+          }else {
+            temp2 <- unlist(test_df$Local[r]) |> as.numeric()
+            if (!is.na(temp2[[1]])) {
+              temp1 <- pmax(temp1, temp2)
+            }
           }
         }
+      }else {
+        temp1 <- unlist(test_df$Local[1]) |> as.numeric()
       }
+      
+      if (max(temp1) >= 0.75) {
+        if (min(temp1) >= 0.75) {
+          local2 <- "Y"
+        } else {
+          local2 <- "P"
+        }
+      }else {
+        local2 <- "N"
+      }
+      
+      #local_unique$Local[i] <- list(temp1) 
+      #local_unique$Local2[i] <- local2
+      
     }else {
-      temp1 <- unlist(test_df$Local[1]) |> as.numeric()
+      temp1 <- ""
+      local2 <- ""
     }
     
-    if (max(temp1) >= 0.75) {
-      if (min(temp1) >= 0.75) {
-        local2 <- "Y"
-      } else {
-        local2 <- "P"
-      }
-    }else {
-      local2 <- "N"
-    }
-    
-    local_unique$Local[i] <- list(temp1) 
-    local_unique$Local2[i] <- local2
+    #local_unique$Local[i] <- list(temp1) 
+    #local_unique$Local2[i] <- local2
+    list(temp1, local2)
   }
   
+  stopCluster(cl) 
+  
+  parallel_result <- data.frame(parallel_result)
+  parallel_result <- cbind(local_unique$Sequence, parallel_result)
+  colnames(parallel_result)
+  
+  return(parallel_result)
 }
-
-
 

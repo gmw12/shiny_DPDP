@@ -41,9 +41,9 @@ filter_data_bg <- function(table_name, new_table_name, params){
   cat(file = stderr(), "step 0, isolate to PTM...", "\n")
   if (params$ptm) {
     df <- df[grepl(params$ptm_grep, df$Sequence, ignore.case = TRUE),]
-    cat(file = stderr(), stringr::str_c("step 1 - ", step0[[1]]-step1[[1]], " ", step0[[2]]-step1[[2]], " ", step0[[3]]-step1[[3]]), "\n")
   }
   step1 <- filter_stats(df)
+  cat(file = stderr(), stringr::str_c("step 1 - ", step0[[1]]-step1[[1]], " ", step0[[2]]-step1[[2]], " ", step0[[3]]-step1[[3]]), "\n")
   
   # Step 2 remove peptides/proteins below minimum count requirement overall 
   cat(file = stderr(), "step 2, remove below minimum...", "\n")

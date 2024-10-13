@@ -284,6 +284,8 @@ meta_data <- function(table_string){
 meta_data_bg <- function(table_name, data_format, params){
   cat(file = stderr(), "Function meta_data bg...", "\n")
   
+  #. table_name <- "precursor_start"; data_format <- "start"
+  
   conn <- RSQLite::dbConnect(RSQLite::SQLite(), params$database_path)
   df <- RSQLite::dbReadTable(conn, table_name)
   
@@ -305,21 +307,18 @@ meta_data_bg <- function(table_name, data_format, params){
     phos_which <- which(grepl(params$ptm_grep, df$Sequence))
     df_other <- df[-phos_which,]
     df_phos <- df[phos_which,]
-    df_phos_local <- df_phos[which(df_phos$Localized >= params$ptm_local),]
-    df_other_local <- df_other[-which(df_other$Localized <= params$ptm_local & df_other$Localized > 0),]
+    df_phos_local <- df_phos[which(df_phos$Local2 == "Y"),]
+
     params$ptm_precursors <- nrow(df_phos)
     params$ptm_total <- length(unique(df_phos$Sequence))
     params$ptm_total_local <- length(unique(df_phos_local$Sequence))
-    params$other_total <- length(unique(df_other$Sequence))
-    params$other_local <- length(unique(df_other_local$Sequence))
-    
+
     df_phos <- df_phos[,(ncol(df_phos)- params$sample_number+1):ncol(df_phos)]
     df_other <- df_other[,(ncol(df_other)- params$sample_number+1):ncol(df_other)]
     df_phos_local <- df_phos_local[,(ncol(df_phos_local)- params$sample_number+1):ncol(df_phos_local)]
-    df_other_local <- df_other_local[,(ncol(df_other_local)- params$sample_number+1):ncol(df_other_local)]
-    
+
     params$ptm_enrich <- round(sum(df_phos, na.rm = TRUE) / (sum(df_other, na.rm = TRUE) + sum(df_phos, na.rm = TRUE)), 2)
-    params$ptm_enrich_local <- round(sum(df_phos_local, na.rm = TRUE) / (sum(df_other_local, na.rm = TRUE) + sum(df_phos_local, na.rm = TRUE)), 2)
+    params$ptm_enrich_local <- round(sum(df_phos_local, na.rm = TRUE) / (sum(df_other, na.rm = TRUE) + sum(df_phos, na.rm = TRUE)), 2)
   }
   
   RSQLite::dbWriteTable(conn, "params", params, overwrite = TRUE)
@@ -617,7 +616,7 @@ precursor_to_precursor_ptm_bg <- function(params){
   df_phos_prob <- df_phos_prob[phos_which,]
   df_other <- df[-phos_which,]
   
-  local_df <- data.frame(localize_summary(df_phos, df_phos_prob))
+  local_df <- data.frame(localize_summary(df_phos, df_phos_prob, params))
   df_phos <- tibble::add_column(df_phos, "Local2" = local_df$Local2, .after="PrecursorId")
   df_phos <- tibble::add_column(df_phos, "Local" = local_df$Local, .after="PrecursorId")
 
@@ -630,6 +629,18 @@ precursor_to_precursor_ptm_bg <- function(params){
   raw_peptide_list <- collapse_precursor_ptm_raw(df, params$sample_number, info_columns = 0, stats = FALSE, add_miss = FALSE, df_missing = NULL, params)
   raw_peptide <- raw_peptide_list[[1]]
   
+  numlist_to_string <- function(x) {
+    return(toString(paste(unlist(x$Local) |> as.character() |> paste(collapse = ","))))
+  }
+  
+  numlist_to_string2 <- function(x) {
+    return(toString(paste(unlist(x$Local2) |> as.character() |> paste(collapse = ","))))
+  }
+  
+  df$Local <- apply(df, 1, numlist_to_string)
+  df$Local2 <- apply(df, 1, numlist_to_string2)
+  
+  
   RSQLite::dbWriteTable(conn, "precursor_start", df, overwrite = TRUE)
   RSQLite::dbWriteTable(conn, "raw_peptide", raw_peptide, overwrite = TRUE)
   RSQLite::dbDisconnect(conn)
@@ -638,7 +649,7 @@ precursor_to_precursor_ptm_bg <- function(params){
 }
 
 #----------------------------------------------------------------------------------------
-localize_summary <- function(df_phos, df_phos_prob){
+localize_summary <- function(df_phos, df_phos_prob, params){
   cat(file = stderr(), "Function localize_summary...", "\n")
 
   require(foreach)
@@ -708,8 +719,8 @@ localize_summary <- function(df_phos, df_phos_prob){
     for (c in length(residue)) {
       local <- c(local, prob[residue]) 
     }
-    if (max(local) >= 0.75) {
-      if (min(local) >= 0.75) {
+    if (max(local) >= params$ptm_local) {
+      if (min(local) >= params$ptm_local) {
         local2 <- "Y"
       } else {
         local2 <- "P"
