@@ -386,6 +386,7 @@ update_widgets_stats <- function(session, input, output, params){
     updatePickerInput(session, "stats_plot_comp2", choices = stats_comp_choices_spqc)
     updateSelectInput(session, "stats_select_data_comp", choices = stats_comp_choices)
     updateSelectInput(session, "stats_oneprotein_plot_comp", choices = stats_comp_choices)
+    updateSelectInput(session, "stats_onepeptide_plot_comp", choices = stats_comp_choices)
     updateSelectInput(session, "select_data_comp_wiki", choices = stats_comp_choices)
     updateSelectInput(session, "select_go_profile_data_comp", choices = stats_comp_choices)
     updateSelectInput(session, "select_go_data_comp", choices = stats_comp_choices)
