@@ -629,18 +629,6 @@ precursor_to_precursor_ptm_bg <- function(params){
   raw_peptide_list <- collapse_precursor_ptm_raw(df, params$sample_number, info_columns = 0, stats = FALSE, add_miss = FALSE, df_missing = NULL, params)
   raw_peptide <- raw_peptide_list[[1]]
   
-  numlist_to_string <- function(x) {
-    return(toString(paste(unlist(x$Local) |> as.character() |> paste(collapse = ","))))
-  }
-  
-  numlist_to_string2 <- function(x) {
-    return(toString(paste(unlist(x$Local2) |> as.character() |> paste(collapse = ","))))
-  }
-  
-  df$Local <- apply(df, 1, numlist_to_string)
-  df$Local2 <- apply(df, 1, numlist_to_string2)
-  
-  
   RSQLite::dbWriteTable(conn, "precursor_start", df, overwrite = TRUE)
   RSQLite::dbWriteTable(conn, "raw_peptide", raw_peptide, overwrite = TRUE)
   RSQLite::dbDisconnect(conn)
@@ -675,6 +663,7 @@ localize_summary <- function(df_phos, df_phos_prob, params){
   df_local$phos_seq <- gsub("[^STY*]", "", df_local$phos_seq)
   
 
+  # determines residue location for phos on sequence reduced to STY
   parallel_result1 <- foreach(r = 1:nrow(df_local), .combine = c) %dopar% {
     phos_count <- stringr::str_count(df_local$phos_seq[r], "\\*")
     temp_list <- c()
@@ -690,6 +679,7 @@ localize_summary <- function(df_phos, df_phos_prob, params){
   df_local$phos_res <- parallel_result1
   
   
+  #consolidates probabilities for each sample and takes the highest prob for each residue
   parallel_result2 <- foreach(r = 1:nrow(df_phos_prob), .combine = c) %dopar% {
     first_value <- FALSE
     for (c in (1:ncol(df_phos_prob))) {
@@ -709,9 +699,8 @@ localize_summary <- function(df_phos, df_phos_prob, params){
   }
   
   df_local$pr <- parallel_result2
-  df_local$local <- ""
-  df_local$local2 <- ""
   
+
   parallel_result3 <- foreach(r = 1:nrow(df_local), .combine = rbind) %dopar% {
     prob <- unlist(df_local$pr[r])
     residue <- unlist(df_local$phos_res[r])
@@ -728,15 +717,25 @@ localize_summary <- function(df_phos, df_phos_prob, params){
     }else {
       local2 <- "N"
     }
-
     list(local, local2)
   }
   
-  stopCluster(cl) 
-  
+  parallel_result3 <- data.frame(parallel_result3)
   colnames(parallel_result3) <- c("Local", "Local2")
   row.names(parallel_result3) <- NULL
-
+  
+  numlist_to_string <- function(x) {
+    return(toString(paste(unlist(x$Local) |> as.character() |> paste(collapse = ","))))
+  }
+  
+  numlist_to_string2 <- function(x) {
+    return(toString(paste(unlist(x$Local2) |> as.character() |> paste(collapse = ","))))
+  }
+  
+  parallel_result3$Local <- apply(parallel_result3, 1, numlist_to_string)
+  parallel_result3$Local2 <- apply(parallel_result3, 1, numlist_to_string2)
+  
+  stopCluster(cl) 
   cat(file = stderr(), "Function localize_summary...end", "\n")
   return(parallel_result3) 
 }

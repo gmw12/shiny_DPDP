@@ -121,7 +121,7 @@ collapse_precursor_raw <- function(precursor_data, info_columns = 0, stats = FAL
 collapse_precursor_ptm_raw <- function(precursor_data, sample_columns, info_columns, stats, add_miss, df_missing, params) {
   cat(file = stderr(), "function collapse_precursor_ptm_raw...", "\n")
   
-  #.   precursor_data <- df; sample_columns <- params$sample_number; info_columns = 0, add_
+  #.   precursor_data <- df; sample_columns <- params$sample_number; info_columns = 0
   save(precursor_data, file="z1");save(info_columns, file="z2");save(stats, file="z3");save(add_miss, file="z4");save(df_missing, file="z5");save(sample_columns, file="z6")
   #  load(file="z1");load(file="z2");load(file="z3");load(file="z4");load(file="z5");  load(file="z6")
   
@@ -164,17 +164,6 @@ collapse_precursor_ptm_raw <- function(precursor_data, sample_columns, info_colu
   
   local_rollup_df <- local_rollup_df[match(peptide_data$Sequence, local_rollup_df$Sequence),]
   
-  numlist_to_string <- function(x) {
-    return(toString(paste(unlist(x$Local) |> as.character() |> paste(collapse = ","))))
-  }
-  
-  numlist_to_string2 <- function(x) {
-    return(toString(paste(unlist(x$Local2) |> as.character() |> paste(collapse = ","))))
-  }
-  
-  local_rollup_df$Local <- apply(local_rollup_df, 1, numlist_to_string)
-  local_rollup_df$Local2 <- apply(local_rollup_df, 1, numlist_to_string2)
-  
   peptide_data <- tibble::add_column(peptide_data, "Local2"=local_rollup_df$Local2, .after="Sequence")
   peptide_data <- tibble::add_column(peptide_data, "Local"=local_rollup_df$Local, .after="Sequence")
   
@@ -210,6 +199,14 @@ collapse_precursor_ptm_raw <- function(precursor_data, sample_columns, info_colu
 rollup_local <- function(localized_data, params) {
   cat(file = stderr(), "Function rollup_local...", "\n")
   
+  #save(localized_data, file="zz1")
+  # load(file="zz1")
+  
+  str_to_numlist <- function(str_in) {
+    num_out <- strsplit(str_in, ",") |> unlist() |> as.numeric()
+    return(num_out)
+  }
+  
   require(foreach)
   require(doParallel)
   cores <- detectCores()
@@ -231,19 +228,19 @@ rollup_local <- function(localized_data, params) {
         first_value <- TRUE
         for (r in (1:nrow(test_df))) {
           if (first_value) { 
-            temp1 <- unlist(test_df$Local[r]) |> as.numeric()
+            temp1 <- str_to_numlist(test_df$Local[r])
             if (!is.na(temp1[[1]])) {
               first_value <- FALSE
             }
           }else {
-            temp2 <- unlist(test_df$Local[r]) |> as.numeric()
+            temp2 <- str_to_numlist(test_df$Local[r])
             if (!is.na(temp2[[1]])) {
               temp1 <- pmax(temp1, temp2)
             }
           }
         }
       }else {
-        temp1 <- unlist(test_df$Local[1]) |> as.numeric()
+        temp1 <- str_to_numlist(test_df$Local[1])
       }
       
       if (max(temp1) >= params$ptm_local) {
@@ -272,9 +269,20 @@ rollup_local <- function(localized_data, params) {
   stopCluster(cl) 
   
   parallel_result <- data.frame(parallel_result)
+  row.names(parallel_result) <- NULL
   parallel_result <- cbind(local_unique$Sequence, parallel_result)
   colnames(parallel_result) <- c("Sequence", "Local", "Local2")
-  row.names(parallel_result) <- NULL
+  
+  numlist_to_string <- function(x) {
+    return(toString(paste(unlist(x$Local) |> as.character() |> paste(collapse = ","))))
+  }
+  
+  numlist_to_string2 <- function(x) {
+    return(toString(paste(unlist(x$Local2) |> as.character() |> paste(collapse = ","))))
+  }
+  
+  parallel_result$Local <- apply(parallel_result, 1, numlist_to_string)
+  parallel_result$Local2 <- apply(parallel_result, 1, numlist_to_string2)
   
   cat(file = stderr(), "Function rollup_local...end", "\n")
   return(parallel_result)

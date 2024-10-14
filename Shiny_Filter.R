@@ -23,6 +23,9 @@ filter_data <- function(session, input, output){
 # require row to contain at least one group that has at least 2 values
 filter_data_bg <- function(table_name, new_table_name, params){
   cat(file = stderr(), "Function - filter_data_bg...", "\n")
+  
+  # table_name="precursor_noise"; new_table_name="precursor_filter"
+  
   source("Shiny_Filter.R")
   source("Shiny_File.R")
   
@@ -33,7 +36,7 @@ filter_data_bg <- function(table_name, new_table_name, params){
 
   info_columns <- ncol(df) - params$sample_number
   total_columns <- ncol(df)
-  df[df == 0] <- NA
+  df[,(info_columns+1):total_columns][df[,(info_columns+1):total_columns]==0] <- NA
   
   step0 <- filter_stats(df)
   

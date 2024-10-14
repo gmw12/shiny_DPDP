@@ -832,3 +832,21 @@ t1 <- df_filter_list[[1]]
 t2 <- df_filter_list[[2]]
 t3 <- df_list[[3]]
 t4 <- df_list[[4]]
+
+list_tables(params)
+df_raw <- read_table_try('precursor_raw', params)
+df_start <- read_table_try('precursor_start', params)
+df_noise <- read_table_try('precursor_noise', params)
+df_filter <- read_table_try('precursor_filter', params)
+df_norm <- read_table_try('precursor_norm_sltmm', params)
+
+which(is.na(df_noise$Local))
+which(is.na(df_noise$Local2))
+
+which(is.na(df_filter$Local))
+which(is.na(df_filter$Local2))
+
+which(is.na(df_norm$Local))
+which(is.na(df_norm$Local2))
+
+
