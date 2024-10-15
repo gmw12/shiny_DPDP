@@ -131,6 +131,7 @@ create_stats_pca3d_ui <- function(plot_number) {
                          max = 50, value = 20),
              sliderInput(str_c(plot_number, "_stats_pca3d_dot_size"), label = h5("Point Size"), min = 1, 
                          max = 10, value = 2),
+             checkboxInput(str_c(plot_number, "_stats_pca3d_show_input"), label = h5("Label data?"), value = FALSE),
              circle = TRUE, status = "danger", icon = icon("cogs"), width = "300px", size = "sm",
              tooltip = tooltipOptions(title = "Click to see inputs !")
            ),

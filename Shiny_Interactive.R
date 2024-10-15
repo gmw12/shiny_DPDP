@@ -205,6 +205,10 @@ interactive_pca2d <- function(session, input, output, df, namex, color_list, gro
 interactive_pca3d <- function(session, input, output, df, namex, color_list, groupx, comp_name, plot_number)
 {
   cat(file = stderr(), "interactive_pca3d" , "\n")
+  
+  #   save(df, file="z1"); save(groupx, file="z2"); save(namex, file="z3")
+  #    load(file="z1"); load(file="z2"); load(file="z3")
+  
   x_transpose <- t(df)
   x_transpose <- data.frame(x_transpose)
   row.names(x_transpose) <- NULL
@@ -216,11 +220,18 @@ interactive_pca3d <- function(session, input, output, df, namex, color_list, gro
   x_gr <- factor(unlist(test_this))
   summary(x_gr)
   
+  if (input[[stringr::str_c(plot_number, "_stats_pca3d_show_input")]]) {
+    show_labels = namex
+    }else{
+      show_labels = ""
+    }
+  
   create_stats_pca3d <- reactive({
     pca3d(x_pca, 
           group = x_gr,
           new = FALSE,
           legend = "right",
+          show.labels = show_labels,
           palette = rev(unique(color_list)), 
           radius = input[[stringr::str_c(plot_number, "_stats_pca3d_dot_size")]],
           title = input[[stringr::str_c(plot_number, "_stats_pca3d_title")]]
