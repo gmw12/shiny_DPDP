@@ -184,6 +184,9 @@ shinyServer(function(session, input, output) {
      update_stat_choices(session, input, output)
    }
    
+   #update filter group choices
+   update_widgets_filters(session, input, output, params) 
+   
    #re-load menu
    load_menu(session, input, output)
  })

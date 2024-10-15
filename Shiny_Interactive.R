@@ -300,9 +300,9 @@ interactive_heatmap <- function(session, input, output, df, namex, groupx, comp_
 {
   cat(file = stderr(), "interactive_heatmap..." , "\n")
   if (site_user == "dpmsr") {
-    heatmap_filename <- stringr::str_c(params$database_dir, "/erasemyheatmap.png") #"erasemyheatmap.png"
+    heatmap_filename <- stringr::str_c(params$database_dir, "/", plot_number, "_erasemyheatmap.png") #"erasemyheatmap.png"
   }else{
-    heatmap_filename <- stringr::str_c(params$database_dir, "/erasemyheatmap.png")
+    heatmap_filename <- stringr::str_c(params$database_dir, "/", plot_number,  "/erasemyheatmap.png")
   }
   
   #if norm by protein one protein will have 0 stdev - which will crash the calc...
@@ -331,7 +331,7 @@ interactive_heatmap <- function(session, input, output, df, namex, groupx, comp_
               scale = "row", density.info = "none", trace = "none", RowSideColors = mycolhc, main = input[[stringr::str_c(plot_number, "_stats_heatmap_title")]],
               margins = c(10,10))
     #heatmap_filename <- stringr::str_c(dpmsr_set$file$output_dir, dpmsr_set$data$stats$final_comp, "//", "erasemyheatmap.png")
-    png(filename = stringr::str_c(plot_number, "_", heatmap_filename), units = "px", width = 1776, height = 1776)  
+    png(filename = heatmap_filename, units = "px", width = 1776, height = 1776)  
     heatmap.2(df, Rowv = as.dendrogram(hr), Colv = as.dendrogram(hc), col = mycol, labCol = groupx, 
               scale = "row", density.info = "none", trace = "none", RowSideColors = mycolhc, main = input[[stringr::str_c(plot_number, "_stats_heatmap_title")]],
               margins = c(20,20))
@@ -356,7 +356,7 @@ interactive_heatmap <- function(session, input, output, df, namex, groupx, comp_
   )
   
   cat(file = stderr(), stringr::str_c("heatmap file exists? ", heatmap_filename, "   ", file.exists(heatmap_filename)), "\n")
-  try(file_delete(heatmap_filename), silent = TRUE)
+  #try(file_delete(heatmap_filename), silent = TRUE)
   cat(file = stderr(), stringr::str_c("deleting temp heatmap file ", file.exists(heatmap_filename)), "\n")
   
 }

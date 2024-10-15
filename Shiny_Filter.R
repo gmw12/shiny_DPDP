@@ -234,13 +234,19 @@ precursor_spqc_quality <- function(df, info_columns, params) {
 
 
 #----------------------------------------
-
 filter_percentCV <- function(x) {
-  ave <- rowMeans(x)
+  
+  getsd <- function(x) {
+    return(sd(x, na.rm=TRUE ))
+  }
+  
+  ave <- rowMeans(x, na.rm = TRUE)
   n <- ncol(x)
-  sd <- apply(x[1:n], 1, sd)
-  cv <- (100 * sd / ave)
-  return(signif(cv, digits = 3))
+  sd <- apply(x[1:n], 1, getsd)
+  cv <- signif((100 * sd / ave), digits = 3)
+  cv[is.na(cv)] <- 0
+  
+  return(cv)
 }
 
 #----------------------------------------------------------------------------------

@@ -357,6 +357,9 @@ update_widgets <- function(session, input, output, params) {
     #parameters
     update_widgets_parameters(session, input, output, params)
     
+    #filters
+    update_widgets_filters(session, input, output, params) 
+    
   }
   cat(file = stderr(), "Function - update_widgets...end", "\n")
 }
@@ -372,6 +375,15 @@ update_widgets_parameters <- function(session, input, output, params) {
   cat(file = stderr(), "Function - update_widgets_parameters...end", "\n")
 }
 
+#-------------------------------------
+update_widgets_filters <- function(session, input, output, params) {
+  cat(file = stderr(), "Function - update_widgets_filters...", "\n")
+  
+  unique_groups <- unlist(stringr::str_split(params$unique_groups, pattern = ", "))
+  updateSelectInput(session, "filter_cv_group", choices = unique_groups, selected = params$filter_cv_group)
+  
+  cat(file = stderr(), "Function - update_widgets_filterss...end", "\n")
+}
 
 #-----------------------------------------------------------------------------------
 
