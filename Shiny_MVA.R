@@ -757,11 +757,11 @@ create_stats_onepeptide_plots <- function(session, input, output, params) {
   cat(file = stderr(), "Function create_stats_onepeptide_plots...", "\n")
   showModal(modalDialog("Creating stats onepeptide plots...", footer = NULL))  
   
-  df_design <- read_table("design", params)
-  stats_comp <- read_table("stats_comp", params)
+  df_design <- read_table_try("design", params)
+  stats_comp <- read_table_try("stats_comp", params)
   
-  arg_list <- list(input$stats_norm_type, input$stats_onepeptide_plot_comp, input$stats_onepeptide_accession, input$stats_onepeptide_plot_spqc,
-                   input$stats_onepeptide_use_zscore, df_design, stats_comp, params)
+  arg_list <- list(input$stats_norm_type, input$stats_onepeptide_plot_comp, input$stats_onepeptide_accession, input$stats_onepeptide_sequence, 
+                   input$stats_onepeptide_plot_spqc, input$stats_onepeptide_use_zscore, df_design, stats_comp, params)
   
   create_stats_onepeptide_plots <- callr::r_bg(func = create_stats_onepeptide_plots_bg , args = arg_list, stderr = str_c(params$error_path, "//error_create_stats_onepeptide_plots.txt"), supervise = TRUE)
   create_stats_onepeptide_plots$wait()
@@ -778,7 +778,7 @@ create_stats_onepeptide_plots <- function(session, input, output, params) {
   df_peptide <- bg_plot_list[[7]]
   options_DT <- bg_plot_list[[8]]
   
-  interactive_barplot(session, input, output, df, namex, color_list, "stats_onepeptide_barplot", input$stats_oneprotein_plot_comp, plot_number=1)
+  interactive_barplot(session, input, output, df, namex, color_list, "stats_onepeptide_barplot", input$stats_onepeptide_plot_comp, plot_number=1)
   
   interactive_grouped_barplot(session, input, output, new_df, input$stats_onepeptide_plot_comp, grouped_color_list)
   
@@ -805,8 +805,12 @@ create_stats_onepeptide_plots <- function(session, input, output, params) {
 
 #------------------------------------------------------------------------------------------------------------------
 create_stats_onepeptide_plots_bg <- function(input_stats_norm_type, input_stats_onepeptide_plot_comp, 
-                                             input_stats_onepeptide_accession, input_stats_onepeptide_plot_spqc,
+                                             input_stats_onepeptide_accession, 
+                                             input_stats_onepeptide_sequence, input_stats_onepeptide_plot_spqc,
                                              input_stats_onepeptide_use_zscore, df_design, stats_comp, params) {
+  
+  save(input_stats_norm_type, file="z6"); save(input_stats_onepeptide_plot_comp, file="z5"); save(input_stats_onepeptide_accession, file="z4"); save(input_stats_onepeptide_sequence, file="z4b"); save(input_stats_onepeptide_plot_spqc, file="z3"); save(input_stats_onepeptide_use_zscore, file="z2"); save(df_design, file="z7"); save(stats_comp, file="z1")
+  #load(file="z6"); load(file="z5"); load(file="z4"); load(file="z4b"); load(file="z3"); load(file="z2"); load(file="z7"); load(file="z1")
   
   cat(file = stderr(), "Function create_stats_onepeptide_plots_bg...", "\n")
   
@@ -816,25 +820,22 @@ create_stats_onepeptide_plots_bg <- function(input_stats_norm_type, input_stats_
   source('Shiny_Tables.R')
   
   #confirm data exists in database
-  data_name <- stringr::str_c("protein_", input_stats_norm_type, "_", input_stats_oneprotein_plot_comp, "_final")
-  data_name_peptide <- stringr::str_c("peptide_", input_stats_norm_type, "_", input_stats_oneprotein_plot_comp, "_final")
-  
-  #protein plot
-  if (data_name %in% list_tables(params) & data_name_peptide %in% list_tables(params)  ) {
-    cat(file = stderr(), stringr::str_c(data_name, " & ", data_name_peptide, " are in database"), "\n") 
+  data_name <- stringr::str_c("peptide_impute_", input_stats_norm_type, "_", input_stats_onepeptide_plot_comp, "_final")
+
+  #peptide plot
+  if (data_name %in% list_tables(params) & data_name %in% list_tables(params)  ) {
+    cat(file = stderr(), stringr::str_c(data_name, " is in database"), "\n") 
     
-    df <- filter_db(data_name, "Accession", input_stats_oneprotein_accession, params)
-    df_peptide <- filter_db(data_name_peptide, "Accession", input_stats_oneprotein_accession, params)
+    df <- filter_db(data_name, "Sequence", input_stats_onepeptide_sequence, params)
     
-    cat(file = stderr(), "Function create_stats_oneprotein_plots_bg...1", "\n")
-    comp_number <- which(stats_comp$Name == input_stats_oneprotein_plot_comp)
+    cat(file = stderr(), "Function create_stats_onepeptide_plots_bg...1", "\n")
+    comp_number <- which(stats_comp$Name == input_stats_onepeptide_plot_comp)
     sample_number <- as.integer(stats_comp$N[comp_number]) + as.integer(stats_comp$D[comp_number])
     start_sample_col <- min(grep(stats_comp$FactorsN[comp_number], names(df)), grep(stats_comp$FactorsD[comp_number], names(df)))
-    start_sample_col_peptide <- min(grep(stats_comp$FactorsN[comp_number], names(df_peptide)), grep(stats_comp$FactorsD[comp_number], names(df)))
     spqc_number <- as.integer(stats_comp$SPQC[comp_number])
     
-    cat(file = stderr(), "Function create_stats_oneprotein_plots_bg...2", "\n")
-    if(input_stats_oneprotein_plot_spqc) {
+    cat(file = stderr(), "Function create_stats_onepeptide_plots_bg...2", "\n")
+    if(input_stats_onepeptide_plot_spqc) {
       df <- df[,(start_sample_col:(start_sample_col + sample_number + spqc_number - 1))]
       design_pos <- stringr::str_c(unlist(stats_comp$N_loc[comp_number]), ", ", unlist(stats_comp$D_loc[comp_number]), ", ", unlist(stats_comp$SPQC_loc[comp_number]))
     }else{
@@ -848,7 +849,7 @@ create_stats_onepeptide_plots_bg <- function(input_stats_norm_type, input_stats_
     
     #grouped peptide 
     cat(file = stderr(), "Function create_stats_oneprotein_plots_bg...3", "\n")
-    if (input_stats_use_zscore) {df_peptide <- peptide_zscore(df_peptide, start_sample_col_peptide)}
+    if (input_stats_onepeptide_use_zscore) {df_grouped <- peptide_zscore(df, start_sample_col_peptide)}
     peptide_pos_lookup <-  peptide_position_lookup(df_peptide, params)
     grouped_color <- unique(color_list)
     
