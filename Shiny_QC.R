@@ -113,7 +113,7 @@ norm_comp_plot_bg <- function(params){
     norm <- stringr::str_replace_all(norm, " ", "")
     
     if (params$data_output == "Protein") {
-      table_name <- stringr::str_c('protein_impute_', norm)
+      table_name <- stringr::str_c('protein_', norm)
     } else if (params$data_output == "Peptide") {
       table_name <- stringr::str_c('peptide_impute_', norm)
     }

@@ -59,7 +59,7 @@ df_design <- read_table("design", params)
 test <- read_table("design", params)
 design <- read_table("design", params)
 test_sample_groups <- read_table("sample_groups", params)
-stats_comp <- read_table("stats_comp", params)
+test_stats_comp <- read_table("stats_comp", params)
 test_design <- read_table("design", params)
 test_protein_missing <- read_table("protein_missing", params)
 
@@ -849,4 +849,9 @@ which(is.na(df_filter$Local2))
 which(is.na(df_norm$Local))
 which(is.na(df_norm$Local2))
 
+
+dl1 <- df_list[[1]]
+dl2 <- df_list[[2]]
+dl3 <- df_list[[3]]
+dl4 <- df_list[[4]]
 

@@ -379,7 +379,7 @@ update_widgets_stats <- function(session, input, output, params){
   cat(file = stderr(), "Function - update_widget_stats...", "\n")
   #stats graphs
   if ("stats_comp" %in% list_tables(params)) {
-    stats_comp <- read_table("stats_comp", params)
+    stats_comp <- read_table_try("stats_comp", params)
     stats_comp_choices <- c(stats_comp$Name)
     stats_comp_choices_spqc <- c(stats_comp$Name, params$comp_spqc)
     updatePickerInput(session, "stats_plot_comp1", choices = stats_comp_choices_spqc)
@@ -562,8 +562,8 @@ update_stat_comparisons <- function(session, input, output){
       for (i in (1:nrow(stats_comp))) {
         compN <- str_c("comp_", i, "N")
         compD <- str_c("comp_", i, "D")
-        updatePickerInput(session, compN, selected = as.list(strsplit(stats_comp$FactorsN[i], ",")[[1]])) 
-        updatePickerInput(session, compD, selected = as.list(strsplit(stats_comp$FactorsD[i], ",")[[1]])) 
+        updatePickerInput(session, compN, selected = unlist(strsplit(stats_comp$FactorsN[i], ", ")) )
+        updatePickerInput(session, compD, selected = unlist(strsplit(stats_comp$FactorsD[i], ", ")) )
         
         #update screen to display the number of samples in the comparison
         updatePickerInput(session, inputId = compN, label = str_c("Numerator selected -> ", stats_comp$N[i]) )

@@ -1,8 +1,9 @@
 cat(file = stderr(), "Shiny_MVA_Functions.R", "\n")
 
 #-------------------------------------------------------------------------------
-stat_create_comp_df <- function(df, factorsN, factorsD, params, df_design) {
+stat_create_comp_df <- function(df, stats_comp, comp_number, params, df_design) {
   cat(file = stderr(), "Function - stat_create_comp_df...", "\n")
+  source('Shiny_Misc_Functions.R')
   
   #reduce dataframe to data only
   df_info <- df[1:(ncol(df) - params$sample_number)]
@@ -11,27 +12,19 @@ stat_create_comp_df <- function(df, factorsN, factorsD, params, df_design) {
   df_D <- df
   df_SPQC <- df
   
-  # find sample position numbers
-  samples_N <- which(df_design$Group %in% as.list(factorsN))
-  samples_D <- which(df_design$Group %in% as.list(factorsD))
-  cat(file = stderr(), stringr::str_c("samples_N = ", samples_N), "\n")
-  cat(file = stderr(), stringr::str_c("samples_D = ", samples_D), "\n")
-  
-  # find SPQC numbers
-  samples_SPQC <- which(df_design$Group %in% as.list(params$comp_spqc))
-  cat(file = stderr(), stringr::str_c("samples_SPQC = ", samples_SPQC), "\n")
-  
   # reduce dataframe to samples of interest
-  df_N <- df_N[c(samples_N)]
-  df_D <- df_D[c(samples_D)]
-  cat(file = stderr(), stringr::str_c("df_N = ", ncol(df_N)), "\n")
-  cat(file = stderr(), stringr::str_c("df_D = ", ncol(df_D)), "\n")
+  n_loc <- str_to_numlist(stats_comp$N_loc[comp_number])
+  d_loc <- str_to_numlist(stats_comp$D_loc[comp_number])
+  df_N <- df[, n_loc]
+  df_D <- df[, d_loc]
+  cat(file = stderr(), stringr::str_c("samples_N = ", length(n_loc)), "\n")
+  cat(file = stderr(), stringr::str_c("samples_D = ", length(d_loc)), "\n")
+
+  spqc_loc <- str_to_numlist(stats_comp$SPQC_loc[comp_number])
+  df_SPQC <- df[, spqc_loc]
+  cat(file = stderr(), stringr::str_c("samples_SPQC = ", length(spqc_loc)), "\n")
   
-  # reduce dataframe to SPQC
-  df_SPQC <- df_SPQC[c(samples_SPQC)]
-  cat(file = stderr(), stringr::str_c("df_SPQC = ", ncol(df_SPQC)), "\n")
-  
-  #combine info and samples to dataframe for stats later
+  #combine into list for next step
   df_out <- list(df_info, df_N, df_D, df_SPQC)
   
   cat(file = stderr(), "Function - stat_create_comp_df...end", "\n")
@@ -39,7 +32,7 @@ stat_create_comp_df <- function(df, factorsN, factorsD, params, df_design) {
 }
 
 #-------------------------------------------------------------------------------
-stat_create_comp_missing_df <- function(df, factorsN, factorsD, params, df_design) {
+stat_create_comp_missing_df <- function(df, stats_comp, comp_number, params, df_design) {
   cat(file = stderr(), "Function - stat_create_comp_missing_df...", "\n")
   
   #reduce dataframe to data only
@@ -47,25 +40,17 @@ stat_create_comp_missing_df <- function(df, factorsN, factorsD, params, df_desig
   df_D <- df
   df_SPQC <- df
   
-  # find sample position numbers
-  samples_N <- which(df_design$Group %in% as.list(factorsN))
-  samples_D <- which(df_design$Group %in% as.list(factorsD))
-  cat(file = stderr(), stringr::str_c("samples_N = ", samples_N), "\n")
-  cat(file = stderr(), stringr::str_c("samples_D = ", samples_D), "\n")
-  
-  # find SPQC numbers
-  samples_SPQC <- which(df_design$Group %in% as.list(params$comp_spqc))
-  cat(file = stderr(), stringr::str_c("samples_SPQC = ", samples_SPQC), "\n")
-  
   # reduce dataframe to samples of interest
-  df_N <- df_N[c(samples_N)]
-  df_D <- df_D[c(samples_D)]
-  cat(file = stderr(), stringr::str_c("df_N = ", ncol(df_N)), "\n")
-  cat(file = stderr(), stringr::str_c("df_D = ", ncol(df_D)), "\n")
+  n_loc <- str_to_numlist(stats_comp$N_loc[comp_number])
+  d_loc <- str_to_numlist(stats_comp$D_loc[comp_number])
+  df_N <- df[, n_loc]
+  df_D <- df[, d_loc]
+  cat(file = stderr(), stringr::str_c("samples_N = ", length(n_loc)), "\n")
+  cat(file = stderr(), stringr::str_c("samples_D = ", length(d_loc)), "\n")
   
-  # reduce dataframe to SPQC
-  df_SPQC <- df_SPQC[c(samples_SPQC)]
-  cat(file = stderr(), stringr::str_c("df_SPQC = ", ncol(df_SPQC)), "\n")
+  spqc_loc <- str_to_numlist(stats_comp$SPQC_loc[comp_number])
+  df_SPQC <- df[, spqc_loc]
+  cat(file = stderr(), stringr::str_c("samples_SPQC = ", length(spqc_loc)), "\n")
   
   #combine info and samples to dataframe for stats later
   df_out <- list(df_N, df_D, df_SPQC)
@@ -190,45 +175,55 @@ precursor_refilter_rollup <- function(df_filter_list, df_design, params) {
 stat_add <- function(df, df_missing, params, comp_number, stats_comp, df_design) {
   cat(file = stderr(), "Function - stat_add...", "\n")
   
-  #save(df, file="x1"); save(df_missing, file="x2"); save(comp_number, file="x3"); save(stats_comp, file="x4"); save(df_design, file="x5");
-  #   load(file="x1");  load(file="x2");load(file="x3"); load(file="x4"); load(file="x5")
+  #save(df, file="z1"); save(df_missing, file="z2"); save(comp_number, file="z3"); save(stats_comp, file="z4"); save(df_design, file="z5");
+  #load(file="z1");  load(file="z2");load(file="z3"); load(file="z4"); load(file="z5")
   
   source("Shiny_Misc_Functions.R")
   source("Shiny_Stats_Functions.R")
   
-  sample_count <- as.numeric(stats_comp$Total[comp_number])
-  df_samples <- df[,(ncol(df) - sample_count + 1):ncol(df)]
+  if (stats_comp$SPQC[comp_number] != 0) {
+    sample_count <- as.numeric(stats_comp$N[comp_number]) + as.numeric(stats_comp$D[comp_number]) + as.numeric(stats_comp$SPQC[comp_number])
+    df_samples <- df[,(ncol(df) - sample_count + 1):ncol(df)]
+  }else {
+    sample_count <- as.numeric(stats_comp$N[comp_number]) + as.numeric(stats_comp$D[comp_number])
+    df_samples <- df[,(ncol(df) - sample_count + 1):ncol(df)] 
+  }
   
   cat(file = stderr(), "stat_add...1", "\n")
-  
   #fix sample names
   sample_names <- c(df_design$Header2[str_to_numlist(stats_comp$N_loc[comp_number])], 
-                      df_design$Header2[str_to_numlist(stats_comp$D_loc[comp_number])])
-  name_order <- c(stats_comp$N_loc, stats_comp$D_loc)
+                    df_design$Header2[str_to_numlist(stats_comp$D_loc[comp_number])])
   
   if (stats_comp$SPQC[comp_number] != 0) {
     sample_names <- c(sample_names, df_design$Header2[str_to_numlist(stats_comp$SPQC_loc[comp_number])])
-    name_order <- c(name_order, stats_comp$SPQC_loc)
   }
-  sample_names <- sample_names[str_to_numlist(name_order)]
   
   colnames(df)[(ncol(df) - sample_count + 1):ncol(df)] <- sample_names
   colnames(df_samples) <- sample_names
   
   cat(file = stderr(), "stat_add...2", "\n")
   
-  df_N <- df_samples[,str_to_numlist(stats_comp$N_loc[comp_number])]
-  df_D <- df_samples[,str_to_numlist(stats_comp$D_loc[comp_number])]
-  if (stats_comp$SPQC[comp_number] != 0) {
-    df_SPQC <- df_samples[,str_to_numlist(stats_comp$SPQC_loc[comp_number])]
-  }
+  n_start <- 1
+  n_end <- as.numeric(stats_comp$N[comp_number])
   
+  d_start <- n_end + 1
+  d_end <- d_start + as.numeric(stats_comp$D[comp_number]) -1
+  
+  df_N <- df_samples[,n_start:n_end]
+  df_D <- df_samples[,d_start:d_end]
+  
+  if (stats_comp$SPQC[comp_number] != 0) {
+    spqc_start <- d_end + 1
+    spqc_end <- spqc_start + as.numeric(stats_comp$SPQC[comp_number]) - 1
+    df_SPQC <- df_samples[,spqc_start:spqc_end]
+  }
   
   
   if (params$raw_data_format != "protein"){
     df_N_missing <- df_missing |> dplyr::select(starts_with(stats_comp$FactorsN[comp_number]))
     df_D_missing <- df_missing |> dplyr::select(starts_with(stats_comp$FactorsD[comp_number]))
   }
+  
   
   cat(file = stderr(), "stat_add...3", "\n")
   df[[stringr::str_c(stats_comp$FactorsN[comp_number], "_CV")]] <- percentCV_gw(df_N)
@@ -268,19 +263,19 @@ stat_add <- function(df, df_missing, params, comp_number, stats_comp, df_design)
   if(params$stats_spqc_cv_filter & stats_comp$SPQC[comp_number] != 0) {
     filtered_spqc <- which(df[[stringr::str_c(params$comp_spqc, "_CV")]] > params$stats_spqc_cv_filter_factor)  
     if(length(filtered_spqc) > 0 ){ df <- df[-(filtered_spqc),] }
-    }
+  }
   
   cat(file = stderr(), "stat_add...7", "\n")
   if(params$stats_comp_cv_filter) {
     filtered_onegroup <- which(df[[stringr::str_c(stats_comp$FactorsN[comp_number], "_CV")]] > params$stats_comp_cv_filter_factor & 
                                  df[[stringr::str_c(stats_comp$FactorsD[comp_number], "_CV")]] > params$stats_comp_cv_filter_factor)  
     if(length(filtered_onegroup) > 0 ){ df <- df[-(filtered_onegroup),]}
-    }
+  }
   
   if(params$stats_peptide_minimum) {
     filtered_min_peptide <- which(df$Precursors < params$stats_peptide_minimum_factor)
     if(length(filtered_min_peptide) > 0 ){ df <- df[-(filtered_min_peptide),] }
-    }
+  }
   
   cat(file = stderr(), "stat_add...8", "\n")
   #label up/down
@@ -294,7 +289,7 @@ stat_add <- function(df, df_missing, params, comp_number, stats_comp, df_design)
     filtered_up <- which(df[[stringr::str_c(stats_comp$Name[comp_number], "_FC")]] >= params$foldchange_cutoff & 
                            df[[stringr::str_c(stats_comp$Name[comp_number], "_pval")]] <= params$pvalue_cutoff) 
     filtered_down <- which(df[[stringr::str_c(stats_comp$Name[comp_number], "_FC")]] <= -params$foldchange_cutoff & 
-                           df[[stringr::str_c(stats_comp$Name[comp_number], "_pval")]] <= params$pvalue_cutoff) 
+                             df[[stringr::str_c(stats_comp$Name[comp_number], "_pval")]] <= params$pvalue_cutoff) 
   }
   
   cat(file = stderr(), "stat_add...9", "\n")
@@ -302,11 +297,12 @@ stat_add <- function(df, df_missing, params, comp_number, stats_comp, df_design)
   df$Stats[filtered_down] <- "Down"
   
   df <- df[order(df$Stats, -df[[stringr::str_c(stats_comp$Name[comp_number], "_pval")]], decreasing = TRUE), ]
-
+  
   cat(file = stderr(), "Function - stat_add...end", "\n\n")  
-
+  
   return(df)  
 } 
+
 
 
 #-------------------------------------------------------------------------------

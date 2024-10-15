@@ -158,9 +158,10 @@ stat_calc_bg <- function(params, comp_number, stats_comp){
   source('Shiny_MVA_Functions.R')
   source('Shiny_File.R')
 
-  #save(comp_number, file="stat1"); save(stats_comp, file="stat4");
-  # stats_comp <- read_table_try("stats_comp", params); comp_number = 1
-  #. load(file="stat1"); load(file="stat2");load(file="stat3");load(file="stat4");
+  #save(comp_number, file="z10"); save(stats_comp, file="z11");
+  #. load(file="z10"); load(file="z11");
+  # stats_comp <- read_table_try("stats_comp", params); comp_number = 3
+
   
   df_design <- read_table_try("design", params) 
   
@@ -184,10 +185,10 @@ stat_calc_bg <- function(params, comp_number, stats_comp){
     df_missing <- read_table_try("precursor_missing", params) 
     
     # reduce precursor df to samples of interest
-    df_list <- stat_create_comp_df(df, stats_comp$FactorsN[comp_number], stats_comp$FactorsD[comp_number], params, df_design)
+    df_list <- stat_create_comp_df(df, stats_comp, comp_number, params, df_design)
     
     # reduce missing df to samples of interest
-    df_missing_list <- stat_create_comp_missing_df(df_missing, stats_comp$FactorsN[comp_number], stats_comp$FactorsD[comp_number], params, df_design)
+    df_missing_list <- stat_create_comp_missing_df(df_missing, stats_comp, comp_number, params, df_design)
     
     #refilter precursors/peptides
     df_filter_list <- precursor_refilter(df_list, df_missing_list, params)
