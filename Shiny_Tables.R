@@ -300,11 +300,13 @@ peptide_table <- function(df, start_sample_col, sample_number, spqc_number){
 
 #------------------------------------------------------------------------------------------------------------------
 
-protein_peptide_table <- function(df_peptide, peptide_pos_lookup, start_sample_col_peptide){
-  cat(file = stderr(), "Function protein_table...", "\n")
+protein_peptide_table <- function(df_peptide, peptide_pos_lookup, start_sample_col){
+  cat(file = stderr(), "Function protein_peptide_table...", "\n")
   require('DT')
   source('Shiny_Misc_Functions.R')
 
+  # df_peptide <- df 
+  
   df_peptide$Sequence <- gsub("_", "", df_peptide$Sequence)
   df_peptide <- merge(df_peptide, peptide_pos_lookup, by = (c("Accession", "Sequence"))    )
   df_peptide$Start <- as.numeric(df_peptide$Start)
@@ -314,7 +316,7 @@ protein_peptide_table <- function(df_peptide, peptide_pos_lookup, start_sample_c
   df_peptide <- df_peptide[order(df_peptide$Start, df_peptide$Stop), ]
   
   #df_peptide <- df_peptide |> dplyr::mutate(dplyr::across((start_sample_col_peptide+2):(ncol(df_peptide)), round, 1))
-  df_peptide <- round_columns(df_peptide, rep(start_sample_col_peptide+2):(ncol(df_peptide)), 7)
+  df_peptide <- round_columns(df_peptide, rep(start_sample_col+2):((ncol(df_peptide)-1) ), 7)
   
   options <- list(
     selection = 'single',
@@ -371,7 +373,7 @@ protein_peptide_table <- function(df_peptide, peptide_pos_lookup, start_sample_c
     #formatRound(columns = c(sample_col_numbers + 1), digits = 0)
   )
   
-  cat(file = stderr(), "Function protein_table...end", "\n")
+  cat(file = stderr(), "Function protein_peptide_table...end", "\n")
   return(list(df_peptide, options))   
 }
 

@@ -617,6 +617,9 @@ peptide_position_lookup <- function(df_peptide, params)  {
     if (params$data_output == "Protein") {
       peptide_pos_lookup <- df_peptide |> dplyr::select(Accession, Sequence, PeptidePosition)
       peptide_pos_lookup$Sequence <- gsub("_", "", peptide_pos_lookup$Sequence)
+    }else{
+      peptide_pos_lookup <- df_peptide |> dplyr::select(Accession, Sequence, PeptidePosition)
+      peptide_pos_lookup$Sequence <- gsub("_", "", peptide_pos_lookup$Sequence)
     }
     
     cat(file = stderr(), "peptide_position_lookup...3", "\n")
