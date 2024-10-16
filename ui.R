@@ -925,97 +925,102 @@ body <- dashboardBody(
 
           tabItem("stats_peptide_plots",
               fluidRow(
-               column(width =1, offset =0,
-                      textInput("stats_onepeptide_accession", label="Accession", value = "0", width = 100)
-               ),
-               column(width =2, offset =0,
-                      textInput("stats_onepeptide_sequence", label="Peptide Sequence", width = 250)
-               ),
-               column(width =2, offset =0,
-                      textInput("stats_onepeptide_modification", label="Peptide Modification", width = 250)
-               ),
-               column(width =3, offset =0,
-                      selectInput("stats_onepeptide_plot_comp", label = "comparison",
-                                  choices = list("Choice 1" = 1, "Choice 2" = 2, "Choice 3" = 3),
-                                  selected = 1)
-               ),
-
-               column(width =1, offset =0,
-                      checkboxInput("stats_onepeptide_plot_spqc", label = "Add SPQC?")
-               ),
-               column(width =1, offset =0,
-                      checkboxInput("stats_onepeptide_use_zscore", label = "Use zscore?")
-               ),
-               column(width =1, offset =0,
-                      numericInput("stats_onepeptide_residue", label="Residue", value = 0, width = 100)
-               ),
-               column(width =1, offset =0,
-                      actionButton("create_stats_onepeptide_plots", label = "Create Plots", width = 100,
-                                   style="color: #fff; background-color: #337ab7; border-color: #2e6da4")
-               )
-             ),
+                box(id = "stats_protein_parameters", title = "Protein Plot Parameters...", status = "primary",
+                    solidHeader = TRUE, collapsible = FALSE, align = "left", width = 12, height = 125,
+                   column(width =1, offset =0,
+                          textInput("stats_onepeptide_accession", label="Accession", value = "0", width = 100)
+                   ),
+                   column(width =2, offset =0,
+                          textInput("stats_onepeptide_sequence", label="Peptide Sequence", width = 250)
+                   ),
+                   column(width =2, offset =0,
+                          textInput("stats_onepeptide_modification", label="Peptide Modification", width = 250)
+                   ),
+                   column(width =3, offset =0,
+                          selectInput("stats_onepeptide_plot_comp", label = "comparison",
+                                      choices = list("Choice 1" = 1, "Choice 2" = 2, "Choice 3" = 3),
+                                      selected = 1)
+                   ),
+    
+                   column(width =1, offset =0,
+                          checkboxInput("stats_onepeptide_plot_spqc", label = "Add SPQC?")
+                   ),
+                   column(width =1, offset =0,
+                          checkboxInput("stats_onepeptide_use_zscore", label = "Use zscore?")
+                   ),
+                   column(width =1, offset =0,
+                          numericInput("stats_onepeptide_residue", label="Residue", value = 0, width = 100)
+                   ),
+                   column(width =1, offset =0,
+                          actionButton("create_stats_onepeptide_plots", label = "Create Plots", width = 100,
+                                       style="color: #fff; background-color: #337ab7; border-color: #2e6da4")
+                   )
+                )
+              ),
              fluidRow(
-               column(width =12, offset =0,
-                      dropdownButton(
-                        textInput("stats_onepeptide_barplot_y_axis_label", label="y axis label", value = "Intensity", width = 200),
-                        textInput("stats_onepeptide_barplot_title", label="plot title", value = "Total Summed Intensity", width = 200),
-                        sliderInput("stats_onepeptide_barplot_label_size", label = h5("Label Size"), min = 1,
-                                    max = 50, value = 11),
-                        sliderInput("stats_onepeptide_barplot_title_size", label = h5("Title Size"), min = 10,
-                                    max = 50, value = 20),
-                        circle = TRUE, status = "danger", icon = icon("cogs"), width = "300px", size = "sm",
-                        tooltip = tooltipOptions(title = "Click to see inputs !")
-                      ),
-                      div(
-                        style = "position:relative",
-                        plotOutput("stats_onepeptide_barplot", width = 1200, height = 400)
-                      ),
-                      downloadButton('download_stats_onepeptide_barplot')
-               )
-             ),
-             fluidRow(
-               column(width =12, offset =0,
-                      dropdownButton(
-                        textInput("stats_onepeptide_grouped_barplot_y_axis_label", label="y axis label", value = "Intensity", width = 200),
-                        textInput("stats_onepeptide_grouped_barplot_x_axis_label", label="x axis label", value = "Sequence", width = 200),
-                        textInput("stats_onepeptide_grouped_barplot_title", label="plot title", value = "Total Summed Intensity", width = 200),
-                        sliderInput("stats_onepeptide_grouped_barplot_label_size", label = h5("Label Size"), min = 1,
-                                    max = 50, value = 11),
-                        sliderInput("stats_onepeptide_grouped_barplot_title_size", label = h5("Title Size"), min = 10,
-                                    max = 50, value = 20),
-                        sliderInput("stats_onepeptide_grouped_barplot_axis_angle", label = h5("X-axis angle"), min = 0,
-                                    max = 90, value = 45),
-                        numericInput("stats_onepeptide_grouped_barplot_axis_vjust", label="X-axis vjust", value = 0.5),
-                        circle = TRUE, status = "danger", icon = icon("cogs"), width = "300px", size = "sm",
-                        tooltip = tooltipOptions(title = "Click to see inputs !")
-                      ),
-                      div(
-                        style = "position:relative",
-                        plotOutput("stats_onepeptide_grouped_barplot", width = 1200, height = 400)
-                      ),
-                      downloadButton('download_stats_onepeptide_grouped_barplot')
-               )
-             ),
-
-             fluidRow(
-               column(width =12, offset =0,
-                      hr(),
-                      tags$head(tags$style("#onepeptide_peptide_table{color: blue;
-                                                               font-size: 12px;
-                                                               }"
+               tabBox(title = "Peptide Plots", width = 12, height = 700,
+                      tabPanel("Peptide",
+                        column(width =12, offset =0,
+                          dropdownButton(
+                            textInput("1_stats_onepeptide_barplot_y_axis_label", label="y axis label", value = "Intensity", width = 200),
+                            textInput("1_stats_onepeptide_barplot_title", label="plot title", value = "Total Summed Intensity", width = 200),
+                            sliderInput("1_stats_onepeptide_barplot_label_size", label = h5("Label Size"), min = 1,
+                                        max = 50, value = 11),
+                            sliderInput("1_stats_onepeptide_barplot_title_size", label = h5("Title Size"), min = 10,
+                                        max = 50, value = 20),
+                            circle = TRUE, status = "danger", icon = icon("cogs"), width = "300px", size = "sm",
+                            tooltip = tooltipOptions(title = "Click to see inputs !")
+                          ),
+                          div(
+                            style = "position:relative",
+                            plotOutput("1_stats_onepeptide_barplot", width = 1200, height = 400)
+                          ),
+                          downloadButton('1_download_stats_onepeptide_barplot')
+                          )
+                        ),
+                    tabPanel("GroupedPeptide",
+                      column(width =12, offset =0,
+                             dropdownButton(
+                               textInput("stats_onepeptide_grouped_barplot_y_axis_label", label="y axis label", value = "Intensity", width = 200),
+                               textInput("stats_onepeptide_grouped_barplot_x_axis_label", label="x axis label", value = "Sequence", width = 200),
+                               textInput("stats_onepeptide_grouped_barplot_title", label="plot title", value = "Total Summed Intensity", width = 200),
+                               sliderInput("stats_onepeptide_grouped_barplot_label_size", label = h5("Label Size"), min = 1,
+                                           max = 50, value = 11),
+                               sliderInput("stats_onepeptide_grouped_barplot_title_size", label = h5("Title Size"), min = 10,
+                                           max = 50, value = 20),
+                               sliderInput("stats_onepeptide_grouped_barplot_axis_angle", label = h5("X-axis angle"), min = 0,
+                                           max = 90, value = 45),
+                               numericInput("stats_onepeptide_grouped_barplot_axis_vjust", label="X-axis vjust", value = 0.5),
+                               circle = TRUE, status = "danger", icon = icon("cogs"), width = "300px", size = "sm",
+                               tooltip = tooltipOptions(title = "Click to see inputs !")
+                             ),
+                             div(
+                               style = "position:relative",
+                               plotOutput("stats_onepeptide_grouped_barplot", width = 1200, height = 400)
+                             ),
+                             downloadButton('download_stats_onepeptide_grouped_barplot')
                       )
-                      ),
-                      DT::dataTableOutput("onepeptide_peptide_table", width ='100%')
-               ),
-               column(width =2, offset =0,
-                      textInput("stats_onepeptide_data_filename", label="File Name", value = "my_peptide_data.xlsx", width = 250)
-               ),
-               column(width =1, offset =0,
-                      actionButton("stats_onepeptide_data_save", label = "Save Data", width = 100,
-                                   style="color: #fff; background-color: #337ab7; border-color: #2e6da4")
+                    ),
+                    tabPanel("PeptideData",   
+                         column(width =12, offset =0,
+                                hr(),
+                                tags$head(tags$style("#onepeptide_peptide_table{color: blue;
+                                                                         font-size: 12px;
+                                                                         }"
+                                )
+                                ),
+                                DT::dataTableOutput("onepeptide_peptide_table", width ='100%')
+                         ),
+                         column(width =2, offset =0,
+                                textInput("stats_onepeptide_data_filename", label="File Name", value = "my_peptide_data.xlsx", width = 250)
+                         ),
+                         column(width =1, offset =0,
+                                actionButton("stats_onepeptide_data_save", label = "Save Data", width = 100,
+                                             style="color: #fff; background-color: #337ab7; border-color: #2e6da4")
+                         )
+                       )
+                    )
                )
-             )
-
     ),
 
 

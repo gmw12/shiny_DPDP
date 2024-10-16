@@ -63,6 +63,9 @@ shinyServer(function(session, input, output) {
   #load menu
   load_menu(session, input, output)
   
+  #button observers
+  observe_buttons(session, input, output)
+  
   removeModal()
   
   #------------------------------------------------------------------------------------------------------  

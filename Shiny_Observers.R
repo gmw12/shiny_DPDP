@@ -1,4 +1,69 @@
 cat(file = stderr(), "Shiny_Observers.R", "\n")
+#---------------------------------------------------------
+observe_buttons <- function(session, input , output) {
+  cat(file = stderr(), "observe buttons loaded...", "\n")
+  
+  observeEvent(input$accept_parameters,{
+    runjs('document.getElementById("accept_parameters").style.backgroundColor = "green";')
+  })
+ 
+  observeEvent(input$noise_apply,{
+    runjs('document.getElementById("noise_apply").style.backgroundColor = "green";')
+  })
+  
+  observeEvent(input$noise_inflection_apply,{
+    runjs('document.getElementById("noise_inflection_apply").style.backgroundColor = "green";')
+  })
+  
+  observeEvent(input$filter_cutoff,{
+    runjs('document.getElementById("filter_cutoff").style.backgroundColor = "green";')
+  })
+  
+  observeEvent(input$filter_apply,{
+    runjs('document.getElementById("filter_apply").style.backgroundColor = "green";')
+  })
+  
+  observeEvent(input$norm_parameters,{
+    runjs('document.getElementById("norm_parameters").style.backgroundColor = "green";')
+  })
+  
+  observeEvent(input$norm_apply,{
+    runjs('document.getElementById("norm_apply").style.backgroundColor = "green";')
+  })
+  
+  observeEvent(input$impute_parameters,{
+    runjs('document.getElementById("impute_parameters").style.backgroundColor = "green";')
+  })
+  
+  observeEvent(input$impute_apply,{
+    runjs('document.getElementById("impute_apply").style.backgroundColor = "green";')
+  })
+  
+  observeEvent(input$rollup_apply,{
+    runjs('document.getElementById("rollup_apply").style.backgroundColor = "green";')
+  })
+  
+  observeEvent(input$stat_options,{
+    runjs('document.getElementById("stat_options").style.backgroundColor = "green";')
+  })
+  
+  observeEvent(input$check_stats,{
+    runjs('document.getElementById("check_stats").style.backgroundColor = "green";')
+  })
+  
+  observeEvent(input$start_stats,{
+    runjs('document.getElementById("start_stats").style.backgroundColor = "green";')
+  })
+  
+  observeEvent(input$save_stats,{
+    runjs('document.getElementById("save_stats").style.backgroundColor = "green";')
+  })
+  
+  observeEvent(input$set_pathway,{
+    runjs('document.getElementById("set_pathway").style.backgroundColor = "green";')
+  })
+  
+}
 
 #----------------------------------------------------------------------------------------- 
 observe_comp_names <- function(session, input, output){

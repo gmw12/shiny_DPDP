@@ -151,7 +151,7 @@ collapse_precursor_ptm_raw <- function(precursor_data, sample_columns, info_colu
   #setting info columns the same so that all rollups group the same way
   localized_data <- cbind(precursor_data$Sequence, localized_data)
   colnames(localized_data) <- c("Sequence", "Local", "Local2")
-  precursor_count_df <- precursor_data[1:info_columns]
+  precursor_count_df <- precursor_data[,1:info_columns]
   
   if(!is.null(df_missing)) {df_missing <- cbind(precursor_data[1:info_columns], df_missing)}
   
