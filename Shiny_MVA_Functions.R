@@ -140,13 +140,13 @@ precursor_refilter_rollup <- function(df_filter_list, df_design, params) {
   
   if (params$data_output == "Protein") {
     #need to add back info columns to missing for rollup
-    df_missing <- cbind(df[,1:(ncol(df) - sample_count)], df_missing)
-    
-    df_missing <- df_missing |> dplyr::select(contains(c("Accession", "Description", "Name", "Genes", df_design$ID))) |> 
+    df_missing_info <- df |> dplyr::select(contains(c("Accession", "Description", "Name", "Genes"))) |> 
       dplyr::mutate(Precursors = 1, .after = Genes)
     
+    df_missing <- cbind(df_missing_info, df_missing)
+    
     #rollup data and missing
-    df <- rollup_selector(df, df_design, params)
+    df <- rollup_selector(df, df_design, params, sample_count)
     df_missing <- rollup_sum(df_missing)
     
     #resort because maxlfq sorts data, while summing does not...
@@ -175,7 +175,7 @@ precursor_refilter_rollup <- function(df_filter_list, df_design, params) {
 stat_add <- function(df, df_missing, params, comp_number, stats_comp, df_design) {
   cat(file = stderr(), "Function - stat_add...", "\n")
   
-  #save(df, file="z1"); save(df_missing, file="z2"); save(comp_number, file="z3"); save(stats_comp, file="z4"); save(df_design, file="z5");
+  save(df, file="z1"); save(df_missing, file="z2"); save(comp_number, file="z3"); save(stats_comp, file="z4"); save(df_design, file="z5");
   #load(file="z1");  load(file="z2");load(file="z3"); load(file="z4"); load(file="z5")
   
   source("Shiny_Misc_Functions.R")

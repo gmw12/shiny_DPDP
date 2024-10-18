@@ -1,18 +1,24 @@
 cat(file = stderr(), "Shiny_Rollup_Functions.R", "\n")
 
 #--------------------------------------------------------------------------------
-rollup_selector <- function(df, df_design, params){
+
+
+
+rollup_selector <- function(df, df_design, params, sample_count){
   cat(file = stderr(), "function rollup_selector...", "\n")
   
   #save(df, file="test_df")
   #. load(file="test_df")
   
-  df <- df |> dplyr::select(contains(c("Accession", "Description", "Name", "Genes", df_design$ID))) |> 
+  df_info <- df |> dplyr::select(contains(c("Accession", "Description", "Name", "Genes"))) |> 
     dplyr::mutate(Precursors = 1, .after = Genes)
   
   #hard coded from above selection
   info_columns <- 5 # add 1 for Precursors
   
+  df_sample <- df[,(ncol(df)-sample_count+1):ncol(df)]
+  df <- cbind(df_info, df_sample)
+
   if (params$rollup_method == "sum") {df <-  rollup_sum(df)}
     else if (params$rollup_method == "median") {df <-  rollup_median(df)}
     else if (params$rollup_method == "median_polish") {df <-  rollup_median_polish(df, info_columns)}

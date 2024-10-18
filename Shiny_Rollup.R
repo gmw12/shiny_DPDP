@@ -37,7 +37,7 @@ rollup_apply_bg <- function(params) {
       table_name_out <- stringr::str_c("protein_", norm)
       table_name_out_peptide <- stringr::str_c("peptide_", norm)
       #rollup precursor/peptides
-      protein_df <- rollup_selector(df, df_design, params)
+      protein_df <- rollup_selector(df, df_design, params, params$sample_number)
       #rollup precursor to peptide
       peptide_df <- rollup_sum_peptide(df, df_design)
       RSQLite::dbWriteTable(conn, table_name_out, protein_df, overwrite = TRUE)

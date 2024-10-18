@@ -162,7 +162,6 @@ stat_calc_bg <- function(params, comp_number, stats_comp){
   #. load(file="z10"); load(file="z11");
   # stats_comp <- read_table_try("stats_comp", params); comp_number = 3
 
-  
   df_design <- read_table_try("design", params) 
   
   if (!params$peptide_refilter) {
@@ -520,6 +519,7 @@ stats_table_select <- function(session, input, output, input_stats_data_final_ro
   create_stats_oneprotein_plots <- function(session, input, output, params) {
     cat(file = stderr(), "Function create_stats_oneprotein_plots...", "\n")
     showModal(modalDialog("Creating stats oneprotein plots...", footer = NULL))  
+    source('Shiny_Interactive.R')
     
     df_design <- read_table("design", params)
     stats_comp <- read_table("stats_comp", params)
