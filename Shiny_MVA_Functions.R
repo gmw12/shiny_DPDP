@@ -25,10 +25,10 @@ stat_create_comp_df <- function(df, stats_comp, comp_number, params, df_design) 
   cat(file = stderr(), stringr::str_c("samples_SPQC = ", length(spqc_loc)), "\n")
   
   #combine into list for next step
-  df_out <- list(df_info, df_N, df_D, df_SPQC)
+  df_list <- list(df_info, df_N, df_D, df_SPQC)
   
   cat(file = stderr(), "Function - stat_create_comp_df...end", "\n")
-  return(df_out)
+  return(df_list)
 }
 
 #-------------------------------------------------------------------------------
