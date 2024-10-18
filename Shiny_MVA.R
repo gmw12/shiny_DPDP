@@ -759,6 +759,10 @@ create_stats_onepeptide_plots <- function(session, input, output, params) {
   
   cat(file = stderr(), "Function create_stats_onepeptide_plots...1", "\n")
   bg_plot_list <- create_stats_onepeptide_plots$get_result()
+  
+  save(bg_plot_list, file="z103")
+  #.  load(file = "z103")
+  
   df_peptide <- bg_plot_list[[1]]
   namex <- bg_plot_list[[2]]
   color_list <- bg_plot_list[[3]]
@@ -768,31 +772,31 @@ create_stats_onepeptide_plots <- function(session, input, output, params) {
   df <- bg_plot_list[[7]]
   options_DT <- bg_plot_list[[8]]
   
-  save(bg_plot_list, file="z103")
-  #.  load(file = "z103")
+
   
   cat(file = stderr(), "Function create_stats_onepeptide_plots...2", "\n")
   interactive_barplot(session, input, output, df_peptide, namex, color_list, "stats_onepeptide_barplot", input$stats_onepeptide_plot_comp, plot_number=1)
   
   cat(file = stderr(), "Function create_stats_onepeptide_plots...3", "\n")
-  interactive_grouped_barplot(session, input, output, new_df, input$stats_onepeptide_plot_comp, grouped_color_list)
-  
-  # cat(file = stderr(), "Function create_stats_onepeptide_plots...4", "\n")
-  # output$onepeptide_peptide_table <-  DT::renderDataTable(df_peptide, rownames = FALSE, extensions = c("FixedColumns"), 
-  #                                                         selection = 'single', options=options_DT,
-  #                                                         callback = DT::JS('table.page(3).draw(false);')
-  # )
-  # 
-  # output$download_stats_onepeptide_data_save <- downloadHandler(
-  #   file = function(){
-  #     input$stats_onepeptide_data_filename
-  #   },
-  #   content = function(file){
-  #     fullname <- stringr::str_c(params$data_path, input$stats_norm_type, "//", input$stats_onepeptide_data_filename)
-  #     cat(file = stderr(), stringr::str_c("download_stats_onepeptide_data fullname = ", fullname), "\n")
-  #     file.copy(fullname, file)
-  #   }
-  # )
+  interactive_grouped_peptide_barplot(session, input, output, new_df, input$stats_onepeptide_plot_comp, grouped_color_list)
+
+
+  cat(file = stderr(), "Function create_stats_onepeptide_plots...4", "\n")
+  output$onepeptide_peptide_table <-  DT::renderDataTable(df, rownames = FALSE, extensions = c("FixedColumns"),
+                                                          selection = 'single', options=options_DT,
+                                                          callback = DT::JS('table.page(3).draw(false);')
+  )
+
+  output$download_stats_onepeptide_data_save <- downloadHandler(
+    file = function(){
+      input$stats_onepeptide_data_filename
+    },
+    content = function(file){
+      fullname <- stringr::str_c(params$data_path, input$stats_norm_type, "//", input$stats_onepeptide_data_filename)
+      cat(file = stderr(), stringr::str_c("download_stats_onepeptide_data fullname = ", fullname), "\n")
+      file.copy(fullname, file)
+    }
+  )
   
   cat(file = stderr(), "Function create_stats_onepeptide_plots...end", "\n")
   removeModal()
@@ -847,7 +851,7 @@ create_stats_onepeptide_plots_bg <- function(input_stats_norm_type, input_stats_
       df_peptide <- df[,(start_sample_col:(start_sample_col + sample_number + spqc_number - 1))]
       design_pos <- stringr::str_c(unlist(stats_comp$N_loc[comp_number]), ", ", unlist(stats_comp$D_loc[comp_number]), ", ", unlist(stats_comp$SPQC_loc[comp_number]))
     }else{
-      df_petide <- df[,(start_sample_col:(start_sample_col + sample_number - 1))]
+      df_peptide <- df[,(start_sample_col:(start_sample_col + sample_number - 1))]
       design_pos <- stringr::str_c(unlist(stats_comp$N_loc[comp_number]), ", ", unlist(stats_comp$D_loc[comp_number]))
     }
     
@@ -857,7 +861,7 @@ create_stats_onepeptide_plots_bg <- function(input_stats_norm_type, input_stats_
     
     #grouped peptide 
     cat(file = stderr(), "Function create_stats_onepeptide_plots_bg...3", "\n")
-    if (input_stats_onepeptide_use_zscore) {df_grouped <- peptide_zscore(df, start_sample_col_peptide)}
+    if (input_stats_onepeptide_use_zscore) {df <- peptide_zscore(df, start_sample_col)}
     peptide_pos_lookup <-  peptide_position_lookup(df, params)
     grouped_color <- unique(color_list)
    
@@ -942,7 +946,7 @@ create_stats_onepeptide_plots_bg <- function(input_stats_norm_type, input_stats_
     write_table_try("onepeptide_peptide_data", df, params)
      
     cat(file = stderr(), "Function create_stats_onepeptide_plots_bg...end", "\n")
-    return(list(df_peptide, namex, color_list, peptide_pos_lookup, grouped_color_list, new_df, df_peptide_table, options_DT))
+    return(list(df_peptide, namex, color_list, peptide_pos_lookup, grouped_color_list, new_df2, df_peptide_table, options_DT))
     
   }
 }
