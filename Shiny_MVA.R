@@ -582,8 +582,7 @@ stats_table_select <- function(session, input, output, input_stats_data_final_ro
     source('Shiny_Tables.R')
     
 
-    save(list =  c("input_stats_norm_type", "input_stats_oneprotein_plot_comp", "input_stats_oneprotein_accession", "input_stats_oneprotein_plot_spqc",
-    "input_stats_use_zscore", "df_design", "stats_comp"), file="z1b24")
+    #save(list =  c("input_stats_norm_type", "input_stats_oneprotein_plot_comp", "input_stats_oneprotein_accession", "input_stats_oneprotein_plot_spqc", "input_stats_use_zscore", "df_design", "stats_comp"), file="z1b24")
     # load(file="z1b24")
     
     #confirm data exists in database
@@ -752,6 +751,8 @@ create_stats_onepeptide_plots <- function(session, input, output, params) {
   cat(file = stderr(), "Function create_stats_onepeptide_plots...", "\n")
   showModal(modalDialog("Creating stats onepeptide plots...", footer = NULL))  
   
+  source('Shiny_Interactive.R')
+  
   df_design <- read_table_try("design", params)
   stats_comp <- read_table_try("stats_comp", params)
   
@@ -765,7 +766,7 @@ create_stats_onepeptide_plots <- function(session, input, output, params) {
   cat(file = stderr(), "Function create_stats_onepeptide_plots...1", "\n")
   bg_plot_list <- create_stats_onepeptide_plots$get_result()
   
-  save(bg_plot_list, file="z103")
+  #save(bg_plot_list, file="z103")
   #.  load(file = "z103")
   
   df_peptide <- bg_plot_list[[1]]
@@ -814,7 +815,7 @@ create_stats_onepeptide_plots_bg <- function(input_stats_norm_type, input_stats_
                                              input_stats_onepeptide_sequence, input_stats_onepeptide_plot_spqc,
                                              input_stats_onepeptide_use_zscore, df_design, stats_comp, params) {
   
-  save(input_stats_norm_type, file="z6"); save(input_stats_onepeptide_plot_comp, file="z5"); save(input_stats_onepeptide_accession, file="z4"); save(input_stats_onepeptide_sequence, file="z4b"); save(input_stats_onepeptide_plot_spqc, file="z3"); save(input_stats_onepeptide_use_zscore, file="z2"); save(df_design, file="z7"); save(stats_comp, file="z1")
+  #save(input_stats_norm_type, file="z6"); save(input_stats_onepeptide_plot_comp, file="z5"); save(input_stats_onepeptide_accession, file="z4"); save(input_stats_onepeptide_sequence, file="z4b"); save(input_stats_onepeptide_plot_spqc, file="z3"); save(input_stats_onepeptide_use_zscore, file="z2"); save(df_design, file="z7"); save(stats_comp, file="z1")
   #load(file="z6"); load(file="z5"); load(file="z4"); load(file="z4b"); load(file="z3"); load(file="z2"); load(file="z7"); load(file="z1")
   
   cat(file = stderr(), "Function create_stats_onepeptide_plots_bg...", "\n")

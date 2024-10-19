@@ -13,8 +13,6 @@ create_db <- function(db_name) {
   RSQLite::dbDisconnect(conn)
 }
 
-
-
 read_table <- function(table_name, params){
   conn <- dbConnect(RSQLite::SQLite(), params$database_path) 
   df <- dbReadTable(conn, table_name)

@@ -5,7 +5,7 @@ interactive_barplot <- function(session, input, output, df, namex, color_list, o
 {
   cat(file = stderr(), "Function interactive_barplot...", "\n")
 
-  save(list = c("df", "namex", "color_list", "output_name", "comp_name", "plot_number"), file="z4322")
+  #save(list = c("df", "namex", "color_list", "output_name", "comp_name", "plot_number"), file="z4322")
   #. load(file="z4322")
   
   datay <- colSums(df, na.rm = TRUE)

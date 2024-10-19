@@ -567,11 +567,7 @@ precursor_to_precursor_bg <- function(params){
   df$Description <- stringr::str_c(df$Description, ", org=", df$Organisms) 
   df$Organisms <- NULL
   
-  #save copy of raw peptide (from precursor start)
-  raw_peptide <- collapse_precursor_raw(df, info_columns = 0, stats = FALSE, params)
-  
   RSQLite::dbWriteTable(conn, "precursor_start", df, overwrite = TRUE)
-  RSQLite::dbWriteTable(conn, "raw_peptide", raw_peptide, overwrite = TRUE)
   RSQLite::dbDisconnect(conn)
   
   cat(file = stderr(), "precursor_to_precursor_bg complete", "\n\n")
@@ -625,12 +621,7 @@ precursor_to_precursor_ptm_bg <- function(params){
   
   df <- rbind(df_phos, df_other)
   
-  #save copy of raw peptide (from precursor start)
-  raw_peptide_list <- collapse_precursor_ptm_raw(df, params$sample_number, info_columns = 0, stats = FALSE, add_miss = FALSE, df_missing = NULL, params)
-  raw_peptide <- raw_peptide_list[[1]]
-  
   RSQLite::dbWriteTable(conn, "precursor_start", df, overwrite = TRUE)
-  RSQLite::dbWriteTable(conn, "raw_peptide", raw_peptide, overwrite = TRUE)
   RSQLite::dbDisconnect(conn)
   
   cat(file = stderr(), "precursor_to_precursor_bg complete", "\n\n")
@@ -1011,6 +1002,7 @@ order_rename_columns <- function(){
 order_rename_columns_bg <- function(table_name, params) {
   cat(file = stderr(), "Function order_columns_bg...", "\n")
   source('Shiny_Data.R')
+  source('Shiny_Rollup.R')
   
   conn <- RSQLite::dbConnect(RSQLite::SQLite(), params$database_path)
   df <- RSQLite::dbReadTable(conn, table_name)
@@ -1033,6 +1025,15 @@ order_rename_columns_bg <- function(table_name, params) {
   colnames(df) <- design$Header1
   df <- cbind(annotate_df, df)
   
+  #save copy of raw peptide (from precursor start)
+  if (params$ptm) {
+    raw_peptide_list <- collapse_precursor_ptm_raw(df, params$sample_number, info_columns = 0, stats = FALSE, add_miss = FALSE, df_missing = NULL, params)
+    raw_peptide <- raw_peptide_list[[1]]
+  }else{
+    raw_peptide <- collapse_precursor_raw(df, info_columns = 0, stats = FALSE, params)
+  }
+  
+  RSQLite::dbWriteTable(conn, "raw_peptide", raw_peptide, overwrite = TRUE)
   RSQLite::dbWriteTable(conn, "precursor_start", df, overwrite = TRUE)
   RSQLite::dbDisconnect(conn)
   

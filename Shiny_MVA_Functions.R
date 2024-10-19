@@ -175,7 +175,7 @@ precursor_refilter_rollup <- function(df_filter_list, df_design, params) {
 stat_add <- function(df, df_missing, params, comp_number, stats_comp, df_design) {
   cat(file = stderr(), "Function - stat_add...", "\n")
   
-  save(df, file="z1"); save(df_missing, file="z2"); save(comp_number, file="z3"); save(stats_comp, file="z4"); save(df_design, file="z5");
+  #save(df, file="z1"); save(df_missing, file="z2"); save(comp_number, file="z3"); save(stats_comp, file="z4"); save(df_design, file="z5");
   #load(file="z1");  load(file="z2");load(file="z3"); load(file="z4"); load(file="z5")
   
   source("Shiny_Misc_Functions.R")
