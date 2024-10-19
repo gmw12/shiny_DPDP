@@ -111,13 +111,21 @@ rollup_sum <- function(df){
 }
 
 #--------------------------------------------------------------------------------
-rollup_sum_peptide <- function(df, df_design){
+rollup_sum_peptide <- function(df, df_design, comp_number, stats_comp){
   cat(file = stderr(), "function rollup_sum_peptide...", "\n")
+  source('Shiny_Misc_Functions.R')
   
   #save(df, file="test_df"); save(df_design, file="test_df_design")
-  #.  load(file="test_df"); load(file="test_df_design")
+  #.  load(file="test_df"); load(file="test_df_design"); df <- df_filter_list[[1]]
   
-  df <- df |> dplyr::select(contains(c("Accession", "Description", "Name", "Genes", "Sequence", "PeptidePosition", df_design$ID))) |> 
+  if (comp_number > 0) {
+    design_order <- str_to_numlist(c(stats_comp$N_loc[comp_number], stats_comp$D_loc[comp_number], stats_comp$SPQC_loc[comp_number]))
+    sample_ID <- df_design$ID[design_order]
+  }else{
+    sample_ID <- df_design$ID
+  }
+  
+  df <- df |> dplyr::select(contains(c("Accession", "Description", "Name", "Genes", "Sequence", "PeptidePosition", sample_ID))) |> 
     dplyr::mutate(Precursors = 1, .after = PeptidePosition)
   
   peptide_df <- df |> dplyr::group_by(Accession, Description, Name, Genes, Sequence, PeptidePosition) |> dplyr::summarise_all(list(sum))

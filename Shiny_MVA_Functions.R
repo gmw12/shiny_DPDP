@@ -617,13 +617,17 @@ peptide_position_lookup <- function(df_peptide, params)  {
     if (params$data_output == "Protein") {
       peptide_pos_lookup <- df_peptide |> dplyr::select(Accession, Sequence, PeptidePosition)
       peptide_pos_lookup$Sequence <- gsub("_", "", peptide_pos_lookup$Sequence)
+      peptide_pos_lookup$Sequence <- gsub("\\[.*?\\]", "", peptide_pos_lookup$Sequence)
     }else{
       peptide_pos_lookup <- df_peptide |> dplyr::select(Accession, Sequence, PeptidePosition)
       peptide_pos_lookup$Sequence <- gsub("_", "", peptide_pos_lookup$Sequence)
+      peptide_pos_lookup$Sequence <- gsub("\\[.*?\\]", "", peptide_pos_lookup$Sequence)
     }
-    
+
     cat(file = stderr(), "peptide_position_lookup...3", "\n")
     colnames(peptide_pos_lookup) <- c("Accession", "Sequence", "Start")
+    peptide_pos_lookup$Start <- gsub("(.*),.*", "\\1", peptide_pos_lookup$Start)
+    peptide_pos_lookup$Start <- gsub("(.*);.*", "\\1", peptide_pos_lookup$Start)
     peptide_pos_lookup <- peptide_pos_lookup |> dplyr::distinct()
     peptide_pos_lookup$Stop <- nchar(peptide_pos_lookup$Sequence) + as.numeric(peptide_pos_lookup$Start)
     

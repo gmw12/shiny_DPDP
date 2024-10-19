@@ -4,12 +4,9 @@ cat(file = stderr(), "Shiny_Interactive.R", "\n")
 interactive_barplot <- function(session, input, output, df, namex, color_list, output_name, comp_name, plot_number)
 {
   cat(file = stderr(), "Function interactive_barplot...", "\n")
-  # df <<- df
-  # namex <<- namex 
-  # color_list <<- color_list
-  # output_name <<- output_name
-  # comp_name <<- comp_name
-  cat(file = stderr(), "interactive_barplot" , "\n")
+
+  save(list = c("df", "namex", "color_list", "output_name", "comp_name", "plot_number"), file="z4322")
+  #. load(file="z4322")
   
   datay <- colSums(df, na.rm = TRUE)
   df2 <- data.frame(namex)

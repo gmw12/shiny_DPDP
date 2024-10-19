@@ -160,7 +160,7 @@ stat_calc_bg <- function(params, comp_number, stats_comp){
 
   #save(comp_number, file="z10"); save(stats_comp, file="z11");
   #. load(file="z10"); load(file="z11");
-  # stats_comp <- read_table_try("stats_comp", params); comp_number = 3
+  # stats_comp <- read_table_try("stats_comp", params); comp_number = 1
 
   df_design <- read_table_try("design", params) 
   
@@ -198,7 +198,7 @@ stat_calc_bg <- function(params, comp_number, stats_comp){
     df_missing <- df_rollup_list[[2]]
     
     #rollup up filtered precursors to peptide to save for graphs
-    df_peptide <- rollup_sum_peptide(df_filter_list[[1]], df_design)
+    df_peptide <- rollup_sum_peptide(df_filter_list[[1]], df_design, comp_number, stats_comp)
     df_peptide_name <- stringr::str_c(stats_comp$Final_Table_Name_Peptide[comp_number])
     
     write_table_try(df_peptide_name, df_peptide, params)
@@ -581,14 +581,19 @@ stats_table_select <- function(session, input, output, input_stats_data_final_ro
     source('Shiny_MVA_Functions.R')
     source('Shiny_Tables.R')
     
+
+    save(list =  c("input_stats_norm_type", "input_stats_oneprotein_plot_comp", "input_stats_oneprotein_accession", "input_stats_oneprotein_plot_spqc",
+    "input_stats_use_zscore", "df_design", "stats_comp"), file="z1b24")
+    # load(file="z1b24")
+    
     #confirm data exists in database
     data_name <- stringr::str_c("protein_", input_stats_norm_type, "_", input_stats_oneprotein_plot_comp, "_final")
-    data_name_peptide <- stringr::str_c("peptide_", input_stats_norm_type, "_", input_stats_oneprotein_plot_comp, "_final")
+    data_name_peptide <- stringr::str_c("peptide_impute_", input_stats_norm_type, "_", input_stats_oneprotein_plot_comp, "_final")
     
     #protein plot
     if (data_name %in% list_tables(params) & data_name_peptide %in% list_tables(params)  ) {
       cat(file = stderr(), stringr::str_c(data_name, " & ", data_name_peptide, " are in database"), "\n") 
-      
+     
       df <- filter_db(data_name, "Accession", input_stats_oneprotein_accession, params)
       df_peptide <- filter_db(data_name_peptide, "Accession", input_stats_oneprotein_accession, params)
 
@@ -615,20 +620,18 @@ stats_table_select <- function(session, input, output, input_stats_data_final_ro
       #grouped peptide 
       cat(file = stderr(), "Function create_stats_oneprotein_plots_bg...3", "\n")
       if (input_stats_use_zscore) {df_peptide <- peptide_zscore(df_peptide, start_sample_col_peptide)}
+      
       peptide_pos_lookup <-  peptide_position_lookup(df_peptide, params)
       grouped_color <- unique(color_list)
 
-      start <- start_sample_col_peptide
-      stop <- start + as.numeric(stats_comp$N[comp_number]) -1
-      df_N <- cbind(df_peptide$Sequence, df_peptide[, start:stop])
+      N_ID <- df_design$ID[str_to_numlist(c(stats_comp$N_loc[comp_number]))]
+      df_N <- df_peptide |> dplyr::select(contains(c("Sequence", N_ID))) 
       
-      start <- start + as.numeric(stats_comp$N[comp_number])
-      stop <- start + as.numeric(stats_comp$D[comp_number]) -1
-      df_D <- cbind(df_peptide$Sequence, df_peptide[, start:stop])
-      
-      start <- start + as.numeric(stats_comp$D[comp_number])
-      stop <- start + as.numeric(stats_comp$SPQC[comp_number]) - 1
-      df_SPQC <- cbind(df_peptide$Sequence, df_peptide[, start:stop])
+      D_ID <- df_design$ID[str_to_numlist(c(stats_comp$D_loc[comp_number]))]
+      df_D <- df_peptide |> dplyr::select(contains(c("Sequence", D_ID))) 
+
+      SPQC_ID <- df_design$ID[str_to_numlist(c(stats_comp$N_loc[comp_number]))]
+      df_SPQC <- df_peptide |> dplyr::select(contains(c("Sequence", SPQC_ID))) 
       
       stats_data_N <- tidyr::gather(df_N, test, y, unlist(2:ncol(df_N)))
       colnames(stats_data_N) <- c("Sequence", "Name", "y")
@@ -698,8 +701,10 @@ stats_table_select <- function(session, input, output, input_stats_data_final_ro
       options_DT <- table_data[[2]]
       write_table_try("oneprotein_peptide_data", df_peptide, params)
 
+      bg_plot_list <- list(df, namex, color_list, peptide_pos_lookup, grouped_color_list, new_df2, df_peptide, options_DT)
+      
       cat(file = stderr(), "Function create_stats_oneprotein_plots_bg...end", "\n")
-      return(list(df, namex, color_list, peptide_pos_lookup, grouped_color_list, new_df2, df_peptide, options_DT))
+      return(bg_plot_list)
 
     }
   }
