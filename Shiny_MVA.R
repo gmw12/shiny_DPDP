@@ -815,8 +815,8 @@ create_stats_onepeptide_plots_bg <- function(input_stats_norm_type, input_stats_
                                              input_stats_onepeptide_sequence, input_stats_onepeptide_plot_spqc,
                                              input_stats_onepeptide_use_zscore, df_design, stats_comp, params) {
   
-  #save(input_stats_norm_type, file="z6"); save(input_stats_onepeptide_plot_comp, file="z5"); save(input_stats_onepeptide_accession, file="z4"); save(input_stats_onepeptide_sequence, file="z4b"); save(input_stats_onepeptide_plot_spqc, file="z3"); save(input_stats_onepeptide_use_zscore, file="z2"); save(df_design, file="z7"); save(stats_comp, file="z1")
-  #load(file="z6"); load(file="z5"); load(file="z4"); load(file="z4b"); load(file="z3"); load(file="z2"); load(file="z7"); load(file="z1")
+  save(list=c("input_stats_norm_type", "input_stats_onepeptide_plot_comp", "input_stats_onepeptide_accession", "input_stats_onepeptide_sequence", "input_stats_onepeptide_plot_spqc", "input_stats_onepeptide_use_zscore", "df_design", "stats_comp"), file="zztop")
+  #. load(file="zztop");
   
   cat(file = stderr(), "Function create_stats_onepeptide_plots_bg...", "\n")
   
@@ -852,6 +852,8 @@ create_stats_onepeptide_plots_bg <- function(input_stats_norm_type, input_stats_
     start_sample_col <- min(grep(stats_comp$FactorsN[comp_number], names(df)), grep(stats_comp$FactorsD[comp_number], names(df)))
     spqc_number <- as.integer(stats_comp$SPQC[comp_number])
     
+    df_no_stats <- df[, 1:(start_sample_col+sample_number+spqc_number-1)]
+    
     cat(file = stderr(), "Function create_stats_onepeptide_plots_bg...2", "\n")
     if(input_stats_onepeptide_plot_spqc) {
       df_peptide <- df[,(start_sample_col:(start_sample_col + sample_number + spqc_number - 1))]
@@ -867,22 +869,19 @@ create_stats_onepeptide_plots_bg <- function(input_stats_norm_type, input_stats_
     
     #grouped peptide 
     cat(file = stderr(), "Function create_stats_onepeptide_plots_bg...3", "\n")
-    if (input_stats_onepeptide_use_zscore) {df <- peptide_zscore(df, start_sample_col)}
+    if (input_stats_onepeptide_use_zscore) {df_no_stats <- peptide_zscore(df_no_stats, start_sample_col)}
     peptide_pos_lookup <-  peptide_position_lookup(df, params)
     grouped_color <- unique(color_list)
    
-    start <- start_sample_col
-    stop <- start + as.numeric(stats_comp$N[comp_number]) -1
-    df_N <- cbind(df$Sequence, df[, start:stop])
-     
-    start <- start + as.numeric(stats_comp$N[comp_number])
-    stop <- start + as.numeric(stats_comp$D[comp_number]) -1
-    df_D <- cbind(df$Sequence, df[, start:stop])
-     
-    start <- start + as.numeric(stats_comp$D[comp_number])
-    stop <- start + as.numeric(stats_comp$SPQC[comp_number]) - 1
-    df_SPQC <- cbind(df$Sequence, df[, start:stop])
-     
+    N_ID <- df_design$ID[str_to_numlist(stats_comp$N_loc[comp_number])]
+    df_N <- df_no_stats |> dplyr::select(contains(c("Sequence", N_ID)))
+    
+    D_ID <- df_design$ID[str_to_numlist(stats_comp$D_loc[comp_number])]
+    df_D <- df_no_stats |> dplyr::select(contains(c("Sequence", D_ID)))
+    
+    SPQC_ID <- df_design$ID[str_to_numlist(stats_comp$SPQC_loc[comp_number])]
+    df_SPQC <- df_no_stats |> dplyr::select(contains(c("Sequence", SPQC_ID)))
+
     stats_data_N <- tidyr::gather(df_N, test, y, unlist(2:ncol(df_N)))
     colnames(stats_data_N) <- c("Sequence", "Name", "y")
      

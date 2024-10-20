@@ -621,7 +621,7 @@ peptide_position_lookup <- function(df_peptide, params)  {
     }else{
       peptide_pos_lookup <- df_peptide |> dplyr::select(Accession, Sequence, PeptidePosition)
       peptide_pos_lookup$Sequence <- gsub("_", "", peptide_pos_lookup$Sequence)
-      peptide_pos_lookup$Sequence <- gsub("\\[.*?\\]", "", peptide_pos_lookup$Sequence)
+      #peptide_pos_lookup$Sequence <- gsub("\\[.*?\\]", "", peptide_pos_lookup$Sequence)
     }
 
     cat(file = stderr(), "peptide_position_lookup...3", "\n")
@@ -643,17 +643,18 @@ peptide_position_lookup <- function(df_peptide, params)  {
 }
 
 # peptide zscore ------------------------------------------------------
-
 peptide_zscore <- function(df_peptide, start_sample_col_peptide) {
+  cat(file = stderr(), "Function peptide_zscore...", "\n")
+  #  df_peptide <- df_no_stats; start_sample_col_peptide <- start_sample_col
+
   info_df <- df_peptide[1:(start_sample_col_peptide - 1)]
-  df <- df_peptide[(start_sample_col_peptide):ncol(df_peptide)]
-  df <- log(df, 2)
-  z_mean <- rowMeans(df)
-  z_stdev  <- apply(df[1:ncol(df)], 1, sd)
+  df_data <- df_peptide[(start_sample_col_peptide):ncol(df_peptide)]
+  col_names <- colnames(df_data)
+  #df_data <- log(df_data, 2)
+  df_zscore <- t(data.frame(apply(df_data, 1, scale)))
+  colnames(df_zscore) <- col_names
+  df_out <- data.frame(cbind(info_df, df_zscore), stringsAsFactors = FALSE)
   
-  df <- apply(df, MARGIN = 2, function(x) (x - z_mean)/z_stdev  )
-  df <- data.frame(cbind(info_df, df), stringsAsFactors = FALSE)
-  
-  return(df)
-  
+  cat(file = stderr(), "Function peptide_zscore...end", "\n")
+  return(df_out)
 }
