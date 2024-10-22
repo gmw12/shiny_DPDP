@@ -19,6 +19,7 @@ sidebar <- dashboardSidebar(width = 165,
                               menuItemOutput("menu_qc"),
                               menuItemOutput("menu_stats"),
                               menuItemOutput("menu_pathway"),
+                              menuItemOutput("menu_phos"),
                               menuItemOutput("menu_admin")
                             )
 )
@@ -1318,6 +1319,95 @@ body <- dashboardBody(
             )
     ),
     
+
+
+
+    tabItem("phos_setup",
+      fluidRow(
+        box(id = "phos_fasta_setup", title = "Phos Database Parameters...", status = "primary",
+            solidHeader = TRUE, collapsible = FALSE, align = "left", width = 12, height = 150,
+            column(width =2, offset =0,
+              br(),
+              shinyFilesButton('motif_fasta_file', label='Select Motif-X FASTA', title='Please select fasta file to format for motif-x', multiple=FALSE,
+                                style="color: #fff; background-color: #337ab7; border-color: #2e6da4"),
+            ),
+            column(width =2, offset =0,
+              textInput("fasta_grep1", label = "Accession start...", value = ">sp\\|"),
+            ),
+            column(width =2, offset =0,
+              textInput("fasta_grep2", label = "Accession start...", value = "\\|[^.]*$"),
+            ),
+            column(width =2, offset =0,
+              br(),
+              actionButton("parse_fasta", label = "Format fasta", width = 150,
+                        style="color: #fff; background-color: #337ab7; border-color: #2e6da4")
+          ),
+            column(width =3, offset =0,
+                br(),
+                 textOutput("fasta_file_name"),
+                 tags$head(tags$style("#fasta{color: blue; font-size: 18px; font-style: bold;}"))
+          )
+          )
+        ), 
+        
+        fluidRow(
+          box(id = "phos_fasta_old", title = "Original Phos Database...", status = "primary",
+              solidHeader = TRUE, collapsible = FALSE, align = "left", width = 4, height = 600,
+              br(),
+              br(),
+              rHandsontableOutput("start_fasta_example")
+          ),
+          
+          box(id = "phos_fasta_new", title = "Formated Phos Database...", status = "primary",
+              solidHeader = TRUE, collapsible = FALSE, align = "left", width = 8, height = 600,
+              br(),
+              br(),
+              rHandsontableOutput("end_fasta_example")
+        )
+        )
+      ),
+
+
+
+    tabItem("phos_motif",
+      fluidRow(
+        column(width =2, offset =0,
+          selectInput("select_data_comp_motif", label = "comparison", 
+            choices = list("Choice 1" = 1, "Choice 2" = 2, "Choice 3" = 3), selected = 1)
+        ),
+        column(width =2, offset =0,  
+            numericInput("pval_motif", label="MotifX pval (x1e-5)", value =1, width = 150)
+        ),
+        column(width =2, offset =0,  
+            numericInput("motif_min_seq", label="Minimum sequences", value =20, width = 150)
+        ),
+        column(width =3, offset =0,  
+            textInput("protein_filter", label="Specific Protein Filter Accession", value ="", width = 250)
+        ),
+        column(width =1, offset =0,
+            actionButton("motif_show", label = "Send to MotifX", width = 150,
+                         style="color: #fff; background-color: #337ab7; border-color: #2e6da4")
+        )
+      ),
+      
+      fluidRow(
+        hr(),
+        tags$head(tags$style("#data_final{color: blue;
+           font-size: 12px;
+           }")),
+        rHandsontableOutput("motif_table"),
+        br(),
+        br(),
+        downloadButton('download_motifx_excel')
+        )
+    ),           
+
+
+
+
+
+
+
     tabItem(tabName = "admin",
             fluidRow(
               column(width = 12, align = "center",

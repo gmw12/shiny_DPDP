@@ -173,6 +173,8 @@ set_file_choosers <- function(session, input, output, volumes) {
   #shinyFileChoose(input, 'sfb_data_file', session = session, roots = volumes, filetypes = c('', 'tsv', 'txt'))
   shinyFileChoose(input, 'sfb_archive_file', session = session, roots = volumes, filetypes = c('', 'zip'))
   
+  shinyFileChoose(input, 'motif_fasta_file', session = session, roots = volumes, filetypes = c('', 'fasta'))
+  
   cat(file = stderr(), "Function - set_file_choosers...end", "\n\n")
 }
 
@@ -184,6 +186,8 @@ set_file_choosers_data <- function(session, input, output, volumes) {
   cat(file = stderr(), stringr::str_c("Volumes ---> ", volumes), "\n")
   
   shinyFileChoose(input, 'sfb_data_file', session = session, roots = volumes, filetypes = c('', 'tsv', 'txt'))
+  
+  shinyFileChoose(input, 'motif_fasta_file', session = session, roots = volumes, filetypes = c('', 'fasta'))
   
   cat(file = stderr(), "Function - set_file_choosers_reset...end", "\n")
 }
