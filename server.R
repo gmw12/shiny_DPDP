@@ -669,6 +669,7 @@ shinyServer(function(session, input, output) {
     cat(file = stderr(), "string_enrich_data_save clicked...end" , "\n")
   })
   
+  
   #-------------------------------------------------------------------------------------------------------------  
   observeEvent(input$parse_fasta, { 
     cat(file = stderr(), "parse_fasta clicked..." , "\n")
@@ -681,27 +682,22 @@ shinyServer(function(session, input, output) {
   
   #-------------------------------------------------------------------------------------------------------------
   observeEvent(input$motif_show, {
+    cat(file = stderr(), "motif_show clicked..." , "\n")
     
-    shinyalert("Hi", "Motif-X table will appear when analysis is complete.", type = "info")
+    source("Shiny_MotifX.R")
+    run_motifx(session, input, output, params)
     
-    comp_string <- input$select_data_comp_motif
-    comp_number <- which(dpmsr_set$y$stats$groups$comp_name == comp_string)
-    
-    filter_df <- dpmsr_set$data$stats[[comp_string]]
-    motif_data <- run_motifx(input, output, filter_df)
-    
-    if (!is.null(motif_data)){
-      output$motif_table<- renderRHandsontable({
-        rhandsontable(motif_data, rowHeaders = NULL) %>%
-          hot_cols(colWidths = 80, halign = "htCenter" ) %>%
-          hot_col(col = "comparison", halign = "htCenter", colWidths = 150) %>%
-          hot_col(col = "motif", halign = "htCenter", colWidths = 100) %>%
-          hot_col(col = "fold.increase", halign = "htCenter", colWidths = 100)
-      })
-    }
-    
+    cat(file = stderr(), "motif_show clicked...end" , "\n")
   })
   
+  #-------------------------------------------------------------------------------------------------------------  
+  observeEvent(input$motif_data_save, { 
+    cat(file = stderr(), "motif_data_save clicked..." , "\n")
+    
+    motif_data_save_excel(session, input, output, params)
+    
+    cat(file = stderr(), "motif_data_save clicked...end" , "\n\n")
+  })
   
   #-------------------------------------------------------------------------------------------------------------  
   observeEvent(input$archive_data, { 

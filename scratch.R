@@ -46,6 +46,8 @@ df_peptide <- filter_db("peptide_sltmm", "Accession", accession, params)
 
 list_tables(params)
 
+ptm_data <- read_table("MotifX_ptm_data", params)
+
 mv <- read_table("missing_values", params)
 
 df1 <- read_table("peptide_impute_sltmm_Control_v_Lrrk2_final", params)
@@ -854,3 +856,9 @@ dl2 <- df_list[[2]]
 dl3 <- df_list[[3]]
 dl4 <- df_list[[4]]
 
+
+testme <-  data.frame(foreground_Seqs_Filtered)
+filename <- stringr::str_c(params$phos_path, "testme.xlsx")
+filename2 <- stringr::str_c(params$phos_path, "testme.tsv")
+Simple_Excel(testme, "data", filename)
+write.table(testme, file=filename2, quote=FALSE, sep='\t', col.names = NA)

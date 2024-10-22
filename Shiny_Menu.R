@@ -214,7 +214,8 @@ load_menu_peptide <- function(session, input, output) {
   output$menu_phos <- renderMenu({ 
     menuItem("Phos", tabName = "phos", startExpanded = FALSE,
              menuItem("Fasta", tabName = "phos_setup"),
-             menuItem("Motif", tabName = "phos_motif"))
+             menuItem("Motif", tabName = "phos_motif"),
+             menuItem("MEME_Momo", tabName = "phos_momo"))
   })
   
   output$menu_admin <- renderMenu({ 

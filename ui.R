@@ -1026,28 +1026,6 @@ body <- dashboardBody(
 
 
 
-
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
     #-----
     tabItem("pathway_setup",
             fluidRow(
@@ -1372,37 +1350,89 @@ body <- dashboardBody(
     tabItem("phos_motif",
       fluidRow(
         column(width =2, offset =0,
-          selectInput("select_data_comp_motif", label = "comparison", 
-            choices = list("Choice 1" = 1, "Choice 2" = 2, "Choice 3" = 3), selected = 1)
-        ),
-        column(width =2, offset =0,  
-            numericInput("pval_motif", label="MotifX pval (x1e-5)", value =1, width = 150)
-        ),
-        column(width =2, offset =0,  
-            numericInput("motif_min_seq", label="Minimum sequences", value =20, width = 150)
-        ),
-        column(width =3, offset =0,  
-            textInput("protein_filter", label="Specific Protein Filter Accession", value ="", width = 250)
-        ),
-        column(width =1, offset =0,
-            actionButton("motif_show", label = "Send to MotifX", width = 150,
-                         style="color: #fff; background-color: #337ab7; border-color: #2e6da4")
-        )
-      ),
+          fluidRow(
+              box(id = "phos_motif_setup", title = "Motif Parameters...", status = "primary",
+                    solidHeader = TRUE, collapsible = FALSE, align = "left", width = 12, height = 800,
+                  selectInput("select_data_comp_motif", label = "comparison", 
+                    choices = list("Choice 1" = 1, "Choice 2" = 2, "Choice 3" = 3), selected = 1, width = 150),
+                  numericInput("pval_motif", label="MotifX pval (x1e-5)", value =1, width = 150),
+                  numericInput("motif_min_seq", label="Min sequences", value =20, width = 150),
+                  textInput("protein_filter", label="Protein Accession Filter", value ="", width = 150),
+                  br(),
+                  br(),
+                  actionButton("motif_show", label = "Send to MotifX", width = 150,
+                               style="color: #fff; background-color: #337ab7; border-color: #2e6da4"),
+                  br(),
+                  br(),
+                  br(),
+                  textInput("motif_data_filename", label="File Name", value = "my_data.xlsx", width = 150),
+                  br(),
+                  br(),
+                  actionButton("motif_data_save", label = "Save Data", width = 150,
+                                style="color: #fff; background-color: #337ab7; border-color: #2e6da4"),
+                  br(),
+                  br(),
+                  br(),
+                  br(),
+                  downloadButton(label="Download Table", 'download_motif_table')
+                )
+                )
+              ),
       
-      fluidRow(
-        hr(),
-        tags$head(tags$style("#data_final{color: blue;
-           font-size: 12px;
-           }")),
-        rHandsontableOutput("motif_table"),
-        br(),
-        br(),
-        downloadButton('download_motifx_excel')
+      column(width =9, offset =0,
+        box(id = "phos_motif_table", title = "Motif Table...", status = "primary",
+            solidHeader = TRUE, collapsible = FALSE, align = "left", width = 12, height = 800,
+          hr(),
+          tags$head(tags$style("#data_final{color: blue;
+             font-size: 12px;
+             }")),
+          DT::dataTableOutput("motif_table", width ='100%')
         )
+      )
+      )
     ),           
 
-
+tabItem("phos_momo",
+        fluidRow(
+          column(width =12, offset =0,
+                 fluidRow(
+                   box(id = "phos_momo", title = "MoMo Parameters...", status = "primary",
+                       solidHeader = TRUE, collapsible = FALSE, align = "left", width = 12, height = 800,
+                       selectInput("select_data_comp_momo", label = "comparison", 
+                                   choices = list("Choice 1" = 1, "Choice 2" = 2, "Choice 3" = 3), selected = 1, width = 150),
+                       br(),
+                       radioButtons("momo_direction", label="Fold Change Direction", choices = list("Up", "Down", "UpDown"),  selected = "Up", width = 200),
+                       br(),
+                       br(),
+                       br(),
+                       actionButton("momo_create", label = "Send to MotifX", width = 150,
+                                    style="color: #fff; background-color: #337ab7; border-color: #2e6da4"),
+                       br(),
+                       br(),
+                       br(),
+                       textInput("momo_data_filename", label="File Name", value = "my_data.xlsx", width = 150),
+                       br(),
+                       br(),
+                       actionButton("momo_data_save", label = "Save Data", width = 150,
+                                    style="color: #fff; background-color: #337ab7; border-color: #2e6da4"),
+                       br(),
+                       br(),
+                       br(),
+                       tags$footer(
+                         "For further information visit ",
+                         tags$a(
+                           "meme-suite.org/meme/tools/momo",
+                           target = "_blank",
+                           href = "https://meme-suite.org/meme/tools/momo"
+                         ),
+                         style = "position: absolute; width: 100%; color: black; text-align: center;"
+                       )
+    
+                   )
+                 )
+          ),
+        )
+), 
 
 
 

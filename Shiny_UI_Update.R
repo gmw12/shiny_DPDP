@@ -405,6 +405,7 @@ update_widgets_stats <- function(session, input, output, params){
     updateSelectInput(session, "select_data_comp_string", choices = stats_comp_choices)
     updateSelectInput(session, "select_data_comp_string_enrich", choices = stats_comp_choices)
     updateSelectInput(session, "select_data_comp_motif", choices = stats_comp_choices)
+    updateSelectInput(session, "select_data_comp_momo", choices = stats_comp_choices)
   }
   
   cat(file = stderr(), "Function - update_widget_stats...end", "\n") 
