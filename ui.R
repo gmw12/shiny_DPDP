@@ -1394,7 +1394,7 @@ body <- dashboardBody(
 
 tabItem("phos_momo",
         fluidRow(
-          column(width =12, offset =0,
+          column(width =4, offset =0,
                  fluidRow(
                    box(id = "phos_momo", title = "MoMo Parameters...", status = "primary",
                        solidHeader = TRUE, collapsible = FALSE, align = "left", width = 12, height = 800,
@@ -1405,7 +1405,7 @@ tabItem("phos_momo",
                        br(),
                        br(),
                        br(),
-                       actionButton("momo_create", label = "Send to MotifX", width = 150,
+                       actionButton("momo_create", label = "Create Files", width = 150,
                                     style="color: #fff; background-color: #337ab7; border-color: #2e6da4"),
                        br(),
                        br(),
@@ -1431,6 +1431,27 @@ tabItem("phos_momo",
                    )
                  )
           ),
+          column(width =4, offset =0,
+                 fluidRow(
+                   box(id = "phos_momo", title = "MoMo Parameters...", status = "primary",
+                       solidHeader = TRUE, collapsible = FALSE, align = "left", width = 12, height = 800,
+     
+                       
+                   )
+                 )
+          ),
+          column(width =4, offset =0,
+                 fluidRow(
+                   box(id = "phos_momo", title = "MoMo Parameters...", status = "primary",
+                       solidHeader = TRUE, collapsible = FALSE, align = "left", width = 12, height = 800,
+                       
+                       
+                   )
+                 )
+          )
+          
+          
+          
         )
 ), 
 

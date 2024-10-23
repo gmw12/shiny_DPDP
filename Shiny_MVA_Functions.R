@@ -599,7 +599,7 @@ peptide_position_lookup <- function(df_peptide, params)  {
     peptide_pos_lookup$Position <- gsub("\\]; \\[", "xxx",  peptide_pos_lookup$Position)
     s <- strsplit(peptide_pos_lookup$Position, split = "; ")
     peptide_pos_lookup <- data.frame(Sequence = rep(peptide_pos_lookup$Sequence, sapply(s, length)), Position = unlist(s))
-    peptide_pos_lookup$Count <- str_count(peptide_pos_lookup$Position, "xxx")
+    peptide_pos_lookup$Count <- stringr::str_count(peptide_pos_lookup$Position, "xxx")
     peptide_pos_lookup <- peptide_pos_lookup %>% separate(Position, c("Accession", "Start_Stop"), sep = " ")
     peptide_pos_lookup$Start_Stop <- gsub("\\[", "",  peptide_pos_lookup$Start_Stop)
     peptide_pos_lookup$Start_Stop <- gsub("\\]", "",  peptide_pos_lookup$Start_Stop)

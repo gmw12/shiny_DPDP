@@ -5,6 +5,8 @@ create_phos_database <- function(session, input, output, params){
   cat(file=stderr(), "Function create_phos_database...", "\n")
   
   fasta_path <- parseFilePaths(volumes, input$motif_fasta_file)
+  save(fasta_path, file =  "z889") #   load(file="z889")
+  
   
   args_list <- list(input$fasta_grep1, input$fasta_grep2, fasta_path, params)
   bg_phos_db <- callr::r_bg(func = create_phos_database_bg, args = args_list, stderr = stringr::str_c(params$error_path, "//error_phos_db.txt"), supervise = TRUE)
@@ -146,7 +148,7 @@ run_motifx <- function(session, input, output, params){
       },
       content = function(file){
         fullName <- stringr::str_c(params$phos_path, input$motif_data_filename)
-        cat(file = stderr(), stringr::str_c("download_motif_data fullname = ", fullname), "\n")
+        cat(file = stderr(), stringr::str_c("download_motif_data fullname = ", fullName), "\n")
         file.copy(fullName, file)
       }
     )
@@ -203,7 +205,7 @@ run_motifx_bg <- function(input_pval_motif, input_motif_min_seq, input_pvalue_cu
   filter_df <- subset(data_in, data_in$Stats == "Down" )
   if (nrow(filter_df > 0)){
     FC <- "Down"
-    ptm_data_down <- create_motifx_input(filter_df, parsed_ref, input$select_data_comp_motif, "Down")
+    ptm_data_down <- create_motifx_input(filter_df, parsed_ref, input_select_data_comp_motif, "Down")
     motifx_S <- motifx_calc(s, "S", w, "Down", ptm_data_down, parsed_ref, pval_motif, min_seq, input_pvalue_cutoff, input_foldchange_cutoff, input_select_data_comp_motif)
     motifx_T <- motifx_calc(s, "T", w, "Down", ptm_data_down, parsed_ref, pval_motif, min_seq, input_pvalue_cutoff, input_foldchange_cutoff, input_select_data_comp_motif)
     motifx_Y <- motifx_calc(s, "Y", w, "Down", ptm_data_down, parsed_ref, pval_motif, min_seq, input_pvalue_cutoff, input_foldchange_cutoff, input_select_data_comp_motif)
@@ -216,7 +218,7 @@ run_motifx_bg <- function(input_pval_motif, input_motif_min_seq, input_pvalue_cu
   filter_df<- subset(data_in, data_in$Stats == "Up" | data_in$Stats == "Down") 
   if (nrow(filter_df > 0)){
     FC <- "UpDown"
-    ptm_data_updown <- create_motifx_input(filter_df, parsed_ref, input$select_data_comp_motif, "UpDown")
+    ptm_data_updown <- create_motifx_input(filter_df, parsed_ref, input_select_data_comp_motif, "UpDown")
     motifx_S <- motifx_calc(s, "S", w, "UpDown", ptm_data_updown, parsed_ref, pval_motif, min_seq, input_pvalue_cutoff, input_foldchange_cutoff, input_select_data_comp_motif)
     motifx_T <- motifx_calc(s, "T", w, "UpDown", ptm_data_updown, parsed_ref, pval_motif, min_seq, input_pvalue_cutoff, input_foldchange_cutoff, input_select_data_comp_motif)
     motifx_Y <- motifx_calc(s, "Y", w, "UpDown", ptm_data_updown, parsed_ref, pval_motif, min_seq, input_pvalue_cutoff, input_foldchange_cutoff, input_select_data_comp_motif)
@@ -251,6 +253,8 @@ create_motifx_input <- function(filter_df, parsed_ref, comparison, direction_fil
   #---------Create input file for PTM data ----------------------------------------
   source('Shiny_File.R')
   
+  save(list=c("filter_df", "parsed_ref", "comparison", "direction_filter"), file="zz9008")  # load(file="zz9008")
+  
   MotifPhos <- filter_df |> dplyr::select(contains(c("Accession", "Sequence", "Local"))) 
   MotifPhos <- MotifPhos[MotifPhos$Local2=="Y",]
   
@@ -266,6 +270,7 @@ create_motifx_input <- function(filter_df, parsed_ref, comparison, direction_fil
   
   MotifPhos$PTM_Loc <- ""
   
+  cat(file=stderr(), "Function run_motifx_input...1" , "\n") 
   for (r in (1:nrow(MotifPhos))) {
     find_s <- unlist(stringr::str_locate_all(MotifPhos$temp1[r], "s"))
     find_t <- unlist(stringr::str_locate_all(MotifPhos$temp1[r], "t"))
@@ -303,7 +308,8 @@ create_motifx_input <- function(filter_df, parsed_ref, comparison, direction_fil
     
   }
   
-  MotifPhos$Total_Sites <- stringr::str_count(MotifPhos$PTM_Loc, "S")+stringr::str_count(MotifPhos$PTM_Loc, "T")+stringr::str_count(MotifPhos$PTM_Loc, "Y")
+  cat(file=stderr(), "Function run_motifx_input...2" , "\n") 
+  MotifPhos$Total_Sites <- stringr::str_count(MotifPhos$PTM_Loc, "S") + stringr::str_count(MotifPhos$PTM_Loc, "T") + stringr::str_count(MotifPhos$PTM_Loc, "Y")
   MotifPhos$Identifier <- stringr::str_c("PhosPeptide", seq.int(nrow(MotifPhos)))
   
   ptm_data <- MotifPhos |> dplyr::select(contains(c("Identifier", "Accession", "Sequence", "Total_Sites", "PTM_Loc", "Local"))) 
@@ -317,8 +323,6 @@ create_motifx_input <- function(filter_df, parsed_ref, comparison, direction_fil
   cat(file=stderr(), "Function run_motifx_input...end" , "\n") 
   return(ptm_data)
 }
-
-
 
 #--------------------------------------------------------------------------------------------
 

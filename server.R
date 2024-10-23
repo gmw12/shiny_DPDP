@@ -2,6 +2,7 @@ cat(file = stderr(), "server.R started", "\n")
 #app_version <- '2024.01.05'
 
 options(shiny.maxRequestSize = 4000*1024^2)
+options(error=traceback)
 
 source("Shiny_Setup.R")
 source("Shiny_Startup.R")
@@ -150,6 +151,9 @@ shinyServer(function(session, input, output) {
       create_design_table(session, input, output)
       create_stats_design_table(session, input, output)
       if (table_exists("summary_cv"))  {create_cv_table(session, input, output, params)}
+      
+      #load menu
+      load_menu(session, input, output)
       
       cat(file = stderr(), "\n\n","sfb_archive_file button clicked...end", "\n")
     }
@@ -698,6 +702,18 @@ shinyServer(function(session, input, output) {
     
     cat(file = stderr(), "motif_data_save clicked...end" , "\n\n")
   })
+  
+  #-------------------------------------------------------------------------------------------------------------
+  observeEvent(input$momo_create, {
+    cat(file = stderr(), "momo_create clicked..." , "\n")
+    
+    source("Shiny_MoMo.R")
+    run_momo(session, input, output, params)
+    
+    cat(file = stderr(), "momo_create clicked...end" , "\n")
+  })
+  
+  
   
   #-------------------------------------------------------------------------------------------------------------  
   observeEvent(input$archive_data, { 
