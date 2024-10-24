@@ -1398,8 +1398,13 @@ tabItem("phos_momo",
                  fluidRow(
                    box(id = "phos_momo", title = "MoMo Parameters...", status = "primary",
                        solidHeader = TRUE, collapsible = FALSE, align = "left", width = 12, height = 800,
+                       br(),
+                       br(),
+                       br(),
                        selectInput("select_data_comp_momo", label = "comparison", 
                                    choices = list("Choice 1" = 1, "Choice 2" = 2, "Choice 3" = 3), selected = 1, width = 150),
+                       br(),
+                       br(),
                        br(),
                        radioButtons("momo_direction", label="Fold Change Direction", choices = list("Up", "Down", "UpDown"),  selected = "Up", width = 200),
                        br(),
@@ -1410,50 +1415,45 @@ tabItem("phos_momo",
                        br(),
                        br(),
                        br(),
-                       textInput("momo_data_filename", label="File Name", value = "my_data.xlsx", width = 150),
                        br(),
                        br(),
-                       actionButton("momo_data_save", label = "Save Data", width = 150,
-                                    style="color: #fff; background-color: #337ab7; border-color: #2e6da4"),
+                       downloadButton(label="Download MOMO ptm_file", 'download_momo_file1'),
                        br(),
                        br(),
                        br(),
-                       tags$footer(
-                         "For further information visit ",
-                         tags$a(
-                           "meme-suite.org/meme/tools/momo",
-                           target = "_blank",
-                           href = "https://meme-suite.org/meme/tools/momo"
-                         ),
-                         style = "position: absolute; width: 100%; color: black; text-align: center;"
-                       )
+                       downloadButton(label="Download MOMO context file", 'download_momo_file2'),
+
     
                    )
                  )
           ),
-          column(width =4, offset =0,
+          column(width =8, offset =0,
                  fluidRow(
-                   box(id = "phos_momo", title = "MoMo Parameters...", status = "primary",
+                   box(id = "phos_momo", title = "MoMo Directions...", status = "primary",
                        solidHeader = TRUE, collapsible = FALSE, align = "left", width = 12, height = 800,
-     
-                       
-                   )
+                       h1("MEME Suite", style = "font-size:50px"),
+                       br(),
+                       h1("Step1", style = "font-size:20px"),
+                       h1("On the left panel pick the comparison and the fold change direction.", style = "font-size:15px"),
+                       h1("Click create files.", style = "font-size:15px"),
+                       h1("Download files.", style = "font-size:15px"),
+                       h1("The ptm_file and context files for MOMO will be saved to your Downloads folder.", style = "font-size:15px"),
+                       br(),
+                       h1("Step2", style = "font-size:20px"),
+                       h1("Click on the link below to open the MEME Suite: MOMO", style = "font-size:15px"),
+                       h4("Link: ", a(target="_blank", "meme-suite.org/meme/tools/momo",  href = "https://meme-suite.org/meme/tools/momo"), style = "font-size:15px"),
+                       br(),
+                       h1("Step3", style = "font-size:20px"),
+                       h1("Upload the ptm_file and context file (or use built in context)", style = "font-size:15px"),
+                       h1("Under advanced change the sequence length to 15 (2 places)", style = "font-size:15px"),
+                       h1("Start search", style = "font-size:15px"),
+                       h1("For more detailed instructions please see the website instructions", style = "font-size:15px")
                  )
-          ),
-          column(width =4, offset =0,
-                 fluidRow(
-                   box(id = "phos_momo", title = "MoMo Parameters...", status = "primary",
-                       solidHeader = TRUE, collapsible = FALSE, align = "left", width = 12, height = 800,
-                       
-                       
-                   )
-                 )
-          )
-          
-          
-          
+              )
         )
-), 
+          
+      )
+    ), 
 
 
 
