@@ -5,7 +5,7 @@ create_phos_database <- function(session, input, output, params){
   cat(file=stderr(), "Function create_phos_database...", "\n")
   
   fasta_path <- parseFilePaths(volumes, input$motif_fasta_file)
-  save(fasta_path, file =  "z889") #   load(file="z889")
+  #save(fasta_path, file =  "z889") #   load(file="z889")
   
   
   args_list <- list(input$fasta_grep1, input$fasta_grep2, fasta_path, params)
@@ -39,7 +39,7 @@ create_phos_database_bg <- function(input_fasta_grep1, input_fasta_grep2, fasta_
   cat(file=stderr(), "Function create_phos_database_bg...", "\n")
   source('Shiny_File.R')
   
-  save(list = c("input_fasta_grep1", "input_fasta_grep2", "fasta_path"), file="zz2343")
+  #save(list = c("input_fasta_grep1", "input_fasta_grep2", "fasta_path"), file="zz2343")
   #   load(file="zz2343")
   
   cat(file=stderr(), stringr::str_c("fasta_path... ",fasta_path), "\n")
@@ -253,7 +253,7 @@ create_motifx_input <- function(filter_df, parsed_ref, comparison, direction_fil
   #---------Create input file for PTM data ----------------------------------------
   source('Shiny_File.R')
   
-  save(list=c("filter_df", "parsed_ref", "comparison", "direction_filter"), file="zz9008")  # load(file="zz9008")
+  #save(list=c("filter_df", "parsed_ref", "comparison", "direction_filter"), file="zz9008")  # load(file="zz9008")
   
   MotifPhos <- filter_df |> dplyr::select(contains(c("Accession", "Sequence", "Local"))) 
   MotifPhos <- MotifPhos[MotifPhos$Local2=="Y",]
