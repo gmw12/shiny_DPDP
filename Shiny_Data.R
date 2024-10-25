@@ -88,7 +88,7 @@ load_unknown_data_bg <- function(data_sfb, params){
   source('Shiny_File.R')
   
   df <- data.table::fread(file = data_sfb$datapath, header = TRUE, stringsAsFactors = FALSE, sep = "\t", fill=TRUE)
-  save(df, file="zdfloadunknowndata")    #  load(file="zdfloadunknowndata") 
+  #save(df, file="zdfloadunknowndata")    #  load(file="zdfloadunknowndata") 
   
   if ("EG.PrecursorId" %in% names(df)) {
     cat(file = stderr(), "Spectronaut data, precursor...", "\n")
@@ -119,6 +119,26 @@ load_unknown_data_bg <- function(data_sfb, params){
     params$data_table_format <- "short"
     
     write_table_try("protein_raw", df, params)
+  }else if ("Annotated.Sequence" %in% names(df)) {
+    cat(file = stderr(), "PD data...", "\n")
+    if ("PSM.Ambiguity" %in% names(df)) {
+      
+      params$data_source <- "PD"
+      params$raw_data_format <- "precursor"
+      params$data_table_format <- "short"
+      params$ptm <- FALSE
+      params$data_output <- "Protein"
+      
+      peptide_file <- gsub("PSMs", "PeptideGroups", data_sfb$datapath)
+      df_peptide <- data.table::fread(file = peptide_file, header = TRUE, stringsAsFactors = FALSE, sep = "\t", fill=TRUE)
+      df_peptide <- df_peptide |> dplyr::select("Master.Protein.Accessions", "Sequence", "Positions.in.Master.Proteins")
+      colnames(df_peptide) <- c("Accession", "Sequence", "Position")    
+      
+      write_table_try("precursor_raw", df, params)
+      write_table_try("peptide_raw", df_peptide,params)
+    }else{
+      cat(file = stderr(), "PD data, still a mystery...", "\n")
+    }
   }else{
     cat(file = stderr(), "Spectronaut data, still a mystery...", "\n")
   }
@@ -545,8 +565,14 @@ prepare_data <- function(session, input, output, params) {  #function(data_type,
     bg_precursor_to_precursor_ptm$wait()
     print_stderr("error_preparedata.txt")
     params$current_data_format <- "precursor"
-  }else if (params$raw_data_format == "fragment") {
+  }else if (params$raw_data_format == "precursor" & params$data_output == "Protein" & params$data_source == "PD") {
     cat(file = stderr(), "prepare data_type 6", "\n")
+    bg_precursor_to_precursor_PD <- callr::r_bg(func = precursor_to_precursor_PD_bg, args = list(params), stderr = str_c(params$error_path, "//error_preparedata.txt"), supervise = TRUE)
+    bg_precursor_to_precursor_PD$wait()
+    print_stderr("error_preparedata.txt")
+    params$current_data_format <- "precursor"
+  }else if (params$raw_data_format == "fragment") {
+    cat(file = stderr(), "prepare data_type 7", "\n")
     peptide_to_peptide()
     params$current_data_format <- "fragment"
   }else{
@@ -564,6 +590,51 @@ prepare_data <- function(session, input, output, params) {  #function(data_type,
   removeModal()
 }
 
+
+#----------------------------------------------------------------------------------------
+precursor_to_precursor_PD_bg <- function(params){
+  cat(file = stderr(), "Function precursor_to_precursor_PD_bg", "\n")
+  source("Shiny_Rollup.R")
+  source("Shiny_File.R")
+  #  load(file="zdfloadunknowndata")
+  
+  df <- read_table_try("precursor_raw", params)
+  
+  df_colnames <- c("Accession", "Description", "Sequence", "Modifications", "PrecursorId")  
+  n_col <- length(df_colnames)
+  
+  df <- df |> dplyr::select(contains('Master.Protein.Accessions'), contains('Master.Protein.Descriptions'), 'Sequence', contains('Modifications'), 'Charge', contains("Abundance."))
+  
+  colnames(df)[1:n_col] <- df_colnames 
+  
+  #add Name column
+  add_name <- gsub(".*OS=(.+)[OG].*", "\\1", df$Description)
+  add_name <- gsub(" OX.+$", "", add_name)
+  add_name <- trimws(add_name, which=c("right"))
+  df <- df |> tibble::add_column(Name = add_name, .before = "Sequence")
+  n_col <- n_col + 1
+  
+  #add Gene column
+  add_gene <- stringr::str_extract(df$Description, "GN=\\w*")
+  add_gene <- gsub("GN=", "", add_gene)
+  df <- df |> tibble::add_column(Genes = add_gene, .before = "Sequence")
+  n_col <- n_col + 1
+  
+  #create Precusor.ID
+  df$PrecursorId <- paste(df$Sequence, ".", df$PrecursorId, sep = "")
+  
+  if (ncol(df) != (n_col + params$sample_number))
+  {
+    cat(file = stderr(), "Number of columns extracted is not as expected", "\n")
+  }
+  
+  
+  df[(n_col + 1):ncol(df)] <- as.data.frame(lapply(df[(n_col + 1):ncol(df)], as.numeric))
+  
+  write_table_try("precursor_start", df, params)
+  
+  cat(file = stderr(), "precursor_to_precursor_PD_bg complete", "\n\n")
+}
 
 #----------------------------------------------------------------------------------------
 precursor_to_precursor_bg <- function(params){
@@ -601,7 +672,6 @@ precursor_to_precursor_bg <- function(params){
   
   cat(file = stderr(), "precursor_to_precursor_bg complete", "\n\n")
 }
-
 
 #----------------------------------------------------------------------------------------
 precursor_to_precursor_ptm_bg <- function(params){
@@ -1163,7 +1233,7 @@ check_sample_id <- function(df, design, params) {
   for (i in 1:length(sample_ids)) {
     confirm_id <- grepl(sample_ids[i], test_data[i])
     if (!confirm_id) {
-      cat(file = stderr(), str_c("count=", i, "  ", sample_ids[i], " vs ", test_data[i]), "\n")
+      cat(file = stderr(), stringr::str_c("count=", i, "  ", sample_ids[i], " vs ", test_data[i]), "\n")
       Sample_ID_alert <- TRUE
       #shinyalert("Oops!", "Sample ID order does not match sample list!", type = "error")
     }

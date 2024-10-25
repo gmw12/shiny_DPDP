@@ -8,11 +8,13 @@ desc2 = "GluC_TiO2"
 desc3 = "Trypsin_ZrIMAC"
 desc4 = "Trypsin_TiO2"
 
+#------------------------------
+
 file = file4
 desc = desc4
 sample_columns =4
 
-file_name <- stringr::str_c("/mnt/h_black2/10651/", desc, "_101624.xlsx")
+file_name <- stringr::str_c("/mnt/h_black2/10651/", desc, "_102324.xlsx")
 
 data_list <- qual_phos(file, desc, sample_columns)
 
@@ -26,6 +28,9 @@ for (i in 1:length(excel_list_name)) {
   nextsheet <- nextsheet + 1 
 }  
 openxlsx::saveWorkbook(wb, file_name, overwrite = TRUE)
+
+
+
 #--------------------------------------------------------------------------------------------------
 
 qual_phos <- function(file, desc, sample_columns) {
@@ -60,10 +65,12 @@ qual_phos <- function(file, desc, sample_columns) {
   df_phos_prob <- df_phos_prob[phos_which,]
   
   local_df <- data.frame(localize_summary(df_phos, df_phos_prob))
+  df_phos <- tibble::add_column(df_phos, "Protein_PTM_Loc" = local_df$Protein_PTM_Loc, .after="PrecursorId")
+  df_phos <- tibble::add_column(df_phos, "PTM_Loc" = local_df$PTM_Loc, .after="PrecursorId")
   df_phos <- tibble::add_column(df_phos, "Local2" = local_df$Local2, .after="PrecursorId")
   df_phos <- tibble::add_column(df_phos, "Local" = local_df$Local, .after="PrecursorId")
   
-  save(df_phos, file="z1")
+  #save(df_phos, file="z1")
   
   #save copy of raw peptide (from precursor start)
   raw_peptide <- collapse_precursor_ptm_raw(df_phos, sample_columns, info_columns = (ncol(df_phos)-sample_columns+1))
@@ -100,6 +107,64 @@ localize_summary <- function(df_phos, df_phos_prob){
   df_local$phos_seq <- gsub("[^STY*]", "", df_local$phos_seq)
   
   
+  #new step
+  df_local$ModSequence2 <- df_local$ModSequence
+  df_local$ModSequence2 <- gsub("S\\[Phospho \\(STY\\)\\]", "s", df_local$ModSequence2)
+  df_local$ModSequence2 <- gsub("T\\[Phospho \\(STY\\)\\]", "t", df_local$ModSequence2)
+  df_local$ModSequence2 <- gsub("Y\\[Phospho \\(STY\\)\\]", "y", df_local$ModSequence2)
+  df_local$ModSequence2 <- gsub("\\[.*?\\]", "", df_local$ModSequence2)
+  df_local$ModSequence2 <- gsub("_", "", df_local$ModSequence2)
+  df_local$ModSequence2 <- gsub("\\[.*?\\]", "", df_local$ModSequence2)
+  df_local$ModSequence2 <- gsub("_", "", df_local$ModSequence2)
+  
+  
+  #new step
+ df_local$PTM_Loc <- ""
+  
+  for (r in (1:nrow(df_local))) {
+    find_s <- unlist(stringr::str_locate_all(df_local$ModSequence2[r], "s"))
+    find_t <- unlist(stringr::str_locate_all(df_local$ModSequence2[r], "t"))
+    find_y <- unlist(stringr::str_locate_all(df_local$ModSequence2[r], "y"))
+    
+    
+    if (length(find_s) > 0) {
+      find_s <- unlist(stringr::str_split(paste("S", find_s, collapse = " ", sep = ""), pattern=" "))
+      find_s <- find_s[1:(length(find_s)/2)]
+    }else{
+      find_s <- ""
+    }
+    
+    
+    if (length(find_t) > 0) {
+      find_t <- unlist(stringr::str_split(paste("T", find_t, collapse = " ", sep = ""), pattern=" "))
+      find_t <- find_t[1:(length(find_t)/2)]
+    }else{
+      find_t <- ""
+    }
+    
+    if (length(find_y) > 0) {
+      find_y <- unlist(stringr::str_split(paste("Y", find_y, collapse = " ", sep = ""), pattern=" "))
+      find_y <- find_y[1:(length(find_y)/2)]
+    }else{
+      find_y <- ""
+    }
+    
+    final_all <- c(find_s, find_t, find_y)
+    final_all <- final_all[final_all != ""]
+    final_all <- paste(final_all, collapse = ",", sep = ",")
+    df_local$PTM_Loc[r] <- final_all  
+  }
+  
+  
+ #new step
+ df_local$Protein_PTM_Loc <- gsub("([CM][0-9]+)", "", df_local$ProteinPTMLocations) 
+ df_local$Protein_PTM_Loc <- gsub("\\(,", "\\(",  df_local$Protein_PTM_Loc) 
+ df_local$Protein_PTM_Loc <- gsub("\\),", "\\)",  df_local$Protein_PTM_Loc) 
+ df_local$Protein_PTM_Loc <- gsub(",\\(", "\\(",  df_local$Protein_PTM_Loc) 
+ df_local$Protein_PTM_Loc <- gsub(",\\)", "\\)",  df_local$Protein_PTM_Loc) 
+ df_local$Protein_PTM_Loc <- gsub("\\(", "",  df_local$Protein_PTM_Loc)  
+ df_local$Protein_PTM_Loc <- gsub("\\)", "",  df_local$Protein_PTM_Loc)  
+ 
   # determines residue location for phos on sequence reduced to STY
   parallel_result1 <- foreach(r = 1:nrow(df_local), .combine = c) %dopar% {
     phos_count <- stringr::str_count(df_local$phos_seq[r], "\\*")
@@ -137,7 +202,7 @@ localize_summary <- function(df_phos, df_phos_prob){
   
   df_local$pr <- parallel_result2
   
-  
+  #mark as localized or not
   parallel_result3 <- foreach(r = 1:nrow(df_local), .combine = rbind) %dopar% {
     prob <- unlist(df_local$pr[r])
     residue <- unlist(df_local$phos_res[r])
@@ -171,6 +236,9 @@ localize_summary <- function(df_phos, df_phos_prob){
   
   parallel_result3$Local <- apply(parallel_result3, 1, numlist_to_string)
   parallel_result3$Local2 <- apply(parallel_result3, 1, numlist_to_string2)
+  
+  parallel_result3$Protein_PTM_Loc <- df_local$Protein_PTM_Loc
+  parallel_result3$PTM_Loc <-  df_local$PTM_Loc
   
   stopCluster(cl) 
   cat(file = stderr(), "Function localize_summary...end", "\n")

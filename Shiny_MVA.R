@@ -198,7 +198,7 @@ stat_calc_bg <- function(params, comp_number, stats_comp){
     df_missing <- df_rollup_list[[2]]
     
     #rollup up filtered precursors to peptide to save for graphs
-    df_peptide <- rollup_sum_peptide(df_filter_list[[1]], df_design, comp_number, stats_comp)
+    df_peptide <- rollup_sum_peptide(df_filter_list[[1]], df_design, comp_number, stats_comp, params)
     df_peptide_name <- stringr::str_c(stats_comp$Final_Table_Name_Peptide[comp_number])
     
     write_table_try(df_peptide_name, df_peptide, params)

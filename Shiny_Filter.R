@@ -147,16 +147,15 @@ filter_data_bg <- function(table_name, new_table_name, params){
   step8 <- filter_stats(df)
   cat(file = stderr(), stringr::str_c("step 8 - ", step7[[1]]-step8[[1]], " ", step7[[2]]-step8[[2]], " ", step7[[3]]-step8[[3]]), "\n")
   
-  
-  
   cat(file = stderr(), "step 8 - remove_duplicates...", "\n")
   
-  if (params$data_source == "PD") {
-    df$Modifications[is.na(df$Modifications)] <- ""
-    df$dup <- stringr::str_c(df$Sequence, "_", df$Modifications)
-    df <- dplyr::distinct(df, dup, .keep_all = TRUE)
-    df$dup <- NULL
-  }
+  # if (params$data_source == "PD" & params$raw_data_format == "precursor") {
+  #   df$Modifications[is.na(df$Modifications)] <- ""
+  #   df$dup <- stringr::str_c(df$PrecursorId, "_", df$Modifications)
+  #   df <- dplyr::distinct(df, dup, .keep_all = TRUE)
+  #   test <- which(duplicated(df$dup))
+  #   df$dup <- NULL
+  # }
   
   if (params$data_source == "SP") {
     df <- dplyr::distinct(df, PrecursorId, .keep_all = TRUE)

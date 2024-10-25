@@ -46,6 +46,12 @@ df_peptide <- filter_db("peptide_sltmm", "Accession", accession, params)
 
 list_tables(params)
 
+df_raw <- read_table('precursor_raw', params)
+df_start <- read_table('precursor_start', params)
+df_filter <- read_table('precursor_filter', params)
+df_noise <- read_table_try('precursor_noise', params)
+df_sltmm <- read_table_try('precursor_impute_sltmm', params)
+
 ptm_data <- read_table("MotifX_ptm_data", params)
 
 mv <- read_table("missing_values", params)
@@ -78,6 +84,7 @@ df_start <- read_table_try('precursor_start', params)
 df_norm_sltmm <- read_table_try('precursor_norm_sltmm', params)
 df_norm_sltmm_protein <- read_table_try('protein_sltmm_final', params)
 precursor_data <- read_table_try('precursor_impute_sltmm', params)
+df <- read_table_try('precursor_impute_sltmm', params)
 df1 <- read_table_try('peptide_impute_sltmm', params)
 df1f <- read_table_try('peptide_impute_sltmm_final', params)
 dfm <- read_table_try('precursor_missing', params)
