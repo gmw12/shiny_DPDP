@@ -578,7 +578,7 @@ peptide_position_lookup <- function(df_peptide, params)  {
   cat(file = stderr(), "function peptide_position_lookup...", "\n")
   source('Shiny_File.R')
   
-  save(df_peptide, file="zzpeptideposlookup") #    load(file="zzpeptideposlookup")
+  #save(df_peptide, file="zzpeptideposlookup") #    load(file="zzpeptideposlookup")
 
   if (params$data_source == "PD" & params$raw_data_format =="precursor") {
     # create peptide lookup table

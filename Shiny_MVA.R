@@ -815,7 +815,7 @@ create_stats_onepeptide_plots_bg <- function(input_stats_norm_type, input_stats_
                                              input_stats_onepeptide_sequence, input_stats_onepeptide_plot_spqc,
                                              input_stats_onepeptide_use_zscore, df_design, stats_comp, params) {
   
-  save(list=c("input_stats_norm_type", "input_stats_onepeptide_plot_comp", "input_stats_onepeptide_accession", "input_stats_onepeptide_sequence", "input_stats_onepeptide_plot_spqc", "input_stats_onepeptide_use_zscore", "df_design", "stats_comp"), file="zztop")
+  #save(list=c("input_stats_norm_type", "input_stats_onepeptide_plot_comp", "input_stats_onepeptide_accession", "input_stats_onepeptide_sequence", "input_stats_onepeptide_plot_spqc", "input_stats_onepeptide_use_zscore", "df_design", "stats_comp"), file="zztop")
   #. load(file="zztop");
   
   cat(file = stderr(), "Function create_stats_onepeptide_plots_bg...", "\n")

@@ -115,7 +115,7 @@ rollup_sum_peptide <- function(df, df_design, comp_number, stats_comp, params){
   cat(file = stderr(), "function rollup_sum_peptide...", "\n")
   source('Shiny_Misc_Functions.R')
   
-  save(list = c("df", "df_design", "comp_number", "stats_comp"), file = "zrollupsumpeptide")   #  load(file = "zrollupsumpeptide")
+  #save(list = c("df", "df_design", "comp_number", "stats_comp"), file = "zrollupsumpeptide")   #  load(file = "zrollupsumpeptide")
   
   if (comp_number > 0) {
     design_order <- str_to_numlist(c(stats_comp$N_loc[comp_number], stats_comp$D_loc[comp_number], stats_comp$SPQC_loc[comp_number]))
