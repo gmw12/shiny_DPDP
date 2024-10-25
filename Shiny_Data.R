@@ -88,7 +88,7 @@ load_unknown_data_bg <- function(data_sfb, params){
   source('Shiny_File.R')
   
   df <- data.table::fread(file = data_sfb$datapath, header = TRUE, stringsAsFactors = FALSE, sep = "\t", fill=TRUE)
-  #load(file="df")
+  save(df, file="zdfloadunknowndata")    #  load(file="zdfloadunknowndata") 
   
   if ("EG.PrecursorId" %in% names(df)) {
     cat(file = stderr(), "Spectronaut data, precursor...", "\n")
@@ -283,11 +283,11 @@ meta_data <- function(table_string){
 #--------------------------------------------------------
 meta_data_bg <- function(table_name, data_format, params){
   cat(file = stderr(), "Function meta_data bg...", "\n")
+  source('Shiny_File.R')
   
   #. table_name <- "precursor_start"; data_format <- "start"
   
-  conn <- RSQLite::dbConnect(RSQLite::SQLite(), params$database_path)
-  df <- RSQLite::dbReadTable(conn, table_name)
+  df <- read_table_try(table_name, params)
   
   precursor_name <- stringr::str_c("meta_precursor_", data_format)
   peptide_name <- stringr::str_c("meta_peptide_", data_format)
@@ -319,10 +319,39 @@ meta_data_bg <- function(table_name, data_format, params){
 
     params$ptm_enrich <- round(sum(df_phos, na.rm = TRUE) / (sum(df_other, na.rm = TRUE) + sum(df_phos, na.rm = TRUE)), 2)
     params$ptm_enrich_local <- round(sum(df_phos_local, na.rm = TRUE) / (sum(df_other, na.rm = TRUE) + sum(df_phos, na.rm = TRUE)), 2)
+    
+    #--calc indiv phos sites
+    
+    save(df, file = "zz999b")  #  load(file = "zz999b")
+    
+    test_df <- df[phos_which,] |> dplyr::select(contains(c('Accession', 'Genes', 'Local', 'Protein_PTM_Loc')))
+    test_df$Local2 <- NULL
+    test_df$Accession <- gsub(";.*$", "", test_df$Accession)
+    test_df$Genes <- gsub(";.*$", "", test_df$Genes)
+    test_df$Local <- gsub(";.*$", "", test_df$Local)
+    test_df$Protein_PTM_Loc <- gsub(";.*$", "", test_df$Protein_PTM_Loc)
+    
+    find_mult <- which(grepl(",", df$Protein_PTM_Loc))
+    new_df <- test_df[-find_mult,]
+    new_df$Phos_ID <- paste(new_df$Accession, "_", new_df$Genes, "_", new_df$Protein_PTM_Loc, sep = "")
+    
+    for(r in find_mult) {
+      sites <- unlist(stringr::str_split(test_df$Protein_PTM_Loc[r], ","))
+      site_local <- unlist(stringr::str_split(test_df$Local[r], ","))
+      for (i in (1:length(sites))){
+        new_df <- rbind(new_df, c(test_df$Accession[r], test_df$Genes[r], site_local[i], test_df$Protein_PTM_Loc[r], 
+                                  paste(test_df$Accession[r], "_", test_df$Genes[r], "_", sites[i], sep = "")))
+      }
+    }
+    
+    params$phos_site_unique_all <- length(unique(new_df$Phos_ID))
+    params$phos_site_unique_local <- length(unique(new_df[new_df$Local > params$ptm_local,]$Phos_ID))
+    
+    write_table_try("phos_sites", new_df, params)
+    
   }
   
-  RSQLite::dbWriteTable(conn, "params", params, overwrite = TRUE)
-  RSQLite::dbDisconnect(conn)
+  write_table_try("params", params, params)
   
   cat(file = stderr(), "Function meta_data bg...end", "\n\n")
   
@@ -715,6 +744,9 @@ localize_summary <- function(df_phos, df_phos_prob){
   df_local$Protein_PTM_Loc <- gsub(",\\)", "\\)",  df_local$Protein_PTM_Loc) 
   df_local$Protein_PTM_Loc <- gsub("\\(", "",  df_local$Protein_PTM_Loc)  
   df_local$Protein_PTM_Loc <- gsub("\\)", "",  df_local$Protein_PTM_Loc)  
+  df_local$Protein_PTM_Loc <- gsub(",,,,", ",",  df_local$Protein_PTM_Loc)  
+  df_local$Protein_PTM_Loc <- gsub(",,,", ",",  df_local$Protein_PTM_Loc) 
+  df_local$Protein_PTM_Loc <- gsub(",,", ",",  df_local$Protein_PTM_Loc)  
   
   # determines residue location for phos on sequence reduced to STY
   parallel_result1 <- foreach(r = 1:nrow(df_local), .combine = c) %dopar% {

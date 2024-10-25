@@ -29,6 +29,8 @@ hide_enable <- function(session, input, output) {
       shinyjs::hide("meta_parameters_precursor_ptm")
       shinyjs::hide("meta_parameters_precursor_phos_percent")
       shinyjs::hide("meta_parameters_precursor_phos_local_percent")
+      shinyjs::hide("meta_parameters_phos_site_unique_all")
+      shinyjs::hide("meta_parameters_phos_site_unique_local")
       updateRadioButtons(session, "rollup_method", label = NULL,
                    choices = list("Sum" = "sum", "Median" = "median", "Median_Polish" = "median_polish", "Mean" = "mean",
                                   "IQ_MaxLFQ" = "iq_maxlfq", "TopN" = "topn"),
@@ -42,6 +44,8 @@ hide_enable <- function(session, input, output) {
       shinyjs::show("meta_parameters_precursor_phos_local")
       shinyjs::show("meta_parameters_precursor_phos_percent")
       shinyjs::show("meta_parameters_precursor_phos_local_percent")
+      shinyjs::show("meta_parameters_phos_site_unique_all")
+      shinyjs::show("meta_parameters_phos_site_unique_local")
       updateRadioButtons(session, "rollup_method", label = NULL,
                          choices = list("Sum" = "sum"), selected = "sum")
     }

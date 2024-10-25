@@ -57,6 +57,9 @@ ui_render_parameters <- function(session, input, output) {
     output$meta_parameters_precursor_phos_percent <- renderText({str_c('Phos Enrich:  ', params$ptm_enrich)})
     output$meta_parameters_precursor_phos_local_percent <- renderText({str_c('Phos Local Enrich:  ', params$ptm_enrich_local )}) 
     
+    output$meta_parameters_phos_site_unique_all <- renderText({str_c('Phos Total Sites:  ', params$phos_site_unique_all )}) 
+    output$meta_parameters_phos_site_unique_local <- renderText({str_c('Phos Local Sites:  ', params$phos_site_unique_local )}) 
+    
     cat(file = stderr(), "Function ui_render_parameters...end", "\n")
 }
 

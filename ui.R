@@ -148,7 +148,10 @@ body <- dashboardBody(
                                     span(textOutput("meta_parameters_precursor_phos_all"), style = "color:blue; font-size:16px"),
                                     span(textOutput("meta_parameters_precursor_phos_local"), style = "color:blue; font-size:16px"),
                                     span(textOutput("meta_parameters_precursor_phos_percent"), style = "color:blue; font-size:16px"),
-                                    span(textOutput("meta_parameters_precursor_phos_local_percent"), style = "color:blue; font-size:16px")
+                                    span(textOutput("meta_parameters_precursor_phos_local_percent"), style = "color:blue; font-size:16px"),
+                                    br(),
+                                    span(textOutput("meta_parameters_phos_site_unique_all"), style = "color:blue; font-size:16px"),
+                                    span(textOutput("meta_parameters_phos_site_unique_local"), style = "color:blue; font-size:16px")
                              )
                            )
                        )))
