@@ -46,6 +46,7 @@ set_user <- function() {
       volumes <<- c(dd = '/data', wd = '.', Home = fs::path_home(), getVolumes()())
       site_user <<- "not_dpmsr"
       database_dir <<- "/data/database"
+      python_path <<- "/usr/bin/python3"
     }
   }
   
