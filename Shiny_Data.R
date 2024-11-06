@@ -11,6 +11,7 @@ load_archive_file <- function(session, input, output){
   # load(file = "testarchive_sfb")
   
   archive_path <- str_extract(archive_sfb$datapath, "^/.*/")
+  cat(file = stderr(), stringr::str_c("archive_path --->", archive_path), "\n")
   archive_zip <- archive_sfb$datapath
   
   archive_name <- basename(archive_sfb$datapath)
@@ -30,6 +31,7 @@ load_archive_file <- function(session, input, output){
   }
   
   database_path <- stringr::str_c(database_dir, "/", file_name)
+  
   #load params file
   if (file.exists(stringr::str_c(database_dir, "/params"))){
     load(file=stringr::str_c(database_dir, "/params"))
@@ -42,7 +44,11 @@ load_archive_file <- function(session, input, output){
   params$database_dir <- database_dir
   params$database_path <- stringr::str_c(database_dir, "/", file_name)
   
+  #check params dir's and update if needed
+  params <- update_dirs(params, archive_path)
+  
   params <<- params
+  
   removeModal()
   cat(file = stderr(), "Function load_archive_file...end", "\n")
   return(archive_zip)

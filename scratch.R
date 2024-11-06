@@ -898,3 +898,10 @@ for(r in find_mult) {
 
 phos_unique_all <- unique(new_df$Phos_ID)
 phos_unique_local <- unique(new_df[new_df$Local > 0.75,]$Phos_ID)
+
+test <- params$design_path
+test2 <- unlist(str_split(test, "/"))
+test3 <- test2[nzchar(test2)]
+test3[length(test3)]
+
+fs::is_dir(params$design_path)
