@@ -4,6 +4,10 @@ cat(file = stderr(), "Shiny_Menu.R", "\n")
 load_menu <- function(session, input, output) {
   cat(file = stderr(), "Function load_menu...", "\n")
   
+  if (site_user != "dpmsr" & params$raw_data_format == "") {
+    load_menu_start(session, input, output)
+  }
+  
   if (site_user == "dpmsr" & params$raw_data_format == "") {
     load_menu_start(session, input, output)
   }
@@ -19,11 +23,7 @@ load_menu <- function(session, input, output) {
   if (site_user == "dpmsr" & params$raw_data_format == "protein") {
     load_menu_all(session, input, output)
   }
-  
-  if (site_user != "dpmsr") {
-    load_menu_all(session, input, output)
-  }
-  
+
   cat(file = stderr(), "Function load_menu...end", "\n")
 }
 
