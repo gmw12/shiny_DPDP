@@ -45,10 +45,10 @@ load_archive_file <- function(session, input, output){
   params$database_path <- stringr::str_c(database_dir, "/", file_name)
   
   #check params dir's and update if needed
-  params <- update_dirs(params, archive_path)
+  params <- archive_update_app(session, input, output, params, archive_path)
   
   params <<- params
-  
+
   removeModal()
   cat(file = stderr(), "Function load_archive_file...end", "\n")
   return(archive_zip)
@@ -289,7 +289,7 @@ load_PD_data <- function(data_sfb){
 
 
 #--------------------------------------------------------
-meta_data <- function(table_string){
+meta_data <- function(table_string, params){
   cat(file = stderr(), "Function meta_data...", "\n")
   showModal(modalDialog("Gathering meta data...", footer = NULL))
   

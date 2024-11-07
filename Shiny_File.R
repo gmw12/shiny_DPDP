@@ -101,44 +101,7 @@ create_dir_only <- function(name){
   cat(file = stderr(), "Function create_dir_only...end", "\n\n")
   return(name)
 }
-#--------------------------------------------------------------
-update_dirs <- function(params, archive_path){
-  cat(file = stderr(), "Function update_dirs...", "\n")
 
-  if(fs::is_dir(params$design_path)) {
-    cat(file = stderr(), "Current params dir structure is valid...", "\n")
-  }else {
-    cat(file = stderr(), "Updating params dir structure...", "\n")
-    test <- unlist(str_split(params$design_path, "/"))
-    test <- test[nzchar(test)]
-    test <- test[length(test)]
-  
-    params$design_path <- stringr::str_c(archive_path, test, "/")
-    params$data_path <- stringr::str_c(params$design_path, params$file_prefix, "/")
-    params$backup_path <- stringr::str_c(params$design_path, "Backup/")
-    params$extra_path <- stringr::str_c(params$design_path, "Extra/")
-    params$error_path <- stringr::str_c(params$design_path, "Error/")
-    params$qc_path <- stringr::str_c(params$design_path, "QC/")
-    params$string_path <- stringr::str_c(params$design_path, "String/")
-    params$phos_path <- stringr::str_c(params$design_path, "Phos/") 
-    params$app_path <- stringr::str_c(params$design_path, "Backup//App/") 
-    
-    create_dir_only(params$design_path)
-    create_dir_only(params$data_path)
-    create_dir_only(params$backup_path)
-    create_dir_only(params$extra_path)
-    create_dir_only(params$error_path)
-    create_dir_only(params$qc_path)
-    create_dir_only(params$string_path)
-    create_dir_only(params$phos_path)
-    create_dir_only(params$app_path)
-    
-    
-  }
-  
-  cat(file = stderr(), "Function update_dirs...end", "\n")
-  return(params)
-}
 #--------------------------------------------------------------
 excel_to_db <- function(excel_path, table_name, database_path){
   df <- readxl::read_excel(excel_path)
@@ -146,7 +109,6 @@ excel_to_db <- function(excel_path, table_name, database_path){
   RSQLite::dbWriteTable(conn, table_name, df, overwrite = TRUE)
   RSQLite::dbDisconnect(conn)
 }
-
 
 #----------------------------------------------------------------------------------------
 save_data <- function(data_file){

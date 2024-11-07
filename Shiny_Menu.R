@@ -4,24 +4,28 @@ cat(file = stderr(), "Shiny_Menu.R", "\n")
 load_menu <- function(session, input, output) {
   cat(file = stderr(), "Function load_menu...", "\n")
   
-  if (site_user != "dpmsr" & params$raw_data_format == "") {
-    load_menu_start(session, input, output)
+  if (site_user != "dpmsr") {
+    if (params$raw_data_format == "") {
+      load_menu_start(session, input, output)
+    }else if (params$raw_data_format == "precursor" & params$data_output == "Protein") {
+      load_menu_customer_protein(session, input, output)
+    }else if (params$raw_data_format == "precursor" & params$data_output == "Peptide") {
+      load_menu_customer_peptide(session, input, output)
+    }else if (params$raw_data_format == "protein") {
+      load_menu_customer_protein(session, input, output)
+    }
   }
   
-  if (site_user == "dpmsr" & params$raw_data_format == "") {
-    load_menu_start(session, input, output)
-  }
-  
-  if (site_user == "dpmsr" & params$raw_data_format == "precursor" & params$data_output == "Protein") {
-    load_menu_precursor_to_protein(session, input, output)
-  }
-  
-  if (site_user == "dpmsr" & params$raw_data_format == "precursor" & params$data_output == "Peptide") {
-    load_menu_peptide(session, input, output)
-  }
-  
-  if (site_user == "dpmsr" & params$raw_data_format == "protein") {
-    load_menu_all(session, input, output)
+  if (site_user == "dpmsr") {
+    if (params$raw_data_format == "") {
+      load_menu_start(session, input, output)
+    }else if (params$raw_data_format == "precursor" & params$data_output == "Protein") {
+      load_menu_precursor_to_protein(session, input, output)
+    }else if (params$raw_data_format == "precursor" & params$data_output == "Peptide") {
+      load_menu_peptide(session, input, output)
+    }else if (raw_data_format == "protein") {
+      load_menu_all(session, input, output)
+    }
   }
 
   cat(file = stderr(), "Function load_menu...end", "\n")
@@ -265,9 +269,7 @@ load_menu_protein_inpute <- function(session, input, output) {
 }
 
 #----------------------------------------------------------------------------------------- 
-load_menu_customer <- function(session, input, output) {
-  
-  
+load_menu_customer_protein <- function(session, input, output) {
   
   output$menu_stats <- renderMenu({ 
     menuItem("Stats", tabName = "stats", startExpanded = FALSE,
@@ -291,4 +293,29 @@ load_menu_customer <- function(session, input, output) {
   })
 
   
+}
+#----------------------------------------------------------------------------------------- 
+load_menu_customer_peptide <- function(session, input, output) {
+  
+  output$menu_load <- renderMenu({ 
+    menuItem("Load", tabName = "load")
+  })
+
+  output$menu_stats <- renderMenu({ 
+    menuItem("Stats", tabName = "stats", startExpanded = FALSE,
+             menuItem("Setup", tabName = "stats_setup"),
+             menuItem("Comparisons", tabName = "stats_compare"),
+             menuItem("Graphs", tabName = "stats_plots"),
+             menuItem("Data", tabName = "stats_data"),
+             menuItem("Peptide Plots", tabName = "stats_peptide_plots"))
+  })
+  
+  output$menu_phos <- renderMenu({ 
+    menuItem("Phos", tabName = "phos", startExpanded = FALSE,
+             menuItem("Fasta", tabName = "phos_setup"),
+             menuItem("Motif", tabName = "phos_motif"),
+             menuItem("MEME_Momo", tabName = "phos_momo"))
+  })
+  
+
 }
