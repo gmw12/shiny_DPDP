@@ -312,10 +312,6 @@ load_menu_customer_peptide <- function(session, input, output) {
     menuItem("Load", tabName = "load_customer")
   })
   
-  output$menu_load <- renderMenu({ 
-    menuItem("Load", tabName = "load")
-  })
-
   output$menu_stats <- renderMenu({ 
     menuItem("Stats", tabName = "stats", startExpanded = FALSE,
              menuItem("Setup", tabName = "stats_setup"),
