@@ -6,7 +6,12 @@ load_archive_file <- function(session, input, output){
   cat(file = stderr(), "Function load_archive_file...", "\n")
   showModal(modalDialog("Loading archive file...", footer = NULL))
   
-  archive_sfb <- parseFilePaths(volumes, input$sfb_archive_file)
+  if(site_user == "dpmsr") {
+    archive_sfb <- parseFilePaths(volumes, input$sfb_archive_file)
+  }else{
+    archive_sfb <- parseFilePaths(volumes, input$sfb_archive_customer_file)
+  }
+  
   #save(archive_sfb, file = "testarchive_sfb")
   # load(file = "testarchive_sfb")
   

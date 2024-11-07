@@ -278,6 +278,10 @@ load_menu_protein_inpute <- function(session, input, output) {
 #----------------------------------------------------------------------------------------- 
 load_menu_customer_protein <- function(session, input, output) {
   
+  output$menu_load_customer <- renderMenu({ 
+    menuItem("Load", tabName = "load_customer")
+  })
+  
   output$menu_stats <- renderMenu({ 
     menuItem("Stats", tabName = "stats", startExpanded = FALSE,
              menuItem("Setup", tabName = "stats_setup"),
@@ -303,6 +307,10 @@ load_menu_customer_protein <- function(session, input, output) {
 }
 #----------------------------------------------------------------------------------------- 
 load_menu_customer_peptide <- function(session, input, output) {
+  
+  output$menu_load_customer <- renderMenu({ 
+    menuItem("Load", tabName = "load_customer")
+  })
   
   output$menu_load <- renderMenu({ 
     menuItem("Load", tabName = "load")

@@ -50,6 +50,9 @@ set_user <- function() {
     }
   }
   
+  #testing shiny
+  #site_user <<- "not_dpmsr"
+  
   cat(file = stderr(), str_c("site_user set to -->  ", site_user), "\n")
   cat(file = stderr(), str_c("volumes --> ", volumes), "\n")
   
@@ -171,8 +174,9 @@ set_file_choosers <- function(session, input, output, volumes) {
   cat(file = stderr(), stringr::str_c("Volumes ---> ", volumes), "\n")
   
   shinyFileChoose(input, 'sfb_design_file', session = session, roots = volumes, filetypes = c('', 'xlsx'))
-  #shinyFileChoose(input, 'sfb_data_file', session = session, roots = volumes, filetypes = c('', 'tsv', 'txt'))
+
   shinyFileChoose(input, 'sfb_archive_file', session = session, roots = volumes, filetypes = c('', 'zip'))
+  shinyFileChoose(input, 'sfb_archive_customer_file', session = session, roots = volumes, filetypes = c('', 'zip'))
   
   shinyFileChoose(input, 'motif_fasta_file', session = session, roots = volumes, filetypes = c('', 'fasta'))
   
@@ -279,7 +283,7 @@ archive_update_app <- function(session, input, output, params, archive_path){
     params <<- params
     
     #only update if DPMSR, customer does not have accesses 
-    if (site_user == "DPMSR") {
+    if (site_user == "dpmsr") {
       #update plots
       if (params$raw_data_format != "protein") {
         parameter_create_plots(sesion, input, output, params)
