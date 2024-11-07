@@ -10,6 +10,7 @@ sidebar <- dashboardSidebar(width = 165,
                             sidebarMenu(
                               menuItem("Welcome", tabName = "welcome", selected = TRUE),
                               menuItemOutput("menu_load"),
+                              menuItemOutput("menu_load_customer"),
                               menuItemOutput("menu_parameters"),
                               menuItemOutput("menu_noise"),
                               menuItemOutput("menu_filter"),
@@ -41,6 +42,48 @@ body <- dashboardBody(
               )
             )
     ),
+    
+    tabItem(tabName = "load_customer",
+            fluidRow(
+              column(width = 6, align = "center",   
+                     br(),
+                     br(),
+                     br(),
+                     br(),
+                     br(),
+                     br(),
+                     box(title = "Welcome", status = "primary", solidHeader = TRUE, collapsible = FALSE, align = "center", width = 12, height = 500,   
+                         br(),
+                         br(),
+                         br(),
+                         br(),
+                         br(),
+                         tags$h3("thanks for coming, blah blah blah"),
+                     )
+              ),
+              column(width = 6, align = "center",   
+                br(),
+                br(),
+                br(),
+                br(),
+                br(),
+                br(),
+                box(title = "Load database file", status = "primary", solidHeader = TRUE, collapsible = FALSE, align = "center", width = 12, height = 500,   
+                  br(),
+                  br(),
+                  br(),
+                  br(),
+                  br(),
+                  tags$h3("Select database file"),
+                 fluidRow(align = "center", shinyFilesButton('sfb_archive_file', label = 'Select Archive/Zip File', title = 'Please select zip file', multiple = FALSE,
+                                                 style = "color: #fff; background-color: #337ab7; border-color: #2e6da4")),
+                 span(textOutput("archive_file_name"), style = "color:blue; font-size:16px")
+                )
+              )
+
+            )
+    ),
+    
     
     # Design 
     tabItem(tabName = "load",

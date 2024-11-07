@@ -278,24 +278,27 @@ archive_update_app <- function(session, input, output, params, archive_path){
 
     params <<- params
     
-    #update plots
-    if (params$raw_data_format != "protein") {
-      parameter_create_plots(sesion, input, output, params)
-      filter_histogram_plot(sesion, input, output, params, "precursor_start", "Precursor_Start_Histogram")
-      render_noise_graphs(session, input, output)
-      filter_histogram_plot(sesion, input, output, params, "precursor_noise", "Precursor_NoiseFiltered_Histogram")
-      filter_create_plots(sesion, input, output, params)
+    #only update if DPMSR, customer does not have accesses 
+    if (site_user == "DPMSR") {
+      #update plots
+      if (params$raw_data_format != "protein") {
+        parameter_create_plots(sesion, input, output, params)
+        filter_histogram_plot(sesion, input, output, params, "precursor_start", "Precursor_Start_Histogram")
+        render_noise_graphs(session, input, output)
+        filter_histogram_plot(sesion, input, output, params, "precursor_noise", "Precursor_NoiseFiltered_Histogram")
+        filter_create_plots(sesion, input, output, params)
+      }
+      
+      ui_render_parameters(session, input, output)
+      render_norm_graphs(session, input, output)
+      render_norm_apply_graphs(session, input, output)
+      impute_meta_data()
+      impute_create_plots(session, input, output, params)
+      render_impute_graphs(session, input, output)
+      qc_stats(session, input, output, params)
+      render_qc_graphs(session, input, output)
+      
     }
-    
-    ui_render_parameters(session, input, output)
-    render_norm_graphs(session, input, output)
-    render_norm_apply_graphs(session, input, output)
-    impute_meta_data()
-    impute_create_plots(session, input, output, params)
-    render_impute_graphs(session, input, output)
-    qc_stats(session, input, output, params)
-    render_qc_graphs(session, input, output)
-    
   }
   
   cat(file = stderr(), "Function update_dirs...end", "\n")

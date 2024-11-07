@@ -6,7 +6,7 @@ load_menu <- function(session, input, output) {
   
   if (site_user != "dpmsr") {
     if (params$raw_data_format == "") {
-      load_menu_start(session, input, output)
+      load_menu_customer_start(session, input, output)
     }else if (params$raw_data_format == "precursor" & params$data_output == "Protein") {
       load_menu_customer_protein(session, input, output)
     }else if (params$raw_data_format == "precursor" & params$data_output == "Peptide") {
@@ -43,7 +43,14 @@ load_menu_start <- function(session, input, output) {
   })
   
 }
-
+#----------------------------------------------------------------------------------------- 
+load_menu_customer_start <- function(session, input, output) {
+  
+  output$menu_load_customer <- renderMenu({ 
+    menuItem("Load", tabName = "load_customer")
+  })
+  
+}
 #----------------------------------------------------------------------------------------- 
 load_menu_precursor_to_protein <- function(session, input, output) {
   
