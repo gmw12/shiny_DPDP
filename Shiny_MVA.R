@@ -262,6 +262,18 @@ stats_Final_Excel <- function(session, input, output, params) {
   bg_excel$wait()
   print_stderr("error_finalexcel.txt")
 
+  
+  output$download_stats_excel <- downloadHandler(
+    file = function(){
+      input$final_stats_name
+    },
+    content = function(file){
+      fullname <- filename
+      cat(file = stderr(), stringr::str_c("download_stats_data fullname = ", fullname), "\n")
+      file.copy(fullname, file)
+    }
+  )
+  
   cat(file = stderr(), "function stats_Final_Excel...end", "\n")
   removeModal()
 }

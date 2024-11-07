@@ -673,6 +673,7 @@ precursor_to_precursor_bg <- function(params){
   
   # set "Filtered" in TotalQuantity to NA
   df[df ==  "Filtered"] <- NA
+  df[df ==  0] <- NA
   df[(n_col + 1):ncol(df)] <- as.data.frame(lapply(df[(n_col + 1):ncol(df)], as.numeric))
   
   df$Description <- stringr::str_c(df$Description, ", org=", df$Organisms) 
@@ -712,6 +713,7 @@ precursor_to_precursor_ptm_bg <- function(params){
   
   # set "Filtered" in TotalQuantity to NA
   df[df ==  "Filtered"] <- NA
+  df[df ==  0] <- NA
   df[(n_col + 1):ncol(df)] <- as.data.frame(lapply(df[(n_col + 1):ncol(df)], as.numeric))
   
   df$Description <- stringr::str_c(df$Description, ", org=", df$Organisms) 
@@ -968,6 +970,7 @@ sp_protein_to_protein_bg <- function(params){
   
   # set "Filtered" in TotalQuantity to NA
   df[df ==  "Filtered"] <- NA
+  df[df ==  0] <- NA
   df[(n_col + 1):ncol(df)] <- as.data.frame(lapply(df[(n_col + 1):ncol(df)], as.numeric))
   
   df$Description <- stringr::str_c(df$Description, ", org=", df$Organisms) 
