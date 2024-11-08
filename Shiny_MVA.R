@@ -294,6 +294,10 @@ stats_Final_Excel_bg <- function(file_dir, filename, filename_params, params) {
     excel_list <- list('precursor_start', 'raw_peptide', stringr::str_c("precursor_impute_", params$stat_norm), 
                        stringr::str_c("protein_", params$stat_norm, "_final"))
     excel_list_name <- list('Raw Precursor Data', 'Raw Peptide Data', 'Imputed Precursor Data', 'Normalized Data')
+  }else if (params$raw_data_format == "precursor" && params$data_output == "Peptide" ) {
+    excel_list <- list('precursor_start', 'raw_peptide', stringr::str_c("precursor_impute_", params$stat_norm), 
+                       stringr::str_c("peptide_impute_", params$stat_norm, "_final"))
+    excel_list_name <- list('Raw Precursor Data', 'Raw Peptide Data', 'Imputed Precursor Data', 'Normalized Data')
   }else if (params$raw_data_format == "protein" && params$data_source == "SP" ) {
     excel_list <- list('protein_raw', 'protein_impute')
     excel_list_name <- list('SP Protein Data', "Protein Data")
@@ -301,7 +305,9 @@ stats_Final_Excel_bg <- function(file_dir, filename, filename_params, params) {
   
   # add stat comparisons to excel list
   for (i in 1:nrow(stats_comp))  {
-    excel_list <- c(excel_list, stats_comp$Final_Table_Name[i])
+    if(params$data_output == "Protein") {final_table_name <- stats_comp$Final_Table_Name[i]}
+    if(params$data_output == "Peptide") {final_table_name <- stats_comp$Final_Table_Name_Peptide[i]}
+    excel_list <- c(excel_list, final_table_name)
     excel_list_name <- c(excel_list_name, stats_comp$Name[i])
   }
   

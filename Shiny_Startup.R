@@ -120,6 +120,7 @@ create_default_params <- function(volumes, python_path) {
     "filter_cv" = FALSE,
     "filter_cv_group" = "SPQC",
     "filter_cv_value" = 99,
+    "filter_ptm" = FALSE,
     "info_col_precursor" = 0,
     "info_col_peptide" = 0,
     "info_col_protein" = 0,

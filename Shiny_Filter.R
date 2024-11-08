@@ -42,7 +42,7 @@ filter_data_bg <- function(table_name, new_table_name, params){
   
   # Step 1 if PTM isolate to modificatin of interest 
   cat(file = stderr(), "step 0, isolate to PTM...", "\n")
-  if (params$ptm) {
+  if (params$filter_ptm) {
     df <- df[grepl(params$ptm_grep, df$Sequence, ignore.case = TRUE),]
   }
   step1 <- filter_stats(df)

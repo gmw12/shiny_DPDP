@@ -283,6 +283,9 @@ body <- dashboardBody(
                                                            choices = list("SPQC"), selected = "SPQC")),
                              column(width = 4, numericInput("filter_cv_value", label = "Cutoff%?", value = 99))
                            ),
+                           fluidRow(
+                             column(width = 12, checkboxInput("filter_ptm", label = "Keep only PTM?")),
+                           ),
                            hr(),
                            fluidRow(
                              column(width = 6, checkboxInput("checkbox_misaligned", label = "Misaligned Filter?")),
