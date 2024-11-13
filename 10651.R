@@ -63,7 +63,7 @@ qual_phos <- function(file, desc, sample_columns) {
   df_phos <- tibble::add_column(df_phos, "Local2" = local_df$Local2, .after="PrecursorId")
   df_phos <- tibble::add_column(df_phos, "Local" = local_df$Local, .after="PrecursorId")
   
-  save(df_phos, file="z1")
+  #save(df_phos, file="z1")
   
   #save copy of raw peptide (from precursor start)
   raw_peptide <- collapse_precursor_ptm_raw(df_phos, sample_columns, info_columns = (ncol(df_phos)-sample_columns+1))
