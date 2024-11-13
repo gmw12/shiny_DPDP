@@ -111,12 +111,11 @@ rollup_sum <- function(df){
 }
 
 #--------------------------------------------------------------------------------
-rollup_sum_peptide <- function(df, df_design, comp_number, stats_comp){
+rollup_sum_peptide <- function(df, df_design, comp_number, stats_comp, params){
   cat(file = stderr(), "function rollup_sum_peptide...", "\n")
   source('Shiny_Misc_Functions.R')
   
-  #save(df, file="test_df"); save(df_design, file="test_df_design")
-  #.  load(file="test_df"); load(file="test_df_design"); df <- df_filter_list[[1]]
+  #save(list = c("df", "df_design", "comp_number", "stats_comp"), file = "zrollupsumpeptide")   #  load(file = "zrollupsumpeptide")
   
   if (comp_number > 0) {
     design_order <- str_to_numlist(c(stats_comp$N_loc[comp_number], stats_comp$D_loc[comp_number], stats_comp$SPQC_loc[comp_number]))
@@ -125,10 +124,19 @@ rollup_sum_peptide <- function(df, df_design, comp_number, stats_comp){
     sample_ID <- df_design$ID
   }
   
-  df <- df |> dplyr::select(contains(c("Accession", "Description", "Name", "Genes", "Sequence", "PeptidePosition", sample_ID))) |> 
-    dplyr::mutate(Precursors = 1, .after = PeptidePosition)
+  if (params$data_source == "PD" &  params$raw_data_format == "precursor") {
+    df <- df |> dplyr::select(contains(c("Accession", "Description", "Name", "Genes", "Sequence", "Modifications", sample_ID))) |> 
+      dplyr::mutate(PSMs = 1, .after = Modifications)
+    peptide_df <- df |> dplyr::group_by(Accession, Description, Name, Genes, Sequence, Modifications) |> dplyr::summarise_all(list(sum))
+    
+  }else {
+    df <- df |> dplyr::select(contains(c("Accession", "Description", "Name", "Genes", "Sequence", "PeptidePosition", sample_ID))) |> 
+      dplyr::mutate(Precursors = 1, .after = PeptidePosition)
+    peptide_df <- df |> dplyr::group_by(Accession, Description, Name, Genes, Sequence, PeptidePosition) |> dplyr::summarise_all(list(sum))
+  }
   
-  peptide_df <- df |> dplyr::group_by(Accession, Description, Name, Genes, Sequence, PeptidePosition) |> dplyr::summarise_all(list(sum))
+  
+  
   peptide_df <- data.frame(dplyr::ungroup(peptide_df))
   
   cat(file = stderr(), "function rollup_sum_peptide...end", "\n")

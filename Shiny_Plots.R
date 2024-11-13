@@ -388,7 +388,7 @@ histogram_plot <- function(table_name, plot_title, params)
   df <- df[(ncol(df) - params$sample_number + 1):ncol(df)]
   title <- as.character(params$file_prefix)
   df_log <- as.matrix(log2(df))
-  intensity_cutoff <- log2(as.numeric(params$intensity_cutoff))
+  #intensity_cutoff <- log2(as.numeric(params$intensity_cutoff))
   
   data_dist <- as.vector(t(df_log))
   data_dist <- data_dist[!is.na(data_dist)]

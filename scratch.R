@@ -46,6 +46,14 @@ df_peptide <- filter_db("peptide_sltmm", "Accession", accession, params)
 
 list_tables(params)
 
+df_raw <- read_table('precursor_raw', params)
+df_start <- read_table('precursor_start', params)
+df_filter <- read_table('precursor_filter', params)
+df_noise <- read_table_try('precursor_noise', params)
+df_sltmm <- read_table_try('precursor_impute_sltmm', params)
+
+ptm_data <- read_table("MotifX_ptm_data", params)
+
 mv <- read_table("missing_values", params)
 
 df1 <- read_table("peptide_impute_sltmm_Control_v_Lrrk2_final", params)
@@ -71,10 +79,12 @@ df <- read_table_try('precursor_noise', params)
 df <- read_table('precursor_filter', params)
 df <- read_table_try('precursor_noise', params)
 df_raw <- read_table_try('precursor_raw', params)
+df <- read_table_try('precursor_start', params)
 df_start <- read_table_try('precursor_start', params)
 df_norm_sltmm <- read_table_try('precursor_norm_sltmm', params)
 df_norm_sltmm_protein <- read_table_try('protein_sltmm_final', params)
 precursor_data <- read_table_try('precursor_impute_sltmm', params)
+df <- read_table_try('precursor_impute_sltmm', params)
 df1 <- read_table_try('peptide_impute_sltmm', params)
 df1f <- read_table_try('peptide_impute_sltmm_final', params)
 dfm <- read_table_try('precursor_missing', params)
@@ -854,3 +864,44 @@ dl2 <- df_list[[2]]
 dl3 <- df_list[[3]]
 dl4 <- df_list[[4]]
 
+
+testme <-  data.frame(foreground_Seqs_Filtered)
+filename <- stringr::str_c(params$phos_path, "testme.xlsx")
+filename2 <- stringr::str_c(params$phos_path, "testme.tsv")
+Simple_Excel(testme, "data", filename)
+write.table(testme, file=filename2, quote=FALSE, sep='\t', col.names = NA)
+
+
+
+
+
+df <- read_table_try('precursor_start', params)
+test_df <- df |> dplyr::select(contains(c('Accession', 'Genes', 'Local', 'Protein_PTM_Loc')))
+test_df$Local2 <- NULL
+test_df$Accession <- gsub(";.*$", "", test_df$Accession)
+test_df$Genes <- gsub(";.*$", "", test_df$Genes)
+test_df$Local <- gsub(";.*$", "", test_df$Local)
+test_df$Protein_PTM_Loc <- gsub(";.*$", "", test_df$Protein_PTM_Loc)
+
+find_mult <- which(grepl(",", df$Protein_PTM_Loc))
+new_df <- test_df[-find_mult,]
+new_df$Phos_ID <- paste(new_df$Accession, "_", new_df$Genes, "_", new_df$Protein_PTM_Loc, sep = "")
+
+for(r in find_mult) {
+  sites <- unlist(stringr::str_split(test_df$Protein_PTM_Loc[r], ","))
+  site_local <- unlist(stringr::str_split(test_df$Local[r], ","))
+  for (i in (1:length(sites))){
+    new_df <- rbind(new_df, c(test_df$Accession[r], test_df$Genes[r], site_local[i], test_df$Protein_PTM_Loc[r], 
+                              paste(test_df$Accession[r], "_", test_df$Genes[r], "_", sites[i], sep = "")))
+  }
+}
+
+phos_unique_all <- unique(new_df$Phos_ID)
+phos_unique_local <- unique(new_df[new_df$Local > 0.75,]$Phos_ID)
+
+test <- params$design_path
+test2 <- unlist(str_split(test, "/"))
+test3 <- test2[nzchar(test2)]
+test3[length(test3)]
+
+fs::is_dir(params$design_path)

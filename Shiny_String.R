@@ -142,10 +142,10 @@ run_string <- function(session, input, output, params) {
     }, deleteFile = FALSE)
     
     
-    fullName <- string_list$string_file_name
+    fullName <- string_file_name
     output$download_string_plot <- downloadHandler(
       filename = function(){
-        stringr::str_c(input$select_data_comp_string, ".png")
+        stringr::str_c(input$select_data_comp_string, "_", input$string_direction, ".png")
       },
       content = function(file){
         file.copy(fullName, file)
@@ -221,7 +221,7 @@ run_string_bg <- function(input_foldchange_cutoff, input_pvalue_cutoff, input_se
   }
   
   cat(file=stderr(), "run_string_bg 6", "\n")
-  string_file_name <- stringr::str_c(params$string_path, input_select_data_comp_string, ".png")
+  string_file_name <- stringr::str_c(params$string_path, input_select_data_comp_string, "_", input_string_direction, ".png")
   cat(file=stderr(), stringr::str_c("string file name... ", string_file_name ), "\n")
   
   
@@ -378,7 +378,7 @@ run_string_enrich_bg <- function(input_foldchange_cutoff, input_pvalue_cutoff, i
   
   cat(file=stderr(), stringr::str_c("number of hits searched...", length(hits)), "\n")
   
-  string_db <- loadRData(stringr::str_c(getwd(), "/database/string_db"))
+  string_db <- loadRData(stringr::str_c(params$database_dir, "/database/string_db"))
   enrichment <- string_db$get_enrichment(hits) #, category = input$select_string_enrich )
 
   cat(file=stderr(), stringr::str_c("enrichment output...", nrow(enrichment)), "\n")

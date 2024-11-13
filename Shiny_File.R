@@ -101,15 +101,14 @@ create_dir_only <- function(name){
   cat(file = stderr(), "Function create_dir_only...end", "\n\n")
   return(name)
 }
-#--------------------------------------------------------------
 
+#--------------------------------------------------------------
 excel_to_db <- function(excel_path, table_name, database_path){
   df <- readxl::read_excel(excel_path)
   conn <- RSQLite::dbConnect(RSQLite::SQLite(), database_path)
   RSQLite::dbWriteTable(conn, table_name, df, overwrite = TRUE)
   RSQLite::dbDisconnect(conn)
 }
-
 
 #----------------------------------------------------------------------------------------
 save_data <- function(data_file){

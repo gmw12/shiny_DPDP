@@ -198,7 +198,7 @@ stat_calc_bg <- function(params, comp_number, stats_comp){
     df_missing <- df_rollup_list[[2]]
     
     #rollup up filtered precursors to peptide to save for graphs
-    df_peptide <- rollup_sum_peptide(df_filter_list[[1]], df_design, comp_number, stats_comp)
+    df_peptide <- rollup_sum_peptide(df_filter_list[[1]], df_design, comp_number, stats_comp, params)
     df_peptide_name <- stringr::str_c(stats_comp$Final_Table_Name_Peptide[comp_number])
     
     write_table_try(df_peptide_name, df_peptide, params)
@@ -262,6 +262,18 @@ stats_Final_Excel <- function(session, input, output, params) {
   bg_excel$wait()
   print_stderr("error_finalexcel.txt")
 
+  
+  output$download_stats_excel <- downloadHandler(
+    file = function(){
+      input$final_stats_name
+    },
+    content = function(file){
+      fullname <- filename
+      cat(file = stderr(), stringr::str_c("download_stats_data fullname = ", fullname), "\n")
+      file.copy(fullname, file)
+    }
+  )
+  
   cat(file = stderr(), "function stats_Final_Excel...end", "\n")
   removeModal()
 }
@@ -282,6 +294,10 @@ stats_Final_Excel_bg <- function(file_dir, filename, filename_params, params) {
     excel_list <- list('precursor_start', 'raw_peptide', stringr::str_c("precursor_impute_", params$stat_norm), 
                        stringr::str_c("protein_", params$stat_norm, "_final"))
     excel_list_name <- list('Raw Precursor Data', 'Raw Peptide Data', 'Imputed Precursor Data', 'Normalized Data')
+  }else if (params$raw_data_format == "precursor" && params$data_output == "Peptide" ) {
+    excel_list <- list('precursor_start', 'raw_peptide', stringr::str_c("precursor_impute_", params$stat_norm), 
+                       stringr::str_c("peptide_impute_", params$stat_norm, "_final"))
+    excel_list_name <- list('Raw Precursor Data', 'Raw Peptide Data', 'Imputed Precursor Data', 'Normalized Data')
   }else if (params$raw_data_format == "protein" && params$data_source == "SP" ) {
     excel_list <- list('protein_raw', 'protein_impute')
     excel_list_name <- list('SP Protein Data', "Protein Data")
@@ -289,7 +305,9 @@ stats_Final_Excel_bg <- function(file_dir, filename, filename_params, params) {
   
   # add stat comparisons to excel list
   for (i in 1:nrow(stats_comp))  {
-    excel_list <- c(excel_list, stats_comp$Final_Table_Name[i])
+    if(params$data_output == "Protein") {final_table_name <- stats_comp$Final_Table_Name[i]}
+    if(params$data_output == "Peptide") {final_table_name <- stats_comp$Final_Table_Name_Peptide[i]}
+    excel_list <- c(excel_list, final_table_name)
     excel_list_name <- c(excel_list_name, stats_comp$Name[i])
   }
   
@@ -815,7 +833,7 @@ create_stats_onepeptide_plots_bg <- function(input_stats_norm_type, input_stats_
                                              input_stats_onepeptide_sequence, input_stats_onepeptide_plot_spqc,
                                              input_stats_onepeptide_use_zscore, df_design, stats_comp, params) {
   
-  save(list=c("input_stats_norm_type", "input_stats_onepeptide_plot_comp", "input_stats_onepeptide_accession", "input_stats_onepeptide_sequence", "input_stats_onepeptide_plot_spqc", "input_stats_onepeptide_use_zscore", "df_design", "stats_comp"), file="zztop")
+  #save(list=c("input_stats_norm_type", "input_stats_onepeptide_plot_comp", "input_stats_onepeptide_accession", "input_stats_onepeptide_sequence", "input_stats_onepeptide_plot_spqc", "input_stats_onepeptide_use_zscore", "df_design", "stats_comp"), file="zztop")
   #. load(file="zztop");
   
   cat(file = stderr(), "Function create_stats_onepeptide_plots_bg...", "\n")

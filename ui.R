@@ -10,6 +10,7 @@ sidebar <- dashboardSidebar(width = 165,
                             sidebarMenu(
                               menuItem("Welcome", tabName = "welcome", selected = TRUE),
                               menuItemOutput("menu_load"),
+                              menuItemOutput("menu_load_customer"),
                               menuItemOutput("menu_parameters"),
                               menuItemOutput("menu_noise"),
                               menuItemOutput("menu_filter"),
@@ -19,6 +20,7 @@ sidebar <- dashboardSidebar(width = 165,
                               menuItemOutput("menu_qc"),
                               menuItemOutput("menu_stats"),
                               menuItemOutput("menu_pathway"),
+                              menuItemOutput("menu_phos"),
                               menuItemOutput("menu_admin")
                             )
 )
@@ -40,6 +42,49 @@ body <- dashboardBody(
               )
             )
     ),
+    
+    tabItem(tabName = "load_customer",
+            fluidRow(
+              column(width = 6, align = "center",   
+                     br(),
+                     br(),
+                     br(),
+                     br(),
+                     br(),
+                     br(),
+                     box(title = "Welcome", status = "primary", solidHeader = TRUE, collapsible = FALSE, align = "center", width = 12, height = 500,   
+                         br(),
+                         br(),
+                         br(),
+                         br(),
+                         br(),
+                         tags$h3("thanks for coming, blah blah blah"),
+                     )
+              ),
+              column(width = 6, align = "center",   
+                br(),
+                br(),
+                br(),
+                br(),
+                br(),
+                br(),
+                box(title = "Load database file", status = "primary", solidHeader = TRUE, collapsible = FALSE, align = "center", width = 12, height = 500,   
+                  br(),
+                  br(),
+                  br(),
+                  br(),
+                  br(),
+                  tags$h3("Select database file"),
+                 fluidRow(align = "center", shinyFilesButton('sfb_archive_customer_file', label = 'Select Archive/Zip File', title = 'Please select zip file', multiple = FALSE,
+                                                 style = "color: #fff; background-color: #337ab7; border-color: #2e6da4")),
+                 br(),
+                 span(textOutput("archive_file_name_customer"), style = "color:blue; font-size:16px")
+                )
+              )
+
+            )
+    ),
+    
     
     # Design 
     tabItem(tabName = "load",
@@ -147,7 +192,10 @@ body <- dashboardBody(
                                     span(textOutput("meta_parameters_precursor_phos_all"), style = "color:blue; font-size:16px"),
                                     span(textOutput("meta_parameters_precursor_phos_local"), style = "color:blue; font-size:16px"),
                                     span(textOutput("meta_parameters_precursor_phos_percent"), style = "color:blue; font-size:16px"),
-                                    span(textOutput("meta_parameters_precursor_phos_local_percent"), style = "color:blue; font-size:16px")
+                                    span(textOutput("meta_parameters_precursor_phos_local_percent"), style = "color:blue; font-size:16px"),
+                                    br(),
+                                    span(textOutput("meta_parameters_phos_site_unique_all"), style = "color:blue; font-size:16px"),
+                                    span(textOutput("meta_parameters_phos_site_unique_local"), style = "color:blue; font-size:16px")
                              )
                            )
                        )))
@@ -234,6 +282,9 @@ body <- dashboardBody(
                              column(width = 4, selectInput("filter_cv_group", label = "Group?", 
                                                            choices = list("SPQC"), selected = "SPQC")),
                              column(width = 4, numericInput("filter_cv_value", label = "Cutoff%?", value = 99))
+                           ),
+                           fluidRow(
+                             column(width = 12, checkboxInput("filter_ptm", label = "Keep only PTM?")),
                            ),
                            hr(),
                            fluidRow(
@@ -1025,28 +1076,6 @@ body <- dashboardBody(
 
 
 
-
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
     #-----
     tabItem("pathway_setup",
             fluidRow(
@@ -1318,6 +1347,168 @@ body <- dashboardBody(
             )
     ),
     
+
+
+
+    tabItem("phos_setup",
+      fluidRow(
+        box(id = "phos_fasta_setup", title = "Phos Database Parameters...", status = "primary",
+            solidHeader = TRUE, collapsible = FALSE, align = "left", width = 12, height = 150,
+            column(width =2, offset =0,
+              br(),
+              shinyFilesButton('motif_fasta_file', label='Select Motif-X FASTA', title='Please select fasta file to format for motif-x', multiple=FALSE,
+                                style="color: #fff; background-color: #337ab7; border-color: #2e6da4"),
+            ),
+            column(width =2, offset =0,
+              textInput("fasta_grep1", label = "Accession start...", value = ">sp\\|"),
+            ),
+            column(width =2, offset =0,
+              textInput("fasta_grep2", label = "Accession start...", value = "\\|[^.]*$"),
+            ),
+            column(width =2, offset =0,
+              br(),
+              actionButton("parse_fasta", label = "Format fasta", width = 150,
+                        style="color: #fff; background-color: #337ab7; border-color: #2e6da4")
+          ),
+            column(width =3, offset =0,
+                br(),
+                 textOutput("fasta_file_name"),
+                 tags$head(tags$style("#fasta{color: blue; font-size: 18px; font-style: bold;}"))
+          )
+          )
+        ), 
+        
+        fluidRow(
+          box(id = "phos_fasta_old", title = "Original Phos Database...", status = "primary",
+              solidHeader = TRUE, collapsible = FALSE, align = "left", width = 4, height = 600,
+              br(),
+              br(),
+              rHandsontableOutput("start_fasta_example")
+          ),
+          
+          box(id = "phos_fasta_new", title = "Formated Phos Database...", status = "primary",
+              solidHeader = TRUE, collapsible = FALSE, align = "left", width = 8, height = 600,
+              br(),
+              br(),
+              rHandsontableOutput("end_fasta_example")
+        )
+        )
+      ),
+
+
+
+    tabItem("phos_motif",
+      fluidRow(
+        column(width =2, offset =0,
+          fluidRow(
+              box(id = "phos_motif_setup", title = "Motif Parameters...", status = "primary",
+                    solidHeader = TRUE, collapsible = FALSE, align = "left", width = 12, height = 800,
+                  selectInput("select_data_comp_motif", label = "comparison", 
+                    choices = list("Choice 1" = 1, "Choice 2" = 2, "Choice 3" = 3), selected = 1, width = 150),
+                  numericInput("pval_motif", label="MotifX pval (x1e-5)", value =1, width = 150),
+                  numericInput("motif_min_seq", label="Min sequences", value =20, width = 150),
+                  textInput("protein_filter", label="Protein Accession Filter", value ="", width = 150),
+                  br(),
+                  br(),
+                  actionButton("motif_show", label = "Send to MotifX", width = 150,
+                               style="color: #fff; background-color: #337ab7; border-color: #2e6da4"),
+                  br(),
+                  br(),
+                  br(),
+                  textInput("motif_data_filename", label="File Name", value = "my_data.xlsx", width = 150),
+                  br(),
+                  br(),
+                  actionButton("motif_data_save", label = "Save Data", width = 150,
+                                style="color: #fff; background-color: #337ab7; border-color: #2e6da4"),
+                  br(),
+                  br(),
+                  br(),
+                  br(),
+                  downloadButton(label="Download Table", 'download_motif_table')
+                )
+                )
+              ),
+      
+      column(width =9, offset =0,
+        box(id = "phos_motif_table", title = "Motif Table...", status = "primary",
+            solidHeader = TRUE, collapsible = FALSE, align = "left", width = 12, height = 800,
+          hr(),
+          tags$head(tags$style("#data_final{color: blue;
+             font-size: 12px;
+             }")),
+          DT::dataTableOutput("motif_table", width ='100%')
+        )
+      )
+      )
+    ),           
+
+tabItem("phos_momo",
+        fluidRow(
+          column(width =4, offset =0,
+                 fluidRow(
+                   box(id = "phos_momo", title = "MoMo Parameters...", status = "primary",
+                       solidHeader = TRUE, collapsible = FALSE, align = "left", width = 12, height = 800,
+                       br(),
+                       br(),
+                       br(),
+                       selectInput("select_data_comp_momo", label = "comparison", 
+                                   choices = list("Choice 1" = 1, "Choice 2" = 2, "Choice 3" = 3), selected = 1, width = 150),
+                       br(),
+                       br(),
+                       br(),
+                       radioButtons("momo_direction", label="Fold Change Direction", choices = list("Up", "Down", "UpDown"),  selected = "Up", width = 200),
+                       br(),
+                       br(),
+                       br(),
+                       actionButton("momo_create", label = "Create Files", width = 150,
+                                    style="color: #fff; background-color: #337ab7; border-color: #2e6da4"),
+                       br(),
+                       br(),
+                       br(),
+                       br(),
+                       br(),
+                       downloadButton(label="Download MOMO ptm_file", 'download_momo_file1'),
+                       br(),
+                       br(),
+                       br(),
+                       downloadButton(label="Download MOMO context file", 'download_momo_file2'),
+
+    
+                   )
+                 )
+          ),
+          column(width =8, offset =0,
+                 fluidRow(
+                   box(id = "phos_momo", title = "MoMo Directions...", status = "primary",
+                       solidHeader = TRUE, collapsible = FALSE, align = "left", width = 12, height = 800,
+                       h1("MEME Suite", style = "font-size:50px"),
+                       br(),
+                       h1("Step1", style = "font-size:20px"),
+                       h1("On the left panel pick the comparison and the fold change direction.", style = "font-size:15px"),
+                       h1("Click create files.", style = "font-size:15px"),
+                       h1("Download files.", style = "font-size:15px"),
+                       h1("The ptm_file and context files for MOMO will be saved to your Downloads folder.", style = "font-size:15px"),
+                       br(),
+                       h1("Step2", style = "font-size:20px"),
+                       h1("Click on the link below to open the MEME Suite: MOMO", style = "font-size:15px"),
+                       h4("Link: ", a(target="_blank", "meme-suite.org/meme/tools/momo",  href = "https://meme-suite.org/meme/tools/momo"), style = "font-size:15px"),
+                       br(),
+                       h1("Step3", style = "font-size:20px"),
+                       h1("Upload the ptm_file and context file (or use built in context)", style = "font-size:15px"),
+                       h1("Under advanced change the sequence length to 15 (2 places)", style = "font-size:15px"),
+                       h1("Start search", style = "font-size:15px"),
+                       h1("For more detailed instructions please see the website instructions", style = "font-size:15px")
+                 )
+              )
+        )
+          
+      )
+    ), 
+
+
+
+
+
     tabItem(tabName = "admin",
             fluidRow(
               column(width = 12, align = "center",

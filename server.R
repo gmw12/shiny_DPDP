@@ -151,10 +151,66 @@ shinyServer(function(session, input, output) {
       create_stats_design_table(session, input, output)
       if (table_exists("summary_cv"))  {create_cv_table(session, input, output, params)}
       
+      #load menu
+      load_menu(session, input, output)
+      
       cat(file = stderr(), "\n\n","sfb_archive_file button clicked...end", "\n")
     }
     
   }) 
+  
+  #------------------------------------------------------------------------------------------------------  
+  #Load data file
+  observeEvent(input$sfb_archive_customer_file, {
+    
+    cat(file = stderr(), "\n\n","sfb_archive_customer_file button clicked...", "\n")
+    
+    if (is.list(input$sfb_archive_customer_file)) {
+      cat(file = stderr(), "\n\n","sfb_archive_customer_file button clicked...1", "\n")
+      
+      #copy zip file contents to database dir, load params
+      archive_name <- load_archive_file(session, input, output)
+      
+      output$archive_file_name_customer <- renderText({archive_name})
+      
+      #update UI
+      ui_render_load_data(session, input, output)
+      ui_render_load_design(session, input, output)
+      app_startup(session, input, output)
+      set_comp_names(session, input,output)
+      create_design_table(session, input, output)
+      create_stats_design_table(session, input, output)
+      if (table_exists("summary_cv"))  {create_cv_table(session, input, output, params)}
+      
+      #load menu
+      load_menu(session, input, output)
+      
+      cat(file = stderr(), "\n\n","sfb_archive_customer_file button clicked...end", "\n")
+    }
+    
+  }) 
+  #------------------------------------------------------------------------------------------------------  
+  #Load data file
+  observeEvent(input$motif_fasta_file, {
+    
+    cat(file = stderr(), "\n\n","motif_fasta_file button clicked...", "\n")
+    
+    if (is.list(input$motif_fasta_file)) {
+      cat(file = stderr(), "\n\n","motif_fasta_file button clicked...1", "\n")
+      
+      
+      output$fasta_file_name <- renderText({
+        if (req(typeof(input$motif_fasta_file)=="list")) {
+          motif_path <- parseFilePaths(volumes, input$motif_fasta_file)
+          basename(motif_path$datapath)
+        }
+      })
+      
+      cat(file = stderr(), "\n\n","motif_fasta_file button clicked...end", "\n")
+    }
+    
+  }) 
+  
 #------------------------------------------------------------------------------------------------------  
 #accept parameters
  observeEvent(input$accept_parameters, {
@@ -174,7 +230,7 @@ shinyServer(function(session, input, output) {
 
    if (params$raw_data_format != "protein") {
      # gather info on raw data for ui
-     meta_data("start")
+     meta_data("start", params)
      
      # create graphs
      parameter_create_plots(sesion, input, output, params)
@@ -317,7 +373,7 @@ shinyServer(function(session, input, output) {
     impute_apply(session, input, output)
     
     #rollup/sum to peptide if PTM analysis (skipping rollup menuItem)
-    if(params$ptm) {
+    if(params$data_output == "Peptide") {
       rollup_apply(session, input, output, params)
       #start qc stats
       qc_stats(session, input, output, params)
@@ -645,6 +701,48 @@ shinyServer(function(session, input, output) {
     
     cat(file = stderr(), "string_enrich_data_save clicked...end" , "\n")
   })
+  
+  
+  #-------------------------------------------------------------------------------------------------------------  
+  observeEvent(input$parse_fasta, { 
+    cat(file = stderr(), "parse_fasta clicked..." , "\n")
+    source("Shiny_MotifX.R")
+    
+    create_phos_database(session, input, output, params)
+    
+    cat(file = stderr(), "parse_fasta clicked...end" , "\n")
+  })
+  
+  #-------------------------------------------------------------------------------------------------------------
+  observeEvent(input$motif_show, {
+    cat(file = stderr(), "motif_show clicked..." , "\n")
+    
+    source("Shiny_MotifX.R")
+    run_motifx(session, input, output, params)
+    
+    cat(file = stderr(), "motif_show clicked...end" , "\n")
+  })
+  
+  #-------------------------------------------------------------------------------------------------------------  
+  observeEvent(input$motif_data_save, { 
+    cat(file = stderr(), "motif_data_save clicked..." , "\n")
+    
+    motif_data_save_excel(session, input, output, params)
+    
+    cat(file = stderr(), "motif_data_save clicked...end" , "\n\n")
+  })
+  
+  #-------------------------------------------------------------------------------------------------------------
+  observeEvent(input$momo_create, {
+    cat(file = stderr(), "momo_create clicked..." , "\n")
+    
+    source("Shiny_MoMo.R")
+    run_momo(session, input, output, params)
+    
+    cat(file = stderr(), "momo_create clicked...end" , "\n")
+  })
+  
+  
   
   #-------------------------------------------------------------------------------------------------------------  
   observeEvent(input$archive_data, { 

@@ -6,11 +6,17 @@ load_archive_file <- function(session, input, output){
   cat(file = stderr(), "Function load_archive_file...", "\n")
   showModal(modalDialog("Loading archive file...", footer = NULL))
   
-  archive_sfb <- parseFilePaths(volumes, input$sfb_archive_file)
+  if(site_user == "dpmsr") {
+    archive_sfb <- parseFilePaths(volumes, input$sfb_archive_file)
+  }else{
+    archive_sfb <- parseFilePaths(volumes, input$sfb_archive_customer_file)
+  }
+  
   #save(archive_sfb, file = "testarchive_sfb")
   # load(file = "testarchive_sfb")
   
   archive_path <- str_extract(archive_sfb$datapath, "^/.*/")
+  cat(file = stderr(), stringr::str_c("archive_path --->", archive_path), "\n")
   archive_zip <- archive_sfb$datapath
   
   archive_name <- basename(archive_sfb$datapath)
@@ -30,6 +36,7 @@ load_archive_file <- function(session, input, output){
   }
   
   database_path <- stringr::str_c(database_dir, "/", file_name)
+  
   #load params file
   if (file.exists(stringr::str_c(database_dir, "/params"))){
     load(file=stringr::str_c(database_dir, "/params"))
@@ -42,7 +49,11 @@ load_archive_file <- function(session, input, output){
   params$database_dir <- database_dir
   params$database_path <- stringr::str_c(database_dir, "/", file_name)
   
+  #check params dir's and update if needed
+  params <- archive_update_app(session, input, output, params, archive_path)
+  
   params <<- params
+
   removeModal()
   cat(file = stderr(), "Function load_archive_file...end", "\n")
   return(archive_zip)
@@ -88,7 +99,7 @@ load_unknown_data_bg <- function(data_sfb, params){
   source('Shiny_File.R')
   
   df <- data.table::fread(file = data_sfb$datapath, header = TRUE, stringsAsFactors = FALSE, sep = "\t", fill=TRUE)
-  #load(file="df")
+  #save(df, file="zdfloadunknowndata")    #  load(file="zdfloadunknowndata") 
   
   if ("EG.PrecursorId" %in% names(df)) {
     cat(file = stderr(), "Spectronaut data, precursor...", "\n")
@@ -119,6 +130,26 @@ load_unknown_data_bg <- function(data_sfb, params){
     params$data_table_format <- "short"
     
     write_table_try("protein_raw", df, params)
+  }else if ("Annotated.Sequence" %in% names(df)) {
+    cat(file = stderr(), "PD data...", "\n")
+    if ("PSM.Ambiguity" %in% names(df)) {
+      
+      params$data_source <- "PD"
+      params$raw_data_format <- "precursor"
+      params$data_table_format <- "short"
+      params$ptm <- FALSE
+      params$data_output <- "Protein"
+      
+      peptide_file <- gsub("PSMs", "PeptideGroups", data_sfb$datapath)
+      df_peptide <- data.table::fread(file = peptide_file, header = TRUE, stringsAsFactors = FALSE, sep = "\t", fill=TRUE)
+      df_peptide <- df_peptide |> dplyr::select("Master.Protein.Accessions", "Sequence", "Positions.in.Master.Proteins")
+      colnames(df_peptide) <- c("Accession", "Sequence", "Position")    
+      
+      write_table_try("precursor_raw", df, params)
+      write_table_try("peptide_raw", df_peptide,params)
+    }else{
+      cat(file = stderr(), "PD data, still a mystery...", "\n")
+    }
   }else{
     cat(file = stderr(), "Spectronaut data, still a mystery...", "\n")
   }
@@ -263,7 +294,7 @@ load_PD_data <- function(data_sfb){
 
 
 #--------------------------------------------------------
-meta_data <- function(table_string){
+meta_data <- function(table_string, params){
   cat(file = stderr(), "Function meta_data...", "\n")
   showModal(modalDialog("Gathering meta data...", footer = NULL))
   
@@ -283,11 +314,11 @@ meta_data <- function(table_string){
 #--------------------------------------------------------
 meta_data_bg <- function(table_name, data_format, params){
   cat(file = stderr(), "Function meta_data bg...", "\n")
+  source('Shiny_File.R')
   
   #. table_name <- "precursor_start"; data_format <- "start"
   
-  conn <- RSQLite::dbConnect(RSQLite::SQLite(), params$database_path)
-  df <- RSQLite::dbReadTable(conn, table_name)
+  df <- read_table_try(table_name, params)
   
   precursor_name <- stringr::str_c("meta_precursor_", data_format)
   peptide_name <- stringr::str_c("meta_peptide_", data_format)
@@ -319,10 +350,39 @@ meta_data_bg <- function(table_name, data_format, params){
 
     params$ptm_enrich <- round(sum(df_phos, na.rm = TRUE) / (sum(df_other, na.rm = TRUE) + sum(df_phos, na.rm = TRUE)), 2)
     params$ptm_enrich_local <- round(sum(df_phos_local, na.rm = TRUE) / (sum(df_other, na.rm = TRUE) + sum(df_phos, na.rm = TRUE)), 2)
+    
+    #--calc indiv phos sites
+    
+    # save(df, file = "zz999b")  #  load(file = "zz999b")
+    
+    test_df <- df[phos_which,] |> dplyr::select(contains(c('Accession', 'Genes', 'Local', 'Protein_PTM_Loc')))
+    test_df$Local2 <- NULL
+    test_df$Accession <- gsub(";.*$", "", test_df$Accession)
+    test_df$Genes <- gsub(";.*$", "", test_df$Genes)
+    test_df$Local <- gsub(";.*$", "", test_df$Local)
+    test_df$Protein_PTM_Loc <- gsub(";.*$", "", test_df$Protein_PTM_Loc)
+    
+    find_mult <- which(grepl(",", df$Protein_PTM_Loc))
+    new_df <- test_df[-find_mult,]
+    new_df$Phos_ID <- paste(new_df$Accession, "_", new_df$Genes, "_", new_df$Protein_PTM_Loc, sep = "")
+    
+    for(r in find_mult) {
+      sites <- unlist(stringr::str_split(test_df$Protein_PTM_Loc[r], ","))
+      site_local <- unlist(stringr::str_split(test_df$Local[r], ","))
+      for (i in (1:length(sites))){
+        new_df <- rbind(new_df, c(test_df$Accession[r], test_df$Genes[r], site_local[i], test_df$Protein_PTM_Loc[r], 
+                                  paste(test_df$Accession[r], "_", test_df$Genes[r], "_", sites[i], sep = "")))
+      }
+    }
+    
+    params$phos_site_unique_all <- length(unique(new_df$Phos_ID))
+    params$phos_site_unique_local <- length(unique(new_df[new_df$Local > params$ptm_local,]$Phos_ID))
+    
+    write_table_try("phos_sites", new_df, params)
+    
   }
   
-  RSQLite::dbWriteTable(conn, "params", params, overwrite = TRUE)
-  RSQLite::dbDisconnect(conn)
+  write_table_try("params", params, params)
   
   cat(file = stderr(), "Function meta_data bg...end", "\n\n")
   
@@ -516,8 +576,14 @@ prepare_data <- function(session, input, output, params) {  #function(data_type,
     bg_precursor_to_precursor_ptm$wait()
     print_stderr("error_preparedata.txt")
     params$current_data_format <- "precursor"
-  }else if (params$raw_data_format == "fragment") {
+  }else if (params$raw_data_format == "precursor" & params$data_output == "Protein" & params$data_source == "PD") {
     cat(file = stderr(), "prepare data_type 6", "\n")
+    bg_precursor_to_precursor_PD <- callr::r_bg(func = precursor_to_precursor_PD_bg, args = list(params), stderr = str_c(params$error_path, "//error_preparedata.txt"), supervise = TRUE)
+    bg_precursor_to_precursor_PD$wait()
+    print_stderr("error_preparedata.txt")
+    params$current_data_format <- "precursor"
+  }else if (params$raw_data_format == "fragment") {
+    cat(file = stderr(), "prepare data_type 7", "\n")
     peptide_to_peptide()
     params$current_data_format <- "fragment"
   }else{
@@ -535,6 +601,51 @@ prepare_data <- function(session, input, output, params) {  #function(data_type,
   removeModal()
 }
 
+
+#----------------------------------------------------------------------------------------
+precursor_to_precursor_PD_bg <- function(params){
+  cat(file = stderr(), "Function precursor_to_precursor_PD_bg", "\n")
+  source("Shiny_Rollup.R")
+  source("Shiny_File.R")
+  #  load(file="zdfloadunknowndata")
+  
+  df <- read_table_try("precursor_raw", params)
+  
+  df_colnames <- c("Accession", "Description", "Sequence", "Modifications", "PrecursorId")  
+  n_col <- length(df_colnames)
+  
+  df <- df |> dplyr::select(contains('Master.Protein.Accessions'), contains('Master.Protein.Descriptions'), 'Sequence', contains('Modifications'), 'Charge', contains("Abundance."))
+  
+  colnames(df)[1:n_col] <- df_colnames 
+  
+  #add Name column
+  add_name <- gsub(".*OS=(.+)[OG].*", "\\1", df$Description)
+  add_name <- gsub(" OX.+$", "", add_name)
+  add_name <- trimws(add_name, which=c("right"))
+  df <- df |> tibble::add_column(Name = add_name, .before = "Sequence")
+  n_col <- n_col + 1
+  
+  #add Gene column
+  add_gene <- stringr::str_extract(df$Description, "GN=\\w*")
+  add_gene <- gsub("GN=", "", add_gene)
+  df <- df |> tibble::add_column(Genes = add_gene, .before = "Sequence")
+  n_col <- n_col + 1
+  
+  #create Precusor.ID
+  df$PrecursorId <- paste(df$Sequence, ".", df$PrecursorId, sep = "")
+  
+  if (ncol(df) != (n_col + params$sample_number))
+  {
+    cat(file = stderr(), "Number of columns extracted is not as expected", "\n")
+  }
+  
+  
+  df[(n_col + 1):ncol(df)] <- as.data.frame(lapply(df[(n_col + 1):ncol(df)], as.numeric))
+  
+  write_table_try("precursor_start", df, params)
+  
+  cat(file = stderr(), "precursor_to_precursor_PD_bg complete", "\n\n")
+}
 
 #----------------------------------------------------------------------------------------
 precursor_to_precursor_bg <- function(params){
@@ -562,6 +673,7 @@ precursor_to_precursor_bg <- function(params){
   
   # set "Filtered" in TotalQuantity to NA
   df[df ==  "Filtered"] <- NA
+  df[df ==  0] <- NA
   df[(n_col + 1):ncol(df)] <- as.data.frame(lapply(df[(n_col + 1):ncol(df)], as.numeric))
   
   df$Description <- stringr::str_c(df$Description, ", org=", df$Organisms) 
@@ -572,7 +684,6 @@ precursor_to_precursor_bg <- function(params){
   
   cat(file = stderr(), "precursor_to_precursor_bg complete", "\n\n")
 }
-
 
 #----------------------------------------------------------------------------------------
 precursor_to_precursor_ptm_bg <- function(params){
@@ -602,6 +713,7 @@ precursor_to_precursor_ptm_bg <- function(params){
   
   # set "Filtered" in TotalQuantity to NA
   df[df ==  "Filtered"] <- NA
+  df[df ==  0] <- NA
   df[(n_col + 1):ncol(df)] <- as.data.frame(lapply(df[(n_col + 1):ncol(df)], as.numeric))
   
   df$Description <- stringr::str_c(df$Description, ", org=", df$Organisms) 
@@ -612,10 +724,14 @@ precursor_to_precursor_ptm_bg <- function(params){
   df_phos_prob <- df_phos_prob[phos_which,]
   df_other <- df[-phos_which,]
   
-  local_df <- data.frame(localize_summary(df_phos, df_phos_prob, params))
+  local_df <- data.frame(localize_summary(df_phos, df_phos_prob))
+  df_phos <- tibble::add_column(df_phos, "Protein_PTM_Loc" = local_df$Protein_PTM_Loc, .after="PrecursorId")
+  df_phos <- tibble::add_column(df_phos, "PTM_Loc" = local_df$PTM_Loc, .after="PrecursorId")
   df_phos <- tibble::add_column(df_phos, "Local2" = local_df$Local2, .after="PrecursorId")
   df_phos <- tibble::add_column(df_phos, "Local" = local_df$Local, .after="PrecursorId")
 
+  df_other <- tibble::add_column(df_other, "Protein_PTM_Loc"= "" , .after="PrecursorId")
+  df_other <- tibble::add_column(df_other, "PTM_Loc" = "", .after="PrecursorId")
   df_other <- tibble::add_column(df_other, "Local2"= "" , .after="PrecursorId")
   df_other <- tibble::add_column(df_other, "Local" = "", .after="PrecursorId")
   
@@ -628,9 +744,9 @@ precursor_to_precursor_ptm_bg <- function(params){
 }
 
 #----------------------------------------------------------------------------------------
-localize_summary <- function(df_phos, df_phos_prob, params){
+localize_summary <- function(df_phos, df_phos_prob){
   cat(file = stderr(), "Function localize_summary...", "\n")
-
+  
   require(foreach)
   require(doParallel)
   cores <- detectCores()
@@ -653,7 +769,68 @@ localize_summary <- function(df_phos, df_phos_prob, params){
   df_local$phos_seq <- gsub("\\[.*?\\]", "", df_local$phos_seq)
   df_local$phos_seq <- gsub("[^STY*]", "", df_local$phos_seq)
   
-
+  
+  #new step
+  df_local$ModSequence2 <- df_local$ModSequence
+  df_local$ModSequence2 <- gsub("S\\[Phospho \\(STY\\)\\]", "s", df_local$ModSequence2)
+  df_local$ModSequence2 <- gsub("T\\[Phospho \\(STY\\)\\]", "t", df_local$ModSequence2)
+  df_local$ModSequence2 <- gsub("Y\\[Phospho \\(STY\\)\\]", "y", df_local$ModSequence2)
+  df_local$ModSequence2 <- gsub("\\[.*?\\]", "", df_local$ModSequence2)
+  df_local$ModSequence2 <- gsub("_", "", df_local$ModSequence2)
+  df_local$ModSequence2 <- gsub("\\[.*?\\]", "", df_local$ModSequence2)
+  df_local$ModSequence2 <- gsub("_", "", df_local$ModSequence2)
+  
+  
+  #new step
+  df_local$PTM_Loc <- ""
+  
+  for (r in (1:nrow(df_local))) {
+    find_s <- unlist(stringr::str_locate_all(df_local$ModSequence2[r], "s"))
+    find_t <- unlist(stringr::str_locate_all(df_local$ModSequence2[r], "t"))
+    find_y <- unlist(stringr::str_locate_all(df_local$ModSequence2[r], "y"))
+    
+    
+    if (length(find_s) > 0) {
+      find_s <- unlist(stringr::str_split(paste("S", find_s, collapse = " ", sep = ""), pattern=" "))
+      find_s <- find_s[1:(length(find_s)/2)]
+    }else{
+      find_s <- ""
+    }
+    
+    
+    if (length(find_t) > 0) {
+      find_t <- unlist(stringr::str_split(paste("T", find_t, collapse = " ", sep = ""), pattern=" "))
+      find_t <- find_t[1:(length(find_t)/2)]
+    }else{
+      find_t <- ""
+    }
+    
+    if (length(find_y) > 0) {
+      find_y <- unlist(stringr::str_split(paste("Y", find_y, collapse = " ", sep = ""), pattern=" "))
+      find_y <- find_y[1:(length(find_y)/2)]
+    }else{
+      find_y <- ""
+    }
+    
+    final_all <- c(find_s, find_t, find_y)
+    final_all <- final_all[final_all != ""]
+    final_all <- paste(final_all, collapse = ",", sep = ",")
+    df_local$PTM_Loc[r] <- final_all  
+  }
+  
+  
+  #new step
+  df_local$Protein_PTM_Loc <- gsub("([CM][0-9]+)", "", df_local$ProteinPTMLocations) 
+  df_local$Protein_PTM_Loc <- gsub("\\(,", "\\(",  df_local$Protein_PTM_Loc) 
+  df_local$Protein_PTM_Loc <- gsub("\\),", "\\)",  df_local$Protein_PTM_Loc) 
+  df_local$Protein_PTM_Loc <- gsub(",\\(", "\\(",  df_local$Protein_PTM_Loc) 
+  df_local$Protein_PTM_Loc <- gsub(",\\)", "\\)",  df_local$Protein_PTM_Loc) 
+  df_local$Protein_PTM_Loc <- gsub("\\(", "",  df_local$Protein_PTM_Loc)  
+  df_local$Protein_PTM_Loc <- gsub("\\)", "",  df_local$Protein_PTM_Loc)  
+  df_local$Protein_PTM_Loc <- gsub(",,,,", ",",  df_local$Protein_PTM_Loc)  
+  df_local$Protein_PTM_Loc <- gsub(",,,", ",",  df_local$Protein_PTM_Loc) 
+  df_local$Protein_PTM_Loc <- gsub(",,", ",",  df_local$Protein_PTM_Loc)  
+  
   # determines residue location for phos on sequence reduced to STY
   parallel_result1 <- foreach(r = 1:nrow(df_local), .combine = c) %dopar% {
     phos_count <- stringr::str_count(df_local$phos_seq[r], "\\*")
@@ -691,7 +868,7 @@ localize_summary <- function(df_phos, df_phos_prob, params){
   
   df_local$pr <- parallel_result2
   
-
+  #mark as localized or not
   parallel_result3 <- foreach(r = 1:nrow(df_local), .combine = rbind) %dopar% {
     prob <- unlist(df_local$pr[r])
     residue <- unlist(df_local$phos_res[r])
@@ -699,8 +876,8 @@ localize_summary <- function(df_phos, df_phos_prob, params){
     for (c in length(residue)) {
       local <- c(local, prob[residue]) 
     }
-    if (max(local) >= params$ptm_local) {
-      if (min(local) >= params$ptm_local) {
+    if (max(local) >= 0.75) {
+      if (min(local) >= 0.75) {
         local2 <- "Y"
       } else {
         local2 <- "P"
@@ -725,6 +902,9 @@ localize_summary <- function(df_phos, df_phos_prob, params){
   
   parallel_result3$Local <- apply(parallel_result3, 1, numlist_to_string)
   parallel_result3$Local2 <- apply(parallel_result3, 1, numlist_to_string2)
+  
+  parallel_result3$Protein_PTM_Loc <- df_local$Protein_PTM_Loc
+  parallel_result3$PTM_Loc <-  df_local$PTM_Loc
   
   stopCluster(cl) 
   cat(file = stderr(), "Function localize_summary...end", "\n")
@@ -790,6 +970,7 @@ sp_protein_to_protein_bg <- function(params){
   
   # set "Filtered" in TotalQuantity to NA
   df[df ==  "Filtered"] <- NA
+  df[df ==  0] <- NA
   df[(n_col + 1):ncol(df)] <- as.data.frame(lapply(df[(n_col + 1):ncol(df)], as.numeric))
   
   df$Description <- stringr::str_c(df$Description, ", org=", df$Organisms) 
@@ -1066,7 +1247,7 @@ check_sample_id <- function(df, design, params) {
   for (i in 1:length(sample_ids)) {
     confirm_id <- grepl(sample_ids[i], test_data[i])
     if (!confirm_id) {
-      cat(file = stderr(), str_c("count=", i, "  ", sample_ids[i], " vs ", test_data[i]), "\n")
+      cat(file = stderr(), stringr::str_c("count=", i, "  ", sample_ids[i], " vs ", test_data[i]), "\n")
       Sample_ID_alert <- TRUE
       #shinyalert("Oops!", "Sample ID order does not match sample list!", type = "error")
     }

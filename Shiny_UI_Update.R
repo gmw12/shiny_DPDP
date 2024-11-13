@@ -57,6 +57,9 @@ ui_render_parameters <- function(session, input, output) {
     output$meta_parameters_precursor_phos_percent <- renderText({str_c('Phos Enrich:  ', params$ptm_enrich)})
     output$meta_parameters_precursor_phos_local_percent <- renderText({str_c('Phos Local Enrich:  ', params$ptm_enrich_local )}) 
     
+    output$meta_parameters_phos_site_unique_all <- renderText({str_c('Phos Total Sites:  ', params$phos_site_unique_all )}) 
+    output$meta_parameters_phos_site_unique_local <- renderText({str_c('Phos Local Sites:  ', params$phos_site_unique_local )}) 
+    
     cat(file = stderr(), "Function ui_render_parameters...end", "\n")
 }
 
@@ -274,6 +277,7 @@ update_widgets <- function(session, input, output, params) {
     updateCheckboxInput(session, 'filter_cv', value = params$filter_cv) 
     updateSelectInput(session, 'filter_cv_group', selected = params$filter_cv_group)
     updateNumericInput(session, 'filter_cv_value', value = params$filter_cv_value)
+    updateCheckboxInput(session, 'ptm_filter', value = params$ptm_filter) 
     updateCheckboxInput(session, 'checkbox_misaligned', value = params$checkbox_misaligned) 
     updateNumericInput(session, 'misaligned_cutoff', value = params$misaligned_cutoff)
     updateNumericInput(session, 'intensity_cutoff_sd', value = params$intensity_cutoff_sd)
@@ -404,6 +408,8 @@ update_widgets_stats <- function(session, input, output, params){
     updateSelectInput(session, "select_go_data_comp", choices = stats_comp_choices)
     updateSelectInput(session, "select_data_comp_string", choices = stats_comp_choices)
     updateSelectInput(session, "select_data_comp_string_enrich", choices = stats_comp_choices)
+    updateSelectInput(session, "select_data_comp_motif", choices = stats_comp_choices)
+    updateSelectInput(session, "select_data_comp_momo", choices = stats_comp_choices)
   }
   
   cat(file = stderr(), "Function - update_widget_stats...end", "\n") 
@@ -442,7 +448,7 @@ noise_widget_save <- function(session, input, output){
 filter_widget_save <- function(session, input, output){
   cat(file = stderr(), "Function - parameter_widget_save...", "\n")
   
-  names <- c('filter_min_measured_all', 'filter_x_percent', 'filter_x_percent_value', 'filter_cv', 'filter_cv_group', 'filter_cv_value',
+  names <- c('filter_min_measured_all', 'filter_x_percent', 'filter_x_percent_value', 'filter_cv', 'filter_cv_group', 'filter_cv_value', 'filter_ptm',
              "checkbox_misaligned", "misaligned_cutoff", "misaligned_target", "intensity_cutoff_sd", "precursor_quality", "precursor_quality_sd",
              "precursor_quality_intensity", "precursor_quality_min", "precursor_spqc_ratio", "precursor_spqc_intensity", "precursor_spqc_accuracy")
   

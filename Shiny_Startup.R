@@ -46,8 +46,12 @@ set_user <- function() {
       volumes <<- c(dd = '/data', wd = '.', Home = fs::path_home(), getVolumes()())
       site_user <<- "not_dpmsr"
       database_dir <<- "/data/database"
+      python_path <<- "/usr/bin/python3"
     }
   }
+  
+  #testing shiny
+  #site_user <<- "not_dpmsr"
   
   cat(file = stderr(), str_c("site_user set to -->  ", site_user), "\n")
   cat(file = stderr(), str_c("volumes --> ", volumes), "\n")
@@ -116,6 +120,7 @@ create_default_params <- function(volumes, python_path) {
     "filter_cv" = FALSE,
     "filter_cv_group" = "SPQC",
     "filter_cv_value" = 99,
+    "filter_ptm" = FALSE,
     "info_col_precursor" = 0,
     "info_col_peptide" = 0,
     "info_col_protein" = 0,
@@ -170,8 +175,11 @@ set_file_choosers <- function(session, input, output, volumes) {
   cat(file = stderr(), stringr::str_c("Volumes ---> ", volumes), "\n")
   
   shinyFileChoose(input, 'sfb_design_file', session = session, roots = volumes, filetypes = c('', 'xlsx'))
-  #shinyFileChoose(input, 'sfb_data_file', session = session, roots = volumes, filetypes = c('', 'tsv', 'txt'))
+
   shinyFileChoose(input, 'sfb_archive_file', session = session, roots = volumes, filetypes = c('', 'zip'))
+  shinyFileChoose(input, 'sfb_archive_customer_file', session = session, roots = volumes, filetypes = c('', 'zip'))
+  
+  shinyFileChoose(input, 'motif_fasta_file', session = session, roots = volumes, filetypes = c('', 'fasta'))
   
   cat(file = stderr(), "Function - set_file_choosers...end", "\n\n")
 }
@@ -184,6 +192,8 @@ set_file_choosers_data <- function(session, input, output, volumes) {
   cat(file = stderr(), stringr::str_c("Volumes ---> ", volumes), "\n")
   
   shinyFileChoose(input, 'sfb_data_file', session = session, roots = volumes, filetypes = c('', 'tsv', 'txt'))
+  
+  shinyFileChoose(input, 'motif_fasta_file', session = session, roots = volumes, filetypes = c('', 'fasta'))
   
   cat(file = stderr(), "Function - set_file_choosers_reset...end", "\n")
 }
@@ -238,6 +248,70 @@ app_startup <- function(session, input, output) {
   
   cat(file = stderr(), "Function - app_startup...end", "\n\n")
 }
+
+#--------------------------------------------------------------
+archive_update_app <- function(session, input, output, params, archive_path){
+  cat(file = stderr(), "Function update_dirs...", "\n")
+  
+  if(fs::is_dir(params$design_path)) {
+    cat(file = stderr(), "Current params dir structure is valid...", "\n")
+  }else {
+    cat(file = stderr(), stringr::str_c("Updating params dir structure... archive_path = ", archive_path), "\n")
+    test <- unlist(str_split(params$design_path, "/"))
+    test <- test[nzchar(test)]
+    test <- test[length(test)]
+    
+    params$design_path <- stringr::str_c(archive_path, test, "/")
+    params$data_path <- stringr::str_c(params$design_path, params$file_prefix, "/")
+    params$backup_path <- stringr::str_c(params$design_path, "Backup/")
+    params$extra_path <- stringr::str_c(params$design_path, "Extra/")
+    params$error_path <- stringr::str_c(params$design_path, "Error/")
+    params$qc_path <- stringr::str_c(params$design_path, "QC/")
+    params$string_path <- stringr::str_c(params$design_path, "String/")
+    params$phos_path <- stringr::str_c(params$design_path, "Phos/") 
+    params$app_path <- stringr::str_c(params$design_path, "Backup//App/") 
+    
+    path_list <- c(params$design_path, params$data_path, params$backup_path, params$extra_path, params$error_path, params$qc_path, params$string_path, params$phos_path, params$app_path)
+    
+    for (path in path_list) {
+      if (site_user == "dmpsr") {
+        create_dir(path)
+      }else{
+        create_dir_only(path)
+      }
+    }
+
+    params <<- params
+    
+    #only update if DPMSR, customer does not have accesses 
+    if (site_user == "dpmsr") {
+      #update plots
+      if (params$raw_data_format != "protein") {
+        parameter_create_plots(sesion, input, output, params)
+        filter_histogram_plot(sesion, input, output, params, "precursor_start", "Precursor_Start_Histogram")
+        render_noise_graphs(session, input, output)
+        filter_histogram_plot(sesion, input, output, params, "precursor_noise", "Precursor_NoiseFiltered_Histogram")
+        filter_create_plots(sesion, input, output, params)
+      }
+      
+      ui_render_parameters(session, input, output)
+      render_norm_graphs(session, input, output)
+      render_norm_apply_graphs(session, input, output)
+      impute_meta_data()
+      impute_create_plots(session, input, output, params)
+      render_impute_graphs(session, input, output)
+      qc_stats(session, input, output, params)
+      render_qc_graphs(session, input, output)
+      
+    }
+  }
+  
+  cat(file = stderr(), "Function update_dirs...end", "\n")
+  return(params)
+}
+
+
+
 
 #-------------------------------------------------------------------
 named_list <- function(input_string) {
