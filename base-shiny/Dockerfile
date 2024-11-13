@@ -12,8 +12,8 @@ RUN apt-get update && apt-get install -y \
 #Run apt install -y python3.8
 #RUN pip install directlfq
 
-ADD ./Shiny_install.R /code/Shiny_install.R
-RUN Rscript /code/Shiny_install.R
+ADD ./Shiny_Install.R /code/Shiny_Install.R
+RUN Rscript /code/Shiny_Install.R
 
 COPY base-shiny/shiny-server.conf /etc/shiny-server/shiny-server.conf
 RUN chown -R shiny /var/lib/shiny-server/
