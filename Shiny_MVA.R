@@ -420,6 +420,9 @@ create_stats_data_table_bg <- function(input_stats_norm_type, input_stats_select
     data_name <- stringr::str_c("peptide_impute_", input_stats_norm_type, "_", input_stats_select_data_comp, "_final")
   }
   
+  #remove whitespace from name, space still there for imputed data
+  data_name <- gsub(" ", "", data_name)
+  
   cat(file = stderr(), stringr::str_c("data_name --> ", data_name), "\n")
   
   stats_comp <- read_table_try("stats_comp", params)
