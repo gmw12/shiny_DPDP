@@ -75,10 +75,17 @@ body <- dashboardBody(
                   br(),
                   br(),
                   tags$h3("Select database file"),
-                 fluidRow(align = "center", shinyFilesButton('sfb_archive_customer_file', label = 'Select Archive/Zip File', title = 'Please select zip file', multiple = FALSE,
-                                                 style = "color: #fff; background-color: #337ab7; border-color: #2e6da4")),
+                 fluidRow(align = "center", 
+                          #shinyFilesButton('sfb_archive_customer_file', label = 'Select Archive/Zip File', title = 'Please select zip file', multiple = FALSE,
+                          #                       style = "color: #fff; background-color: #337ab7; border-color: #2e6da4")
+                          fileInput("sfb_archive_customer_file", "Please select zip file",
+                                    multiple = FALSE, width=300,
+                                    accept = c(".dpmsr_set", ".zip")),
+                          ),
                  br(),
-                 span(textOutput("archive_file_name_customer"), style = "color:blue; font-size:16px")
+                 actionButton("load_customer_archive_file", label = "Process File", width = 200, 
+                              style = "color: #fff; background-color: #337ab7; border-color: #2e6da4")
+                 #span(textOutput("archive_file_name_customer"), style = "color:blue; font-size:16px")
                 )
               )
 

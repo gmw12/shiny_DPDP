@@ -326,6 +326,7 @@ update_widgets <- function(session, input, output, params) {
     update_stat_choices(session, input, output)
     update_stat_comparisons(session, input, output)
     updateSelectInput(session, "stats_norm_type", selected = params$stat_norm)
+    updateSelectInput(session, "stats_comp_spqc", selected = params$comp_spqc)
     
     updateNumericInput(session, "pvalue_cutoff", value = params$pvalue_cutoff)
     updateCheckboxInput(session, "pair_comp", value = params$pair_comp)

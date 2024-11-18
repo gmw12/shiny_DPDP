@@ -8,18 +8,19 @@ load_archive_file <- function(session, input, output){
   
   if(site_user == "dpmsr") {
     archive_sfb <- parseFilePaths(volumes, input$sfb_archive_file)
+    archive_path <- str_extract(archive_sfb$datapath, "^/.*/")
+    cat(file = stderr(), stringr::str_c("archive_path --->", archive_path), "\n")
+    archive_zip <- archive_sfb$datapath
+    archive_name <- basename(archive_sfb$datapath)
   }else{
-    archive_sfb <- parseFilePaths(volumes, input$sfb_archive_customer_file)
+    archive_zip <-input$sfb_archive_customer_file$datapath
+    archive_path <- str_extract(archive_zip, "^/.*/")
   }
   
   #save(archive_sfb, file = "testarchive_sfb")
   # load(file = "testarchive_sfb")
   
-  archive_path <- str_extract(archive_sfb$datapath, "^/.*/")
-  cat(file = stderr(), stringr::str_c("archive_path --->", archive_path), "\n")
-  archive_zip <- archive_sfb$datapath
-  
-  archive_name <- basename(archive_sfb$datapath)
+
   create_dir(database_dir)
   
   utils::unzip(zipfile = archive_zip, exdir = database_dir)

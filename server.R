@@ -161,11 +161,15 @@ shinyServer(function(session, input, output) {
   
   #------------------------------------------------------------------------------------------------------  
   #Load data file
-  observeEvent(input$sfb_archive_customer_file, {
+  observeEvent(input$load_customer_archive_file, {
     
     cat(file = stderr(), "\n\n","sfb_archive_customer_file button clicked...", "\n")
     
-    if (is.list(input$sfb_archive_customer_file)) {
+    req(input$sfb_archive_customer_file)
+    
+    if (!is.null(input$sfb_archive_customer_file)) {fileUploaded <- TRUE  }  
+    
+    if (fileUploaded) {
       cat(file = stderr(), "\n\n","sfb_archive_customer_file button clicked...1", "\n")
       
       #copy zip file contents to database dir, load params
@@ -189,6 +193,37 @@ shinyServer(function(session, input, output) {
     }
     
   }) 
+  
+  #------------------------------------------------------------------------------------------------------  
+  #Load data file
+  # observeEvent(input$sfb_archive_customer_file, {
+  #   
+  #   cat(file = stderr(), "\n\n","sfb_archive_customer_file button clicked...", "\n")
+  #   
+  #   if (is.list(input$sfb_archive_customer_file)) {
+  #     cat(file = stderr(), "\n\n","sfb_archive_customer_file button clicked...1", "\n")
+  #     
+  #     #copy zip file contents to database dir, load params
+  #     archive_name <- load_archive_file(session, input, output)
+  #     
+  #     output$archive_file_name_customer <- renderText({archive_name})
+  #     
+  #     #update UI
+  #     ui_render_load_data(session, input, output)
+  #     ui_render_load_design(session, input, output)
+  #     app_startup(session, input, output)
+  #     set_comp_names(session, input,output)
+  #     create_design_table(session, input, output)
+  #     create_stats_design_table(session, input, output)
+  #     if (table_exists("summary_cv"))  {create_cv_table(session, input, output, params)}
+  #     
+  #     #load menu
+  #     load_menu(session, input, output)
+  #     
+  #     cat(file = stderr(), "\n\n","sfb_archive_customer_file button clicked...end", "\n")
+  #   }
+  #   
+  # }) 
   #------------------------------------------------------------------------------------------------------  
   #Load data file
   observeEvent(input$motif_fasta_file, {
