@@ -1,5 +1,6 @@
-cat(file = stderr(), "server.R started", "\n")
 options(shiny.maxRequestSize = 4000*1024^2)
+cat(file = stderr(), "server.R started", "\n")
+
 #app_version <- '2024.01.05'
 
 source("Shiny_Setup.R")
