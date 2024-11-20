@@ -316,7 +316,7 @@ protein_peptide_table <- function(df_peptide, peptide_pos_lookup, start_sample_c
   df_peptide <- df_peptide[order(df_peptide$Start, df_peptide$Stop), ]
   
   #df_peptide <- df_peptide |> dplyr::mutate(dplyr::across((start_sample_col_peptide+2):(ncol(df_peptide)), round, 1))
-  df_peptide <- round_columns(df_peptide, rep(start_sample_col+2):((ncol(df_peptide)-1) ), 7)
+  df_peptide <- round_columns(df_peptide, rep(start_sample_col+2):((ncol(df_peptide)-1) ), 3)
   
   options <- list(
     selection = 'single',
