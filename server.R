@@ -814,7 +814,19 @@ shinyServer(function(session, input, output) {
  })
 
  
- 
+  # This code will be run after the client has disconnected
+  session$onSessionEnded(function() {
+    if (site_user != "dpmsr") {
+      cat(file = stderr(), "Running session end...", "\n")
+      cat(file = stderr(), str_c("Database dir ", database_dir,  " exists? ", dir.exists(database_dir)), "\n")
+      do.call(file.remove, list(list.files(database_dir, full.names = TRUE)))
+      dir_delete(database_dir)
+      system(str_c("rm -R ", name))
+      clear_memory()
+      #stopApp()
+      #file_touch("restart.txt", access_time = Sys.time(), modification_time = Sys.time())
+    }
+  })
  
      
 })
