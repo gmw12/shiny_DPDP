@@ -8,10 +8,10 @@ package_list <- c('devtools', 'tidyr', 'httr', 'png', 'tidyverse', 'dplyr', 'fs'
                   'shinyjs', 'shinyalert', 'DT', 'ggraph', 'imp4p', 'Peptides',
                   'flexdashboard', 'openxlsx', 'stringi', 'jsonlite', 'remotes', 
                   'BiocManager', 'rAmCharts', 'future', 'promises', 'miscTools', 'reticulate', 'iq',
-                  'inflection', 'foreach', "doParallel", "shinybrowser")
+                  'inflection', 'foreach', "doParallel", "shinybrowser", 'ggtangle')
 
 
-biocmanager_list = c('impute', 'ViSEAGO', 'topGO', 'clusterProfiler', 'GSEABase', 'rWikiPathways', 
+biocmanager_list = c('impute', 'ViSEAGO', 'topGO', 'enrichplot', 'clusterProfiler', 'GSEABase', 'rWikiPathways', 
                      'STRINGdb', 'limma', 'edgeR', 'pcaMethods', 'gridExtra', 'MASS', 'vsn',
                      'preprocessCore', 'org.Hs.eg.db', 'org.Mm.eg.db', 'org.Rn.eg.db')
 
