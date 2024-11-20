@@ -15,6 +15,8 @@ biocmanager_list = c('clusterProfiler', 'impute', 'ViSEAGO', 'topGO', 'enrichplo
                      'STRINGdb', 'limma', 'edgeR', 'pcaMethods', 'gridExtra', 'MASS', 'vsn',
                      'preprocessCore', 'org.Hs.eg.db', 'org.Mm.eg.db', 'org.Rn.eg.db')
 
+BiocManager::install('clusterProfiler', dependencies = TRUE) 
+
 
 cat(file = stderr(), "Shiny_install.R.... package_list", "\n")
 # loop to install require packages
