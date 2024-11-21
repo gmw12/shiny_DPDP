@@ -15,6 +15,8 @@ biocmanager_list = c('clusterProfiler', 'impute', 'ViSEAGO', 'topGO', 'enrichplo
                      'STRINGdb', 'limma', 'edgeR', 'pcaMethods', 'gridExtra', 'MASS', 'vsn',
                      'preprocessCore', 'org.Hs.eg.db', 'org.Mm.eg.db', 'org.Rn.eg.db')
 
+BiocManager::install(version = "3.20", ask = FALSE, dependencies = TRUE) 
+
 BiocManager::install('clusterProfiler', dependencies = TRUE) 
 
 
