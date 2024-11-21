@@ -4,7 +4,7 @@ RUN apt-get update && apt-get install -y \
   build-essential libgl1-mesa-dev libglu1-mesa-dev libv8-dev cmake \
   libglpk-dev libbz2-dev liblzma-dev libfontconfig1 libharfbuzz-dev \
   libfreetype6-dev libpng-dev libtiff5-dev libjpeg-dev  libfribidi-dev \
-  libcurl4-openssl-dev libxml2-dev libarchive-dev librsvg2-dev \
+  libcurl4-openssl-dev libxml2-dev libarchive-dev librsvg2-dev git vim \
   libsodium-dev python3-pip \
   && rm -rf /var/lib/apt/lists/*
 
