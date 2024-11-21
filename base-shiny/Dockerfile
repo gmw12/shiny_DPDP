@@ -5,7 +5,7 @@ RUN apt-get update && apt-get install -y \
   libglpk-dev libbz2-dev liblzma-dev libfontconfig1 libharfbuzz-dev \
   libfreetype6-dev libpng-dev libtiff5-dev libjpeg-dev  libfribidi-dev \
   libcurl4-openssl-dev libxml2-dev libarchive-dev librsvg2-dev \
-  libuduinit2-dev libsodium-dev python3-pip \
+  libsodium-dev python3-pip \
   && rm -rf /var/lib/apt/lists/*
 
 #removed iq package for now, requires python 3.8, may not need for customer version
