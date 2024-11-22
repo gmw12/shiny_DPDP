@@ -20,6 +20,7 @@ percentCV_gw <- function(x) {
 #cohensD ---------------------------------
 cohend_gw <- function(x, y, hedges) {
   cat(file = stderr(), "function cohend_gw...", "\n")
+  require(effsize)
   
   cohend <- function(x, y) {
     cohend_est = try(cohen.d(
@@ -206,6 +207,7 @@ exactTest_gw <- function(x, y) {
 #comp_name <- comp_groups$comp_name[1]
 limma_gw <- function(x, y) {   #, comp_name, plot_dir) {
   cat(file = stderr(), "function limma_gw...", "\n")
+  require(limma)
   
   xy <- cbind(x, y)
   xy <- log2(xy)

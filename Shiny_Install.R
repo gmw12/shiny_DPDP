@@ -4,7 +4,7 @@ cat(file = stderr(), "Shiny_install.R.... starting....", "\n")
 package_list <- c('devtools', 'tidyr', 'httr', 'png', 'tidyverse', 'dplyr', 'fs', 'effsize',
                   'colourpicker', 'tibble', 'stringr', 'readxl', 'randomcoloR', 'gplots',
                   'ggpubr', 'rgl', 'pca3d', 'robustbase', 'cluster', 'factoextra',
-                  'igraph', 'shiny', 'shinyWidgets', 'shinyFiles', 'rhandsontable', 
+                  'igraph', 'shiny', 'shinyWidgets', 'shinyFiles', 'shinyBS', 'rhandsontable', 
                   'shinyjs', 'shinyalert', 'DT', 'ggraph', 'imp4p', 'Peptides',
                   'flexdashboard', 'openxlsx', 'stringi', 'jsonlite', 'remotes', 
                   'BiocManager', 'rAmCharts', 'future', 'promises', 'miscTools', 'reticulate', 'iq',

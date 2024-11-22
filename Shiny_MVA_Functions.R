@@ -243,9 +243,9 @@ stat_add <- function(df, df_missing, params, comp_number, stats_comp, df_design)
   }
   
   if (params$checkbox_cohensd) {
-    df[[stringr::str_c(stats_comp$Name[comp_number], "_cohensd")]] <-  cohend_gw(df_N, df_D, as.logical(input$checkbox_cohensd))
+    df[[stringr::str_c(stats_comp$Name[comp_number], "_cohensd")]] <-  cohend_gw(df_N, df_D, as.logical(params$checkbox_cohensd_hedges))
   }
-  
+
   if (params$checkbox_limmapvalue) {
     df[[stringr::str_c(stats_comp$Name[comp_number], "_limma")]] <- limma_gw(df_N, df_D)
   }

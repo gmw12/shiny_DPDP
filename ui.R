@@ -4,6 +4,7 @@ source("Shiny_Libraries.R")
 source("Shiny_UI.R")
 #height_factor <- 1
 
+
 sidebar <- dashboardSidebar(width = 165,
                             useShinyjs(),
                             #shinybrowser::detect(),
@@ -45,6 +46,7 @@ body <- dashboardBody(
     
     tabItem(tabName = "load_customer",
             fluidRow(
+              use_prompt(),
               column(width = 6, align = "center",   
                      br(),
                      br(),
@@ -80,11 +82,21 @@ body <- dashboardBody(
                           #                       style = "color: #fff; background-color: #337ab7; border-color: #2e6da4")
                           fileInput("sfb_archive_customer_file", "Please select zip file",
                                     multiple = FALSE, width=300,
-                                    accept = c(".dpmsr_set", ".zip")),
+                                    accept = c(".dpmsr_set", ".zip")) |>
+                            add_prompt(
+                              message = "Select zip file and wait for the progress bar to complete.",
+                              position = "left", type = "info", 
+                              size = "medium", rounded = TRUE
+                            ),
                           ),
                  br(),
                  actionButton("load_customer_archive_file", label = "Process File", width = 200, 
-                              style = "color: #fff; background-color: #337ab7; border-color: #2e6da4")
+                              style = "color: #fff; background-color: #337ab7; border-color: #2e6da4")  |>
+                   add_prompt(
+                     message = "Click to process the zip file and load the data.",
+                     position = "left", type = "info", 
+                     size = "medium", rounded = TRUE
+                   ),
                  #span(textOutput("archive_file_name_customer"), style = "color:blue; font-size:16px")
                 )
               )
@@ -655,7 +667,11 @@ body <- dashboardBody(
                   hidden(selectInput("padjust_options", label = "p.adjust method", choices = list("holm", "hochberg", "hommel", "bonferroni", "BH", "BY", "fdr"), 
                                      selected = "fdr")),
                   numericInput("foldchange_cutoff", label = "Fold Change cutoff", value = 1.5),
+                  
                   numericInput("missing_factor", label = "Measured % (decimal)", value = 0.6),
+                  bsTooltip("missing_factor", "Requires X% measured values in one group in order to be considered stat signifigant",
+                            "right", options = list(container = "body")),
+                  
                   hr(),
                   tags$b(style = "color:blue", 'Final Excel Options'),
                   checkboxInput("checkbox_report_ptm", label = "Report Only PTM?"),
@@ -682,10 +698,23 @@ body <- dashboardBody(
                   hidden(numericInput("stats_peptide_minimum_factor", label = "Peptide Minimum", value = 1)),
                   hr(),
                   tags$b(style = "color:blue", 'Extra Stats'),
+                  
                   hidden(checkboxInput("checkbox_filter_adjpval", label = "Filter with adjusted pvalue?")),
+                  bsTooltip("checkbox_filter_adjpval", "add adjusted pvalue to stat output",
+                            "left", trigger = "hover", options = list(container = "body")),
+                  
                   checkboxInput("checkbox_cohensd", label = "Include Cohen's D?"),
+                  bsTooltip("checkbox_cohensd", "use coehnsD for effect size (R package = effsize)",
+                            "left", trigger = "hover", options = list(container = "body")),
+                  
                   checkboxInput("checkbox_cohensd_hedges", label = "Use Hedge's Correction (low N)?"),
+                  bsTooltip("checkbox_cohensd_hedges", "Correction for small sample size",
+                            "left", trigger = "hover", options = list(container = "body")),
+
                   checkboxInput("checkbox_limmapvalue", label = "Include Limma Pvalue?"),
+                  bsTooltip("checkbox_limmapvalue", "R package = limma",
+                            "left", trigger = "hover", options = list(container = "body")),
+                  
                   br(),
                   actionButton("stat_options", label = "Save Stat Options", width = 300,
                                style = "color: #fff; background-color: #337ab7; border-color: #2e6da4")

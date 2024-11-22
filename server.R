@@ -515,6 +515,8 @@ shinyServer(function(session, input, output) {
         if(input$stats_plot_comp1 != params$comp_spqc) {
           create_volcano(session, input, output, params, plot_number = 1)
         }
+      }else{
+        shinyalert("Oops!", "Cannot create volcano plot, pick only 1 comparison", type = "error")
       }
     }else{
       create_plot(session, input, output, params, plot_number = 1) 
@@ -821,7 +823,7 @@ shinyServer(function(session, input, output) {
       cat(file = stderr(), str_c("Database dir ", database_dir,  " exists? ", dir.exists(database_dir)), "\n")
       do.call(file.remove, list(list.files(database_dir, full.names = TRUE)))
       dir_delete(database_dir)
-      system(str_c("rm -R ", name))
+      system(str_c("rm -R ", database_dir))
       clear_memory()
       #stopApp()
       #file_touch("restart.txt", access_time = Sys.time(), modification_time = Sys.time())
