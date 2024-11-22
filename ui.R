@@ -664,6 +664,8 @@ body <- dashboardBody(
                   numericInput("pvalue_cutoff", label = "Pvalue Cutoff", value = .05),
                   checkboxInput("pair_comp", label = "Pairwise Comparisons"),
                   checkboxInput("checkbox_adjpval", label = "Include adjusted pvalue?", value = TRUE),
+                  bsTooltip("checkbox_adjpval", "add adjusted pvalue to stat output",
+                            "left", trigger = "hover", options = list(container = "body")),
                   hidden(selectInput("padjust_options", label = "p.adjust method", choices = list("holm", "hochberg", "hommel", "bonferroni", "BH", "BY", "fdr"), 
                                      selected = "fdr")),
                   numericInput("foldchange_cutoff", label = "Fold Change cutoff", value = 1.5),
@@ -700,7 +702,7 @@ body <- dashboardBody(
                   tags$b(style = "color:blue", 'Extra Stats'),
                   
                   hidden(checkboxInput("checkbox_filter_adjpval", label = "Filter with adjusted pvalue?")),
-                  bsTooltip("checkbox_filter_adjpval", "add adjusted pvalue to stat output",
+                  bsTooltip("checkbox_filter_adjpval", "use adjpval to define stat signifigance",
                             "left", trigger = "hover", options = list(container = "body")),
                   
                   checkboxInput("checkbox_cohensd", label = "Include Cohen's D?"),
