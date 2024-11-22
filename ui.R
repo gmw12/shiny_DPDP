@@ -46,7 +46,6 @@ body <- dashboardBody(
     
     tabItem(tabName = "load_customer",
             fluidRow(
-              use_prompt(),
               column(width = 6, align = "center",   
                      br(),
                      br(),
