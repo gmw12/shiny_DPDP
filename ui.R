@@ -81,21 +81,15 @@ body <- dashboardBody(
                           #                       style = "color: #fff; background-color: #337ab7; border-color: #2e6da4")
                           fileInput("sfb_archive_customer_file", "Please select zip file",
                                     multiple = FALSE, width=300,
-                                    accept = c(".dpmsr_set", ".zip")) |>
-                            add_prompt(
-                              message = "Select zip file and wait for the progress bar to complete.",
-                              position = "left", type = "info", 
-                              size = "medium", rounded = TRUE
-                            ),
+                                    accept = c(".dpmsr_set", ".zip")),
+                          bsTooltip("sfb_archive_customer_file", "Select zip file and wait for the progress bar to complete.",
+                                    "left", trigger = "hover", options = list(container = "body")),
                           ),
                  br(),
                  actionButton("load_customer_archive_file", label = "Process File", width = 200, 
-                              style = "color: #fff; background-color: #337ab7; border-color: #2e6da4")  |>
-                   add_prompt(
-                     message = "Click to process the zip file and load the data.",
-                     position = "left", type = "info", 
-                     size = "medium", rounded = TRUE
-                   ),
+                              style = "color: #fff; background-color: #337ab7; border-color: #2e6da4"),
+                 bsTooltip("load_customer_archive_file", "Click to process the zip file and load the data.",
+                           "left", trigger = "hover", options = list(container = "body")),
                  #span(textOutput("archive_file_name_customer"), style = "color:blue; font-size:16px")
                 )
               )
