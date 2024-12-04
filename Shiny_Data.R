@@ -24,7 +24,17 @@ load_archive_file <- function(session, input, output){
 
   create_dir(database_dir)
   
+  cat(file = stderr(), stringr::str_c("unzip file to database_dir:  ", database_dir), "\n")
+  
   utils::unzip(zipfile = archive_zip, exdir = database_dir)
+  
+  temp_files <- list.files(database_dir)
+  if (length(temp_files) == 0) {
+    temp_files <- ""
+  }
+  
+  cat(file = stderr(), stringr::str_c("files in database_dir:  ", temp_files), "\n")
+  
   if(Sys.getenv("USER") == "erik") {
     system("chmod -R 777 /home/erik/Shiny_DPDP/database")
   }

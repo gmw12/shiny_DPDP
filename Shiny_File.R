@@ -74,13 +74,20 @@ create_dir <- function(name){
     cat(file = stderr(), "dir exists, deleting...", "\n")
     do.call(file.remove, list(list.files(name, full.names = TRUE)))
     dir_delete(name)
+    cat(file = stderr(), "dir deleted, re-creating...", "\n")
     dir_create(name)
   }else{
+    cat(file = stderr(), stringr::str_c("dir does NOT exist, creating...", name), "\n")
     dir_create(name)
   }
-  name <- str_replace_all(name, "/", "//")
-  name <- str_c(name, "//")
-  cat(file = stderr(), str_c(name, " created...", "\n"))
+  
+  if (fs::is_dir(name)) {
+    name <- stringr::str_replace_all(name, "/", "//")
+    name <- stringr::str_c(name, "//")
+    cat(file = stderr(), stringr::str_c(name, " confirmed created...", "\n"))
+  }else{
+    cat(file = stderr(), stringr::str_c(name, " NOT created...", "\n"))
+  }  
   
   cat(file = stderr(), "Function create_dir...end", "\n\n")
   return(name)
