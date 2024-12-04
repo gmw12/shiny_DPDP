@@ -821,10 +821,18 @@ shinyServer(function(session, input, output) {
     if (site_user != "dpmsr") {
       cat(file = stderr(), "Running session end...", "\n")
       cat(file = stderr(), str_c("Database dir ", database_dir,  " exists? ", dir.exists(database_dir)), "\n")
-      do.call(file.remove, list(list.files(database_dir, full.names = TRUE)))
-      dir_delete(database_dir)
-      system(str_c("rm -R ", database_dir))
-      clear_memory()
+      
+      temp_files <- list.files(params$database_dir)
+      if (length(temp_files) == 0) {
+        temp_files <- ""
+      }
+      
+      cat(file = stderr(), stringr::str_c("files in database_dir:  ", temp_files), "\n")
+      
+      #do.call(file.remove, list(list.files(database_dir, full.names = TRUE)))
+      #dir_delete(database_dir)
+      #system(str_c("rm -R ", database_dir))
+      #clear_memory()
       #stopApp()
       #file_touch("restart.txt", access_time = Sys.time(), modification_time = Sys.time())
     }
