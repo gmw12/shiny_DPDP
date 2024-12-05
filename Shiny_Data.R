@@ -14,7 +14,9 @@ load_archive_file <- function(session, input, output){
     archive_name <- basename(archive_sfb$datapath)
   }else{
     archive_zip <-input$sfb_archive_customer_file$datapath
+    cat(file = stderr(), stringr::str_c("archive_zip --->", archive_zip), "\n")
     archive_path <- str_extract(archive_zip, "^/.*/")
+    cat(file = stderr(), stringr::str_c("archive_path --->", archive_path), "\n")
     database_dir <- stringr::str_c(database_dir, "/", format(Sys.time(), "%Y%m%d%H%M%S"))
   }
   
