@@ -316,7 +316,8 @@ update_widgets <- function(session, input, output, params) {
     updateCheckboxInput(session, "maxlfq_scale", value = params$maxlfq_scale)
     
     #QC
-    qc_norm_types <- as.list(strsplit(params$norm_type, ",")[[1]])
+    qc_norm_types <- strsplit(params$norm_type, ",")[[1]]
+    qc_norm_types <- as.list(gsub(" ", "", qc_norm_types))
     updateSelectInput(session, "qc_norm_type", choices = qc_norm_types)
     updateSelectInput(session, "spike_norm_type", choices = qc_norm_types)
     updateSelectInput(session, "stats_norm_type", choices = qc_norm_types)
@@ -325,6 +326,7 @@ update_widgets <- function(session, input, output, params) {
     update_stat_choices(session, input, output)
     update_stat_comparisons(session, input, output)
     updateSelectInput(session, "stats_norm_type", selected = params$stat_norm)
+    updateSelectInput(session, "stats_comp_spqc", selected = params$comp_spqc)
     
     updateNumericInput(session, "pvalue_cutoff", value = params$pvalue_cutoff)
     updateCheckboxInput(session, "pair_comp", value = params$pair_comp)

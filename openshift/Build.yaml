@@ -32,7 +32,7 @@ items:
         name: base-shiny:latest
     source:
       git:
-        ref: master
+        ref: main
         uri: https://github.com/gmw12/shiny_DPDP.git
       type: Git
     strategy:
@@ -57,7 +57,7 @@ items:
         name: spd-shiny-app:latest
     source:
       git:
-        ref: master
+        ref: main
         uri: https://github.com/gmw12/shiny_DPDP.git
       type: Git
     strategy:

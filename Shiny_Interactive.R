@@ -379,6 +379,8 @@ interactive_stats_volcano <- function(session, input, output, df, xmax, ymax, hi
                                        highlight_stat_down, stats_plot_comp, plot_number) {
   cat(file=stderr(), stringr::str_c("interactive_stats_volcano...      ", stats_plot_comp, "   ", plot_number), "\n")
   
+  #save(stats_plot_comp, file="z1") #load(file="z1")
+  
   cat(file=stderr(), "Interactive stats volcano...3" , "\n")
   volcano_stats_plot <- reactive({
     ggplot(df, aes(x = log_fc, y = log_pvalue)) +

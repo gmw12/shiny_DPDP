@@ -378,7 +378,7 @@ run_string_enrich_bg <- function(input_foldchange_cutoff, input_pvalue_cutoff, i
   
   cat(file=stderr(), stringr::str_c("number of hits searched...", length(hits)), "\n")
   
-  string_db <- loadRData(stringr::str_c(params$database_dir, "/database/string_db"))
+  string_db <- loadRData(stringr::str_c(params$database_dir, "/string_db"))
   enrichment <- string_db$get_enrichment(hits) #, category = input$select_string_enrich )
 
   cat(file=stderr(), stringr::str_c("enrichment output...", nrow(enrichment)), "\n")

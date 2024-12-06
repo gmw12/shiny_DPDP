@@ -1,7 +1,7 @@
-cat(file = stderr(), "server.R started", "\n")
-#app_version <- '2024.01.05'
-
 options(shiny.maxRequestSize = 4000*1024^2)
+cat(file = stderr(), "server.R started", "\n")
+
+#app_version <- '2024.01.05'
 
 source("Shiny_Setup.R")
 source("Shiny_Startup.R")
@@ -161,11 +161,15 @@ shinyServer(function(session, input, output) {
   
   #------------------------------------------------------------------------------------------------------  
   #Load data file
-  observeEvent(input$sfb_archive_customer_file, {
+  observeEvent(input$load_customer_archive_file, {
     
     cat(file = stderr(), "\n\n","sfb_archive_customer_file button clicked...", "\n")
     
-    if (is.list(input$sfb_archive_customer_file)) {
+    req(input$sfb_archive_customer_file)
+    
+    if (!is.null(input$sfb_archive_customer_file)) {fileUploaded <- TRUE  }  
+    
+    if (fileUploaded) {
       cat(file = stderr(), "\n\n","sfb_archive_customer_file button clicked...1", "\n")
       
       #copy zip file contents to database dir, load params
@@ -189,6 +193,37 @@ shinyServer(function(session, input, output) {
     }
     
   }) 
+  
+  #------------------------------------------------------------------------------------------------------  
+  #Load data file
+  # observeEvent(input$sfb_archive_customer_file, {
+  #   
+  #   cat(file = stderr(), "\n\n","sfb_archive_customer_file button clicked...", "\n")
+  #   
+  #   if (is.list(input$sfb_archive_customer_file)) {
+  #     cat(file = stderr(), "\n\n","sfb_archive_customer_file button clicked...1", "\n")
+  #     
+  #     #copy zip file contents to database dir, load params
+  #     archive_name <- load_archive_file(session, input, output)
+  #     
+  #     output$archive_file_name_customer <- renderText({archive_name})
+  #     
+  #     #update UI
+  #     ui_render_load_data(session, input, output)
+  #     ui_render_load_design(session, input, output)
+  #     app_startup(session, input, output)
+  #     set_comp_names(session, input,output)
+  #     create_design_table(session, input, output)
+  #     create_stats_design_table(session, input, output)
+  #     if (table_exists("summary_cv"))  {create_cv_table(session, input, output, params)}
+  #     
+  #     #load menu
+  #     load_menu(session, input, output)
+  #     
+  #     cat(file = stderr(), "\n\n","sfb_archive_customer_file button clicked...end", "\n")
+  #   }
+  #   
+  # }) 
   #------------------------------------------------------------------------------------------------------  
   #Load data file
   observeEvent(input$motif_fasta_file, {
@@ -480,6 +515,8 @@ shinyServer(function(session, input, output) {
         if(input$stats_plot_comp1 != params$comp_spqc) {
           create_volcano(session, input, output, params, plot_number = 1)
         }
+      }else{
+        shinyalert("Oops!", "Cannot create volcano plot, pick only 1 comparison", type = "error")
       }
     }else{
       create_plot(session, input, output, params, plot_number = 1) 
@@ -779,7 +816,27 @@ shinyServer(function(session, input, output) {
  })
 
  
- 
+  # This code will be run after the client has disconnected
+  session$onSessionEnded(function() {
+    if (site_user != "dpmsr") {
+      cat(file = stderr(), "Running session end...", "\n")
+      cat(file = stderr(), str_c("Database dir ", database_dir,  " exists? ", dir.exists(database_dir)), "\n")
+      
+      temp_files <- list.files(params$database_dir)
+      if (length(temp_files) == 0) {
+        temp_files <- ""
+      }
+      
+      cat(file = stderr(), stringr::str_c("files in database_dir:  ", temp_files), "\n")
+      
+      #do.call(file.remove, list(list.files(database_dir, full.names = TRUE)))
+      #dir_delete(database_dir)
+      #system(str_c("rm -R ", database_dir))
+      #clear_memory()
+      #stopApp()
+      #file_touch("restart.txt", access_time = Sys.time(), modification_time = Sys.time())
+    }
+  })
  
      
 })

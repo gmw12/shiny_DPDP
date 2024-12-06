@@ -35,7 +35,7 @@ round_columns <- function(df, search_text, round_digits) {
     select_cols <- which(stringr::str_detect(colnames(df), search_text))
   }
   for (col in select_cols){
-    df[,col] <- df |> dplyr::select(dplyr::all_of(col)) |> round(digits = 0)
+    df[,col] <- df |> dplyr::select(dplyr::all_of(col)) |> round(digits = round_digits)
   }
   return(df)
 }

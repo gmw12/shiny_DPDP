@@ -177,7 +177,9 @@ set_file_choosers <- function(session, input, output, volumes) {
   shinyFileChoose(input, 'sfb_design_file', session = session, roots = volumes, filetypes = c('', 'xlsx'))
 
   shinyFileChoose(input, 'sfb_archive_file', session = session, roots = volumes, filetypes = c('', 'zip'))
-  shinyFileChoose(input, 'sfb_archive_customer_file', session = session, roots = volumes, filetypes = c('', 'zip'))
+  
+  shinyFileChoose(input, 'sfb_archive_customer_file', roots = volumes, session = session, defaultPath = '', defaultRoot = 'wd',
+                  filetypes = c('', 'zip'))
   
   shinyFileChoose(input, 'motif_fasta_file', session = session, roots = volumes, filetypes = c('', 'fasta'))
   

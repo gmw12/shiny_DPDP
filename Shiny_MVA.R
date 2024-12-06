@@ -236,6 +236,13 @@ save_stat_options <- function(session, input, output, params) {
   params$stats_spqc_cv_filter_factor <- input$stats_spqc_cv_filter_factor
   params$stats_comp_cv_filter <- input$stats_comp_cv_filter
   params$stats_comp_cv_filter_factor <- input$stats_comp_cv_filter_factor
+  params$stats_peptide_minimum <- input$stats_peptide_minimum
+  params$stats_peptide_minimum_factor <- input$stats_peptide_minimum_factor
+  params$checkbox_filter_adjpval <- input$checkbox_filter_adjpval
+  params$checkbox_cohensd_hedges <-  input$checkbox_cohensd_hedges
+  params$checkbox_cohensd <-  input$checkbox_cohensd
+  params$checkbox_limmapvalue <-  input$checkbox_limmapvalue
+  
   params <<- params
 
   write_table_try("params", params, params)
@@ -419,6 +426,9 @@ create_stats_data_table_bg <- function(input_stats_norm_type, input_stats_select
   } else {
     data_name <- stringr::str_c("peptide_impute_", input_stats_norm_type, "_", input_stats_select_data_comp, "_final")
   }
+  
+  #remove whitespace from name, space still there for imputed data
+  data_name <- gsub(" ", "", data_name)
   
   cat(file = stderr(), stringr::str_c("data_name --> ", data_name), "\n")
   

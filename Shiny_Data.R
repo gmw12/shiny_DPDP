@@ -8,21 +8,35 @@ load_archive_file <- function(session, input, output){
   
   if(site_user == "dpmsr") {
     archive_sfb <- parseFilePaths(volumes, input$sfb_archive_file)
+    archive_path <- str_extract(archive_sfb$datapath, "^/.*/")
+    cat(file = stderr(), stringr::str_c("archive_path --->", archive_path), "\n")
+    archive_zip <- archive_sfb$datapath
+    archive_name <- basename(archive_sfb$datapath)
   }else{
-    archive_sfb <- parseFilePaths(volumes, input$sfb_archive_customer_file)
+    archive_zip <-input$sfb_archive_customer_file$datapath
+    cat(file = stderr(), stringr::str_c("archive_zip --->", archive_zip), "\n")
+    archive_path <- str_extract(archive_zip, "^/.*/")
+    cat(file = stderr(), stringr::str_c("archive_path --->", archive_path), "\n")
+    database_dir <- stringr::str_c(database_dir, "/", format(Sys.time(), "%Y%m%d%H%M%S"))
   }
   
   #save(archive_sfb, file = "testarchive_sfb")
   # load(file = "testarchive_sfb")
   
-  archive_path <- str_extract(archive_sfb$datapath, "^/.*/")
-  cat(file = stderr(), stringr::str_c("archive_path --->", archive_path), "\n")
-  archive_zip <- archive_sfb$datapath
-  
-  archive_name <- basename(archive_sfb$datapath)
+
   create_dir(database_dir)
   
+  cat(file = stderr(), stringr::str_c("unzip file to database_dir:  ", database_dir), "\n")
+  
   utils::unzip(zipfile = archive_zip, exdir = database_dir)
+  
+  temp_files <- list.files(database_dir)
+  if (length(temp_files) == 0) {
+    temp_files <- ""
+  }
+  
+  cat(file = stderr(), stringr::str_c("files in database_dir:  ", temp_files), "\n")
+  
   if(Sys.getenv("USER") == "erik") {
     system("chmod -R 777 /home/erik/Shiny_DPDP/database")
   }

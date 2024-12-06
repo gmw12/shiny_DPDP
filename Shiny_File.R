@@ -73,14 +73,21 @@ create_dir <- function(name){
     #added file delete, dir delete not working on customer shiny server
     cat(file = stderr(), "dir exists, deleting...", "\n")
     do.call(file.remove, list(list.files(name, full.names = TRUE)))
-    dir_delete(name)
-    dir_create(name)
+    fs::dir_delete(name)
+    cat(file = stderr(), "dir deleted, re-creating...", "\n")
+    fs::dir_create(name, mode="u=rwx,go=rwx", recurse=TRUE)
   }else{
-    dir_create(name)
+    cat(file = stderr(), stringr::str_c("dir does NOT exist, creating...", name), "\n")
+    fs::dir_create(name, mode="u=rwx,go=rwx", recurse=TRUE)
   }
-  name <- str_replace_all(name, "/", "//")
-  name <- str_c(name, "//")
-  cat(file = stderr(), str_c(name, " created...", "\n"))
+  
+  if (fs::is_dir(name)) {
+    name <- stringr::str_replace_all(name, "/", "//")
+    name <- stringr::str_c(name, "//")
+    cat(file = stderr(), stringr::str_c(name, " confirmed created...", "\n"))
+  }else{
+    cat(file = stderr(), stringr::str_c(name, " NOT created...", "\n"))
+  }  
   
   cat(file = stderr(), "Function create_dir...end", "\n\n")
   return(name)
