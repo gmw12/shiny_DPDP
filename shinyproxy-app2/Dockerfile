@@ -1,4 +1,4 @@
-FROM gregwaitt/base-shinyproxy:1.2
+FROM gregwaitt/shinyproxy-app:latest
 
 RUN echo "\noptions(shiny.port=3838, shiny.host='0.0.0.0')" >> /etc/R/Rprofile.site
 
