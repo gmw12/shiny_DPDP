@@ -21,7 +21,7 @@ data:
         display-name: Shiny_DPDP
         description: Shiny app
         container-cmd: ["R", "-e", "shiny::runApp('/app')"]
-        container-image: gregwaitt/base-shinyproxy:1.12
+        container-image: gregwaitt/app-shinyproxy:1.0
     logging:
       file:
         name: shinyproxy.log
