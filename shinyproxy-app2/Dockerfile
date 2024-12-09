@@ -1,4 +1,4 @@
-FROM gregwaitt/shinyproxy-app:latest
+FROM gregwaitt/base_app-shinyproxy-app:latest
 
 RUN echo "\noptions(shiny.port=3838, shiny.host='0.0.0.0')" >> /etc/R/Rprofile.site
 
@@ -15,7 +15,7 @@ RUN chgrp -R 0 /tmp && \
     chmod -R g=u /tmp
 
 # install R code
-COPY Shiny_DPDP /app
+COPY ./Shiny_DPDP /app
 WORKDIR /app
 
 EXPOSE 3838
