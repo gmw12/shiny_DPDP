@@ -15,7 +15,7 @@ data:
       hide-navbar: true
       kubernetes:
         internal-networking: true
-        namespace: dpmsr-gw
+        namespace: dpmsr-pddp2
       specs:
       - id: 01_PDPD
         display-name: Shiny_DPDP

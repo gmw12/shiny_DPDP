@@ -19,7 +19,7 @@ spec:
       serviceAccount: shinyproxy
       containers:
        - name: shinyproxy
-         image: image-registry.openshift-image-registry.svc:5000/dpmsr-gw/shinyproxy
+         image: image-registry.openshift-image-registry.svc:5000/dpmsr-pddp2/shinyproxy
          livenessProbe:
           httpGet:
             path: /actuator/health/liveness
