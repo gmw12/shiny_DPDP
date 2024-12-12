@@ -1,0 +1,19 @@
+kind: Route
+apiVersion: route.openshift.io/v1
+metadata:
+  name: shiny-external
+  namespace: dpmsr-pddp2
+  labels:
+    cloud.duke.edu/route-type: external
+  annotations:
+    app: shinyproxy
+  host: dpmsr-pddp.cloud.duke.edu
+  to:
+    kind: Service
+    name: shinyproxy
+    weight: 100
+  port:
+    targetPort: 8080
+  tls:
+    termination: edge
+    insecureEdgeTerminationPolicy: Redirect
