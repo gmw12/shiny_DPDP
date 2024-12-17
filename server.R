@@ -164,7 +164,7 @@ shinyServer(function(session, input, output) {
   observeEvent(input$load_customer_archive_file, {
     
     cat(file = stderr(), "\n\n","sfb_archive_customer_file button clicked...", "\n")
-    showModal(modalDialog("Processing File...", footer = NULL))
+    #showModal(modalDialog("Processing File...", footer = NULL))
     
     req(input$sfb_archive_customer_file)
     
@@ -190,7 +190,7 @@ shinyServer(function(session, input, output) {
       #load menu
       load_menu(session, input, output)
       
-      removeModal()
+      #removeModal()
       cat(file = stderr(), "\n\n","sfb_archive_customer_file button clicked...end", "\n")
     }
     
