@@ -3,6 +3,10 @@ cat(file = stderr(), "Shiny_Observers.R", "\n")
 observe_buttons <- function(session, input , output) {
   cat(file = stderr(), "observe buttons loaded...", "\n")
   
+  observeEvent(input$load_customer_archive_file,{
+    runjs('document.getElementById("load_customer_archive_file").style.backgroundColor = "green";')
+  })
+  
   observeEvent(input$accept_parameters,{
     runjs('document.getElementById("accept_parameters").style.backgroundColor = "green";')
   })

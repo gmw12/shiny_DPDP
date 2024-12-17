@@ -37,7 +37,7 @@ body <- dashboardBody(
                      br(),
                      br(),
                      br(),
-                     h1("Welcome to Duke Proteomics Data Processing", style = "font-size:60px"),
+                     h1("Welcome to Duke Proteomics Data Processing Tool", style = "font-size:60px"),
                      br(),
                      img(src = 'astral.png', align = "center", width = 400, height = 400 )
               )
@@ -59,7 +59,7 @@ body <- dashboardBody(
                          br(),
                          br(),
                          br(),
-                         tags$h3("thanks for coming, blah blah blah"),
+                         tags$h3("Welcome to the Duke Proteomics and Metabolomics Core Facility Data processing tool. This tools is designed to integrate directly with your specific proteomic dataset and allow various statistical analysis options, global data reduction visualizations such as PCA and clustering, gene ontology, classifications, pathway analysis and string-db based protein interaction visualizations. Note that this tool is developed in-house by DPMCF staff and is continuing to be optimized for less common experimental variables. We appreciate feedback on any bugs that you may encounter (greg.waitt@duke.edu)."),
                      )
               ),
               column(width = 6, align = "center",   
