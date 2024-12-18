@@ -1,0 +1,28 @@
+apiVersion: build.openshift.io/v1
+kind: BuildConfig
+metadata:
+  labels:
+    name: shinyproxy
+  name: shinyproxy
+spec:
+  failedBuildsHistoryLimit: 1
+  output:
+    to:
+      kind: ImageStreamTag
+      name: shinyproxy:latest
+  postCommit: {}
+  resources: {}
+  runPolicy: Serial
+  source:
+    contextDir: ShinyProxy
+    git:
+      uri: https://github.com/gmw12/shinyproxy-docker.git
+    type: Git
+  strategy:
+    dockerStrategy:
+      dockerfilePath: Dockerfile
+    type: Docker
+  successfulBuildsHistoryLimit: 3
+  triggers:
+  - type: ConfigChange
+status:

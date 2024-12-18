@@ -1,0 +1,46 @@
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: shinyproxy
+  labels:
+    app: shinyproxy
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: shinyproxy
+  template:
+    metadata:
+      name: shinyproxy
+      labels:
+        app: shinyproxy
+    spec:
+      serviceAccount: shinyproxy
+      containers:
+       - name: shinyproxy
+         image: image-registry.openshift-image-registry.svc:5000/dpmsr-gw/shinyproxy
+         livenessProbe:
+          httpGet:
+            path: /actuator/health/liveness
+            port: 9090
+          periodSeconds: 1
+         readinessProbe:
+          httpGet:
+            path: /actuator/health/readiness
+            port: 9090
+          periodSeconds: 1
+         startupProbe:
+          httpGet:
+            path: /actuator/health/liveness
+            port: 9090
+          failureThreshold: 8
+          periodSeconds: 50
+         volumeMounts:
+          - name: config-volume
+            mountPath: /opt/shinyproxy/application.yml
+            subPath: application.yml
+      volumes:
+       - name: config-volume
+         configMap:
+           name: shinyproxy-application-yml

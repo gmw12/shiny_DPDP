@@ -1,0 +1,27 @@
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: shinyproxy-application-yml
+data:
+  application.yml: |
+    proxy:
+      title: Open Analytics Shiny Proxy
+      logo-url: https://www.openanalytics.eu/shinyproxy/logo.png
+      port: 8080
+      authentication: none
+      container-backend: kubernetes
+      container-wait-time: 120000
+      hide-navbar: true
+      kubernetes:
+        internal-networking: true
+        namespace: dpmsr-gw
+      specs:
+      - id: 01_PDPD
+        display-name: Shiny_DPDP
+        description: Shiny app
+        container-cmd: ["R", "-e", "shiny::runApp('/app')"]
+        container-image: gregwaitt/app-shinyproxy:1.1
+    logging:
+      file:
+        name: shinyproxy.log
