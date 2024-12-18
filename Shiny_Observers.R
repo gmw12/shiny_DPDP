@@ -67,6 +67,30 @@ observe_buttons <- function(session, input , output) {
     runjs('document.getElementById("set_pathway").style.backgroundColor = "green";')
   })
   
+  observeEvent(input$wiki_show,{
+    runjs('document.getElementById("wiki_show").style.backgroundColor = "green";')
+  })
+  
+  observeEvent(input$profile_go_show,{
+    runjs('document.getElementById("profile_go_show").style.backgroundColor = "green";')
+  })
+  
+  observeEvent(input$go_show,{
+    runjs('document.getElementById("go_show").style.backgroundColor = "green";')
+  }) 
+  
+  observeEvent(input$start_go_volcano,{
+    runjs('document.getElementById("start_go_volcano").style.backgroundColor = "green";')
+  })  
+  
+  observeEvent(input$get_string,{
+    runjs('document.getElementById("get_string").style.backgroundColor = "green";')
+  })  
+  
+  observeEvent(input$get_string_enrich,{
+    runjs('document.getElementById("get_string_enrich").style.backgroundColor = "green";')
+  })  
+  
 }
 
 #----------------------------------------------------------------------------------------- 

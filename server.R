@@ -164,7 +164,7 @@ shinyServer(function(session, input, output) {
   observeEvent(input$load_customer_archive_file, {
     
     cat(file = stderr(), "\n\n","sfb_archive_customer_file button clicked...", "\n")
-    #showModal(modalDialog("Processing File...", footer = NULL))
+    showModal(modalDialog("Processing File...", footer = NULL))
     
     req(input$sfb_archive_customer_file)
     
@@ -190,7 +190,10 @@ shinyServer(function(session, input, output) {
       #load menu
       load_menu(session, input, output)
       
-      #removeModal()
+      removeModal()
+      
+      shinyalert("Success!", "File Processed.  Please select 'Stats' or 'Pathway' on the left panel to expand options", type = "success")  
+      
       cat(file = stderr(), "\n\n","sfb_archive_customer_file button clicked...end", "\n")
     }
     
@@ -642,18 +645,20 @@ shinyServer(function(session, input, output) {
     
     source("Shiny_Wiki.R")
     run_wiki(session, input, output, params)
-  
+    
+    db_table_to_Excel("wiki_table",  "wiki pathways", stringr::str_c(params$string_path, input$wiki_data_filename), params)
+    
     cat(file = stderr(), "wiki_show clicked...end" , "\n") 
     
   })
   #-------------------------------------------------------------------------------------------------------------  
-  observeEvent(input$wiki_data_save, { 
-    cat(file = stderr(), "wiki_data_save clicked..." , "\n")
-    
-    db_table_to_Excel("wiki_table",  "wiki pathways", stringr::str_c(params$string_path, input$wiki_data_filename), params)
-    
-    cat(file = stderr(), "wiki_data_save clicked...end" , "\n")
-  })
+  # observeEvent(input$wiki_data_save, { 
+  #   cat(file = stderr(), "wiki_data_save clicked..." , "\n")
+  #   
+  #   db_table_to_Excel("wiki_table",  "wiki pathways", stringr::str_c(params$string_path, input$wiki_data_filename), params)
+  #   
+  #   cat(file = stderr(), "wiki_data_save clicked...end" , "\n")
+  # })
   #-------------------------------------------------------------------------------------------------------------
 
   observeEvent(input$profile_go_show, {
@@ -662,17 +667,19 @@ shinyServer(function(session, input, output) {
     source("Shiny_Wiki.R")
     run_profile_go(session, input, output, params)
     
+    db_table_to_Excel("go_profile_result",  "go profile", stringr::str_c(params$string_path, input$go_profile_filename), params)
+    
     cat(file = stderr(), "profile_go_show clicked...end" , "\n")
   })
   #-------------------------------------------------------------------------------------------------------------
   #-------------------------------------------------------------------------------------------------------------  
-  observeEvent(input$profile_go_excel, { 
-    cat(file = stderr(), "profile_go_excel clicked..." , "\n")
-    
-    db_table_to_Excel("go_profile_result",  "go profile", stringr::str_c(params$string_path, input$go_profile_filename), params)
-    
-    cat(file = stderr(), "profile_go_excel clicked...end" , "\n")
-  })
+  # observeEvent(input$profile_go_excel, { 
+  #   cat(file = stderr(), "profile_go_excel clicked..." , "\n")
+  #   
+  #   db_table_to_Excel("go_profile_result",  "go profile", stringr::str_c(params$string_path, input$go_profile_filename), params)
+  #   
+  #   cat(file = stderr(), "profile_go_excel clicked...end" , "\n")
+  # })
   
   #-------------------------------------------------------------------------------------------------------------
   observeEvent(input$go_show, {
@@ -681,17 +688,20 @@ shinyServer(function(session, input, output) {
     source("Shiny_ViSEAGO.R")
     run_go_analysis(session, input, output, params)
     
+    db_table_to_Excel("go_data",  "go analysis", stringr::str_c(params$string_path, input$go_filename), params)
+    
     cat(file = stderr(), "profile_go_show clicked...end" , "\n")
   }
   )   
+  
   #-------------------------------------------------------------------------------------------------------------  
-  observeEvent(input$go_excel, { 
-    cat(file = stderr(), "go_excel clicked..." , "\n")
-    
-    db_table_to_Excel("go_data",  "go analysis", stringr::str_c(params$string_path, input$go_filename), params)
-    
-    cat(file = stderr(), "go_excel clicked...end" , "\n")
-  })
+  # observeEvent(input$go_excel, { 
+  #   cat(file = stderr(), "go_excel clicked..." , "\n")
+  #   
+  #   db_table_to_Excel("go_data",  "go analysis", stringr::str_c(params$string_path, input$go_filename), params)
+  #   
+  #   cat(file = stderr(), "go_excel clicked...end" , "\n")
+  # })
   
   #-------------------------------------------------------------------------------------------------------------
   observeEvent(input$start_go_volcano, {
@@ -700,16 +710,19 @@ shinyServer(function(session, input, output) {
     source('Shiny_ViSEAGO.R')
     create_go_volcano(session, input, output, params)
     
-    cat(file = stderr(), "start_go_volcano clicked...end" , "\n")
-  })  
-  #-------------------------------------------------------------------------------------------------------------  
-  observeEvent(input$go_volcano_excel, { 
-    cat(file = stderr(), "go_volcano_excel clicked..." , "\n")
-    
     db_table_to_Excel("go_volcano_data",  "go volcano data", stringr::str_c(params$string_path, input$go_volcano_filename), params)
     
-    cat(file = stderr(), "go_volcano_excel clicked...end" , "\n")
-  })
+    cat(file = stderr(), "start_go_volcano clicked...end" , "\n")
+  })  
+  
+  #-------------------------------------------------------------------------------------------------------------  
+  # observeEvent(input$go_volcano_excel, { 
+  #   cat(file = stderr(), "go_volcano_excel clicked..." , "\n")
+  #   
+  #   db_table_to_Excel("go_volcano_data",  "go volcano data", stringr::str_c(params$string_path, input$go_volcano_filename), params)
+  #   
+  #   cat(file = stderr(), "go_volcano_excel clicked...end" , "\n")
+  # })
   
   #-------------------------------------------------------------------------------------------------------------
   
@@ -729,17 +742,20 @@ shinyServer(function(session, input, output) {
     source('Shiny_String.R')
     run_string_enrich(session, input, output, params)
     
+    db_table_to_Excel("string_enrichment",  "string_enrich", stringr::str_c(params$string_path, input$string_enrich_data_filename), params)
+    
     cat(file = stderr(), "get_string_enrich clicked...end", "\n")
   }) 
   
   #-------------------------------------------------------------------------------------------------------------  
-  observeEvent(input$string_enrich_data_save, { 
-    cat(file = stderr(), "string_enrich_data_save clicked..." , "\n")
-    
-    db_table_to_Excel("string_enrichment",  "string_enrich", stringr::str_c(params$string_path, input$string_enrich_data_filename), params)
-    
-    cat(file = stderr(), "string_enrich_data_save clicked...end" , "\n")
-  })
+
+  # observeEvent(input$string_enrich_data_save, { 
+  #   cat(file = stderr(), "string_enrich_data_save clicked..." , "\n")
+  #   
+  #   db_table_to_Excel("string_enrichment",  "string_enrich", stringr::str_c(params$string_path, input$string_enrich_data_filename), params)
+  #   
+  #   cat(file = stderr(), "string_enrich_data_save clicked...end" , "\n")
+  # })
   
   
   #-------------------------------------------------------------------------------------------------------------  
