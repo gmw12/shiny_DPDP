@@ -17,7 +17,7 @@ data:
         internal-networking: true
         namespace: dpmsr-gw
       specs:
-      - id: 01_PDPD
+      - id: Shiny_DPDP
         display-name: Shiny_DPDP
         description: Shiny app
         container-cmd: ["R", "-e", "shiny::runApp('/app')"]
