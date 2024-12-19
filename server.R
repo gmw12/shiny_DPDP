@@ -66,6 +66,12 @@ shinyServer(function(session, input, output) {
   #button observers
   observe_buttons(session, input, output)
   
+  #create message for customer version
+  if (site_user != "dpmsr") {
+    shinyalert("Welcome!", "Please select 'Load' on the left panel.  Click 'Browse' to select file.  When the file is 100% uploaded then click 'Process File'.", type = "success")
+  }
+  
+  
   removeModal()
   
   #------------------------------------------------------------------------------------------------------  
