@@ -256,9 +256,12 @@ stats_Final_Excel <- function(session, input, output, params) {
   
   require(openxlsx)
   
-  file_dir <- stringr::str_c(params$data_path, input$stats_norm_type) 
-  filename <- stringr::str_c(params$data_path, input$stats_norm_type, "//", input$final_stats_name)
-  filename_params <- stringr::str_c(params$data_path, input$stats_norm_type, "//", params$file_prefix, "_Parameters.xlsx")
+  #remove whitespace
+  input_stats_norm_type <- trimws(input$stats_norm_type)
+  
+  file_dir <- stringr::str_c(params$data_path, input_stats_norm_type) 
+  filename <- stringr::str_c(params$data_path, input_stats_norm_type, "//", input$final_stats_name)
+  filename_params <- stringr::str_c(params$data_path, input_stats_norm_type, "//", params$file_prefix, "_Parameters.xlsx")
   
   if (!fs::is_dir(file_dir)) {
     cat(file = stderr(), str_c("create_dir...", file_dir), "\n")

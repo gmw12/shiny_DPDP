@@ -319,8 +319,8 @@ bar_plot2 <- function(table_name, plot_title, plot_filename, plot_dir, params, d
     #scale_y_discrete(labels = NULL) +
     ggplot2::coord_cartesian(ylim = NULL, expand = TRUE) +
     ggplot2::theme(plot.title = ggplot2::element_text(hjust = 0.5), 
-                   axis.text.x = ggplot2::element_text(size = 5, angle = 90,  color = "black"),
-                   axis.text.y = ggplot2::element_text(size = 5,  color = "black"),
+                   axis.text.x = ggplot2::element_text(size = 8, angle = 90,  color = "black"),
+                   axis.text.y = ggplot2::element_text(size = 10,  color = "black"),
     ) 
   ggplot2::ggsave(file_name, width = 5, height = 5)
   cat(file = stderr(), "Function bar_plot2...end", "\n")
