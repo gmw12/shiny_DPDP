@@ -119,7 +119,7 @@ shinyServer(function(session, input, output) {
       #read data files
       load_data_file(session, input, output, params)
       
-      output$data_file_name <- renderText({get_data_file_name()})
+      #output$data_file_name <- renderText({get_data_file_name()})
       
       #update UI
       ui_render_load_data(session, input, output)
