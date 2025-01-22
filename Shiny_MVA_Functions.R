@@ -220,8 +220,11 @@ stat_add <- function(df, df_missing, params, comp_number, stats_comp, df_design)
   
   
   if (params$raw_data_format != "protein"){
-    df_N_missing <- df_missing |> dplyr::select(starts_with(stats_comp$FactorsN[comp_number]))
-    df_D_missing <- df_missing |> dplyr::select(starts_with(stats_comp$FactorsD[comp_number]))
+    #df_N_missing <- df_missing |> dplyr::select(starts_with(stats_comp$FactorsN[comp_number]))
+    #df_D_missing <- df_missing |> dplyr::select(starts_with(stats_comp$FactorsD[comp_number]))
+    df_N_missing <- df_missing[,n_start:n_end]
+    df_D_missing <- df_missing[,d_start:d_end]
+    
   }
   
   
