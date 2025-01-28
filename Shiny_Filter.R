@@ -10,6 +10,13 @@ filter_data <- function(session, input, output){
     bg_filter <- callr::r_bg(func = filter_data_bg, args = list("precursor_noise", "precursor_filter", params), stderr = str_c(params$error_path, "//error_filter.txt"), supervise = TRUE)
     bg_filter$wait()
     print_stderr("error_filter.txt")
+    error_alert <- bg_filter$get_result()
+    cat(file = stderr(), str_c("filter erorrs -> ", error_alert), "\n")
+    
+    if (error_alert != "") {
+      shinyalert("Error", error_alert)
+    }
+    
   } 
   
   params <<- read_table_try("params", params)
@@ -30,6 +37,7 @@ filter_data_bg <- function(table_name, new_table_name, params){
   source("Shiny_File.R")
   
   start <- Sys.time()
+  error_alert <- ""
   
   df <- read_table_try(table_name, params)
   sample_groups <- read_table_try("sample_groups", params)
@@ -133,7 +141,11 @@ filter_data_bg <- function(table_name, new_table_name, params){
   # Step 7, precursor quality filter 
   cat(file = stderr(), "step 6 - Precursor Quality Filter...", "\n")
   if (params$precursor_quality) {
-    df <- precursor_quality(df, params)
+    if(params$data_output == "Peptide") {
+      error_alert <- "Precursor Quality Filter is not available for Peptide Data"
+    }else{
+      df <- precursor_quality(df, params)
+    }
   }
   step7 <- filter_stats(df)
   cat(file = stderr(), stringr::str_c("step 7 - ", step6[[1]]-step7[[1]], " ", step6[[2]]-step7[[2]], " ", step6[[3]]-step7[[3]]), "\n")
@@ -200,7 +212,7 @@ filter_data_bg <- function(table_name, new_table_name, params){
   write_table_try("params", params, params)
   
   cat(file = stderr(), stringr::str_c("filter_data completed in ", Sys.time() - start), "\n")
-  return()
+  return(error_alert)
 }
 
 

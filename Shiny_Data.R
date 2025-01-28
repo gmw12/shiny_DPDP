@@ -563,6 +563,8 @@ prepare_data <- function(session, input, output, params) {  #function(data_type,
   cat(file = stderr(), "Function prepare_data...", "\n")
   showModal(modalDialog("Preparing Data...", footer = NULL))
   
+  sample_error <- FALSE
+  
   if (params$raw_data_format == "protein_peptide") {
     cat(file = stderr(), "prepare data_type 1", "\n")
     protein_to_peptide()
@@ -582,13 +584,14 @@ prepare_data <- function(session, input, output, params) {  #function(data_type,
     cat(file = stderr(), "prepare data_type 4", "\n")
     bg_precursor_to_precursor <- callr::r_bg(func = precursor_to_precursor_bg, args = list(params), stderr = str_c(params$error_path, "//error_preparedata.txt"), supervise = TRUE)
     bg_precursor_to_precursor$wait()
-    sample_error<- bg_precursor_to_precursor$get_result()
+    sample_error <- bg_precursor_to_precursor$get_result()
     print_stderr("error_preparedata.txt")
     params$current_data_format <- "precursor"
   }else if (params$raw_data_format == "precursor" & params$data_output == "Peptide" & params$data_source == "SP") {
     cat(file = stderr(), "prepare data_type 5", "\n")
     bg_precursor_to_precursor_ptm <- callr::r_bg(func = precursor_to_precursor_ptm_bg, args = list(params), stderr = str_c(params$error_path, "//error_preparedata.txt"), supervise = TRUE)
     bg_precursor_to_precursor_ptm$wait()
+    sample_error <- bg_precursor_to_precursor_ptm$get_result()
     print_stderr("error_preparedata.txt")
     params$current_data_format <- "precursor"
   }else if (params$raw_data_format == "precursor" & params$data_output == "Protein" & params$data_source == "PD") {
@@ -711,7 +714,7 @@ precursor_to_precursor_bg <- function(params){
 
 #----------------------------------------------------------------------------------------
 precursor_to_precursor_ptm_bg <- function(params){
-  cat(file = stderr(), "Function precursor_to_precursor_bg", "\n")
+  cat(file = stderr(), "Function precursor_to_precursor_ptm_bg", "\n")
   source("Shiny_Rollup.R")
   source("Shiny_Data.R")
   
@@ -729,7 +732,9 @@ precursor_to_precursor_ptm_bg <- function(params){
   
   if (ncol(df) != (n_col + params$sample_number))
   {
-    shinyalert::shinyalert("Oops!", "Number of columns extracted is not as expected", type = "error") 
+    sample_error <- TRUE
+  }else{
+    sample_error <- FALSE
     cat(file = stderr(), "Number of columns extracted is not as expected", "\n")
   }
   
@@ -764,7 +769,8 @@ precursor_to_precursor_ptm_bg <- function(params){
   RSQLite::dbWriteTable(conn, "precursor_start", df, overwrite = TRUE)
   RSQLite::dbDisconnect(conn)
   
-  cat(file = stderr(), "precursor_to_precursor_bg complete", "\n\n")
+  cat(file = stderr(), "precursor_to_precursor_ptm_bg complete", "\n\n")
+  return(sample_error)
 }
 
 #----------------------------------------------------------------------------------------
