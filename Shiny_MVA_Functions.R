@@ -299,6 +299,20 @@ stat_add <- function(df, df_missing, params, comp_number, stats_comp, df_design)
   df$Stats[filtered_up] <- "Up"
   df$Stats[filtered_down] <- "Down"
   
+  
+  cat(file = stderr(), "stat_add...10", "\n")
+  #filter stats by ptm if needed
+  if (params$data_output == "Peptide" & params$checkbox_report_ptm & params$data_source == "SP") {
+      df <- df[grep(params$peptide_report_grep, df$Sequence),]
+    }
+  
+  cat(file = stderr(), "stat_add...11", "\n")
+  #filter stats by accession if needed
+  if (params$checkbox_report_accession & params$data_source == "SP") {
+    df <- df[grep(params$report_accession, df$Accession),]
+  }
+  
+  
   df <- df[order(df$Stats, -df[[stringr::str_c(stats_comp$Name[comp_number], "_pval")]], decreasing = TRUE), ]
   
   cat(file = stderr(), "Function - stat_add...end", "\n\n")  
