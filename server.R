@@ -245,12 +245,12 @@ shinyServer(function(session, input, output) {
       cat(file = stderr(), "\n\n","motif_fasta_file button clicked...1", "\n")
       
       
-      output$fasta_file_name <- renderText({
-        if (req(typeof(input$motif_fasta_file)=="list")) {
-          motif_path <- parseFilePaths(volumes, input$motif_fasta_file)
-          basename(motif_path$datapath)
-        }
-      })
+      # output$fasta_file_name <- renderText({
+      #   if (req(typeof(input$motif_fasta_file)=="list")) {
+      #     motif_path <- parseFilePaths(volumes, input$motif_fasta_file)
+      #     basename(motif_path$datapath)
+      #   }
+      # })
       
       cat(file = stderr(), "\n\n","motif_fasta_file button clicked...end", "\n")
     }

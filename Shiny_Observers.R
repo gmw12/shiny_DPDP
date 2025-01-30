@@ -91,6 +91,14 @@ observe_buttons <- function(session, input , output) {
     runjs('document.getElementById("get_string_enrich").style.backgroundColor = "green";')
   })  
   
+  observeEvent(input$parse_fasta,{
+    runjs('document.getElementById("parse_fasta").style.backgroundColor = "green";')
+  })  
+  
+  observeEvent(input$motif_show,{
+    runjs('document.getElementById("motif_show").style.backgroundColor = "green";')
+  })
+  
 }
 
 #----------------------------------------------------------------------------------------- 

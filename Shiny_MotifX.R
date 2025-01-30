@@ -4,11 +4,20 @@ cat(file = stderr(), "Shiny_MotifX.R", "\n")
 create_phos_database <- function(session, input, output, params){
   cat(file=stderr(), "Function create_phos_database...", "\n")
   
-  fasta_path <- parseFilePaths(volumes, input$motif_fasta_file)
+  if(site_user == "dpmsr") {
+    cat(file=stderr(), "Loading fasta file from dpmsr user", "\n")
+    fasta_path <- parseFilePaths(volumes, input$motif_fasta_file)
+    fasta_file_path <- fasta_path$datapath
+    output$fasta_file_name <- renderText({fasta_file_path})
+  }else{
+    cat(file=stderr(), "Loading fasta file from non-dpmsr user", "\n")
+    fasta_file_path <-input$motif_fasta_file$datapath
+    output$fasta_file_name <- renderText({fasta_file_path})
+  } 
+
   #save(fasta_path, file =  "z889") #   load(file="z889")
-  
-  
-  args_list <- list(input$fasta_grep1, input$fasta_grep2, fasta_path, params)
+
+  args_list <- list(input$fasta_grep1, input$fasta_grep2, fasta_file_path, params)
   bg_phos_db <- callr::r_bg(func = create_phos_database_bg, args = args_list, stderr = stringr::str_c(params$error_path, "//error_phos_db.txt"), supervise = TRUE)
   bg_phos_db$wait()
   print_stderr("error_phos_db.txt")
@@ -35,17 +44,16 @@ create_phos_database <- function(session, input, output, params){
 
 #----------------------------------------------------------------------------------------- 
 
-create_phos_database_bg <- function(input_fasta_grep1, input_fasta_grep2, fasta_path, params){
+create_phos_database_bg <- function(input_fasta_grep1, input_fasta_grep2, fasta_file_path, params){
   cat(file=stderr(), "Function create_phos_database_bg...", "\n")
   source('Shiny_File.R')
   
   #save(list = c("input_fasta_grep1", "input_fasta_grep2", "fasta_path"), file="zz2343")
   #   load(file="zz2343")
   
-  cat(file=stderr(), stringr::str_c("fasta_path... ",fasta_path), "\n")
+  cat(file=stderr(), stringr::str_c("fasta_path... ",fasta_file_path), "\n")
   
-  fasta_txt_file <- fasta_path$datapath
-  raw_fasta <- data.frame(readr::read_lines(fasta_txt_file))
+  raw_fasta <- data.frame(readr::read_lines(fasta_file_path))
   raw_fasta_sample <- data.frame(raw_fasta[1:20,])
   
   raw_fasta <- data.frame(lapply(raw_fasta, function(x) gsub(input_fasta_grep1, ">", x)), stringsAsFactors=F)

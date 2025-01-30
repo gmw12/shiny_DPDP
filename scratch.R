@@ -52,7 +52,9 @@ df_filter <- read_table('precursor_filter', params)
 df_noise <- read_table_try('precursor_noise', params)
 df_sltmm <- read_table_try('precursor_impute_sltmm', params)
 
-ptm_data <- read_table("MotifX_ptm_data", params)
+df_motif <- read_table_try('MotifX_table', params)
+
+phos_fasta <- read_table("phos_fasta", params)
 
 mv <- read_table("missing_values", params)
 
