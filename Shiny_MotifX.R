@@ -4,20 +4,26 @@ cat(file = stderr(), "Shiny_MotifX.R", "\n")
 create_phos_database <- function(session, input, output, params){
   cat(file=stderr(), "Function create_phos_database...", "\n")
   
+  showModal(modalDialog("Creating motif database from fasta...", footer = NULL))
+  
   if(site_user == "dpmsr") {
     cat(file=stderr(), "Loading fasta file from dpmsr user", "\n")
     fasta_path <- parseFilePaths(volumes, input$motif_fasta_file)
     fasta_file_path <- fasta_path$datapath
-    output$fasta_file_name <- renderText({fasta_file_path})
+    cat(file=stderr(), stringr::str_c("fasta_path... ",fasta_file_path), "\n")
+    args_list <- list(input$fasta_grep1, input$fasta_grep2, fasta_file_path, params)
   }else{
     cat(file=stderr(), "Loading fasta file from non-dpmsr user", "\n")
-    fasta_file_path <-input$motif_fasta_file$datapath
-    output$fasta_file_name <- renderText({fasta_file_path})
+    test <<- input$motif_fasta_file_customer
+    fasta_file_path <- input$motif_fasta_file_customer$datapath
+    output$fasta_file_name_customer <- renderText({input$motif_fasta_file_customer$name})
+    cat(file=stderr(), stringr::str_c("fasta_path... ", input$motif_fasta_file_customer$name), "\n")
+    args_list <- list(input$fasta_grep1_customer, input$fasta_grep2_customer, fasta_file_path, params)
   } 
 
   #save(fasta_path, file =  "z889") #   load(file="z889")
 
-  args_list <- list(input$fasta_grep1, input$fasta_grep2, fasta_file_path, params)
+  
   bg_phos_db <- callr::r_bg(func = create_phos_database_bg, args = args_list, stderr = stringr::str_c(params$error_path, "//error_phos_db.txt"), supervise = TRUE)
   bg_phos_db$wait()
   print_stderr("error_phos_db.txt")
@@ -26,20 +32,42 @@ create_phos_database <- function(session, input, output, params){
   start_fasta_sample <- bg_fasta_list[[1]]
   colnames(start_fasta_sample) <- c("Fasta")
   end_fasta_sample <- bg_fasta_list[[2]]
+
+  test_bg_fasta_list <<- bg_phos_db$get_result()
+  test1 <<- start_fasta_sample
+  test2 <<- end_fasta_sample
+  
+  if (site_user == "dpmsr") {
+    
+    output$start_fasta_example <- renderRHandsontable({
+      rhandsontable(start_fasta_sample, rowHeaders = NULL) 
+    })
+    output$end_fasta_example<- renderRHandsontable({
+      rhandsontable(end_fasta_sample, rowHeaders = NULL) %>%
+        hot_cols(colWidths = 80, halign = "htCenter" ) %>%
+        hot_col(col = "Accession", halign = "htCenter", colWidths = 200) %>%
+        hot_col(col = "Sequence", halign = "htLeft", colWidths = 800)
+    })
+    
+  }else{
+    
+    output$start_fasta_example_customer <- renderRHandsontable({
+      rhandsontable(start_fasta_sample, rowHeaders = NULL) 
+    })
+    output$end_fasta_example_customer <- renderRHandsontable({
+      rhandsontable(end_fasta_sample, rowHeaders = NULL) %>%
+        hot_cols(colWidths = 80, halign = "htCenter" ) %>%
+        hot_col(col = "Accession", halign = "htCenter", colWidths = 200) %>%
+        hot_col(col = "Sequence", halign = "htLeft", colWidths = 800)
+    })
+    
+  }
+
   
   
-  output$start_fasta_example<- renderRHandsontable({
-    rhandsontable(start_fasta_sample, rowHeaders = NULL) 
-  })
-  
-  output$end_fasta_example<- renderRHandsontable({
-    rhandsontable(end_fasta_sample, rowHeaders = NULL) %>%
-      hot_cols(colWidths = 80, halign = "htCenter" ) %>%
-      hot_col(col = "Accession", halign = "htCenter", colWidths = 200) %>%
-      hot_col(col = "Sequence", halign = "htLeft", colWidths = 800)
-  })
   
   cat(file=stderr(), "Function create_phos_database...end", "\n") 
+  removeModal()
 }
 
 #----------------------------------------------------------------------------------------- 
@@ -50,8 +78,6 @@ create_phos_database_bg <- function(input_fasta_grep1, input_fasta_grep2, fasta_
   
   #save(list = c("input_fasta_grep1", "input_fasta_grep2", "fasta_path"), file="zz2343")
   #   load(file="zz2343")
-  
-  cat(file=stderr(), stringr::str_c("fasta_path... ",fasta_file_path), "\n")
   
   raw_fasta <- data.frame(readr::read_lines(fasta_file_path))
   raw_fasta_sample <- data.frame(raw_fasta[1:20,])

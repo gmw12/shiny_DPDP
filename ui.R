@@ -1398,7 +1398,7 @@ tabItem("phos_setup",
               column(width =3, offset =0,
                      br(),
                      textOutput("fasta_file_name"),
-                     tags$head(tags$style("#fasta{color: blue; font-size: 18px; font-style: bold;}"))
+                     tags$head(tags$style("#fasta_file_name{color: blue; font-size: 18px; font-style: bold;}"))
               )
           )
         ), 
@@ -1423,50 +1423,50 @@ tabItem("phos_setup",
 
     tabItem("phos_setup_customer",
       fluidRow(
-        box(id = "phos_fasta_setup", title = "Phos Database Parameters...", status = "primary",
+        box(id = "phos_fasta_setup_customer", title = "Phos Database Parameters...", status = "primary",
             solidHeader = TRUE, collapsible = FALSE, align = "left", width = 12, height = 150,
-            column(width =2, offset =0,
+            column(width =3, offset =0,
               br(),
-              fileInput("motif_fasta_file", "Please fasta file...",
-                        multiple = FALSE, width=300,
+              fileInput("motif_fasta_file_customer", "Please select fasta file...",
+                        multiple = FALSE, width=400,
                         accept = c(".fasta")),
-              bsTooltip("motif_fasta_file", "Select a standard fasta file to format for motif-x.  The file should be in fasta format with the protein accession as the first line of the fasta sequence.  The protein accession should be in the format >sp|P12345|MYC_HUMAN",
+              bsTooltip("motif_fasta_file_customer", "Select a standard fasta file to format for motif-x.  The file should be in fasta format with the protein accession as the first line of the fasta sequence.  The protein accession should be in the format >sp|P12345|MYC_HUMAN",
                         "left", trigger = "hover", options = list(container = "body")),
               ),
               #shinyFilesButton('motif_fasta_file', label='Select Motif-X FASTA', title='Please select fasta file to format for motif-x', multiple=FALSE,
               #                 style="color: #fff; background-color: #337ab7; border-color: #2e6da4"),
             column(width =2, offset =0,
-              textInput("fasta_grep1", label = "Accession start...", value = ">sp\\|"),
+              textInput("fasta_grep1_customer", label = "Accession start...", value = ">sp\\|"),
             ),
             column(width =2, offset =0,
-              textInput("fasta_grep2", label = "Accession start...", value = "\\|[^.]*$"),
+              textInput("fasta_grep2_customer", label = "Accession start...", value = "\\|[^.]*$"),
             ),
             column(width =2, offset =0,
               br(),
-              actionButton("parse_fasta", label = "Format fasta", width = 150,
+              actionButton("parse_fasta_customer", label = "Format fasta", width = 150,
                         style="color: #fff; background-color: #337ab7; border-color: #2e6da4")
           ),
             column(width =3, offset =0,
                 br(),
-                 textOutput("fasta_file_name"),
-                 tags$head(tags$style("#fasta{color: blue; font-size: 18px; font-style: bold;}"))
+                 textOutput("fasta_file_name_customer"),
+                 tags$head(tags$style("#fasta_file_name_customer{color: blue; font-size: 18px; font-style: bold;}"))
           )
           )
         ), 
         
         fluidRow(
-          box(id = "phos_fasta_old", title = "Original Phos Database...", status = "primary",
+          box(id = "phos_fasta_old_customer", title = "Original Phos Database...", status = "primary",
               solidHeader = TRUE, collapsible = FALSE, align = "left", width = 4, height = 600,
               br(),
               br(),
-              rHandsontableOutput("start_fasta_example")
+              rHandsontableOutput("start_fasta_example_customer")
           ),
           
-          box(id = "phos_fasta_new", title = "Formated Phos Database...", status = "primary",
+          box(id = "phos_fasta_new_customer", title = "Formated Phos Database...", status = "primary",
               solidHeader = TRUE, collapsible = FALSE, align = "left", width = 8, height = 600,
               br(),
               br(),
-              rHandsontableOutput("end_fasta_example")
+              rHandsontableOutput("end_fasta_example_customer")
         )
         )
       ),

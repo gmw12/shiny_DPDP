@@ -244,13 +244,9 @@ shinyServer(function(session, input, output) {
     if (is.list(input$motif_fasta_file)) {
       cat(file = stderr(), "\n\n","motif_fasta_file button clicked...1", "\n")
       
-      
-      # output$fasta_file_name <- renderText({
-      #   if (req(typeof(input$motif_fasta_file)=="list")) {
-      #     motif_path <- parseFilePaths(volumes, input$motif_fasta_file)
-      #     basename(motif_path$datapath)
-      #   }
-      # })
+      motif_path <- parseFilePaths(volumes, input$motif_fasta_file)
+      output$fasta_file_name <- renderText({basename(motif_path$datapath)})
+
       
       cat(file = stderr(), "\n\n","motif_fasta_file button clicked...end", "\n")
     }
@@ -767,11 +763,21 @@ shinyServer(function(session, input, output) {
   #-------------------------------------------------------------------------------------------------------------  
   observeEvent(input$parse_fasta, { 
     cat(file = stderr(), "parse_fasta clicked..." , "\n")
-    source("Shiny_MotifX.R")
     
+    source("Shiny_MotifX.R")
     create_phos_database(session, input, output, params)
     
     cat(file = stderr(), "parse_fasta clicked...end" , "\n")
+  })
+  
+  #-------------------------------------------------------------------------------------------------------------  
+  observeEvent(input$parse_fasta_customer, { 
+    cat(file = stderr(), "parse_fasta_customer clicked..." , "\n")
+    
+    source("Shiny_MotifX.R")
+    create_phos_database(session, input, output, params)
+    
+    cat(file = stderr(), "parse_fasta_customer clicked...end" , "\n")
   })
   
   #-------------------------------------------------------------------------------------------------------------
