@@ -110,7 +110,7 @@ create_phos_database_bg <- function(input_fasta_grep1, input_fasta_grep2, fasta_
 #----------------------------------------------------------------------------------------- 
 run_motifx <- function(session, input, output, params){
   cat(file=stderr(), "Function run_motifx..." , "\n") 
-  showModal(modalDialog("Motifx running...", footer = NULL))
+  showModal(modalDialog("Motifx running (may take awhile)...", footer = NULL))
   source('Shiny_MotifX.R')
   
   args_list <- list(input$pval_motif, input$motif_min_seq, input$pvalue_cutoff, input$foldchange_cutoff, 
