@@ -907,3 +907,35 @@ test3 <- test2[nzchar(test2)]
 test3[length(test3)]
 
 fs::is_dir(params$design_path)
+
+
+#-------------------------------------------------------------------------------------------
+# count lines in all *.R files in the current directory
+
+#-------------------------------------------------------------------------------------------
+# Create a function to count lines in a file
+count_lines <- function(file) {
+  lines <- readLines(file)
+  return(length(lines))
+}
+#-------------------------------------------------------------------------------------------
+# Get a list of all *.R files in the current directory
+#-------------------------------------------------------------------------------------------
+r_files <- list.files(pattern = "\\.R$", full.names = TRUE)
+#-------------------------------------------------------------------------------------------
+# Use lapply to apply the function to each file and get the results
+#-------------------------------------------------------------------------------------------
+line_counts <- lapply(r_files, count_lines)
+#-------------------------------------------------------------------------------------------
+# Combine the results into a data frame
+#-------------------------------------------------------------------------------------------
+line_counts_df <- data.frame(
+  File = r_files,
+  Lines = unlist(line_counts)
+)
+#-------------------------------------------------------------------------------------------
+# Print the data frame
+#-------------------------------------------------------------------------------------------
+print(line_counts_df)
+print(sum(line_counts_df$Lines))
+print(sum(line_counts_df$Lines)/35)
