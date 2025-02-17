@@ -59,6 +59,10 @@ create_plot <- function(session, input, output, params, plot_number) {
 create_plot_bg <- function(comp_string, input_stats_norm_type, params, plot_number) {
   cat(file = stderr(), stringr::str_c("Function create_plot_bg...", "    plot_number=", plot_number), "\n")
   
+  #save(comp_string, file="z1"); save(input_stats_norm_type, file="z2"); save(params, file="z3"); save(plot_number, file="z4");
+  #load(file="z1");  load(file="z2");load(file="z3"); load(file="z4");
+  
+  
   source("Shiny_File.R")
   source("Shiny_Interactive.R")
   
