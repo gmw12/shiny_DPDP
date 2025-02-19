@@ -939,3 +939,11 @@ line_counts_df <- data.frame(
 print(line_counts_df)
 print(sum(line_counts_df$Lines))
 print(sum(line_counts_df$Lines)/35)
+
+
+
+#-------------------------------------------------------------------------------------------
+p = df$K10_v_Ki17778_pval
+#sort p 
+p = sort(p)
+adjpval = p.adjust(p, method = "fdr")

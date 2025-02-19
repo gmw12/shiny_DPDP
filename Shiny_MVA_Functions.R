@@ -240,6 +240,8 @@ stat_add <- function(df, df_missing, params, comp_number, stats_comp, df_design)
   df[[stringr::str_c(stats_comp$Name[comp_number], "_FC2")]] <- foldchange_decimal_gw(df_N, df_D, params)
   df[[stringr::str_c(stats_comp$Name[comp_number], "_pval")]] <- pvalue_gw(df_N, df_D, params)
   
+  save(df, file="zdf")
+  
   cat(file = stderr(), "stat_add...5", "\n")
   if (params$checkbox_adjpval) {
     df[[stringr::str_c(stats_comp$Name[comp_number], "_adjpval")]] <- p.adjust(df[[stringr::str_c(stats_comp$Name[comp_number], "_pval")]] , method = params$padjust_options) 
