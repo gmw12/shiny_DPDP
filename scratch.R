@@ -75,6 +75,9 @@ stats_comp <- read_table("stats_comp", params)
 sample_groups <- read_table("sample_groups", params)
 
 test <- read_table('params', params)
+
+
+
 df1 <- read_table("peptide_impute_sltmm_Lrrk2_v_Control_final", params)
 df_norm_data <- read_table_try('precursor_normdata', params)
 df <- read_table_try('precursor_noise', params)

@@ -107,6 +107,7 @@ set_sample_groups <- function(session, input, output, params){
 #----------------------------------------------------------------------------------------
 set_sample_groups_bg <- function(session, input, output, params, check_design_sort){
   cat(file = stderr(), "Function set_sample_groups_bg ...", "\n")
+  source("Shiny_File.R")
   #----------------------------------------------------------------------------------------
   #check if sample list is sorted (groups are together)
   
@@ -141,10 +142,8 @@ set_sample_groups_bg <- function(session, input, output, params, check_design_so
     return(design)
   }
 
+  design <- read_table_try("design", params)
 
-  conn <- RSQLite::dbConnect(RSQLite::SQLite(), params$database_path)
-  design <- RSQLite::dbReadTable(conn, "design")
-  
   #check if using primary group for filter and impute
   cat(file = stderr(), "set_sample_groups ...1", "\n")
   design$PrimaryGroup <- sapply(design$Group, function(string) stringr::str_split(string, "_")[[1]][1])
@@ -200,10 +199,11 @@ set_sample_groups_bg <- function(session, input, output, params, check_design_so
   params$unique_groups <- toString(unique(design$Group))
   
   cat(file = stderr(), "set_sample_groups ...5", "\n")
-  RSQLite::dbWriteTable(conn, "sample_groups", sample_groups, overwrite = TRUE )
-  RSQLite::dbWriteTable(conn, "design", design, overwrite = TRUE)
-  RSQLite::dbWriteTable(conn, "params", params, overwrite = TRUE)
-  RSQLite::dbDisconnect(conn)
+  
+  write_table_try("params", params, params)
+  write_table_try("design", design, params)
+  write_table_try("sample_groups", sample_groups, params)
+  
   
   cat(file = stderr(), "set_sample_groups_bg ...end", "\n")
 }

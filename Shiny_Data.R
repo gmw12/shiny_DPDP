@@ -2,7 +2,7 @@ cat(file = stderr(), "Shiny_Data.R", "\n")
 
 #---------------------------------------------------------------------
 
-load_archive_file <- function(session, input, output){
+load_archive_file <- function(session, input, output, params){
   cat(file = stderr(), "Function load_archive_file...", "\n")
   #showModal(modalDialog("Loading archive file...", footer = NULL))
   
@@ -12,6 +12,10 @@ load_archive_file <- function(session, input, output){
     cat(file = stderr(), stringr::str_c("archive_path --->", archive_path), "\n")
     archive_zip <- archive_sfb$datapath
     archive_name <- basename(archive_sfb$datapath)
+    params$archive_path <- archive_path
+    params$error_path <- stringr::str_c(archive_path, "error")
+    params <<- params
+    cat(file = stderr(), stringr::str_c("error_path -->", params$error_path), "\n")
   }else{
     archive_zip <-input$sfb_archive_customer_file$datapath
     cat(file = stderr(), stringr::str_c("archive_zip --->", archive_zip), "\n")
@@ -23,12 +27,23 @@ load_archive_file <- function(session, input, output){
   #save(archive_sfb, file = "testarchive_sfb")
   # load(file = "testarchive_sfb")
   
-
+  create_dir(params$error_path)
   create_dir(database_dir)
   
-  cat(file = stderr(), stringr::str_c("unzip file to database_dir:  ", database_dir), "\n")
+  # if archive_zip has file extention *.zip
+  if (getExtension(archive_zip) == "dpmsr_set") {
+    cat(file = stderr(), stringr::str_c("legacy dpmsr_set file loaded"), "\n")
+    params$archive_source <- "dpmsr_set"
+    params$design_path <- archive_path
+    params <- convert_dpmsr_set(archive_zip, params)
+  }else if (getExtension(archive_zip) == "zip"){
+    cat(file = stderr(), stringr::str_c("unzip file to database_dir:  ", database_dir), "\n")
+    params$archive_source <- "zip"
+    utils::unzip(zipfile = archive_zip, exdir = database_dir)
+  }else{
+    cat(file = stderr(), stringr::str_c("archive file not recognized"), "\n")
+  }
   
-  utils::unzip(zipfile = archive_zip, exdir = database_dir)
   
   temp_files <- list.files(database_dir)
   if (length(temp_files) == 0) {
@@ -51,13 +66,11 @@ load_archive_file <- function(session, input, output){
   
   database_path <- stringr::str_c(database_dir, "/", file_name)
   
-  #load params file
-  if (file.exists(stringr::str_c(database_dir, "/params"))){
-    load(file=stringr::str_c(database_dir, "/params"))
-  }else{
-    conn <- RSQLite::dbConnect(RSQLite::SQLite(), database_path) 
-    params <- RSQLite::dbReadTable(conn, "params")
-    RSQLite::dbDisconnect(conn)
+  #load params file from zip archive only if it exists
+  if (getExtension(archive_zip) == "zip"){
+    if (file.exists(stringr::str_c(database_dir, "/params"))){
+      load(file=stringr::str_c(database_dir, "/params"))
+    }
   }
   
   params$database_dir <- database_dir
@@ -105,6 +118,74 @@ load_data_file <- function(session, input, output, params){
   cat(file = stderr(), "Function load_data_file...end", "\n\n")
   removeModal()
 }
+
+#---------------------------------------------------------------------------------------------------------------------------
+#. convert_dpmsr_set(archive_zip, params)
+
+convert_dpmsr_set <- function(file_name, params){
+  cat(file = stderr(), "function convert_dpmsr_set....", "\n")
+  showModal(modalDialog("Converting dpmsr_set file to database..", footer = NULL))  
+  
+  params_0 <<- params
+  
+  arg_list <- list(file_name, params)
+  bg_convert_dpmsr_set <- callr::r_bg(func = convert_dpmsr_set_bg, args = arg_list, stderr = stringr::str_c(params$error_path, "//bg_convert_dpmsr_set.txt"), supervise = TRUE)
+  bg_convert_dpmsr_set$wait()
+  print_stderr("bg_convert_dpmsr_set.txt")
+  
+  params <- bg_convert_dpmsr_set$get_result()
+  
+  cat(file = stderr(), "function convert_dpmsr_set....end", "\n\n")
+  removeModal()
+  return(params)
+}
+
+#---------------------------------------------------------------------------------------------------------------------------
+convert_dpmsr_set_bg <- function(file_name, params){
+  cat(file = stderr(), "function convert_dpmsr_set_bg....", "\n")
+  source('Shiny_File.R')
+  
+  #save(file_name, file = "z1")
+  #.  load(file = "z1"); load(file = archive_zip);  load(file = "/Users/gregwaitt/Data/10482_062124.dpmsr_set"); 
+  
+  cat(file = stderr(), stringr::str_c("Converting, ", file_name), "\n")
+  load(file = file_name)
+  
+  params$file_prefix <- dpmsr_set$x$file_prefix
+  params$raw_data_format <- tolower(dpmsr_set$x$raw_data_input)
+  params$raw_data_output <- dpmsr_set$x$raw_data_output
+  params$data_source <- dpmsr_set$x$data_source
+  params$primary_group <- dpmsr_set$x$primary_group
+  params$data_output <- dpmsr_set$x$final_data_output
+  params$norm_ptm <- dpmsr_set$x$peptide_ptm_norm
+  
+  design <- dpmsr_set$design[,1:7]
+  colnames(design)[colnames(design) == "PD_Order"] <- "Raw_Order"
+
+  
+  #Global set of data and database paths
+  params$data_path <- stringr::str_c(params$archive_path, params$file_prefix, "/")
+  database_dir <- stringr::str_c(getwd(), "/database/")
+  params$database_path <- stringr::str_c(database_dir, params$file_prefix, ".db")
+  params$error_path <- create_dir(stringr::str_c(params$data_path, "Error"))
+  
+  #create working directory for 
+  create_dir(params$data_path)
+  create_dir(database_dir)
+  create_dir(params$error_path)
+
+  write_table_try("design", design, params)
+  
+  cat(file = stderr(), "function convert_dpmsr_set_bg....end", "\n\n")
+  return(params)
+}
+
+
+
+
+
+
+
 
 
 #----------------------------------------------------------------------------------------

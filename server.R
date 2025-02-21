@@ -144,7 +144,7 @@ shinyServer(function(session, input, output) {
       cat(file = stderr(), "\n\n","sfb_archive_file button clicked...1", "\n")
       
       #copy zip file contents to database dir, load params
-      archive_name <- load_archive_file(session, input, output)
+      archive_name <- load_archive_file(session, input, output, params)
       
       output$archive_file_name <- renderText({archive_name})
       
@@ -180,7 +180,7 @@ shinyServer(function(session, input, output) {
       cat(file = stderr(), "\n\n","sfb_archive_customer_file button clicked...1", "\n")
       
       #copy zip file contents to database dir, load params
-      archive_name <- load_archive_file(session, input, output)
+      archive_name <- load_archive_file(session, input, output, params)
       
       output$archive_file_name_customer <- renderText({archive_name})
       

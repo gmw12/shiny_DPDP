@@ -291,3 +291,9 @@ zip_data_save_bg <- function(input_archive_data_filename, params){
   
   cat(file = stderr(), "Function - zip_data_save_bg...end", "\n")
 }
+
+#----------------------------------------------------------------------------------------
+getExtension <- function(file){ 
+  ex <- strsplit(basename(file), split="\\.")[[1]]
+  return(ex[-1])
+} 
