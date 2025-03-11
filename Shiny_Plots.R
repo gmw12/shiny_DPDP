@@ -1,18 +1,20 @@
 cat(file = stderr(), "Shiny_Plots.R", "\n")
 
 #---------------------------------------------------------------------
-create_plot <- function(session, input, output, params, plot_number) {
+create_plot <- function(session, input, output, db_path, plot_number) {
   cat(file = stderr(), stringr::str_c("Function create_plot...", "    plot_number=", plot_number), "\n")
   
   showModal(modalDialog("Creating plot...", footer = NULL))  
   
   source('Shiny_Interactive.R')
   
+  params <- get_params(db_path)
+  
   comp_string <- input[[str_c("stats_plot_comp", plot_number)]]
   
-  bg_create_plot <- callr::r_bg(func = create_plot_bg, args = list(comp_string, input$stats_norm_type, params, plot_number), stderr = str_c(params$error_path, "//error_create_plot.txt"), supervise = TRUE)
+  bg_create_plot <- callr::r_bg(func = create_plot_bg, args = list(comp_string, input$stats_norm_type, params, db_path, plot_number), stderr = str_c(params$error_path, "//error_create_plot.txt"), supervise = TRUE)
   bg_create_plot$wait()
-  print_stderr("error_create_plot.txt")
+  print_stderr("error_create_plot.txt", db_path)
   
   create_plot_list <- bg_create_plot$get_result()
   df <- create_plot_list[[1]]
@@ -56,7 +58,7 @@ create_plot <- function(session, input, output, params, plot_number) {
 }
 
 #---------------------------------------------------------------------
-create_plot_bg <- function(comp_string, input_stats_norm_type, params, plot_number) {
+create_plot_bg <- function(comp_string, input_stats_norm_type, params, db_path, plot_number) {
   cat(file = stderr(), stringr::str_c("Function create_plot_bg...", "    plot_number=", plot_number), "\n")
   
   #save(comp_string, file="z1"); save(input_stats_norm_type, file="z2"); save(params, file="z3"); save(plot_number, file="z4");
@@ -73,11 +75,11 @@ create_plot_bg <- function(comp_string, input_stats_norm_type, params, plot_numb
     data_name <- stringr::str_c("peptide_impute_", input_stats_norm_type)
   }
   
-  if (data_name %in% list_tables(params)) {
+  if (data_name %in% list_tables(db_path)) {
     cat(file = stderr(), stringr::str_c(data_name, " is in database"), "\n") 
     
     #load data
-    conn <- RSQLite::dbConnect(RSQLite::SQLite(), params$database_path)
+    conn <- RSQLite::dbConnect(RSQLite::SQLite(), db_path)
     df <- RSQLite::dbReadTable(conn, data_name)
     design <- RSQLite::dbReadTable(conn, "design")
     stats_comp <- RSQLite::dbReadTable(conn, "stats_comp")
@@ -135,12 +137,14 @@ create_plot_bg <- function(comp_string, input_stats_norm_type, params, plot_numb
 #---------------------------------------------
 
 #---------------------------------------------------------------------
-create_volcano <- function(session, input, output, params, plot_number) {
+create_volcano <- function(session, input, output, db_path, plot_number) {
   cat(file = stderr(), "Function create_volcano...", "\n")
   
   showModal(modalDialog("Creating volcano...", footer = NULL))  
   source("Shiny_File.R")
   source("Shiny_Interactive.R")
+  
+  params <- get_params(db_path)
   
   if (plot_number == 1) {
     stats_plot_comp <- input$stats_plot_comp1
@@ -157,12 +161,12 @@ create_volcano <- function(session, input, output, params, plot_number) {
   
   arg_list <- list(stats_plot_comp, input$stats_norm_type, input$checkbox_filter_adjpval, stats_volcano_fixed_axis, 
                 stats_volcano_x_axis, stats_volcano_y_axis, volcano_highlight,
-                stats_volcano_highlight_up, stats_volcano_highlight_down, params, plot_number )
+                stats_volcano_highlight_up, stats_volcano_highlight_down, params, db_path, plot_number )
   
   cat(file = stderr(), "Function create_volcano...1", "\n")
   bg_create_volcano <- callr::r_bg(func = create_volcano_bg, args = arg_list, stderr = str_c(params$error_path, "//error_create_volcano.txt"), supervise = TRUE)
   bg_create_volcano$wait()
-  print_stderr("error_create_volcano.txt")
+  print_stderr("error_create_volcano.txt", db_path)
   
   cat(file = stderr(), "Function create_volcano...2", "\n")
   create_volcano_list <- bg_create_volcano$get_result()
@@ -186,7 +190,7 @@ create_volcano <- function(session, input, output, params, plot_number) {
 #---------------------------------------------------------------------
 create_volcano_bg <- function(stats_plot_comp, input_stats_norm_type, input_checkbox_filter_adjpval, stats_volcano_fixed_axis, 
                               stats_volcano_x_axis, stats_volcano_y_axis, 
-                              volcano_highlight, stats_volcano_highlight_up, stats_volcano_highlight_down, params, plot_number) {
+                              volcano_highlight, stats_volcano_highlight_up, stats_volcano_highlight_down, params, db_path, plot_number) {
   cat(file = stderr(), "Function create_volcano_bg...", "\n")
   source('Shiny_File.R')
   
@@ -199,11 +203,11 @@ create_volcano_bg <- function(stats_plot_comp, input_stats_norm_type, input_chec
   
   
   
-  if (data_name %in% list_tables(params)) {
+  if (data_name %in% list_tables(db_path)) {
     cat(file = stderr(), stringr::str_c(data_name, " is in database"), "\n") 
     
     #load data
-    conn <- RSQLite::dbConnect(RSQLite::SQLite(), params$database_path)
+    conn <- RSQLite::dbConnect(RSQLite::SQLite(), db_path)
     df <- RSQLite::dbReadTable(conn, data_name)
     design <- RSQLite::dbReadTable(conn, "design")
     stats_comp <- RSQLite::dbReadTable(conn, "stats_comp")
@@ -270,12 +274,14 @@ create_volcano_bg <- function(stats_plot_comp, input_stats_norm_type, input_chec
 
 
 #Bar plot-------------------------------------------------
-bar_plot <- function(table_name, plot_title, plot_dir, params) {
+bar_plot <- function(table_name, plot_title, plot_dir, db_path) {
   cat(file = stderr(), "Function bar_plot", "\n")
-  
+  source("Shiny_File.R")
   source("Shiny_Plots.R")
+  
+  params <- get_params(db_path)
 
-  conn <- RSQLite::dbConnect(RSQLite::SQLite(), params$database_path)
+  conn <- RSQLite::dbConnect(RSQLite::SQLite(), db_path)
   df <- RSQLite::dbReadTable(conn, table_name)
   RSQLite::dbDisconnect(conn)
   
@@ -290,7 +296,7 @@ bar_plot <- function(table_name, plot_title, plot_dir, params) {
   df <- df[(ncol(df) - params$sample_number + 1):ncol(df)]
   df <- df |>  dplyr::mutate(across(!where(is.numeric), as.numeric))
   
-  bar_plot2(table_name, plot_title, plot_filename, plot_dir, params, df)
+  bar_plot2(table_name, plot_title, plot_filename, plot_dir, db_path, df)
   
   cat(file = stderr(), "Function bar_plot...end", "\n")
   return("done")
@@ -298,13 +304,13 @@ bar_plot <- function(table_name, plot_title, plot_dir, params) {
 
 
 #Bar plot2-------------------------------------------------
-bar_plot2 <- function(table_name, plot_title, plot_filename, plot_dir, params, df) {
-  cat(file = stderr(), "Function bar_plot2", "\n")
+bar_plot2 <- function(table_name, plot_title, plot_filename, plot_dir, db_path, df) {
+  cat(file = stderr(), "Function bar_plot2...", "\n")
   
   source('Shiny_File.R')  
-  design <- read_table_try("design", params)
+  design <- read_table_try("design", db_path)
   
-  df <- df[(ncol(df) - params$sample_number + 1):ncol(df)]
+  df <- df[(ncol(df) - get_param('sample_number', db_path) + 1):ncol(df)]
   df <- df |>  dplyr::mutate(across(!where(is.numeric), as.numeric))
   
   namex <- design$Label
@@ -327,27 +333,28 @@ bar_plot2 <- function(table_name, plot_title, plot_filename, plot_dir, params, d
                    axis.text.y = ggplot2::element_text(size = 10,  color = "black"),
     ) 
   ggplot2::ggsave(file_name, width = 5, height = 5)
-  cat(file = stderr(), "Function bar_plot2...end", "\n")
+  cat(file = stderr(), "Function bar_plot2... end", "\n")
   return("done")
 }
 
 
 #Box plot-------------------------------------------------
-box_plot <- function(table_name, plot_title, plot_dir, params) {
-  cat(file = stderr(), "Function box_plot", "\n")
+box_plot <- function(table_name, plot_title, plot_dir, db_path) {
+  cat(file = stderr(), "Function box_plot...", "\n")
+  source("Shiny_File.R")
   
-  conn <- RSQLite::dbConnect(RSQLite::SQLite(), params$database_path)
+  conn <- RSQLite::dbConnect(RSQLite::SQLite(), db_path)
   design <- RSQLite::dbReadTable(conn, "design")
   df <- RSQLite::dbReadTable(conn, table_name)
   RSQLite::dbDisconnect(conn)
   
   plot_filename <- plot_title
   
-  if (params$ptm) {
+  if (get_param('ptm', db_path)) {
     plot_title <- paste(plot_title, "_PTM", sep = "")
   }
   
-  df <- df[(ncol(df) - params$sample_number + 1):ncol(df)]
+  df <- df[(ncol(df) - get_param('sample_number', db_path) + 1):ncol(df)]
   colnames(df) <- design$Label
   
   df <- df |>  dplyr::mutate(across(!where(is.numeric), as.numeric))
@@ -366,21 +373,22 @@ box_plot <- function(table_name, plot_title, plot_dir, params) {
           las = 1,
           graphics::par(mar = c(2,8,4,1))) #bottom, left, top, right
   dev.off()
-  cat(file = stderr(), "Function box_plot...end", "\n")
+  cat(file = stderr(), "Function box_plot... end", "\n")
 }
 
 
 #Histogram for total intensity-------------------------------------------------
-histogram_plot <- function(table_name, plot_title, params)
-{
-  start <- Sys.time()
+histogram_plot <- function(table_name, plot_title, db_path){
   cat(file = stderr(), "Function histogram_plot...", "\n")
+  start <- Sys.time()
   library(grid)
+  source("Shiny_File.R")
   grDevices::pdf(NULL)
 
-  conn <- RSQLite::dbConnect(RSQLite::SQLite(), params$database_path)
+  conn <- RSQLite::dbConnect(RSQLite::SQLite(), db_path)
   df <- RSQLite::dbReadTable(conn, table_name)
   df_groups <- RSQLite::dbReadTable(conn, "sample_groups")
+  params <- RSQLite::dbReadTable(conn, "params")
   
   plot_filename <- plot_title
   
@@ -486,10 +494,11 @@ histogram_plot <- function(table_name, plot_title, params)
 
 
 #Bar plot-------------------------------------------------
-missing_bar_plot <- function(params) {
+missing_bar_plot <- function(db_path) {
   cat(file = stderr(), "Function missing_bar_plot", "\n")
+  source("Shiny_File.R")
   
-  conn <- RSQLite::dbConnect(RSQLite::SQLite(), params$database_path)
+  conn <- RSQLite::dbConnect(RSQLite::SQLite(), db_path)
   df <- RSQLite::dbReadTable(conn, "missing_values")
   RSQLite::dbDisconnect(conn)
   
@@ -497,17 +506,18 @@ missing_bar_plot <- function(params) {
   ggplot2::geom_bar(ggplot2::aes(x = key, y = num.missing), stat = 'identity') +
   ggplot2::labs(x = 'variable', y = "number of missing values", title = 'Number of missing values') +
   ggplot2::theme(axis.text.x = ggplot2::element_text(angle = 45, hjust = 1))
-  ggplot2::ggsave(stringr::str_c(params$qc_path, "missing_bar_plot.png"), width = 8, height = 8)
+  ggplot2::ggsave(stringr::str_c(get_param('qc_path', db_path), "missing_bar_plot.png"), width = 8, height = 8)
   
   cat(file = stderr(), "Function missing_bar_plot...end", "\n")
   return("done")
 }
 
 #Bar plot-------------------------------------------------
-missing_percent_plot <- function(params) {
-  cat(file = stderr(), "Function missing_percent_plot", "\n")
+missing_percent_plot <- function(db_path) {
+  cat(file = stderr(), "Function missing_percent_plot...", "\n")
+  source("Shiny_File.R")
   
-  conn <- RSQLite::dbConnect(RSQLite::SQLite(), params$database_path)
+  conn <- RSQLite::dbConnect(RSQLite::SQLite(), db_path)
   df <- RSQLite::dbReadTable(conn, "missing_values_plots")
   RSQLite::dbDisconnect(conn)
   
@@ -524,7 +534,7 @@ missing_percent_plot <- function(params) {
   ggplot2::coord_flip() +
   ggplot2::labs(title = "Percentage of missing values", x =
          'Variable', y = "% of missing values")
-  ggplot2::ggsave(stringr::str_c(params$qc_path, "missing_percent_plot.png"), width = 6, height = 8)
+  ggplot2::ggsave(stringr::str_c(get_param('qc_path', db_path), "missing_percent_plot.png"), width = 6, height = 8)
   
   cat(file = stderr(), "Function missing_percent_plot...end", "\n")
   return("done")
@@ -533,12 +543,14 @@ missing_percent_plot <- function(params) {
 
 
 #-----------------------------------------------------------------------------------------
-cv_grouped_plot_bg <- function(params) {
+cv_grouped_plot_bg <- function(db_path) {
   cat(file = stderr(), stringr::str_c("function cv_grouped_plot_bg...."), "\n")
   
-  file_name <- stringr::str_c(params$qc_path, "CV_barplot.png")
+  source("Shiny_File.R")
   
-  conn <- RSQLite::dbConnect(RSQLite::SQLite(), params$database_path)
+  file_name <- stringr::str_c(get_param('qc_path', db_path), "CV_barplot.png")
+  
+  conn <- RSQLite::dbConnect(RSQLite::SQLite(), db_path)
   df <- RSQLite::dbReadTable(conn, "summary_cv")
   RSQLite::dbDisconnect(conn)
   

@@ -1,11 +1,13 @@
 cat(file = stderr(), "Shiny_Pathway.R", "\n")
 
 #----------------------------------------------------------------------------------------- 
-set_pathway <- function(input, output, session, params){
+set_pathway <- function(input, output, session, db_path){
   
   cat(file = stderr(), "Function set_pathway..." , "\n")
   showModal(modalDialog("Downloading and Setting up databases...", footer = NULL))  
   source('Shiny_String.R')
+  
+  params <- get_params(db_path)
   
   tax_choice <- input$select_organism
   cat(file = stderr(), stringr::str_c("Pathway tax choice...", tax_choice), "\n")
@@ -23,16 +25,14 @@ set_pathway <- function(input, output, session, params){
     #save params
     params$tax_choice <- tax_choice
     params$string_species <- string_species
-    params <<- params
-    write_table_try("params", params, params)
+  
+    write_params(params, db_path)
     
-    arg_list <- list(input$checkbox_filter_adjpval, params)
+    arg_list <- list(input$checkbox_filter_adjpval, params,db_path)
     bg_setup_string <- callr::r_bg(func = setup_string_bg , args = arg_list, stderr = stringr::str_c(params$error_path, "//error_setup_string.txt"), supervise = TRUE)
     bg_setup_string$wait()
-    print_stderr("error_setup_string.txt")
+    print_stderr("error_setup_string.txt", db_path)
   }
-
-
   
   removeModal()
   cat(file = stderr(), "Function set_pathway...end" , "\n") 

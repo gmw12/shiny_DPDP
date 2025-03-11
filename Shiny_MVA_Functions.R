@@ -161,7 +161,7 @@ precursor_refilter_rollup <- function(df_filter_list, df_design, params) {
     df <- tibble::add_column(df, df_missing_summary, .after = (ncol(df) - sample_count))
     
   }else{
-    df_list <- collapse_precursor_ptm_raw(df, sample_count, info_columns, stats=FALSE, add_miss=TRUE, df_missing, params)
+    df_list <- collapse_precursor_ptm_raw(df, sample_count, info_columns, stats=FALSE, add_miss=TRUE, df_missing, params, db_path)
     df <- df_list[[1]]
     df_missing <- df_list[[2]]
   }
@@ -175,9 +175,9 @@ precursor_refilter_rollup <- function(df_filter_list, df_design, params) {
 stat_add <- function(df, df_missing, params, comp_number, stats_comp, df_design) {
   cat(file = stderr(), "Function - stat_add...", "\n")
   
-  #save(df, file="z1"); save(df_missing, file="z2"); save(comp_number, file="z3"); save(stats_comp, file="z4"); save(df_design, file="z5");
-  #load(file="z1");  load(file="z2");load(file="z3"); load(file="z4"); load(file="z5")
-  
+  #save(df, file="z1"); save(df_missing, file="z2"); save(comp_number, file="z3"); save(stats_comp, file="z4"); save(df_design, file="z5"); save(params, file="z6");
+  #load(file="z1");  load(file="z2");load(file="z3"); load(file="z4"); load(file="z5"); load(file="z6")
+
   source("Shiny_Misc_Functions.R")
   source("Shiny_Stats_Functions.R")
   
@@ -240,7 +240,7 @@ stat_add <- function(df, df_missing, params, comp_number, stats_comp, df_design)
   df[[stringr::str_c(stats_comp$Name[comp_number], "_FC2")]] <- foldchange_decimal_gw(df_N, df_D, params)
   df[[stringr::str_c(stats_comp$Name[comp_number], "_pval")]] <- pvalue_gw(df_N, df_D, params)
   
-  save(df, file="zdf")
+  #save(df, file="zdf")
   
   cat(file = stderr(), "stat_add...5", "\n")
   if (params$checkbox_adjpval) {
@@ -326,10 +326,10 @@ stat_add <- function(df, df_missing, params, comp_number, stats_comp, df_design)
 
 #-------------------------------------------------------------------------------
 
-create_imputed_df <- function(params) {
+create_imputed_df <- function(params, db_path) {
   cat(file = stderr(), "function create_imputed_df....", "\n")
   
-  conn <- RSQLite::dbConnect(RSQLite::SQLite(), params$database_path)
+  conn <- RSQLite::dbConnect(RSQLite::SQLite(), db_path)
   df <- RSQLite::dbReadTable(conn, "precursor_filter")
   
   info_columns <- ncol(df) - params$sample_number
@@ -373,12 +373,12 @@ reduce_imputed_df <- function(df) {
 } 
 
 #-------------------------------------------------------------------------------
-add_imputed_df <- function(df, params, stats_comp, comp_number, table_name) {
+add_imputed_df <- function(df, params, db_path, stats_comp, comp_number, table_name) {
   cat(file = stderr(), "function add_imputed_df...", "\n")
   source("Shiny_Misc_Functions.R")
   source("Shiny_File.R")
   
-  df_missing <- read_table_try(table_name, params)
+  df_missing <- read_table_try(table_name, db_path)
   
   #select samples in comparison
   df_missing <- df_missing[, c(str_to_numlist(stats_comp$N_loc[comp_number]), str_to_numlist(stats_comp$D_loc[comp_number]), str_to_numlist(stats_comp$SPQC_loc[comp_number]))]
@@ -386,6 +386,7 @@ add_imputed_df <- function(df, params, stats_comp, comp_number, table_name) {
   df_missing <-  reduce_imputed_df(df_missing)
   
   df <- tibble::add_column(df, df_missing, .after = (ncol(df) - params$sample_number))
+  
   cat(file = stderr(), "function add_imputed_df...end", "\n")
   return(list(df, df_missing))
 }
@@ -602,7 +603,7 @@ peptide_position_lookup <- function(df_peptide, params)  {
   if (params$data_source == "PD" & params$raw_data_format =="precursor") {
     # create peptide lookup table
     peptide_pos_lookup <- df_peptide |> dplyr::select("Accession", "Sequence")
-    peptide_raw <- read_table_try("peptide_raw", params)
+    peptide_raw <- read_table_try("peptide_raw", db_path)
     peptide_pos_lookup <- merge(peptide_raw, peptide_pos_lookup, by =(c("Accession", "Sequence")) )
 
     cat(file = stderr(), "peptide_position_lookup...1", "\n")

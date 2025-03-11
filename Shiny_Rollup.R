@@ -1,30 +1,33 @@
 cat(file = stderr(), "Shiny_Rollup.R", "\n")
 #--------------------------------------------------------------------
 
-rollup_apply <- function(session, input, output, params){ 
+rollup_apply <- function(session, input, output, db_path){ 
   cat(file = stderr(), "Function - rollup_apply...", "\n")
   showModal(modalDialog("Apply Rollup...", footer = NULL))
   
-  cat(file = stderr(), stringr::str_c("rollup_method = ", params$rollup_method), "\n")
-  arg_list <- list(params)
-  bg_rollup_apply <- callr::r_bg(func = rollup_apply_bg, args = arg_list, stderr = stringr::str_c(params$error_path, "//error_rollup_bg.txt"), supervise = TRUE)
+  cat(file = stderr(), stringr::str_c("rollup_method = ", get_param('rollup_method', db_path)), "\n")
+  
+  arg_list <- list(db_path)
+  bg_rollup_apply <- callr::r_bg(func = rollup_apply_bg, args = arg_list, stderr = stringr::str_c(get_param('error_path', db_path), "//error_rollup_bg.txt"), supervise = TRUE)
   bg_rollup_apply$wait()
-  print_stderr("error_rollup_bg.txt")
+  print_stderr("error_rollup_bg.txt", db_path)
 
   removeModal()
 }
 
 #--------------------------------------------------------------------
 
-rollup_apply_bg <- function(params) {
+rollup_apply_bg <- function(db_path) {
   cat(file = stderr(), "Function - rollup_apply_bg...", "\n")
   
   source("Shiny_Rollup_Functions.R") 
   source("Shiny_File.R")
   
+  params <- get_params(db_path)
+  
   norm_type <- as.list(strsplit(params$norm_type, ",")[[1]])
 
-  conn <- RSQLite::dbConnect(RSQLite::SQLite(), params$database_path)
+  conn <- RSQLite::dbConnect(RSQLite::SQLite(), db_path)
   df_design <- RSQLite::dbReadTable(conn, "design")
   
   for (norm in norm_type) {
@@ -49,8 +52,8 @@ rollup_apply_bg <- function(params) {
       #rollup precursor ptm
       source('Shiny_Rollup.R')
       table_name_out_peptide_ptm <- stringr::str_c("peptide_impute_", norm)
-      df_missing <- read_table_try("precursor_missing", params)
-      peptide_df_list <- collapse_precursor_ptm_raw(df, params$sample_number, info_columns = 0, stats = FALSE, add_miss = TRUE, df_missing, params)
+      df_missing <- read_table_try("precursor_missing", db_path)
+      peptide_df_list <- collapse_precursor_ptm_raw(df, params$sample_number, info_columns = 0, stats = FALSE, add_miss = TRUE, df_missing, params, db_path)
       peptide_df <- peptide_df_list[[1]]
       RSQLite::dbWriteTable(conn, table_name_out_peptide_ptm, peptide_df, overwrite = TRUE)
     }
@@ -118,7 +121,7 @@ collapse_precursor_raw <- function(precursor_data, info_columns = 0, stats = FAL
 }
 
 #--- collapse precursor to peptide-------------------------------------------------------------
-collapse_precursor_ptm_raw <- function(precursor_data, sample_columns, info_columns, stats, add_miss, df_missing, params) {
+collapse_precursor_ptm_raw <- function(precursor_data, sample_columns, info_columns, stats, add_miss, df_missing, params, db_path) {
   cat(file = stderr(), "function collapse_precursor_ptm_raw...", "\n")
   
   #.   precursor_data <- df; sample_columns <- params$sample_number; info_columns = 0

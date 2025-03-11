@@ -3,6 +3,7 @@ cat(file = stderr(), "Shiny_UI.R", "\n")
 #-------------------------------------------------------------------------
 
 set_comp_names <- function(session, input, output) {
+  cat(file = stderr(), "Function set_comp_names...", "\n")
   output$comp1_text <- renderText({ "Comparison 1" })
   output$comp2_text <- renderText({ "Comparison 2" })
   output$comp3_text <- renderText({ "Comparison 3" })
@@ -12,6 +13,7 @@ set_comp_names <- function(session, input, output) {
   output$comp7_text <- renderText({ "Comparison 7" })
   output$comp8_text <- renderText({ "Comparison 8" })
   output$comp9_text <- renderText({ "Comparison 9" })
+  cat(file = stderr(), "Function set_comp_names...end", "\n\n")
 }
 
 #-------------------------------------------------------------------------

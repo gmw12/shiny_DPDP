@@ -1,23 +1,25 @@
 cat(file = stderr(), "Shiny_Impute.R", "\n")
 
 #--------------------------------------------------------------------------------
-impute_apply <- function(session, input, output) {
+impute_apply <- function(session, input, output, db_path) {
   cat(file = stderr(), "Function - impute_apply...", "\n")
   showModal(modalDialog("Apply Imputation...", footer = NULL))
   start <- Sys.time()
   
+  params <- get_params(db_path)
+  
   norm_type <- as.list(strsplit(params$norm_type, ",")[[1]])
   
-  bg_impute_apply <- callr::r_bg(func = impute_apply_bg, args = list(norm_type, params), stderr = str_c(params$error_path, "//error_impute_bg.txt"), supervise = TRUE)
+  bg_impute_apply <- callr::r_bg(func = impute_apply_bg, args = list(norm_type, params, db_path), stderr = str_c(params$error_path, "//error_impute_bg.txt"), supervise = TRUE)
   bg_impute_apply$wait()
-  print_stderr("error_impute_bg.txt")
+  print_stderr("error_impute_bg.txt", db_path)
 
 
   #create imputed df's for protein and precursor
   source("Shiny_MVA_Functions.R")
-  bg_impute_df <- callr::r_bg(func = create_imputed_df, args = list(params), stderr = str_c(params$error_path, "//error_impute_df.txt"), supervise = TRUE)
+  bg_impute_df <- callr::r_bg(func = create_imputed_df, args = list(params, db_path), stderr = str_c(params$error_path, "//error_impute_df.txt"), supervise = TRUE)
   bg_impute_df$wait()
-  print_stderr("error_impute_df.txt")
+  print_stderr("error_impute_df.txt", db_path)
   
   
   removeModal()
@@ -26,30 +28,35 @@ impute_apply <- function(session, input, output) {
 
 #----------------------------------------------------------------------------------------------------
 
-impute_apply_bg <- function(norm_type, params) {
+impute_apply_bg <- function(norm_type, params, db_path) {
   cat(file = stderr(), "Function - impute_apply_bg...", "\n")
 
+  save(params, file = "z1"); save(norm_type, file = "z2"); save(db_path, file = "z3")
+  #.   load(file = "z1"); load(file = "z2"); load(file = "z3")
+  
   source("Shiny_Impute.R")
   source("Shiny_File.R")
 
-  df_random <- read_table_try("random", params)
-  df_groups <- read_table_try("sample_groups", params)
+  df_random <- read_table_try("random", db_path)
+  df_groups <- read_table_try("sample_groups", db_path)
   
   for (norm in norm_type) {
-    cat(file = stderr(), stringr::str_c("impute_apply...", norm), "\n\n")
+    cat(file = stderr(), stringr::str_c("impute_apply...", norm), "\n")
     norm <- stringr::str_replace_all(norm, " ", "")
     
     table_name <- stringr::str_c("precursor_norm_", norm)
     cat(file = stderr(), stringr::str_c("imputing...", table_name), "\n")
     
-    df <- read_table_try(table_name, params)
+    df <- read_table_try(table_name, db_path)
 
     bg_name <- stringr::str_c('bg_impute_', norm)
     bg_file <- stringr::str_c(params$error_path, "//error_", bg_name, ".txt")
-    assign(bg_name, callr::r_bg(func = impute_apply_bg2, args = list(norm, params, df_random, df_groups, df), stderr = bg_file, supervise = TRUE))
+    arglist <- list(norm, params, db_path, df_random, df_groups, df)
+    assign(bg_name, callr::r_bg(func = impute_apply_bg2, args = arglist, stderr = bg_file, supervise = TRUE))
   }
 
   for (norm in norm_type) {
+    cat(file = stderr(), stringr::str_c("getting r_bg info for... ", norm), "\n")
     norm <- stringr::str_replace_all(norm, " ", "")
     bg_name <- stringr::str_c('bg_impute_', norm)
     bg_impute <- get(bg_name)
@@ -58,19 +65,19 @@ impute_apply_bg <- function(norm_type, params) {
     bg_impute_list <- bg_impute$get_result()
     new_table_name <- bg_impute_list[[1]]
     df_impute <- bg_impute_list[[2]]
-    write_table_try(new_table_name, df_impute, params)
+    write_table_try(new_table_name, df_impute, db_path)
     
-    print_stderr2(stringr::str_c("error_", bg_name, ".txt"), params)
+    print_stderr(stringr::str_c("error_", bg_name, ".txt"), db_path)
+    #print_stderr2(stringr::str_c("error_", bg_name, ".txt"), db_path)
   }
   
-
   cat(file = stderr(), "Function - impute_apply_bg...end", "\n")
 }
 
 
 #----------------------------------------------------------------------------------------------------
 
-impute_apply_bg2 <- function(norm, params, df_random, df_groups, df) {
+impute_apply_bg2 <- function(norm, params, db_path, df_random, df_groups, df) {
   cat(file = stderr(), "Function - impute_apply_bg2...", "\n")
   
   source('Shiny_Impute_Functions.R')
@@ -78,7 +85,7 @@ impute_apply_bg2 <- function(norm, params, df_random, df_groups, df) {
   source('Shiny_Filter.R')
   
   if (params$impute_type == "duke") {
-    df_impute <- impute_duke(df, df_random, df_groups, params)
+    df_impute <- impute_duke(df, df_random, df_groups, params, db_path)
     df_impute <- impute_bottomx(df_impute, df_random, params)
     }
   if (params$impute_type == "bottomx") {
@@ -91,13 +98,13 @@ impute_apply_bg2 <- function(norm, params, df_random, df_groups, df) {
     info_columns <- ncol(df_impute) - params$sample_number
     #need to re-create norm_data
     norm_data <- norm_filter_exclude_include(df_impute, params)
-    #norm_data <-  read_table_try("precursor_normdata", params)
+    #norm_data <-  read_table_try("precursor_normdata", db_path)
     df_impute <- tmm_normalize(norm_data, df_impute, info_columns)
   }
   
   cat(file = stderr(), "Function - impute_apply_bg2...1", "\n")
   new_table_name <- stringr::str_c('precursor_impute_', norm)
-  #added to bg above to avoid database locking error...  write_table_try(new_table_name, df_impute, params)
+  #added to bg above to avoid database locking error...  write_table_try(new_table_name, df_impute, db_path)
   
   cat(file = stderr(), "Function - impute_apply_bg2...end", "\n")
   return(list(new_table_name, df_impute))

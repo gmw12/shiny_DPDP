@@ -1,24 +1,26 @@
 cat(file = stderr(), "Shiny_MotifX.R", "\n")
 
 #----------------------------------------------------------------------------------------- 
-create_phos_database <- function(session, input, output, params){
+create_phos_database <- function(session, input, output, db_path){
   cat(file=stderr(), "Function create_phos_database...", "\n")
   
   showModal(modalDialog("Creating motif database from fasta...", footer = NULL))
+  
+  params <- get_params(db_path)
   
   if(site_user == "dpmsr") {
     cat(file=stderr(), "Loading fasta file from dpmsr user", "\n")
     fasta_path <- parseFilePaths(volumes, input$motif_fasta_file)
     fasta_file_path <- fasta_path$datapath
     cat(file=stderr(), stringr::str_c("fasta_path... ",fasta_file_path), "\n")
-    args_list <- list(input$fasta_grep1, input$fasta_grep2, fasta_file_path, params)
+    args_list <- list(input$fasta_grep1, input$fasta_grep2, fasta_file_path, params, db_path)
   }else{
     cat(file=stderr(), "Loading fasta file from non-dpmsr user", "\n")
     test <<- input$motif_fasta_file_customer
     fasta_file_path <- input$motif_fasta_file_customer$datapath
     output$fasta_file_name_customer <- renderText({input$motif_fasta_file_customer$name})
     cat(file=stderr(), stringr::str_c("fasta_path... ", input$motif_fasta_file_customer$name), "\n")
-    args_list <- list(input$fasta_grep1_customer, input$fasta_grep2_customer, fasta_file_path, params)
+    args_list <- list(input$fasta_grep1_customer, input$fasta_grep2_customer, fasta_file_path, params, db_path)
   } 
 
   #save(fasta_path, file =  "z889") #   load(file="z889")
@@ -26,7 +28,7 @@ create_phos_database <- function(session, input, output, params){
   
   bg_phos_db <- callr::r_bg(func = create_phos_database_bg, args = args_list, stderr = stringr::str_c(params$error_path, "//error_phos_db.txt"), supervise = TRUE)
   bg_phos_db$wait()
-  print_stderr("error_phos_db.txt")
+  print_stderr("error_phos_db.txt", db_path)
   
   bg_fasta_list <- bg_phos_db$get_result()
   start_fasta_sample <- bg_fasta_list[[1]]
@@ -34,8 +36,8 @@ create_phos_database <- function(session, input, output, params){
   end_fasta_sample <- bg_fasta_list[[2]]
 
   test_bg_fasta_list <<- bg_phos_db$get_result()
-  test1 <<- start_fasta_sample
-  test2 <<- end_fasta_sample
+  test1 <- start_fasta_sample
+  test2 <- end_fasta_sample
   
   if (site_user == "dpmsr") {
     
@@ -72,7 +74,7 @@ create_phos_database <- function(session, input, output, params){
 
 #----------------------------------------------------------------------------------------- 
 
-create_phos_database_bg <- function(input_fasta_grep1, input_fasta_grep2, fasta_file_path, params){
+create_phos_database_bg <- function(input_fasta_grep1, input_fasta_grep2, fasta_file_path, params, db_path){
   cat(file=stderr(), "Function create_phos_database_bg...", "\n")
   source('Shiny_File.R')
   
@@ -101,23 +103,26 @@ create_phos_database_bg <- function(input_fasta_grep1, input_fasta_grep2, fasta_
   
   new_fasta$Accession <- gsub(">", "", new_fasta$Accession)
   
-  write_table_try("phos_fasta", new_fasta, params)
+  write_table_try("phos_fasta", new_fasta, db_path)
 
   cat(file=stderr(), "Function create_phos_database_bg...end", "\n")
   return(list(raw_fasta_sample, new_fasta[1:15,]))
 }
 
 #----------------------------------------------------------------------------------------- 
-run_motifx <- function(session, input, output, params){
+run_motifx <- function(session, input, output, db_path){
   cat(file=stderr(), "Function run_motifx..." , "\n") 
   showModal(modalDialog("Motifx running (may take awhile)...", footer = NULL))
+  
   source('Shiny_MotifX.R')
   
+  params <- get_params(db_path)
+  
   args_list <- list(input$pval_motif, input$motif_min_seq, input$pvalue_cutoff, input$foldchange_cutoff, 
-                    input$select_data_comp_motif, params)
+                    input$select_data_comp_motif, params, db_path)
   bg_motifx <- callr::r_bg(func = run_motifx_bg, args = args_list, stderr = stringr::str_c(params$error_path, "//error_motifx.txt"), supervise = TRUE)
   bg_motifx$wait()
-  print_stderr("error_motifx.txt")
+  print_stderr("error_motifx.txt", db_path)
   
   cat(file=stderr(), "Function run_motifx...1" , "\n") 
   motif_data <- bg_motifx$get_result() 
@@ -196,20 +201,20 @@ run_motifx <- function(session, input, output, params){
 
 
 run_motifx_bg <- function(input_pval_motif, input_motif_min_seq, input_pvalue_cutoff, input_foldchange_cutoff, 
-                          input_select_data_comp_motif, params){
+                          input_select_data_comp_motif, params, db_path){
   cat(file=stderr(), "Function run_motifx_bg..." , "\n") 
   source('Shiny_File.R')
   source('Shiny_MotifX.R')
   
-  stats_comp <- read_table_try("stats_comp", params)
+  stats_comp <- read_table_try("stats_comp", db_path)
   comp_string <- input_select_data_comp_motif
   comp_number <- which(grepl(comp_string, stats_comp$Name))
   table_name <- stringr::str_c(stats_comp$Final_Table_Name_Peptide[comp_number])
-  data_in <- read_table_try(table_name, params)
+  data_in <- read_table_try(table_name, db_path)
   
   #---------Create background data ----------------------------------------
   # Set parameters for extractBackground (s - sequence list; c - central character; w - width of motifs
-  parsed_ref <- read_table_try("phos_fasta", params)
+  parsed_ref <- read_table_try("phos_fasta", db_path)
   s <- parsed_ref$Sequence
   w <- 15
   pval_motif <- input_pval_motif * 1e-5
@@ -271,8 +276,8 @@ run_motifx_bg <- function(input_pval_motif, input_motif_min_seq, input_pvalue_cu
   
   ptm_data_all <- rbind(ptm_data_up, ptm_data_down, ptm_data_updown)
   
-  write_table_try("MotifX_table", motifx_all, params)
-  write_table_try("MotifX_ptm_data", ptm_data_all, params)
+  write_table_try("MotifX_table", motifx_all, db_path)
+  write_table_try("MotifX_ptm_data", ptm_data_all, db_path)
   
   cat(file=stderr(), "Function run_motifx_bg...end" , "\n") 
   #save(list=c("motifx_all", "motif_table_name"), file="z093")  #  load(file="z093")
@@ -396,22 +401,24 @@ motifx_calc <- function(s, c, w, FC, ptm_data, parsed_ref, pval_motif, min_seq, 
 
 
 #-------------------------------------------------------------------------------------------------------------  
-motif_data_save_excel <- function(session, input, output, params) {
+motif_data_save_excel <- function(session, input, output, db_path) {
   cat(file = stderr(), "Function motif_data_save_excel...", "\n")
   showModal(modalDialog("Saving motif table to excel...", footer = NULL))  
   
-  arg_list <- list(input$motif_data_filename, params)
+  params <- get_params(db_path)
+  
+  arg_list <- list(input$motif_data_filename, params, db_path)
   
   bg_motif_data_save_excel <- callr::r_bg(func = motif_data_save_excel_bg , args = arg_list, stderr = str_c(params$error_path, "//error_motif_data_save_excel.txt"), supervise = TRUE)
   bg_motif_data_save_excel$wait()
-  print_stderr("error_motif_data_save_excel.txt")
+  print_stderr("error_motif_data_save_excel.txt", db_path)
   
   cat(file = stderr(), "Function motif_data_save_excel...end", "\n")
   removeModal()
   
 }
 #-------------------------------------------------------------------------------------------------------------  
-motif_data_save_excel_bg <- function(input_motif_data_filename, params) {
+motif_data_save_excel_bg <- function(input_motif_data_filename, params, db_path) {
   cat(file = stderr(), "Function motif_data_save_excel_bg...", "\n")
   source('Shiny_File.R')
   
@@ -425,7 +432,7 @@ motif_data_save_excel_bg <- function(input_motif_data_filename, params) {
   
   cat(file = stderr(), stringr::str_c("filename = ", filename) , "\n")
   
-  motif_data <- read_table("MotifX_table", params)
+  motif_data <- read_table_try("MotifX_table", db_path)
   Simple_Excel(motif_data, "data", filename)
   
   cat(file = stderr(), "Function motif_data_save_excel_bg...end", "\n")

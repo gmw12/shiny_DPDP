@@ -3,48 +3,53 @@ cat(file = stderr(), "Shiny_QC.R", "\n")
 
 #----------------------------------------------------------------------------------------- 
 #------------------------------------------------------------------------------------------------
-qc_stats <- function(session, input, output, params){
+qc_stats <- function(session, input, output, db_path){
   cat(file = stderr(), "Function - qc_stats...", "\n")
   showModal(modalDialog("QC Stats...", footer = NULL))
   
+  error_path <- get_param("error_path", db_path)
+  
   #calc cv stats
-  bg_qc <- callr::r_bg(func = qc_stats_bg, args = list(params), stderr = str_c(params$error_path, "//error_qc.txt"), supervise = TRUE)
+  bg_qc <- callr::r_bg(func = qc_stats_bg, args = list(db_path), stderr = str_c(error_path, "//error_qc.txt"), supervise = TRUE)
   bg_qc$wait()
-  print_stderr("error_qc.txt")
+  print_stderr("error_qc.txt", db_path)
 
   #save grouped plot of average cv's
-  bg_cv_grouped_plot <- callr::r_bg(func = cv_grouped_plot_bg, args = list(params), stderr = stringr::str_c(params$error_path, "//cv_plot.txt"), supervise = TRUE)
+  bg_cv_grouped_plot <- callr::r_bg(func = cv_grouped_plot_bg, args = list(db_path), stderr = stringr::str_c(error_path, "//cv_plot.txt"), supervise = TRUE)
   bg_cv_grouped_plot$wait()
-  print_stderr("cv_plot.txt")
+  print_stderr("cv_plot.txt", db_path)
   
   #Norm Comparison
-  bg_norm_comp_plot <- callr::r_bg(func = norm_comp_plot_bg, args = list(params), stderr = stringr::str_c(params$error_path, "//norm_comp_plot.txt"), supervise = TRUE)
+  bg_norm_comp_plot <- callr::r_bg(func = norm_comp_plot_bg, args = list(db_path), stderr = stringr::str_c(error_path, "//norm_comp_plot.txt"), supervise = TRUE)
   bg_norm_comp_plot$wait()
-  print_stderr("norm_comp_plot.txt")
+  print_stderr("norm_comp_plot.txt", db_path)
   
   #ADH barplot
   
   
   #force update of widget
-  qc_norm_types <- as.list(strsplit(params$norm_type, ",")[[1]])
+  qc_norm_types <- as.list(strsplit(get_param('norm_type', db_path), ",")[[1]])
   updateSelectInput(session, "qc_norm_type", choices = qc_norm_types)
   updateSelectInput(session, "spike_norm_type", choices = qc_norm_types)
   updateSelectInput(session, "stats_norm_type", choices = qc_norm_types)
-  update_stat_choices(session, input, output)
+  update_stat_choices(session, input, output, db_path)
   
   removeModal()
-  cat(file = stderr(), "Function - qc_stats...end", "\n")
+  cat(file = stderr(), "Function - qc_stats...end", "\n\n")
 }
 
 #------------------------------------------------------------------------------------------------
 
 #collect QC statistics
-qc_stats_bg <- function(params){
+qc_stats_bg <- function(db_path){
   cat(file = stderr(), stringr::str_c("function qc_stats_bg..."), "\n")
   
   source("Shiny_Stats_Functions.R")
-
-  conn <- RSQLite::dbConnect(RSQLite::SQLite(), params$database_path)
+  source("Shiny_File.R")
+  
+  params <- get_params(db_path)
+  
+  conn <- RSQLite::dbConnect(RSQLite::SQLite(), db_path)
   df_groups <- RSQLite::dbReadTable(conn, "sample_groups")
   
   #create starter df for summary CV's
@@ -103,9 +108,12 @@ qc_stats_bg <- function(params){
 #------------------------------------------------------------------------------------------------
 
 #create bar plots for all norm types
-norm_comp_plot_bg <- function(params){
+norm_comp_plot_bg <- function(db_path){
   cat(file = stderr(), stringr::str_c("function norm_comp_plot_bg..."), "\n")
   source("Shiny_Plots.R")
+  source("Shiny_File.R")
+  
+  params <- get_params(db_path)
   
   norm_type <- as.list(strsplit(params$norm_type, ",")[[1]])
   
@@ -118,7 +126,7 @@ norm_comp_plot_bg <- function(params){
       table_name <- stringr::str_c('peptide_impute_', norm)
     }
     
-    bar_plot(table_name, table_name, params$qc_path, params) 
+    bar_plot(table_name, table_name, params$qc_path, db_path) 
   }
   
   cat(file = stderr(), stringr::str_c("function norm_comp_plot_bg...end"), "\n")
@@ -127,8 +135,10 @@ norm_comp_plot_bg <- function(params){
 #------------------------------------------------------------------------------------------------
 
 #create bar plots for specific protein
-qc_protein_plots <- function(session, input, output, params){
+qc_protein_plots <- function(session, input, output, db_path){
   cat(file = stderr(), stringr::str_c("function qc_protein_plots..."), "\n")
+  
+  params <- get_params(db_path)
   
   qc_norm_type <- stringr::str_replace_all(input$qc_norm_type, " ", "") 
   qc_accession <- input$qc_plot_accession
@@ -143,9 +153,9 @@ qc_protein_plots <- function(session, input, output, params){
 
   plot_title <- str_c(qc_accession, '_', qc_norm_type)
   
-  bg_qcprotein <- callr::r_bg(func = qc_protein_plots_bg, args = list(table_name, plot_title, qc_accession, params$qc_path, params), stderr = str_c(params$error_path, "//error_qcprotein.txt"), supervise = TRUE)
+  bg_qcprotein <- callr::r_bg(func = qc_protein_plots_bg, args = list(table_name, plot_title, qc_accession, params$qc_path, db_path), stderr = str_c(params$error_path, "//error_qcprotein.txt"), supervise = TRUE)
   bg_qcprotein$wait()
-  print_stderr("error_qcprotein.txt")
+  print_stderr("error_qcprotein.txt", db_path)
   
   plot_path <- stringr::str_c(params$qc_path, plot_title, "_barplot.png")
   
@@ -159,7 +169,7 @@ qc_protein_plots <- function(session, input, output, params){
 #------------------------------------------------------------------------------------------------
 
 #create bar plots for specific protein
-qc_protein_plots_bg <- function(table_name, plot_title, qc_accession, plot_dir, params){
+qc_protein_plots_bg <- function(table_name, plot_title, qc_accession, plot_dir, db_path){
   cat(file = stderr(), stringr::str_c("function qc_protein_plots_bg..."), "\n")
   
   source("Shiny_Plots.R")
@@ -168,26 +178,30 @@ qc_protein_plots_bg <- function(table_name, plot_title, qc_accession, plot_dir, 
   #save(table_name, file="z1"); save(plot_title, file="z2"); save(plot_dir, file="z3"); save(qc_accession, file="z4")
   #  load(file="z1"); load(file="z2"); load(file="z3"); load(file="z4")
   
-  df <- read_table_try(table_name, params)
+  df <- read_table_try(table_name, db_path)
 
   df <- df[df$Accession %in% qc_accession,]
   
-  bar_plot2(table_name, plot_title, plot_title, params$qc_path, params, df)
+  bar_plot2(table_name, plot_title, plot_title, get_param('qc_path', db_path), db_path, df)
 
   cat(file = stderr(), stringr::str_c("function qc_protein_plots_bg...end"), "\n")
 }
 
 #-----------------------------------------------------------------------------------------
 #create bar plots for spike protein
-qc_spike_plots <- function(session, input, output, params){
+qc_spike_plots <- function(session, input, output, db_path){
   cat(file = stderr(), stringr::str_c("function qc_spike_plots..."), "\n")
   
   qc_norm_type <- stringr::str_replace_all(input$spike_norm_type, " ", "") 
   qc_accession <- input$spike_plot_accession
   
-  if (params$data_output == "Protein") {
+  data_output <- get_param('data_output', db_path)
+  error_path <- get_param('error_path', db_path)
+  qc_path <- get_param('qc_path', db_path)
+  
+  if (data_output == "Protein") {
     table_name <- stringr::str_c('protein_', qc_norm_type)
-  } else if (params$data_output == "Peptide") {
+  } else if (data_output == "Peptide") {
     table_name <- stringr::str_c('peptide_impute_', qc_norm_type)
   }
 
@@ -195,11 +209,11 @@ qc_spike_plots <- function(session, input, output, params){
   
   cat(file = stderr(), stringr::str_c(qc_norm_type, "   ", qc_accession), "\n")
   
-  bg_qcspike <- callr::r_bg(func = qc_spike_plots_bg, args = list(table_name, plot_title, qc_accession, params), stderr = str_c(params$error_path, "//error_qcspike.txt"), supervise = TRUE)
+  bg_qcspike <- callr::r_bg(func = qc_spike_plots_bg, args = list(table_name, plot_title, qc_accession, db_path), stderr = str_c(error_path, "//error_qcspike.txt"), supervise = TRUE)
   bg_qcspike$wait()
-  print_stderr("error_qcspike.txt")
+  print_stderr("error_qcspike.txt", db_path)
 
-  plot_path <-  stringr::str_c(params$qc_path, plot_title, "_barplot.png")
+  plot_path <-  stringr::str_c(qc_path, plot_title, "_barplot.png")
   
   output$spike_protein_barplot <- renderImage({
     list(src = plot_path, contentType = 'image/png', width = 800, height = 400, alt = "this is alt text")
@@ -214,10 +228,12 @@ qc_spike_plots <- function(session, input, output, params){
 
 #-----------------------------------------------------------------------------------------
 #create bar plots for spike protein
-qc_spike_plots_bg <- function(table_name, plot_title, qc_accession, params){
+qc_spike_plots_bg <- function(table_name, plot_title, qc_accession, db_path){
   cat(file = stderr(), stringr::str_c("function qc_spike_plots_bg..."), "\n")
   
-  conn <- RSQLite::dbConnect(RSQLite::SQLite(), params$database_path)
+  source("Shiny_File.R")
+  
+  conn <- RSQLite::dbConnect(RSQLite::SQLite(), db_path)
   df_design <- RSQLite::dbReadTable(conn, "design")
   df <- RSQLite::dbReadTable(conn, table_name)
   RSQLite::dbDisconnect(conn)
@@ -230,7 +246,7 @@ qc_spike_plots_bg <- function(table_name, plot_title, qc_accession, params){
   qc_accession <- unlist(strsplit(as.character(qc_accession), split = ","))
   
   spike_protein <- subset(df, Accession %in% qc_accession)  
-  spike_protein <- spike_protein[(ncol(df) - params$sample_number + 1):ncol(df)]
+  spike_protein <- spike_protein[(ncol(df) - get_param('sample_number', db_path) + 1):ncol(df)]
   qc_spike$Intensity <- colSums(spike_protein)
   
   qc_spike_final <- aggregate(qc_spike[,2:3], by = list(Category = qc_spike$SpikeLevel), FUN = mean)
@@ -242,7 +258,7 @@ qc_spike_plots_bg <- function(table_name, plot_title, qc_accession, params){
     qc_spike_final$PercentofLow[i] <- round((qc_spike_final$Intensity[i]/qc_spike_final$Intensity[1]), 2)
   }
   
-  file_name <- stringr::str_c(params$qc_path, plot_title, "_barplot.png")
+  file_name <- stringr::str_c(get_param('qc_path', db_path), plot_title, "_barplot.png")
   ggplot2::ggplot(qc_spike, ggplot2::aes(fill = Label, y = Intensity, x = SpikeLevel)) + 
     ggplot2::geom_bar(position = "dodge", stat = "identity") +
     ggplot2::theme(legend.position = "none") +

@@ -13,7 +13,7 @@ get_pathway_files <- function(params) {
   
   bg_get_pathway_files <- callr::r_bg(func = get_pathway_files_bg , args = arg_list, stderr = stringr::str_c(params$error_path, "//error_get_pathway_files.txt"), supervise = TRUE)
   bg_get_pathway_files$wait()
-  print_stderr("error_get_pathway_files.txt")
+  print_stderr("error_get_pathway_files.txt", db_path)
   
   cat(file = stderr(), "Function get_pathway_files...end", "\n")
   #removeModal()

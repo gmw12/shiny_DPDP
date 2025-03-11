@@ -37,7 +37,7 @@ set_user <- function() {
       volumes <<- c(dd = '/mnt/h_black2', h1 = '/mnt/h_black1', h2 = '/mnt/h_black2', dc = '/mnt/RawData', wd = '.', Home = fs::path_home(), getVolumes()())
       site_user <<- "dpmsr"
       python_path <<- "/home/user/anaconda3/envs/python38/bin/python3"
-    }else if (Sys.info()["nodename"] %in% c("gregorys-mbp.lan", "Gregorys-MacBook-Pro.local", "mac.lan")) {
+    }else if (Sys.info()["nodename"] %in% c("gregorys-mbp.lan", "Gregorys-MacBook-Pro.local", "mac.lan", "Gregorys-MBP.wired.duke.local" )) {
       volumes <<- c(dd = '/Users/gregwaitt/Data', dd2 = '/Users/gregwaitt/Cloud-Drive/R', dc = '/mnt/RawData', wd = '.', Home = fs::path_home(), getVolumes()())
       site_user <<- "dpmsr"
       python_path <<- "/home/user/anaconda3/envs/python38/bin/python3"
@@ -66,7 +66,7 @@ set_user <- function() {
 create_default_params <- function(volumes, python_path) {
   cat(file = stderr(), "Function - create_default_params...", "\n")
   
-  params <<- data.frame(
+  params <- data.frame(
     "volumes" = toString(volumes),
     "volumes_name" = toString(names(volumes)),
     "database_dir" = stringr::str_c(getwd(), "/database"),
@@ -75,7 +75,7 @@ create_default_params <- function(volumes, python_path) {
     "design_path" = "",
     "design_file" = "",
     "data_source" = "",
-    "file_prefix" = str_c("project_", strftime(Sys.time(), format = "%m%d%y")),
+    "file_prefix" = "",
     "data_path" = "",
     "data_file" = "",
     "backup_path" = "",
@@ -165,6 +165,8 @@ create_default_params <- function(volumes, python_path) {
   )
   
   cat(file = stderr(), "Function - create_default_params...end", "\n\n")
+  
+  return(params)
 }
 
 
@@ -198,15 +200,17 @@ set_file_choosers_data <- function(session, input, output, volumes) {
   
   shinyFileChoose(input, 'motif_fasta_file', session = session, roots = volumes, filetypes = c('', 'fasta'))
   
-  cat(file = stderr(), "Function - set_file_choosers_reset...end", "\n")
+  cat(file = stderr(), "Function - set_file_choosers_reset...end", "\n\n")
 }
 
 #---------------------------------------------------------------------------------------------------------
 
 
-app_startup <- function(session, input, output) {
-  cat(file = stderr(), "Function - app_startup", "\n")
+app_startup <- function(session, input, output, db_path) {
+  cat(file = stderr(), "Function - app_startup...", "\n")
   source('Shiny_UI_Update.R')
+  
+  params <- get_params(db_path)
   
   #Check if database file present
   if (params$database_path != "") {
@@ -215,23 +219,23 @@ app_startup <- function(session, input, output) {
     loaded_prefix <- params$file_prefix
     
     #updateUI
-    ui_render_load_design(session, input, output)
-    ui_render_load_data(session, input, output)
-    ui_render_parameters(session, input, output)
-    render_parameters_graphs(session, input, output)
-    ui_render_filter(session, input, output)
-    render_noise_graphs(session, input, output)
-    render_filter_graphs(session, input, output)
-    render_norm_graphs(session, input, output)
-    render_norm_apply_graphs(session, input, output)
-    render_filter_histogram_graphs(session, input, output)
-    render_impute_graphs(session, input, output) 
+    ui_render_load_design(session, input, output, db_path)
+    ui_render_load_data(session, input, output, db_path)
+    ui_render_parameters(session, input,output, db_path)
+    render_parameters_graphs(session, input, output, db_path)
+    ui_render_filter(session, input, output, db_path)
+    render_noise_graphs(session, input, output, db_path)
+    render_filter_graphs(session, input, output, db_path)
+    render_norm_graphs(session, input, output, db_path)
+    render_norm_apply_graphs(session, input, output, db_path)
+    render_filter_histogram_graphs(session, input, output, db_path)
+    render_impute_graphs(session, input, output, db_path)
     #create_impute_table(session, input, output) 
-    render_qc_graphs(session, input, output) 
+    render_qc_graphs(session, input, output, db_path)
  
       
     #update Widgets
-    update_widgets(session, input, output, params)
+    update_widgets(session, input, output, db_path)
 
     
   }else{
@@ -244,7 +248,7 @@ app_startup <- function(session, input, output) {
   output$loaded_prefix <- renderText(str_c("Loaded File Prefix:  ", loaded_prefix))
   
   #observers
-  observe_comp_names(session, input, output)
+  observe_comp_names(session, input, output, db_path)
   observe_plot_type1(session, input, output)   
   observe_plot_type2(session, input, output)  
   
@@ -252,82 +256,3 @@ app_startup <- function(session, input, output) {
   cat(file = stderr(), "Function - app_startup...end", "\n\n")
 }
 
-#--------------------------------------------------------------
-archive_update_app <- function(session, input, output, params, archive_path){
-  cat(file = stderr(), "Function update_dirs...", "\n")
-  
-  if(fs::is_dir(params$design_path)) {
-    cat(file = stderr(), "Current params dir structure is valid...", "\n")
-  }else {
-    cat(file = stderr(), stringr::str_c("Updating params dir structure... archive_path = ", archive_path), "\n")
-    test <- unlist(str_split(params$design_path, "/"))
-    test <- test[nzchar(test)]
-    test <- test[length(test)]
-    
-    params$design_path <- stringr::str_c(archive_path, test, "/")
-    params$data_path <- stringr::str_c(params$design_path, params$file_prefix, "/")
-    params$backup_path <- stringr::str_c(params$design_path, "Backup/")
-    params$extra_path <- stringr::str_c(params$design_path, "Extra/")
-    params$error_path <- stringr::str_c(params$design_path, "Error/")
-    params$qc_path <- stringr::str_c(params$design_path, "QC/")
-    params$string_path <- stringr::str_c(params$design_path, "String/")
-    params$phos_path <- stringr::str_c(params$design_path, "Phos/") 
-    params$app_path <- stringr::str_c(params$design_path, "Backup//App/") 
-    
-    path_list <- c(params$design_path, params$data_path, params$backup_path, params$extra_path, params$error_path, params$qc_path, params$string_path, params$phos_path, params$app_path)
-    
-    for (path in path_list) {
-      if (site_user == "dmpsr") {
-        create_dir(path)
-      }else{
-        create_dir_only(path)
-      }
-    }
-
-    params <<- params
-    
-    #only update if DPMSR, customer does not have accesses 
-    if (site_user == "dpmsr") {
-      #update plots
-      if (params$raw_data_format != "protein") {
-        parameter_create_plots(sesion, input, output, params)
-        filter_histogram_plot(sesion, input, output, params, "precursor_start", "Precursor_Start_Histogram")
-        render_noise_graphs(session, input, output)
-        filter_histogram_plot(sesion, input, output, params, "precursor_noise", "Precursor_NoiseFiltered_Histogram")
-        filter_create_plots(sesion, input, output, params)
-      }
-      
-      ui_render_parameters(session, input, output)
-      render_norm_graphs(session, input, output)
-      render_norm_apply_graphs(session, input, output)
-      impute_meta_data()
-      impute_create_plots(session, input, output, params)
-      render_impute_graphs(session, input, output)
-      qc_stats(session, input, output, params)
-      render_qc_graphs(session, input, output)
-      
-    }
-  }
-  
-  cat(file = stderr(), "Function update_dirs...end", "\n")
-  return(params)
-}
-
-
-
-
-#-------------------------------------------------------------------
-named_list <- function(input_string) {
-  cat(file = stderr(), "Function named_list...", "\n")
-  
-  input_string <- params$norm_type
-  named_list <- strsplit(input_string, ", ")
-  list_names <- named_list
-  named_list <- as.list(named_list)
-  test <- c(named_list)
-  test <- unlist(test)
-  
-  names(named_list) <- c(test)
-  cat(file = stderr(), "Function named_list...end", "\n")
-  return(named_list)
-}

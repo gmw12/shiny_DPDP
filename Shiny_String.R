@@ -2,7 +2,7 @@ cat(file = stderr(), "Shiny_String.R", "\n")
 
 #----------------------------------------------------------------------------------------- 
 
-setup_string_bg <- function(input_checkbox_filter_adjpval, params){
+setup_string_bg <- function(input_checkbox_filter_adjpval, params, db_path){
   cat(file=stderr(), stringr::str_c("function setup_string_bg..."), "\n")
   
   require(STRINGdb)
@@ -43,9 +43,9 @@ setup_string_bg <- function(input_checkbox_filter_adjpval, params){
   
   if (params$raw_data_format == "protein" & params$data_source == "SP") {
     temp_name <- stringr::str_c("protein_", params$norm_type[[1]])
-    df <- read_table_try(temp_name, params)
+    df <- read_table_try(temp_name, db_path)
     }else {
-    df <- read_table_try("protein_impute_final", params)
+    df <- read_table_try("protein_impute_final", db_path)
     }
   
   #get first 500 or all if less than 500
@@ -80,12 +80,12 @@ setup_string_bg <- function(input_checkbox_filter_adjpval, params){
   string_db$set_background(backgroundV)
   
   cat(file=stderr(), stringr::str_c("string setup...4"), "\n")
-  stats_comp <- read_table_try("stats_comp", params)
+  stats_comp <- read_table_try("stats_comp", db_path)
   
   for (i in 1:nrow(stats_comp)){
     cat(file=stderr(), stringr::str_c("string setup comp #  ", i), "\n")
     comp_name <- stats_comp$Name[i]
-    data_in <- read_table_try(stats_comp$Final_Table_Name[i], params)
+    data_in <- read_table_try(stats_comp$Final_Table_Name[i], db_path)
     if(input_checkbox_filter_adjpval){
       pval_col <- data_in |> dplyr::select(contains("_adjpval")) 
     }else{
@@ -101,7 +101,7 @@ setup_string_bg <- function(input_checkbox_filter_adjpval, params){
     df <- dplyr::left_join(df, string_IDs[, c("queryItem", "stringId")], by=c("Uniprot" = "queryItem"))
     df <- df[stats::complete.cases(df),]
     table_name <- stringr::str_c('String_', stats_comp$Final_Table_Name[i])
-    write_table_try(table_name, df, params)
+    write_table_try(table_name, df, db_path)
     
     cat(file=stderr(), "", "\n")
     cat(file=stderr(), stringr::str_c("data for ", comp_name, " has ", nrow(df), " lines"), "\n")
@@ -115,21 +115,23 @@ setup_string_bg <- function(input_checkbox_filter_adjpval, params){
 }  
 
 #--------------------------------------------------------------------------------
-run_string <- function(session, input, output, params) {
+run_string <- function(session, input, output, db_path) {
   cat(file=stderr(), stringr::str_c("function run_string..."), "\n")
   showModal(modalDialog("String Analysis...", footer = NULL))  
   
-  stats_comp <- read_table_try("stats_comp", params)
-  string_check <- sum(stringr::str_count(list_tables(params), "String_"))
+  params <- get_params(db_path)
+  
+  stats_comp <- read_table_try("stats_comp", db_path)
+  string_check <- sum(stringr::str_count(list_tables(db_path), "String_"))
   
   if(string_check >= nrow(stats_comp)) {
     cat(file = stderr(), "go string triggered", "\n")
     
     arg_list <- list(input$foldchange_cutoff, input$pvalue_cutoff, input$select_data_comp_string, input$string_direction, 
-                     input$protein_number, stats_comp, params)
+                     input$protein_number, stats_comp, params, db_path)
     bg_run_string <- callr::r_bg(func = run_string_bg , args = arg_list, stderr = stringr::str_c(params$error_path, "//error_run_string.txt"), supervise = TRUE)
     bg_run_string$wait()
-    print_stderr("error_run_string.txt")
+    print_stderr("error_run_string.txt", db_path)
     string_list <- bg_run_string$get_result()
     string_file_name <- string_list[[1]]
     string_link_network <- string_list[[2]]
@@ -170,7 +172,7 @@ run_string <- function(session, input, output, params) {
 #-------------------------------------------------------------------
 
 run_string_bg <- function(input_foldchange_cutoff, input_pvalue_cutoff, input_select_data_comp_string, input_string_direction, 
-                          input_protein_number, stats_comp, params){
+                          input_protein_number, stats_comp, params, db_path){
   cat(file=stderr(), stringr::str_c("function run_string_bg..."), "\n")
   require(httr)
   require(png)
@@ -185,7 +187,7 @@ run_string_bg <- function(input_foldchange_cutoff, input_pvalue_cutoff, input_se
   comp_number <- which(stats_comp$Name == input_select_data_comp_string)
   
   table_name <- stringr::str_c("String_", stats_comp$Final_Table_Name[comp_number])
-  df <- read_table_try(table_name, params)
+  df <- read_table_try(table_name, db_path)
   df <- subset(df, pvalue <= input_pvalue_cutoff)
 
   cat(file=stderr(), stringr::str_c("length of dataframe...", nrow(df)), "\n")
@@ -257,16 +259,18 @@ run_string_bg <- function(input_foldchange_cutoff, input_pvalue_cutoff, input_se
 
 #--------------------------------------------------------------------
 
-run_string_enrich <- function(session, input, output, params){
+run_string_enrich <- function(session, input, output, db_path){
   cat(file=stderr(), stringr::str_c("function run_string_enrich..."), "\n")
   showModal(modalDialog("Running StringDB Enrich...", footer = NULL))  
   
-  stats_comp <- read_table_try("stats_comp", params)
+  params <- get_params(db_path)
+  
+  stats_comp <- read_table_try("stats_comp", db_path)
   arg_list <- list(input$foldchange_cutoff, input$pvalue_cutoff, input$select_data_comp_string_enrich, input$string_enrich_direction, 
-                   stats_comp, params)
+                   stats_comp, params, db_path)
   bg_run_string_enrich <- callr::r_bg(func = run_string_enrich_bg , args = arg_list, stderr = stringr::str_c(params$error_path, "//error_run_string_enrich.txt"), supervise = TRUE)
   bg_run_string_enrich$wait()
-  print_stderr("error_run_string_enrich.txt")
+  print_stderr("error_run_string_enrich.txt", db_path)
   string_result <- bg_run_string_enrich$get_result()
   
   cat(file=stderr(), stringr::str_c("function run_string_enrich...1"), "\n")
@@ -346,7 +350,7 @@ run_string_enrich <- function(session, input, output, params){
 #--------------------------------------------------------------------
 
 run_string_enrich_bg <- function(input_foldchange_cutoff, input_pvalue_cutoff, input_select_data_comp_string_enrich, input_string_enrich_direction, 
-                                 stats_comp, params){
+                                 stats_comp, params, db_path){
   cat(file=stderr(), stringr::str_c("function run_string_enrich_bg..."), "\n")
   source("Shiny_File.R")
   
@@ -358,7 +362,7 @@ run_string_enrich_bg <- function(input_foldchange_cutoff, input_pvalue_cutoff, i
   
   comp_number <- which(stats_comp$Name == input_select_data_comp_string_enrich)
   table_name <- stringr::str_c("String_", stats_comp$Final_Table_Name[comp_number])
-  df <- read_table_try(table_name, params)
+  df <- read_table_try(table_name, db_path)
   
   cat(file=stderr(), stringr::str_c("dataframe size...", nrow(df)), "\n")
   df <- subset(df, pvalue <= input_pval)
@@ -386,7 +390,7 @@ run_string_enrich_bg <- function(input_foldchange_cutoff, input_pvalue_cutoff, i
   enrichment <- dplyr::rename(enrichment, genes = number_of_genes)
   enrichment <- dplyr::rename(enrichment, genes_background = number_of_genes_in_background)
   
-  write_table_try("string_enrichment", enrichment, params)
+  write_table_try("string_enrichment", enrichment, db_path)
   
   cat(file=stderr(), stringr::str_c("function run_string_enrich_bg...end"), "\n")
   return(enrichment)
@@ -394,21 +398,23 @@ run_string_enrich_bg <- function(input_foldchange_cutoff, input_pvalue_cutoff, i
 
 
 #-------------------------------------------------------------------------------------------------------------  
-string_enrich_data_save_excel <- function(session, input, output, params) {
+string_enrich_data_save_excel <- function(session, input, output, db_path) {
   cat(file = stderr(), "Function string_enrich_data_save_excel...", "\n")
   showModal(modalDialog("Saving data table to excel...", footer = NULL))  
   
-  arg_list <- list(input$stats_norm_type,  input$string_enrich_data_filename, params)
+  params <- get_params(db_path)
+  
+  arg_list <- list(input$stats_norm_type,  input$string_enrich_data_filename, params, db_path)
   bg_string_enrich_data_save_excel <- callr::r_bg(func = string_enrich_data_save_excel_bg , args = arg_list, stderr = str_c(params$error_path, "//error_string_enrich_data_save_excel.txt"), supervise = TRUE)
   bg_string_enrich_data_save_excel$wait()
-  print_stderr("error_string_enrich_data_save_excel.txt")
+  print_stderr("error_string_enrich_data_save_excel.txt", db_path)
   
   cat(file = stderr(), "Function string_enrich_data_save_excel...end", "\n")
   removeModal()
   
 }
 #-------------------------------------------------------------------------------------------------------------  
-string_enrich_data_save_excel_bg <- function(input_stats_norm_type,  input_string_enrich_data_filename, params) {
+string_enrich_data_save_excel_bg <- function(input_stats_norm_type,  input_string_enrich_data_filename, params, db_path) {
   cat(file = stderr(), "Function string_enrich_data_save_excel_bg...", "\n")
   source('Shiny_File.R')
   
@@ -422,7 +428,7 @@ string_enrich_data_save_excel_bg <- function(input_stats_norm_type,  input_strin
   
   cat(file = stderr(), stringr::str_c("filename = ", filename) , "\n")
   
-  string_enrich_DT <- read_table("string_table", params)
+  string_enrich_DT <- read_table("string_table", db_path)
   Simple_Excel(string_enrich_DT, "data", filename)
   
   cat(file = stderr(), "Function string_enrich_data_save_excel_bg...end", "\n")

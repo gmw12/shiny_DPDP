@@ -1,14 +1,16 @@
 cat(file = stderr(), "Shiny_Wiki.R", "\n")
 
 #----------------------------------------------------------------------------------------- 
-run_wiki <- function(session, input, output, params){
+run_wiki <- function(session, input, output, db_path){
   cat(file=stderr(), stringr::str_c("Function run_wiki..." ), "\n")
   showModal(modalDialog("Processing Wiki Pathway...", footer = NULL))  
   
-  arg_list <- list(input$select_data_comp_wiki, input$wiki_direction, params)
-  bg_run_wiki <- callr::r_bg(func = run_wiki_bg , args = arg_list, stderr = stringr::str_c(params$error_path, "//error_run_wiki.txt"), supervise = TRUE)
+  
+  
+  arg_list <- list(input$select_data_comp_wiki, input$wiki_direction, db_path)
+  bg_run_wiki <- callr::r_bg(func = run_wiki_bg , args = arg_list, stderr = stringr::str_c(get_param('error_path', db_path), "//error_run_wiki.txt"), supervise = TRUE)
   bg_run_wiki$wait()
-  print_stderr("error_run_wiki.txt")
+  print_stderr("error_run_wiki.txt", db_path)
   wiki_data <- bg_run_wiki$get_result()
   
   if ( class(wiki_data) != "try-error"){
@@ -63,7 +65,7 @@ run_wiki <- function(session, input, output, params){
     shinyalert("Oops!", "Wiki Pathway enrichment failed due to insufficient gene IDs mapping to pathways", type = "error")
   }
   
-  fullName <- stringr::str_c(params$string_path, input$wiki_data_filename)
+  fullName <- stringr::str_c(get_param('string_path', db_path), input$wiki_data_filename)
   
   output$download_wiki_table <- downloadHandler(
     file = function(){
@@ -80,13 +82,15 @@ run_wiki <- function(session, input, output, params){
 
 
 #----------------------------------------------------------------------------------------- 
-run_wiki_bg <- function(input_select_data_comp_wiki, input_wiki_direction, params){
+run_wiki_bg <- function(input_select_data_comp_wiki, input_wiki_direction, db_path){
   cat(file=stderr(), stringr::str_c("Function run_wiki_bg..." ), "\n")
   require(clusterProfiler, quietly = TRUE)
   source('Shiny_File.R')
   source('Shiny_Wiki.R')
   
-  stats_comp <- read_table_try("stats_comp", params)
+  params <- get_params(db_path)
+  
+  stats_comp <- read_table_try("stats_comp", db_path)
   #comp_string <- stats_comp$Name[1]
   comp_string <- input_select_data_comp_wiki
   comp_number <- which(grepl(comp_string, stats_comp$Name))
@@ -94,7 +98,7 @@ run_wiki_bg <- function(input_select_data_comp_wiki, input_wiki_direction, param
   cat(file=stderr(), stringr::str_c("run_wiki_bg...1" ), "\n")
   
   table_name <- stats_comp$Final_Table_Name[comp_number]
-  data_in <- read_table_try(table_name, params)
+  data_in <- read_table_try(table_name, db_path)
   
   if(input_wiki_direction == 'Up') {
     go_df <- subset(data_in, data_in$Stats == "Up" ) 
@@ -134,7 +138,7 @@ run_wiki_bg <- function(input_select_data_comp_wiki, input_wiki_direction, param
   df$p.adjust <- round(df$p.adjust,3)
   df$qvalue <- round(df$qvalue,3)
   
-  write_table_try("wiki_table", df, params)
+  write_table_try("wiki_table", df, db_path)
   cat(file=stderr(), stringr::str_c("Function run_wiki_bg...end" ), "\n")
   
   return(df)
@@ -142,15 +146,15 @@ run_wiki_bg <- function(input_select_data_comp_wiki, input_wiki_direction, param
 
 
 #----------------------------------------------------------------------------------------- 
-run_profile_go <- function(session, input, output, params){
+run_profile_go <- function(session, input, output, db_path){
   cat(file=stderr(), "run_profile_go...", "\n")
   showModal(modalDialog("Creating Go Profile...", footer = NULL)) 
   
   arg_list <- list(input$select_go_profile_data_comp, input$profile_direction, input$select_ont_profile, 
-                   input$select_level_profile, params)
-  bg_run_profile_go <- callr::r_bg(func = run_profile_go_bg , args = arg_list, stderr = stringr::str_c(params$error_path, "//error_run_profile_go.txt"), supervise = TRUE)
+                   input$select_level_profile, db_path)
+  bg_run_profile_go <- callr::r_bg(func = run_profile_go_bg , args = arg_list, stderr = stringr::str_c(get_param('error_path', db_path), "//error_run_profile_go.txt"), supervise = TRUE)
   bg_run_profile_go$wait()
-  print_stderr("error_run_profile_go.txt")
+  print_stderr("error_run_profile_go.txt", db_path)
   go_profile_result <- bg_run_profile_go$get_result()
   go_profile_data <- go_profile_result[[1]]
   go_profile_plot <- go_profile_result[[2]]
@@ -204,7 +208,9 @@ run_profile_go <- function(session, input, output, params){
     shinyalert("Oops!", "Go Profile failed due to insufficient gene IDs mapping to pathways", type = "error")
   }
   
-  fullName <- stringr::str_c(params$string_path, input$go_profile_filename)
+  string_path <- get_param('string_path', db_path)
+  
+  fullName <- stringr::str_c(string_path, input$go_profile_filename)
   output$download_go_profile_table <- downloadHandler(
     file = function(){
       stringr::str_c(input$go_profile_filename)
@@ -214,7 +220,7 @@ run_profile_go <- function(session, input, output, params){
     }
   )
   
-  fullName <- stringr::str_c(params$string_path, "GO_Profile_", input$select_go_profile_data_comp, "_", 
+  fullName <- stringr::str_c(string_path, "GO_Profile_", input$select_go_profile_data_comp, "_", 
                                       input$select_ont_profile, input$select_level_profile, ".png", collapse = " ")
   output$download_go_profile_plot <- downloadHandler(
     file = function(){
@@ -234,19 +240,20 @@ run_profile_go <- function(session, input, output, params){
 
 #----------------------------------------------------------------------------------------- 
 run_profile_go_bg <- function(input_select_go_profile_data_comp, input_profile_direction, input_select_ont_profile, 
-                              input_select_level_profile, params){
+                              input_select_level_profile, db_path){
   cat(file=stderr(), "run_profile_go_bg...", "\n")
   
   require(clusterProfiler, quietly = TRUE)
   source('Shiny_File.R')
   source('Shiny_Wiki.R')
   
+  params <- get_params(db_path)
+  
   comp_string <- input_select_go_profile_data_comp
-  stats_comp <- read_table_try("stats_comp", params)
+  stats_comp <- read_table_try("stats_comp", db_path)
   comp_number <- which(grepl(comp_string, stats_comp$Name))
   
-  data_in <- read_table_try(stats_comp$Final_Table_Name[comp_number], params)
-    
+  data_in <- read_table_try(stats_comp$Final_Table_Name[comp_number], db_path)
   cat(file=stderr(), "run_profile_go_bg...1", "\n")
   if(input_profile_direction == 'Up') {
     go_df <- subset(data_in, data_in$Stats == "Up" ) 
@@ -279,22 +286,15 @@ run_profile_go_bg <- function(input_select_go_profile_data_comp, input_profile_d
   ggplot2::ggsave(profile_plot_name, p, width=10, height=8)
 
   
-  
   go_profile_result <- ggo@result[,1:5]
   go_profile_result <- go_profile_result[go_profile_result$Count >= 1,]
   go_profile_result <- go_profile_result[order(-go_profile_result$Count),]
   
-  write_table_try("go_profile_result", go_profile_result, params)
+  write_table_try("go_profile_result", go_profile_result, db_path)
   
   cat(file=stderr(), "run_profile_go_bg...end", "\n")
   return(list(go_profile_result, p))
 }
-
-
-
-
-
-
 
 
 #----------------------------------------------------------------------------------------- 

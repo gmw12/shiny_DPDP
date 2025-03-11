@@ -1,13 +1,15 @@
 cat(file = stderr(), "Shiny_Hide.R", "\n")
 
-hide_enable <- function(session, input, output) {
+hide_enable <- function(session, input, output, db_path) {
   cat(file = stderr(), "Function - hide_enable...", "\n")
-
+  
+  params <- get_params(db_path)
+  
   observe({
     if (params$raw_data_format == "protein") {
       updateCheckboxInput(session, "peptide_refilter", value = FALSE)
       updateCheckboxInput(session, "peptide_missing_filter", value = FALSE)
-      params$peptide_refilter <<- FALSE
+      param_update('peptide_refilter', FALSE, db_path)
       shinyjs::hide("peptide_refilter")
       shinyjs::hide("peptide_missing_filter")
       shinyjs::hide("peptide_missing_factor")
@@ -203,5 +205,5 @@ hide_enable <- function(session, input, output) {
   })
     
 
-  cat(file = stderr(), "Function - hide_enable...end", "\n")
+  cat(file = stderr(), "Function - hide_enable...end", "\n\n")
 }

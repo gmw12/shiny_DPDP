@@ -293,9 +293,7 @@ collapse_precursor_ptm_raw <- function(precursor_data, sample_columns, info_colu
   peptide_data <- tibble::add_column(peptide_data, Precursors, .after="Sequence")
   
   cat(file = stderr(), "function collapse_precursor_ptm_raw...end", "\n")
-
   return(peptide_data)
-
 }
 
 #------------------------------------------------------------

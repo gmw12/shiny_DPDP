@@ -2,14 +2,16 @@ cat(file = stderr(), "Shiny_MoMo.R", "\n")
 
 
 #----------------------------------------------------------------------------------------- 
-run_momo <- function(session, input, output, params){
+run_momo <- function(session, input, output, db_path){
   cat(file=stderr(), stringr::str_c("Function run_momo..." ), "\n")
   showModal(modalDialog("Creating files for MoMo...", footer = NULL))  
   
-  arg_list <- list(input$select_data_comp_momo, input$momo_direction, params)
+  params <- get_params(db_path)
+  
+  arg_list <- list(input$select_data_comp_momo, input$momo_direction, params, db_path)
   bg_run_momo <- callr::r_bg(func = run_momo_bg , args = arg_list, stderr = stringr::str_c(params$error_path, "//error_run_momo.txt"), supervise = TRUE)
   bg_run_momo$wait()
-  print_stderr("error_run_momo.txt")
+  print_stderr("error_run_momo.txt", db_path)
   momo_data_list <- bg_run_momo$get_result()
   momo_file1 <- momo_data_list[[1]]
   momo_path1 <- momo_data_list[[2]]
@@ -41,14 +43,14 @@ run_momo <- function(session, input, output, params){
 }
 
 #----------------------------------------------------------------------------------------- 
-run_momo_bg <- function(input_select_data_comp_momo, input_momo_direction, params){
+run_momo_bg <- function(input_select_data_comp_momo, input_momo_direction, params, db_path){
   cat(file=stderr(), stringr::str_c("Function run_momo_bg..." ), "\n")
 
   source('Shiny_File.R')
   source('Shiny_MotifX.R')
   require(stringr)
   
-  stats_comp <- read_table_try("stats_comp", params)
+  stats_comp <- read_table_try("stats_comp", db_path)
   #  comp_string <- stats_comp$Name[1]
   comp_string <- input_select_data_comp_momo
   comp_number <- which(grepl(comp_string, stats_comp$Name))
@@ -56,7 +58,7 @@ run_momo_bg <- function(input_select_data_comp_momo, input_momo_direction, param
   cat(file=stderr(), stringr::str_c("run_momo_bg...1" ), "\n")
   
   table_name <- stats_comp$Final_Table_Name_Peptide[comp_number]
-  data_in <- read_table_try(table_name, params)
+  data_in <- read_table_try(table_name, db_path)
   
   if(input_momo_direction == 'Up') {
     momo_df <- subset(data_in, data_in$Stats == "Up" ) 
@@ -70,7 +72,7 @@ run_momo_bg <- function(input_select_data_comp_momo, input_momo_direction, param
   #keep only localized
   momo_df <- momo_df[momo_df$Local2 == "Y",]
   
-  parsed_ref <- read_table_try("phos_fasta", params)
+  parsed_ref <- read_table_try("phos_fasta", db_path)
   ptm_data <- create_motifx_input(momo_df, parsed_ref, input_select_data_comp_momo, input_momo_direction)
   
   # Locate PTMs within full-length proteins and extract neighboring motifs

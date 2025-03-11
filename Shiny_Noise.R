@@ -2,21 +2,18 @@ cat(file = stderr(), "Shiny_Noise.R", "\n")
 
 
 #-------------------------------------------------------------------------------------------#----------------------------------------------------------------------------------------
-noise_inflection <- function(session, input, output, params){
+noise_inflection <- function(session, input, output, db_path){
   cat(file = stderr(), "Function - noise_inflection...", "\n")
   showModal(modalDialog("Applying noise parameters...", footer = NULL))
   
-  params$noise_baseline_value <<- input$noise_baseline_value
+  param_update('noise_baseline_value', input$noise_baseline_value, db_path)
   
-  if (params$raw_data_format == "precursor") {
+  if (get_param('raw_data_format', db_path) == "precursor") {
     cat(file = stderr(), "remove noise precursor...", "\n")
-    bg_inflection <- callr::r_bg(func = noise_inflection_bg, args = list("precursor_start", params), stderr = str_c(params$error_path, "//error_inflection.txt"), supervise = TRUE)
+    bg_inflection <- callr::r_bg(func = noise_inflection_bg, args = list("precursor_start", db_path), stderr = str_c(get_param('error_path', db_path), "//error_inflection.txt"), supervise = TRUE)
     bg_inflection$wait()
-    print_stderr("error_inflection.txt")
+    print_stderr("error_inflection.txt", db_path)
   } 
-  
-  #reload params, new data added
-  params <<- param_load_from_database()
   
   cat(file = stderr(), "Function - noise_inflection...end", "\n")
   removeModal()
@@ -24,11 +21,12 @@ noise_inflection <- function(session, input, output, params){
 
 
 #----------------------------------------------------------------------------------------
-noise_inflection_bg <- function(table_name, params){
+noise_inflection_bg <- function(table_name, db_path){
   cat(file = stderr(), "Function - noise_inflection_bg...", "\n")
   
-  conn <- RSQLite::dbConnect(RSQLite::SQLite(), params$database_path)
+  conn <- RSQLite::dbConnect(RSQLite::SQLite(), db_path)
   df <- RSQLite::dbReadTable(conn, table_name)
+  params <- RSQLite::dbReadTable(conn, "params")
   
   df <- df[(ncol(df) - params$sample_number + 1):ncol(df)]
   
@@ -91,14 +89,15 @@ noise_inflection_bg <- function(table_name, params){
 }
 
 #----------------------------------------------------------------------------------------
-backup_noise_inflection_bg <- function(table_name, params){
+backup_noise_inflection_bg <- function(table_name, db_path){
   cat(file = stderr(), "Function - noise_inflection_bg...", "\n")
   
   library(inflection)
   
-  conn <- RSQLite::dbConnect(RSQLite::SQLite(), params$database_path)
+  conn <- RSQLite::dbConnect(RSQLite::SQLite(), db_path)
   df <- RSQLite::dbReadTable(conn, table_name)
-
+  params <- RSQLite::dbReadTable(conn, "params")
+  
   df <- df[(ncol(df) - params$sample_number + 1):ncol(df)]
 
   vec <- unlist(df, use.names = FALSE)
@@ -185,33 +184,31 @@ backup_noise_inflection_bg <- function(table_name, params){
 
 
 #-------------------------------------------------------------------------------------------#----------------------------------------------------------------------------------------
-noise_remove <- function(session, input, output, params){
+noise_remove <- function(session, input, output, db_path){
   cat(file = stderr(), "Function - noise_remove...", "\n")
   showModal(modalDialog("Removing noise...", footer = NULL))
   
-  if (params$raw_data_format == "precursor") {
+  if (get_param('raw_data_format', db_path) == "precursor") {
     cat(file = stderr(), "remove noise precursor...", "\n")
-    bg_noise <- callr::r_bg(func = noise_remove_bg, args = list("precursor_start", "precursor_noise", params), stderr = str_c(params$error_path, "//error_noise.txt"), supervise = TRUE)
+    bg_noise <- callr::r_bg(func = noise_remove_bg, args = list("precursor_start", "precursor_noise", db_path), stderr = str_c(get_param('error_path', db_path), "//error_noise.txt"), supervise = TRUE)
     bg_noise$wait()
-    print_stderr("error_noise.txt")
+    print_stderr("error_noise.txt", db_path)
   } 
   
-  #reload params, new data added
-  params <<- param_load_from_database()
-  
   #create histogram
-  filter_histogram_plot(sesion, input, output, params, "precursor_noise", "Precursor_NoiseFiltered_Histogram")
+  filter_histogram_plot(sesion, input, output, db_path, "precursor_noise", "Precursor_NoiseFiltered_Histogram")
   
   cat(file = stderr(), "Function - noise_remove...end", "\n")
   removeModal()
 }
 
 #----------------------------------------------------------------------------------------
-noise_remove_bg <- function(table_name, new_table_name, params){
+noise_remove_bg <- function(table_name, new_table_name, db_path){
   cat(file = stderr(), "Function - noise_remove_bg...", "\n")
   
-  conn <- RSQLite::dbConnect(RSQLite::SQLite(), params$database_path)
+  conn <- RSQLite::dbConnect(RSQLite::SQLite(), db_path)
   df <- RSQLite::dbReadTable(conn, table_name)
+  params <- RSQLite::dbReadTable(conn, "params")
   
   cat(file = stderr(), stringr::str_c("noise type -> ", params$noise_type), "\n")
   

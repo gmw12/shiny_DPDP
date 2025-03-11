@@ -107,11 +107,12 @@ observe_buttons <- function(session, input , output) {
     runjs('document.getElementById("motif_fasta_file").style.backgroundColor = "green";')
   })
   
+  cat(file = stderr(), "observe buttons loaded...end", "\n\n")
 }
 
 #----------------------------------------------------------------------------------------- 
-observe_comp_names <- function(session, input, output){
-  
+observe_comp_names <- function(session, input, output, db_path){
+  cat(file = stderr(), "observe_comp_names...", "\n")
   #---comparison info
   observe({
       
@@ -126,8 +127,8 @@ observe_comp_names <- function(session, input, output){
       compname9 <- input$comp9_name
     
       
-      if (params$database_path != "na") {
-        conn <- dbConnect(RSQLite::SQLite(), params$database_path)
+      if (db_path != "na") {
+        conn <- dbConnect(RSQLite::SQLite(), db_path)
         tables <- dbListTables(conn)
         if ("stats_comp" %in% tables) {
           stats_comp <- RSQLite::dbReadTable(conn, "stats_comp")
@@ -140,20 +141,21 @@ observe_comp_names <- function(session, input, output){
         }
         RSQLite::dbDisconnect(conn)
       }
-      update_widgets_stats(session, input, output, params)
-      #update_stat_comparisons(session, input, output)
+      update_widgets_stats(session, input, output, db_path)
+      #update_stat_comparisons(session, input, output, db_path)
   
   })
-
+  
+  cat(file = stderr(), "observe_comp_names...end", "\n\n")
 }
 
 
 
 #-------------------------------------------------------------------------------------------------------------
 observe_plot_type1 <- function(session, input, output){
-
+  cat(file = stderr(), "observe_plot_type1...", "\n")
+  
   observe({
-    cat(file = stderr(), "Observe plot_type1...", "\n")
   
     if (input$plot_type1 == "Bar") {
       cat(file = stderr(), stringr::str_c("Observed: Bar plot") , "\n")
@@ -207,19 +209,16 @@ observe_plot_type1 <- function(session, input, output){
       })
     }
     
-    
-    
-    cat(file = stderr(), "Observe plot_type1...end", "\n")
+    cat(file = stderr(), "Observe plot_type1...end", "\n\n")
   })
   
 }
 
 #-------------------------------
 observe_plot_type2 <- function(session, input, output){
-
+  cat(file = stderr(), "Observe plot_type2...", "\n")
+  
   observe({
-    cat(file = stderr(), "Observe plot_type2...", "\n")
-    
     if (input$plot_type2 == "Bar") {
       output$stats_plots2 <- renderUI({
         create_stats_bar_ui(plot_number=2)
@@ -270,7 +269,7 @@ observe_plot_type2 <- function(session, input, output){
       })
     }
       
-    cat(file = stderr(), "Observe plot_type2...end", "\n")
+    cat(file = stderr(), "Observe plot_type2...end", "\n\n")
   })
 
 }

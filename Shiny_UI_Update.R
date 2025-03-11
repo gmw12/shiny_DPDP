@@ -1,9 +1,11 @@
 cat(file = stderr(), "load Shiny_UI_Update.R", "\n")
 
 #-------------------------------------------------------------------------------------------
-ui_render_load_design <- function(session, input, output) {
+ui_render_load_design <- function(session, input, output, db_path) {
   cat(file = stderr(), "Function ui_render_load_design", "\n")
   #showModal(modalDialog("Render design...", footer = NULL))
+  
+  params <- get_params(db_path)
   
   output$data_source <- renderText({str_c("Source:  ", params$data_source)})
   output$data_input <- renderText({str_c("Raw Data Format:  ", params$raw_data_format)})
@@ -26,22 +28,24 @@ ui_render_load_design <- function(session, input, output) {
   }
 
 #-------------------------------------------------------------------------------------------
-ui_render_load_data <- function(session, input, output) {
+ui_render_load_data <- function(session, input, output, db_path) {
   cat(file = stderr(), "Function ui_render_load_data", "\n")
   #showModal(modalDialog("Render data...", footer = NULL))
   
-  output$data_file_name <- renderText({params$data_file})
+  output$data_file_name <- renderText({get_param('data_file', db_path)})
   
   #removeModal()
-  cat(file = stderr(), "Function ui_render_load_data... end", "\n")
+  cat(file = stderr(), "Function ui_render_load_data... end", "\n\n")
 }
 
 
 #------------------------------------------------------------------------
-ui_render_parameters <- function(session, input, output) {
+ui_render_parameters <- function(session, input, output, db_path) {
   cat(file = stderr(), "Function ui_render_parameters...", "\n")
+  #showModal(modalDialog("Rendering parameters...", footer = NULL))
+    params <- get_params(db_path)
   
-    render_parameters_graphs(session, input, output)
+    render_parameters_graphs(session, input, output, db_path)
   
     output$meta_parameters_precursor_raw <- renderText({str_c('Raw Precursors:  ', params$meta_precursor_start)})
     output$meta_parameters_peptide_raw <- renderText({str_c('Raw Peptides:  ', params$meta_peptide_start)})
@@ -60,32 +64,36 @@ ui_render_parameters <- function(session, input, output) {
     output$meta_parameters_phos_site_unique_all <- renderText({str_c('Phos Total Sites:  ', params$phos_site_unique_all )}) 
     output$meta_parameters_phos_site_unique_local <- renderText({str_c('Phos Local Sites:  ', params$phos_site_unique_local )}) 
     
-    cat(file = stderr(), "Function ui_render_parameters...end", "\n")
+    cat(file = stderr(), "Function ui_render_parameters...end", "\n\n")
 }
 
 #-------------------------------------------------------------------------------------------
-render_parameters_graphs <- function(session, input, output) {
+render_parameters_graphs <- function(session, input, output, db_path) {
   cat(file = stderr(), "Function render_graphs...", "\n")
   
+  qc_path <- get_param('qc_path', db_path)
+  
   output$raw_bar <- renderImage({
-    list(src = str_c(params$qc_path,"Precursor_Start_barplot.png"), contentType = 'image/png', width = 300, height = 300, alt = "this is alt text")
+    list(src = str_c(qc_path,"Precursor_Start_barplot.png"), contentType = 'image/png', width = 300, height = 300, alt = "this is alt text")
   }, deleteFile = FALSE)
   
   output$raw_box <- renderImage({
-    list(src = str_c(params$qc_path,"Precursor_Start_boxplot.png"), contentType = 'image/png', width = 400, height = 250, alt = "this is alt text")
+    list(src = str_c(qc_path,"Precursor_Start_boxplot.png"), contentType = 'image/png', width = 400, height = 250, alt = "this is alt text")
   }, deleteFile = FALSE)
   
   output$start_histogram <- renderImage({
-    list(src = str_c(params$qc_path, "Precursor_Start_Histogram.png"), contentType = 'image/png', width = 500, height = 500, alt = "this is alt text")
+    list(src = str_c(qc_path, "Precursor_Start_Histogram.png"), contentType = 'image/png', width = 500, height = 500, alt = "this is alt text")
   }, deleteFile = FALSE)
   
-  cat(file = stderr(), "Function render_graphs...end", "\n")
+  cat(file = stderr(), "Function render_graphs...end", "\n\n")
 }
 
 
 #-------------------------------------------------------------------------------------------
-render_filter_histogram_graphs <- function(session, input, output) {
+render_filter_histogram_graphs <- function(session, input, output, db_path) {
   cat(file = stderr(), "Function render_filter_histogram_graphs...", "\n")
+  
+  params <- get_params(db_path)
   
   output$impute_histogram <- renderImage({
     list(src = str_c(params$qc_path, "Precursor_NoiseFiltered_Histogram.png"), contentType = 'image/png', width = 500, height = 600, alt = "this is alt text")
@@ -94,26 +102,30 @@ render_filter_histogram_graphs <- function(session, input, output) {
   output$impute_total_na <- renderText({str_c("Total missing:  ", params$total_na)})
   output$impute_total_misaligned <- renderText({str_c("Total misaligned:  ", params$total_misaligned)})
   
-  cat(file = stderr(), "Function render_filter_histogram_graphs...end", "\n")
+  cat(file = stderr(), "Function render_filter_histogram_graphs...end", "\n\n")
 }
 #------------------------------------------------------------------------
-ui_render_filter <- function(session, input, output) {
+ui_render_filter <- function(session, input, output, db_path) {
   cat(file = stderr(), "Function ui_update_parameters...", "\n")
   
-  render_filter_graphs(session, input, output)
+  params <- get_params(db_path)
+  
+  render_filter_graphs(session, input, output, db_path)
   
   output$meta_filter_precursor_filtered <- renderText({str_c('Filtered Precursors:  ', params$meta_precursor_filter)})
   output$meta_filter_peptide_filtered <- renderText({str_c('Filtered Peptides:  ', params$meta_peptide_filter)})
   output$meta_filter_protein_filtered <- renderText({str_c('Filtered Protein:  ', params$meta_protein_filter)})
   
-  cat(file = stderr(), "Function ui_update_parameters...end", "\n")
+  cat(file = stderr(), "Function ui_update_parameters...end", "\n\n")
 }
 
 
 #-------------------------------------------------------------------------------------------
-render_noise_graphs <- function(session, input, output) {
+render_noise_graphs <- function(session, input, output, db_path) {
   cat(file = stderr(), "Function render_noise_graphs...", "\n")
   #showModal(modalDialog("Rendering noise graph...", footer = NULL))
+  
+  params <- get_params(db_path)
   
   output$noise_total <- renderText({str_c('Total data points:  ', params$noise_total)})
   output$dynamic_noise_count <- renderText({str_c('Dynamic noise data points:  ', params$dynamic_noise_count)})
@@ -126,89 +138,99 @@ render_noise_graphs <- function(session, input, output) {
     list(src = str_c(params$qc_path,"Inflection_Point.png"), contentType = 'image/png', width = 800, height = 600, alt = "this is alt text")
   }, deleteFile = FALSE)
  
-  cat(file = stderr(), "Function render_noise_graphs...end", "\n")
+  cat(file = stderr(), "Function render_noise_graphs...end", "\n\n")
   #removeModal() 
 }
 
 
 #-------------------------------------------------------------------------------------------
-render_filter_graphs <- function(session, input, output) {
+render_filter_graphs <- function(session, input, output, db_path) {
   cat(file = stderr(), "Function render_filter_graphs...", "\n")
   
+  qc_path <- get_param('qc_path', db_path)
+  
   output$filter_bar <- renderImage({
-    list(src = str_c(params$qc_path,"Precursor_Filter_barplot.png"), contentType = 'image/png', width = 350, height = 400, alt = "this is alt text")
+    list(src = str_c(qc_path,"Precursor_Filter_barplot.png"), contentType = 'image/png', width = 350, height = 400, alt = "this is alt text")
   }, deleteFile = FALSE)
   
   output$filter_box <- renderImage({
-    list(src = str_c(params$qc_path,"Precursor_Filter_boxplot.png"), contentType = 'image/png', width = 350, height = 250, alt = "this is alt text")
+    list(src = str_c(qc_path,"Precursor_Filter_boxplot.png"), contentType = 'image/png', width = 350, height = 250, alt = "this is alt text")
   }, deleteFile = FALSE)
   
   
   #same graph reused in norm tab
   output$norm_data_start_bar <- renderImage({
-    list(src = str_c(params$qc_path,"Precursor_Filter_barplot.png"), contentType = 'image/png', width = 480, height = 400, alt = "this is alt text")
+    list(src = str_c(qc_path,"Precursor_Filter_barplot.png"), contentType = 'image/png', width = 480, height = 400, alt = "this is alt text")
   }, deleteFile = FALSE)
   
-  cat(file = stderr(), "Function render_filter_graphs...end", "\n")
+  cat(file = stderr(), "Function render_filter_graphs...end", "\n\n")
 }
 
 #-------------------------------------------------------------------------------------------
-render_norm_graphs <- function(session, input, output) {
+render_norm_graphs <- function(session, input, output, db_path) {
   cat(file = stderr(), "Function render_norm_graphs", "\n")
   #showModal(modalDialog("Rendering norm graphs...", footer = NULL))
 
+  qc_path <- get_param('qc_path', db_path)
+  
   output$norm_normdata_bar <- renderImage({
-    list(src = str_c(params$qc_path,"Precursor_NormData_barplot.png"), contentType = 'image/png', width = 480, height = 400, alt = "this is alt text")
+    list(src = str_c(qc_path,"Precursor_NormData_barplot.png"), contentType = 'image/png', width = 480, height = 400, alt = "this is alt text")
   }, deleteFile = FALSE)
   
   #removeModal()
-  cat(file = stderr(), "Function render_norm_graphs...end", "\n")
+  cat(file = stderr(), "Function render_norm_graphs...end", "\n\n")
 }
 
 #-------------------------------------------------------------------------------------------
-render_norm_apply_graphs <- function(session, input, output) {
+render_norm_apply_graphs <- function(session, input, output, db_path) {
   cat(file = stderr(), "Function render_norm_apply_graphs", "\n")
   #showModal(modalDialog("Render Norm Graphs...", footer = NULL))
   
-  norm_type <- as.list(strsplit(params$norm_type, ",")[[1]])
+  norm_type <- as.list(strsplit(get_param('norm_type', db_path), ",")[[1]])
   
   output$norm_bar <- renderImage({
-    list(src = str_c(params$qc_path, "Precursor_", norm_type[1],"_barplot.png"), contentType = 'image/png', width = 480, height = 400, alt = "this is alt text")
+    list(src = str_c(get_param('qc_path', db_path), "Precursor_", norm_type[1],"_barplot.png"), contentType = 'image/png', width = 480, height = 400, alt = "this is alt text")
   }, deleteFile = FALSE)
   
   #removeModal()
-  cat(file = stderr(), "Function render_norm_apply_graphs...end", "\n")
+  cat(file = stderr(), "Function render_norm_apply_graphs...end", "\n\n")
 }
 
 #-------------------------------------------------------------------------------------------
-render_impute_graphs <- function(session, input, output) {
+render_impute_graphs <- function(session, input, output, db_path) {
   cat(file = stderr(), "Function render_impute_graphs", "\n")
   
+  qc_path <- get_param('qc_path', db_path)
+  
   output$missing_bar_plot <- renderImage({
-    list(src = str_c(params$qc_path,"missing_bar_plot.png"), contentType = 'image/png', width = 400, height = 400, alt = "this is alt text")
+    list(src = str_c(qc_path,"missing_bar_plot.png"), contentType = 'image/png', width = 400, height = 400, alt = "this is alt text")
   }, deleteFile = FALSE)
  
   output$missing_percent_plot <- renderImage({
-    list(src = str_c(params$qc_path,"missing_percent_plot.png"), contentType = 'image/png', width = 420, height = 480, alt = "this is alt text")
+    list(src = str_c(qc_path,"missing_percent_plot.png"), contentType = 'image/png', width = 420, height = 480, alt = "this is alt text")
   }, deleteFile = FALSE)
   
-  if ("missing_values" %in% list_tables(params)) {
+  if ("missing_values" %in% list_tables(db_path)) {
     cat(file = stderr(), "Creating impute table...", "\n")
-    create_impute_table(session, input, output, params)
+    create_impute_table(session, input, output, db_path)
   }
   
-  cat(file = stderr(), "Function render_impute_graphs...end", "\n")  
+  cat(file = stderr(), "Function render_impute_graphs...end", "\n\n")  
 }
 
 #-------------------------------------------------------------------------------------------
-render_qc_graphs <- function(session, input, output) {
+render_qc_graphs <- function(session, input, output, db_path) {
   cat(file = stderr(), "Function render_qc_graphs", "\n")
   
-  output$cv_plot <- renderImage({
-    list(src = str_c(params$qc_path,"CV_barplot.png"), contentType = 'image/png', width = 800, height = 400, alt = "this is alt text")
+  qc_path <- get_param('qc_path', db_path)
+  data_output <- get_param('data_output', db_path)
+  norm_type <- get_param('norm_type', db_path)
+  
+    output$cv_plot <- renderImage({
+    list(src = str_c(qc_path,"CV_barplot.png"), contentType = 'image/png', width = 800, height = 400, alt = "this is alt text")
   }, deleteFile = FALSE)
   
-  norm_type <- as.list(strsplit(params$norm_type, ",")[[1]])
+  norm_type <- as.list(strsplit(norm_type, ",")[[1]])
   counter <- seq(1:length(norm_type))
 
   image_render_loop <- function(){
@@ -216,10 +238,10 @@ render_qc_graphs <- function(session, input, output) {
            function(x) {
              norm <- norm_type[x]
              norm <- stringr::str_replace_all(norm, " ", "")
-             if (params$data_output == "Protein") {
-               plot_name <- str_c(params$qc_path, "protein_", norm, "_barplot.png")
-             } else if (params$data_output == "Peptide") {
-               plot_name <- str_c(params$qc_path, "peptide_impute_", norm, "_barplot.png")
+             if (data_output == "Protein") {
+               plot_name <- str_c(qc_path, "protein_", norm, "_barplot.png")
+             } else if (data_output == "Peptide") {
+               plot_name <- str_c(qc_path, "peptide_impute_", norm, "_barplot.png")
              }
              output_name <- str_c("qc_norm_comp", x)
              output[[output_name]] <- renderImage({
@@ -229,30 +251,20 @@ render_qc_graphs <- function(session, input, output) {
   }
   
   image_render_loop()
-    
-  # for (norm in norm_type) {
-  #   norm <- stringr::str_replace_all(norm, " ", "")
-  #   plot_name <- str_c(params$qc_path, "protein_", norm, "_barplot.png")
-  #   output_name <- str_c("qc_norm_comp", i)
-  #   cat(file = stderr(), str_c("norm = ", norm, "   i=", i, "   plot_name=", plot_name, "   output_name=", output_name), "\n")
-  #   
-  #   output[[output_name]] <- renderImage({
-  #     list(src = plot_name, contentType = 'image/png', width = 300, height = 300, alt = "this is alt text")
-  #   }, deleteFile = FALSE)
-  #   
-  #   i <- i + 1
-  # }
    
-  cat(file = stderr(), "Function render_qc_graphs...end", "\n")
+  cat(file = stderr(), "Function render_qc_graphs...end", "\n\n")
 }
 
 
 #-------------------------------------
-update_widgets <- function(session, input, output, params) {
+update_widgets <- function(session, input, output, db_path) {
   cat(file = stderr(), "Function - update_widgets...", "\n")
   
-  if (exists("params")) {
-    
+  
+  if (table_exists("params", db_path)) {
+  
+    params <- get_params(db_path)
+  
     #Load-----------------------------------------------------------------
     updateTextInput(session, 'file_prefix', value = params$file_prefix)
     
@@ -323,8 +335,8 @@ update_widgets <- function(session, input, output, params) {
     updateSelectInput(session, "stats_norm_type", choices = qc_norm_types)
     
     #stats
-    update_stat_choices(session, input, output)
-    update_stat_comparisons(session, input, output)
+    update_stat_choices(session, input, output, db_path)
+    update_stat_comparisons(session, input, output, db_path)
     updateSelectInput(session, "stats_norm_type", selected = params$stat_norm)
     updateSelectInput(session, "stats_comp_spqc", selected = params$comp_spqc)
     
@@ -358,46 +370,72 @@ update_widgets <- function(session, input, output, params) {
     updateTextInput(session, "report_accession", value = params$report_accession)
     
     #stats graphs
-    update_widgets_stats(session, input, output, params)
+    update_widgets_stats(session, input, output, db_path)
     
     #parameters
-    update_widgets_parameters(session, input, output, params)
+    update_widgets_parameters(session, input, output, db_path)
     
     #filters
-    update_widgets_filters(session, input, output, params) 
+    update_widgets_filters(session, input, output, db_path) 
     
   }
-  cat(file = stderr(), "Function - update_widgets...end", "\n")
+  cat(file = stderr(), "Function - update_widgets...end", "\n\n")
 }
 
 #-------------------------------------
-update_widgets_parameters <- function(session, input, output, params) {
+update_widgets_parameters <- function(session, input, output, db_path)  {
   cat(file = stderr(), "Function - update_widgets_parameters...", "\n")
+  
+  params <- get_params(db_path)
   
   updateSelectInput(session, "primary_group", selected = params$primary_goup)
   updateSelectInput(session, "data_output", selected = params$data_output)
   updateCheckboxInput(session, "ptm", value = params$ptm)
   
-  cat(file = stderr(), "Function - update_widgets_parameters...end", "\n")
+  cat(file = stderr(), "Function - update_widgets_parameters...end", "\n\n")
 }
 
 #-------------------------------------
-update_widgets_filters <- function(session, input, output, params) {
+update_widgets_filters <- function(session, input, output, db_path)  {
   cat(file = stderr(), "Function - update_widgets_filters...", "\n")
+  
+  params <- get_params(db_path)
   
   unique_groups <- unlist(stringr::str_split(params$unique_groups, pattern = ", "))
   updateSelectInput(session, "filter_cv_group", choices = unique_groups, selected = params$filter_cv_group)
   
-  cat(file = stderr(), "Function - update_widgets_filterss...end", "\n")
+  cat(file = stderr(), "Function - update_widgets_filters...end", "\n\n")
 }
 
+#-------------------------------------
+update_widgets_rollup <- function(session, input, output, db_path)  {
+  cat(file = stderr(), "Function - update_widgets_rollup...", "\n")
+  
+  params <- get_params(db_path)
+
+  rollup_list <- list("Sum" = "sum", "Median" = "median", "Median_Polish" = "median_polish", "Mean" = "mean",
+       "IQ_MaxLFQ" = "iq_maxlfq", "TopN" = "topn")
+
+  rollup_method <- names(rollup_list[rollup_list == params$rollup_method])
+  
+  cat(file = stderr(), str_c("param$rollup_method->", params$rollup_method, "   Name = ", rollup_method), "\n")
+  
+  updateRadioButtons(session, "rollup_method", selected = rollup_method)
+  updateSelectInput(session, "rollup_topn", selected = params$rollup_topn)
+  updateCheckboxInput(session, "maxlfq_scale", value = params$maxlfq_scale)
+
+  cat(file = stderr(), "Function - update_widgets_rollup...end", "\n\n")
+}
 #-----------------------------------------------------------------------------------
 
-update_widgets_stats <- function(session, input, output, params){
+update_widgets_stats <- function(session, input, output, db_path) {
   cat(file = stderr(), "Function - update_widget_stats...", "\n")
+  
+  params <- get_params(db_path)
+  
   #stats graphs
-  if ("stats_comp" %in% list_tables(params)) {
-    stats_comp <- read_table_try("stats_comp", params)
+  if ("stats_comp" %in% list_tables(db_path)) {
+    stats_comp <- read_table_try("stats_comp", db_path)
     stats_comp_choices <- c(stats_comp$Name)
     stats_comp_choices_spqc <- c(stats_comp$Name, params$comp_spqc)
     updatePickerInput(session, "stats_plot_comp1", choices = stats_comp_choices_spqc)
@@ -414,104 +452,123 @@ update_widgets_stats <- function(session, input, output, params){
     updateSelectInput(session, "select_data_comp_momo", choices = stats_comp_choices)
   }
   
-  cat(file = stderr(), "Function - update_widget_stats...end", "\n") 
+  cat(file = stderr(), "Function - update_widget_stats...end", "\n\n") 
 }
 
 #-----------------------------------------------------------------------------------
-parameter_widget_save <- function(session, input, output){
+parameter_widget_save <- function(session, input, output, db_path){
   cat(file = stderr(), "Function - parameter_widget_save...", "\n")
+  
+  params <- get_params(db_path)
   
   names <- c('primary_group', 'data_output', 'ptm', 'ptm_grep', 'ptm_local', 'multi_tmt', 'peptide_select', 'use_isoform')
   
   for (name in names) {
-    params[[name]] <<- input[[name]]
+    params[[name]] <- input[[name]]
   }
   
-  param_save_to_database()
-  cat(file = stderr(), "Function - parameter_widget_save...end", "\n")
+  write_params(params, db_path)
+  
+  cat(file = stderr(), "Function - parameter_widget_save...end", "\n\n")
 }
 
 #-----------------------------------------------------------------------------------
-noise_widget_save <- function(session, input, output){
+noise_widget_save <- function(session, input, output, db_path){
   cat(file = stderr(), "Function - noise_widget_save...", "\n")
+  
+  params <- get_params(db_path)
   
   names <- c('noise_type', 'noise_baseline_value')
   
   for (name in names) {
-    params[[name]] <<- input[[name]]
+    params[[name]] <- input[[name]]
   }
   
-  param_save_to_database()
-  cat(file = stderr(), "Function - noise_widget_save...end", "\n")
+  write_params(params, db_path)
+  
+  cat(file = stderr(), "Function - noise_widget_save...end", "\n\n")
 }
 
 
 #-----------------------------------------------------------------------------------
-filter_widget_save <- function(session, input, output){
-  cat(file = stderr(), "Function - parameter_widget_save...", "\n")
+filter_widget_save <- function(session, input, output, db_path){
+  cat(file = stderr(), "Function - filter_widget_save...", "\n")
+  
+  params <- get_params(db_path)
   
   names <- c('filter_min_measured_all', 'filter_x_percent', 'filter_x_percent_value', 'filter_cv', 'filter_cv_group', 'filter_cv_value', 'filter_ptm',
              "checkbox_misaligned", "misaligned_cutoff", "misaligned_target", "intensity_cutoff_sd", "precursor_quality", "precursor_quality_sd",
              "precursor_quality_intensity", "precursor_quality_min", "precursor_spqc_ratio", "precursor_spqc_intensity", "precursor_spqc_accuracy")
   
   for (name in names) {
-    params[[name]] <<- input[[name]]
+    params[[name]] <- input[[name]]
   }
   
-  param_save_to_database()
-  cat(file = stderr(), "Function - parameter_widget_save...end", "\n")
+  write_params(params, db_path)
+  
+  cat(file = stderr(), "Function - filter_widget_save...end", "\n\n")
 }
 
 #-----------------------------------------------------------------------------------
-norm_widget_save <- function(session, input, output){
+norm_widget_save <- function(session, input, output, db_path){
   cat(file = stderr(), "Function - norm_widget_save...", "\n")
+  
+  params <- get_params(db_path)
   
   names <- c("norm_exclude", "norm_exclude_grep", "norm_include", "norm_include_grep", "norm_ptm", "norm_ptm_grep")
   
   for (name in names) {
-    params[[name]] <<- input[[name]]
+    params[[name]] <- input[[name]]
   }
   
-  param_save_to_database()
+  write_params(params, db_path)
+  cat(file = stderr(), "Function - norm_widget_save...end", "\n\n")
 }
 #-----------------------------------------------------------------------------------
-norm_apply_widget_save <- function(session, input, output){
+norm_apply_widget_save <- function(session, input, output, db_path){
   cat(file = stderr(), "Function - norm_apply_widget_save...", "\n")
+  
+  params <- get_params(db_path)
   
   norm_type <- str_c(input$norm_type, ",", params$norm_type)
   norm_type <- str_replace_all(norm_type, " ", "")
   norm_type <- as.list(strsplit(norm_type, ",")[[1]])
   norm_type <- unique(norm_type)
-  params$norm_type <<- toString(norm_type)
+  params$norm_type <- toString(norm_type)
   
   names <- c("norm_include", "norm_include_grep", "norm_exclude", "norm_exclude_grep", "norm_ptp", "norm_ptm_grep",
              "protein_norm_search_field", "protein_norm_grep")
 
   for (name in names) {
-    params[[name]] <<- input[[name]]
+    params[[name]] <- input[[name]]
   }
   
-  param_save_to_database()
-  cat(file = stderr(), "Function - norm_apply_widget_save...end", "\n")
+  write_params(params, db_path)
+  cat(file = stderr(), "Function - norm_apply_widget_save...end", "\n\n")
 }
 
 #-----------------------------------------------------------------------------------
-impute_apply_widget_save <- function(session, input, output){
+impute_apply_widget_save <- function(session, input, output, db_path){
   cat(file = stderr(), "Function - impute_apply_widget_save...", "\n")
+  
+  params <- get_params(db_path)
   
   names <- c("impute_type",  "bottom_x", "missing_cutoff") #"impute_ptm", "impute_ptm_grep",
   
   for (name in names) {
-    params[[name]] <<- input[[name]]
+    params[[name]] <- input[[name]]
   }
   
-  param_save_to_database()
-  cat(file = stderr(), "Function - impute_apply_widget_save...end", "\n")
+  write_params(params, db_path)
+  
+  cat(file = stderr(), "Function - impute_apply_widget_save...end", "\n\n")
 }
 
 #-----------------------------------------------------------------------------------
-rollup_widget_save <- function(session, input, output){
+rollup_widget_save <- function(session, input, output, db_path){
   cat(file = stderr(), "Function - rollup_widget_save...", "\n")
+  
+  params <- get_params(db_path)
   
   names <- c("rollup_method", "rollup_topn", "maxlfq_scale")
   
@@ -519,14 +576,16 @@ rollup_widget_save <- function(session, input, output){
     params[[name]] <- input[[name]]
   }
   
-  write_table_try("params", params, params)
-  params <<- params
-  cat(file = stderr(), "Function - rollup_widget_save...end", "\n")
+  write_params(params, db_path)
+
+  cat(file = stderr(), "Function - rollup_widget_save...end", "\n\n")
 }
 
 #-----------------------------------------------------------------------------------
-stat_widget_save <- function(session, input, output){
+stat_widget_save <- function(session, input, output, db_path){
   cat(file = stderr(), "Function - stat_widget_save...", "\n")
+  
+  params <- get_params(db_path)
   
   names <- c("pvalue_cutoff", "pair_comp", "checkbox_adjpval", "foldchange_cutoff", "missing_factor", "peptide_refilter", "peptide_missing_filter", "peptide_missing_factor",
              "peptide_cv_filter", "peptide_cv_factor", "stats_spqc_cv_filter", "stats_spqc_cv_filter_factor", "stats_comp_cv_filter", "stats_comp_cv_filter_factor",
@@ -537,17 +596,19 @@ stat_widget_save <- function(session, input, output){
     params[[name]] <- input[[name]]
   }
 
-  params <<- params
-  write_table_try("params", params, params)
-  cat(file = stderr(), "Function - stat_widget_save...end", "\n")
+  write_params(params, db_path)
+
+  cat(file = stderr(), "Function - stat_widget_save...end", "\n\n")
 }
 
 
 
 #----------------------------------------------------------------------
-update_stat_choices <- function(session, input, output){
+update_stat_choices <- function(session, input, output, db_path){
   cat(file = stderr(), "function update_stat_choices...", "\n")
-
+  
+  params <- get_params(db_path)
+  
   unique_groups <- params$unique_groups
   unique_groups <- str_replace_all(unique_groups, " ", "")
   unique_groups <- as.list(strsplit(unique_groups, ",")[[1]])
@@ -565,19 +626,16 @@ update_stat_choices <- function(session, input, output){
     updatePickerInput(session, compD, choices = unique_groups) 
   }
   
-  update_stat_comparisons(session, input, output)
-  cat(file = stderr(), "function update_stat_choices...end", "\n")
+  update_stat_comparisons(session, input, output, db_path)
+  cat(file = stderr(), "function update_stat_choices...end", "\n\n")
 }
 
 #----------------------------------------------------------------------
-update_stat_comparisons <- function(session, input, output){
+update_stat_comparisons <- function(session, input, output, db_path){
   cat(file = stderr(), "function update_stat_comparisons...", "\n")
   
-  conn <- dbConnect(RSQLite::SQLite(), params$database_path)
-  tables <- dbListTables(conn)
-  
-  if ("stats_comp" %in% tables) {
-    stats_comp <- RSQLite::dbReadTable(conn, "stats_comp")
+  if ("stats_comp" %in% list_tables(db_path)) {
+    stats_comp <- read_table_try("stats_comp", db_path)
     if (nrow(stats_comp > 0)) {
       for (i in (1:nrow(stats_comp))) {
         compN <- str_c("comp_", i, "N")
@@ -590,17 +648,10 @@ update_stat_comparisons <- function(session, input, output){
         updatePickerInput(session, inputId = compD, label = str_c("Denominator selected -> ", stats_comp$D[i]) )
         updateTextInput(session, inputId = str_c("comp",i,"_name"),  value = stats_comp$Name[i])
       }
-      # for (i in ((nrow(stats_comp) + 1):9)) {
-      #   compN <- str_c("comp_", i, "N")
-      #   compD <- str_c("comp_", i, "D")
-      #   updatePickerInput(session, compN, selected = "-") 
-      #   updatePickerInput(session, compD, selected = "-") 
-      # }
     }
   } 
   
-  updateTextInput(session, inputId = "final_stats_name", value = str_c("Final_", params$stat_norm, "_stats.xlsx"))
-  
-  RSQLite::dbDisconnect(conn)
-  cat(file = stderr(), "function update_stat_comparisons...end", "\n")
+  updateTextInput(session, inputId = "final_stats_name", value = str_c("Final_", get_param('stat_norm', db_path), "_stats.xlsx"))
+
+  cat(file = stderr(), "function update_stat_comparisons...end", "\n\n")
 }

@@ -2,35 +2,38 @@ cat(file = stderr(), "Shiny_MVA.R", "\n")
 
 #----------------------------------------------------------------------------------------- 
 #create data frame for comparisons
-check_comp_names <- function(session, input, output){
+check_comp_names <- function(session, input, output, db_path){
   cat(file = stderr(), "function check_comp_names....", "\n")
   showModal(modalDialog("Setting Stat groups...", footer = NULL))  
   source('Shiny_File.R')
+  
+  params <- get_params(db_path)
   
   table_name <- str_c("protein_", input$stats_norm_type)
   table_name_peptide <- str_c("peptide_impute_", input$stats_norm_type)
   table_name <- gsub(" ", "", table_name, fixed = TRUE)
   table_name_peptide <- gsub(" ", "", table_name_peptide, fixed = TRUE) 
   
-  params$stat_norm <<- input$stats_norm_type
-  params$comp_spqc <<- toString(input$comp_spqc)
-  params$comp_number <<- input$comp_number
+  params$stat_norm <- input$stats_norm_type
+  params$comp_spqc <- toString(input$comp_spqc)
+  params$comp_number <- input$comp_number
+  write_params(params, db_path)
   
   #create df to store comparision info
   stats_comp <- data.frame(matrix(ncol = 13, nrow = 0))
 
-  write_table_try("stats_comp", stats_comp, params)
+  write_table_try("stats_comp", stats_comp, db_path)
   
   for (comp_number in 1:input$comp_number) {
     factorsN <- input[[stringr::str_c('comp_',comp_number,'N')]]
     factorsD <- input[[stringr::str_c('comp_',comp_number,'D')]]
-    bg_stat_groups <- callr::r_bg(func = check_comp_names_bg, args = list(params, table_name, table_name_peptide, comp_number, factorsN, factorsD), 
+    bg_stat_groups <- callr::r_bg(func = check_comp_names_bg, args = list(params, db_path, table_name, table_name_peptide, comp_number, factorsN, factorsD), 
                                   stderr = stringr::str_c(params$error_path, "//stat_groups.txt"), supervise = TRUE)
     bg_stat_groups$wait()
-    print_stderr("stat_groups.txt")
+    print_stderr("stat_groups.txt", db_path)
   }
   
-  stats_comp <- read_table_try("stats_comp", params)
+  stats_comp <- read_table_try("stats_comp", db_path)
   
   for (comp_number in 1:input$comp_number) {
     cat(file = stderr(), str_c("name length = ", nchar(stats_comp$Name[comp_number]) ), "\n")
@@ -39,7 +42,7 @@ check_comp_names <- function(session, input, output){
     }
   }
 
-  update_stat_comparisons(session, input, output)
+  update_stat_comparisons(session, input, output, db_path)
   
   final_stats_name <- table_name <- gsub(" ", "", stringr::str_c("Final_", params$stat_norm,  "_stats.xlsx"), fixed = TRUE)
   updateTextInput(session, "final_stats_name", value = final_stats_name)
@@ -51,10 +54,10 @@ check_comp_names <- function(session, input, output){
 #----------------------------------------------------------------------------------------- 
 
 #create data frame for comparisons
-check_comp_names_bg <- function(params, table_name, table_name_peptide, comp_number, factorsN, factorsD){
+check_comp_names_bg <- function(params, db_path, table_name, table_name_peptide, comp_number, factorsN, factorsD){
   cat(file = stderr(), "function check_comp_names_bg....", "\n")
   
-  conn <- RSQLite::dbConnect(RSQLite::SQLite(), params$database_path)
+  conn <- RSQLite::dbConnect(RSQLite::SQLite(), db_path)
   df_design <- RSQLite::dbReadTable(conn, "design")
   stats_comp <- RSQLite::dbReadTable(conn, "stats_comp")
   
@@ -129,19 +132,17 @@ check_comp_names_bg <- function(params, table_name, table_name_peptide, comp_num
 #---------------------------------------------------------------------------------------------------------------------------
 
 #create data frame for comparisons
-stat_calc <- function(session, input, output){
+stat_calc <- function(session, input, outpu, db_path){
   cat(file = stderr(), "function stat_calc....", "\n")
   showModal(modalDialog("Calculating stats...", footer = NULL))  
   
-  conn <- RSQLite::dbConnect(RSQLite::SQLite(), params$database_path)
-  stats_comp <- RSQLite::dbReadTable(conn, "stats_comp")
-  RSQLite::dbDisconnect(conn)
-
+  stats_comp <- read_table_try("stats_comp", db_path)
+  
   for (comp_number in 1:nrow(stats_comp)) {
-    arg_list <- list(params, comp_number, stats_comp)
-    bg_stat_calc <- callr::r_bg(func = stat_calc_bg, args = arg_list, stderr = stringr::str_c(params$error_path, "//stat_calc.txt"), supervise = TRUE)
+    arg_list <- list(db_path, comp_number, stats_comp)
+    bg_stat_calc <- callr::r_bg(func = stat_calc_bg, args = arg_list, stderr = stringr::str_c(get_param('error_path', db_path), "//stat_calc.txt"), supervise = TRUE)
     bg_stat_calc$wait()
-    print_stderr("stat_calc.txt")
+    print_stderr("stat_calc.txt", db_path)
   }
   
   cat(file = stderr(), "function stat_calc....end", "\n\n")
@@ -153,26 +154,30 @@ stat_calc <- function(session, input, output){
 #----------------------------------------------------------------------------------------- 
 
 #create data frame for comparisons
-stat_calc_bg <- function(params, comp_number, stats_comp){
+stat_calc_bg <- function(db_path, comp_number, stats_comp){
   cat(file = stderr(), "function stat_calc_bg....", "\n")
   source('Shiny_MVA_Functions.R')
+  source("Shiny_Misc_Functions.R")
   source('Shiny_File.R')
 
   #save(comp_number, file="z10"); save(stats_comp, file="z11");
   #. load(file="z10"); load(file="z11");
   # stats_comp <- read_table_try("stats_comp", params); comp_number = 1
 
-  df_design <- read_table_try("design", params) 
+  params <- get_params(db_path)
+  df_design <- read_table_try("design", db_path)
   
   if (!params$peptide_refilter) {
     cat(file = stderr(), "data NOT refiltered at peptide/precursor level....", "\n")
-    df <- read_table_try(stats_comp$Table_Name[comp_number], params)
+    table_name <- stringr::str_replace_all(stringr::str_c("protein_", params$stat_norm, "_final"), " ", "")
+    df <- read_table_try(stats_comp$Table_Name[comp_number], db_path)
     #add imputed column
     if (params$raw_data_format != "protein"){
       cat(file = stderr(), "raw format NOT protein...", "\n")
-      df_list <- add_imputed_df(df, params, stats_comp, comp_number, "protein_missing")
-      df <- df_list[[1]]
-      df_missing <- df_list[[2]]
+      #df_list <- add_imputed_df(df, params, db_path, stats_comp, comp_number, "protein_missing")
+      #df <- df_list[[1]]
+      #df_missing <- df_list[[2]]
+      df_missing <- read_table_try("protein_missing", db_path)
     }else{
       cat(file = stderr(), "raw format IS protein...", "\n")
       df_missing <- ""
@@ -180,8 +185,8 @@ stat_calc_bg <- function(params, comp_number, stats_comp){
   } else {
     cat(file = stderr(), "data IS refiltered at peptide/precursor level....", "\n")
     table_name <- stringr::str_replace_all(stringr::str_c("precursor_impute_", params$stat_norm), " ", "")
-    df <- read_table_try(table_name, params)  
-    df_missing <- read_table_try("precursor_missing", params) 
+    df <- read_table_try(table_name, db_path) 
+    df_missing <- read_table_try("precursor_missing", db_path)
     
     # reduce precursor df to samples of interest
     df_list <- stat_create_comp_df(df, stats_comp, comp_number, params, df_design)
@@ -201,7 +206,7 @@ stat_calc_bg <- function(params, comp_number, stats_comp){
     df_peptide <- rollup_sum_peptide(df_filter_list[[1]], df_design, comp_number, stats_comp, params)
     df_peptide_name <- stringr::str_c(stats_comp$Final_Table_Name_Peptide[comp_number])
     
-    write_table_try(df_peptide_name, df_peptide, params)
+    write_table_try(df_peptide_name, df_peptide, db_path)
   }
   
   #add stats to df
@@ -212,14 +217,16 @@ stat_calc_bg <- function(params, comp_number, stats_comp){
   }else{
     stats_out_name <- stringr::str_c(stats_comp$Final_Table_Name_Peptide[comp_number])
   }
-  write_table_try(stats_out_name, df, params)
+  write_table_try(stats_out_name, df, db_path)
   
-  cat(file = stderr(), "function stat_calc_bg....end", "\n")
+  cat(file = stderr(), "function stat_calc_bg....end", "\n\n")
 }
 
 #-------------------------------------------------------------------------------
-save_stat_options <- function(session, input, output, params) {
+save_stat_options <- function(session, input, output, db_path) {
   cat(file = stderr(), "function save_stat_options...", "\n")
+  
+  params <- get_params(db_path)
   
   params$pvalue_cutoff <- input$pvalue_cutoff
   params$pair_comp <- input$pair_comp
@@ -243,18 +250,19 @@ save_stat_options <- function(session, input, output, params) {
   params$checkbox_cohensd <-  input$checkbox_cohensd
   params$checkbox_limmapvalue <-  input$checkbox_limmapvalue
   
-  params <<- params
-
-  write_table_try("params", params, params)
+  write_params(params, db_path)
+  cat(file = stderr(), "function save_stat_options...end", "\n\n")
 }
 
 #----------------------------------------------------------------------------------------
 # create final excel documents
-stats_Final_Excel <- function(session, input, output, params) {
+stats_Final_Excel <- function(session, input, output, db_path) {
   cat(file = stderr(), "function stats_Final_Excel...", "\n")
   showModal(modalDialog("Creating/Saving excel file...", footer = NULL))  
   
   require(openxlsx)
+  
+  params <- get_params(db_path)
   
   #remove whitespace
   input_stats_norm_type <- trimws(input$stats_norm_type)
@@ -270,7 +278,7 @@ stats_Final_Excel <- function(session, input, output, params) {
   
   bg_excel <- callr::r_bg(func = stats_Final_Excel_bg, args = list(file_dir, filename, filename_params, params), stderr = stringr::str_c(params$error_path, "//error_finalexcel.txt"), supervise = TRUE)
   bg_excel$wait()
-  print_stderr("error_finalexcel.txt")
+  print_stderr("error_finalexcel.txt", db_path)
 
   
   output$download_stats_excel <- downloadHandler(
@@ -303,11 +311,11 @@ stats_Final_Excel_bg <- function(file_dir, filename, filename_params, params) {
   if (params$raw_data_format == "precursor" && params$data_output == "Protein") {
     excel_list <- list('precursor_start', 'raw_peptide', stringr::str_c("precursor_impute_", params$stat_norm), 
                        stringr::str_c("protein_", params$stat_norm, "_final"))
-    excel_list_name <- list('Raw Precursor Data', 'Raw Peptide Data', 'Imputed Precursor Data', 'Normalized Data')
+    excel_list_name <- list('Table2 Raw Precursor Data', 'Table3 Raw Peptide Data', 'Table4 Imputed Precursor Data', 'Table5 Normalized Data')
   }else if (params$raw_data_format == "precursor" && params$data_output == "Peptide" ) {
     excel_list <- list('precursor_start', 'raw_peptide', stringr::str_c("precursor_impute_", params$stat_norm), 
                        stringr::str_c("peptide_impute_", params$stat_norm, "_final"))
-    excel_list_name <- list('Raw Precursor Data', 'Raw Peptide Data', 'Imputed Precursor Data', 'Normalized Data')
+    excel_list_name <- list('Table2 Raw Precursor Data', 'Table3 Raw Peptide Data', 'Table4 Imputed Precursor Data', 'Table5 Normalized Data')
   }else if (params$raw_data_format == "protein" && params$data_source == "SP" ) {
     excel_list <- list('protein_raw', 'protein_impute')
     excel_list_name <- list('SP Protein Data', "Protein Data")
@@ -315,14 +323,24 @@ stats_Final_Excel_bg <- function(file_dir, filename, filename_params, params) {
   
   # add stat comparisons to excel list
   for (i in 1:nrow(stats_comp))  {
-    if(params$data_output == "Protein") {final_table_name <- stats_comp$Final_Table_Name[i]}
-    if(params$data_output == "Peptide") {final_table_name <- stats_comp$Final_Table_Name_Peptide[i]}
+    table_number <- 6
+    if(params$data_output == "Protein") {final_table_name <- stringr::str_c("Table", table_number, " ", stats_comp$Final_Table_Name[i])}
+    if(params$data_output == "Peptide") {final_table_name <- stringr::str_c("Table", table_number, " ", stats_comp$Final_Table_Name_Peptide[i])}
     excel_list <- c(excel_list, final_table_name)
     excel_list_name <- c(excel_list_name, stats_comp$Name[i])
   }
   
+  #check names for excel max length, if too long then truncate to 31 characters
+  for (i in 1:length(excel_list_name)) {
+    if (nchar(excel_list_name[i]) > 31) {
+      excel_list_name[i] <- substr(excel_list_name[i], 1, 31)
+    }
+  }
+  
   cat(file = stderr(), "Creating Excel Output File...3", "\n")
   # build Excel file
+  headerStyle <- createStyle(halign = "center", textDecoration = "bold", wrapText = TRUE)
+  dataStyle <- createStyle(halign = "center")
   nextsheet <- 1
   wb <- createWorkbook()
   for (i in 1:length(excel_list)) {
@@ -330,6 +348,22 @@ stats_Final_Excel_bg <- function(file_dir, filename, filename_params, params) {
     table_name <- unlist(excel_list[i])
     excel_df <- RSQLite::dbReadTable(conn, table_name)
     writeData(wb, sheet = nextsheet, excel_df)
+    
+    #format top row
+    addStyle(wb, sheet = nextsheet, rows = 1, cols = 1:ncol(excel_df), style = headerStyle)
+    col_number <- 1
+    for (col_name in colnames(excel_df)){
+      if (col_name %in% c("Accession", "Name", "Genes", "PeptidePosition", "Precursors", "Peptides")){
+        addStyle(wb, sheet = nextsheet, rows = 2:nrow(excel_df), cols=col_number, style = dataStyle)
+        setColWidths(wb, sheet = nextsheet, cols = col_number, widths = 20)
+      }
+      if (col_name %in% c("Description", "Sequence")){
+        addStyle(wb, sheet = nextsheet, rows = 2:nrow(excel_df), cols=col_number, style = dataStyle)
+        setColWidths(wb, sheet = nextsheet, cols = col_number, widths = 30)
+      }
+      col_number <- col_number + 1
+    }
+    
     nextsheet <- nextsheet + 1 
   }  
 
@@ -350,16 +384,18 @@ stats_Final_Excel_bg <- function(file_dir, filename, filename_params, params) {
 }
 
 #----------------------------------------------------------------------------------------
-create_stats_data_table <- function(session, input, output, params) {
+create_stats_data_table <- function(session, input, output, db_path) {
   cat(file = stderr(), "Function create_stats_data_table...", "\n")
   showModal(modalDialog("Creating stats data table...", footer = NULL))  
 
+  params <- get_params(db_path)
+  
   arg_list <- list(input$stats_norm_type, input$stats_select_data_comp, input$stats_add_filters, 
-                   input$stats_search_field, input$stats_data_description, params)
+                   input$stats_search_field, input$stats_data_description, params, db_path)
   
   bg_create_stats_data_table <- callr::r_bg(func = create_stats_data_table_bg, args = arg_list, stderr = str_c(params$error_path, "//error_create_stats_data_table.txt"), supervise = TRUE)
   bg_create_stats_data_table$wait()
-  print_stderr("error_create_stats_data_table.txt")
+  print_stderr("error_create_stats_data_table.txt", db_path)
   
   DT_list <- bg_create_stats_data_table$get_result()
   df_DT <- DT_list[[1]]
@@ -414,7 +450,7 @@ create_stats_data_table <- function(session, input, output, params) {
 
 #----------------------------------------------------------------------------------------
 create_stats_data_table_bg <- function(input_stats_norm_type, input_stats_select_data_comp, input_stats_add_filters, input_stats_search_field,
-                                       input_stats_data_description, params) {
+                                       input_stats_data_description, params, db_path) {
   cat(file = stderr(), "Function create_stats_data_table_bg...", "\n")
   source('Shiny_File.R')
   source('Shiny_Tables.R')
@@ -435,13 +471,13 @@ create_stats_data_table_bg <- function(input_stats_norm_type, input_stats_select
   
   cat(file = stderr(), stringr::str_c("data_name --> ", data_name), "\n")
   
-  stats_comp <- read_table_try("stats_comp", params)
+  stats_comp <- read_table_try("stats_comp", db_path)
   
-  if (data_name %in% list_tables(params)) {
+  if (data_name %in% list_tables(db_path)) {
     cat(file = stderr(), stringr::str_c(data_name, " is in database"), "\n") 
     
     #load data
-    df <- read_table_try(data_name, params)
+    df <- read_table_try(data_name, db_path)
   }else {
     cat(file = stderr(), stringr::str_c(data_name, " is NOT in database"), "\n") 
   }
@@ -462,7 +498,7 @@ create_stats_data_table_bg <- function(input_stats_norm_type, input_stats_select
     stats_DT <- peptide_table(df, start_sample_col, sample_number, spqc_number)
   }
   
-  write_table_try("stats_DT", stats_DT[[1]], params)
+  write_table_try("stats_DT", stats_DT[[1]], db_path)
   
   return(stats_DT)
   
@@ -470,22 +506,24 @@ create_stats_data_table_bg <- function(input_stats_norm_type, input_stats_select
 }
 
 #-------------------------------------------------------------------------------------------------------------  
-stats_data_save_excel <- function(session, input, output, params) {
+stats_data_save_excel <- function(session, input, output, db_path) {
   cat(file = stderr(), "Function stats_data_save_excel...", "\n")
   showModal(modalDialog("Saving data table to excel...", footer = NULL))  
-
-  arg_list <- list(input$stats_norm_type,  input$stats_data_filename, params)
+  
+  params <- get_params(db_path)
+  
+  arg_list <- list(input$stats_norm_type,  input$stats_data_filename, params, db_path)
 
   bg_stats_data_save_excel <- callr::r_bg(func = stats_data_save_excel_bg , args = arg_list, stderr = str_c(params$error_path, "//error_stats_data_save_excel.txt"), supervise = TRUE)
   bg_stats_data_save_excel$wait()
-  print_stderr("error_stats_data_save_excel.txt")
+  print_stderr("error_stats_data_save_excel.txt", db_path)
   
   cat(file = stderr(), "Function stats_data_save_excel...end", "\n")
   removeModal()
   
 }
 #-------------------------------------------------------------------------------------------------------------  
-stats_data_save_excel_bg <- function(input_stats_norm_type,  input_stats_data_filename, params) {
+stats_data_save_excel_bg <- function(input_stats_norm_type,  input_stats_data_filename, params, db_path) {
   cat(file = stderr(), "Function stats_data_save_excel_bg...", "\n")
   source('Shiny_File.R')
   
@@ -499,7 +537,7 @@ stats_data_save_excel_bg <- function(input_stats_norm_type,  input_stats_data_fi
   
   cat(file = stderr(), stringr::str_c("filename = ", filename) , "\n")
   
-  stats_DT <- read_table("stats_DT", params)
+  stats_DT <- read_table_try("stats_DT", db_path)
   Simple_Excel(stats_DT, "data", filename)
   
   cat(file = stderr(), "Function stats_data_save_excel_bg...end", "\n")
@@ -547,20 +585,21 @@ stats_table_select <- function(session, input, output, input_stats_data_final_ro
 }
 
 #-------------------------------------------------------------------------------------------------------------  
-  create_stats_oneprotein_plots <- function(session, input, output, params) {
+  create_stats_oneprotein_plots <- function(session, input, output, db_path) {
     cat(file = stderr(), "Function create_stats_oneprotein_plots...", "\n")
     showModal(modalDialog("Creating stats oneprotein plots...", footer = NULL))  
     source('Shiny_Interactive.R')
     
-    df_design <- read_table("design", params)
-    stats_comp <- read_table("stats_comp", params)
+    params <- get_params(db_path)
+    df_design <- read_table_try("design", db_path)
+    stats_comp <- read_table_try("stats_comp", db_path)
     
     arg_list <- list(input$stats_norm_type, input$stats_oneprotein_plot_comp, input$stats_oneprotein_accession, input$stats_oneprotein_plot_spqc,
-                     input$stats_use_zscore, df_design, stats_comp, params)
+                     input$stats_use_zscore, df_design, stats_comp, params, db_path)
     
     create_stats_oneprotein_plots <- callr::r_bg(func = create_stats_oneprotein_plots_bg , args = arg_list, stderr = str_c(params$error_path, "//error_create_stats_oneprotein_plots.txt"), supervise = TRUE)
     create_stats_oneprotein_plots$wait()
-    print_stderr("error_create_stats_oneprotein_plots.txt")
+    print_stderr("error_create_stats_oneprotein_plots.txt", db_path)
   
     cat(file = stderr(), "Function create_stats_oneprotein_plots...1", "\n")
     bg_plot_list <- create_stats_oneprotein_plots$get_result()
@@ -603,7 +642,7 @@ stats_table_select <- function(session, input, output, input_stats_data_final_ro
   #------------------------------------------------------------------------------------------------------------------
   create_stats_oneprotein_plots_bg <- function(input_stats_norm_type, input_stats_oneprotein_plot_comp, 
                                                input_stats_oneprotein_accession, input_stats_oneprotein_plot_spqc,
-                                               input_stats_use_zscore, df_design, stats_comp, params) {
+                                               input_stats_use_zscore, df_design, stats_comp, params, db_path) {
     
     cat(file = stderr(), "Function create_stats_oneprotein_plots_bg...", "\n")
     
@@ -621,7 +660,7 @@ stats_table_select <- function(session, input, output, input_stats_data_final_ro
     data_name_peptide <- stringr::str_c("peptide_impute_", input_stats_norm_type, "_", input_stats_oneprotein_plot_comp, "_final")
     
     #protein plot
-    if (data_name %in% list_tables(params) & data_name_peptide %in% list_tables(params)  ) {
+    if (data_name %in% list_tables(db_path) & data_name_peptide %in% list_tables(db_path)  ) {
       cat(file = stderr(), stringr::str_c(data_name, " & ", data_name_peptide, " are in database"), "\n") 
      
       df <- filter_db(data_name, "Accession", input_stats_oneprotein_accession, params)
@@ -729,7 +768,7 @@ stats_table_select <- function(session, input, output, input_stats_data_final_ro
       table_data <- protein_peptide_table(df_peptide, peptide_pos_lookup, start_sample_col_peptide)
       df_peptide <- table_data[[1]]
       options_DT <- table_data[[2]]
-      write_table_try("oneprotein_peptide_data", df_peptide, params)
+      write_table_try("oneprotein_peptide_data", df_peptide, db_path)
 
       bg_plot_list <- list(df, namex, color_list, peptide_pos_lookup, grouped_color_list, new_df2, df_peptide, options_DT)
       
@@ -740,24 +779,26 @@ stats_table_select <- function(session, input, output, input_stats_data_final_ro
   }
 
 #-------------------------------------------------------------------------------------------------------------  
-oneprotein_data_save_excel <- function(session, input, output, params) {
+oneprotein_data_save_excel <- function(session, input, output, db_path) {
   cat(file = stderr(), "Function oneprotein_data_save_excel...", "\n")
   showModal(modalDialog("Saving data table to excel...", footer = NULL))  
   
-  arg_list <- list(input$stats_norm_type,  input$stats_oneprotein_data_filename, params)
+  arg_list <- list(input$stats_norm_type,  input$stats_oneprotein_data_filename, db_path)
   
-  bg_stats_data_save_excel <- callr::r_bg(func = oneprotein_data_save_excel_bg , args = arg_list, stderr = str_c(params$error_path, "//error_oneprotein_data_save_excel.txt"), supervise = TRUE)
+  bg_stats_data_save_excel <- callr::r_bg(func = oneprotein_data_save_excel_bg , args = arg_list, stderr = str_c(get_param('error_path', db_path), "//error_oneprotein_data_save_excel.txt"), supervise = TRUE)
   bg_stats_data_save_excel$wait()
-  print_stderr("error_oneprotein_data_save_excel.txt")
+  print_stderr("error_oneprotein_data_save_excel.txt", db_path)
   
   cat(file = stderr(), "Function oneprotein_data_save_excel...end", "\n")
   removeModal()
   
 }
 #-------------------------------------------------------------------------------------------------------------  
-oneprotein_data_save_excel_bg <- function(input_stats_norm_type,  input_stats_oneprotein_data_filename, params) {
+oneprotein_data_save_excel_bg <- function(input_stats_norm_type,  input_stats_oneprotein_data_filename, db_path) {
   cat(file = stderr(), "Function oneprotein_data_save_excel_bg...", "\n")
   source('Shiny_File.R')
+  
+  params <- get_params(db_path)
   
   filename <- stringr::str_c(params$data_path, input_stats_norm_type, "//", input_stats_oneprotein_data_filename)
   file_dir <- stringr::str_c(params$data_path, input_stats_norm_type) 
@@ -769,7 +810,7 @@ oneprotein_data_save_excel_bg <- function(input_stats_norm_type,  input_stats_on
   
   cat(file = stderr(), stringr::str_c("filename = ", filename) , "\n")
   
-  df_oneprotein <- read_table_try("oneprotein_peptide_data", params)
+  df_oneprotein <- read_table_try("oneprotein_peptide_data", db_path)
   Simple_Excel(df_oneprotein, "data", filename)
   
   cat(file = stderr(), "Function oneprotein_data_save_excel_bg...end", "\n")
@@ -778,21 +819,22 @@ oneprotein_data_save_excel_bg <- function(input_stats_norm_type,  input_stats_on
 
 
 #-------------------------------------------------------------------------------------------------------------  
-create_stats_onepeptide_plots <- function(session, input, output, params) {
+create_stats_onepeptide_plots <- function(session, input, output, db_path) {
   cat(file = stderr(), "Function create_stats_onepeptide_plots...", "\n")
   showModal(modalDialog("Creating stats onepeptide plots...", footer = NULL))  
   
   source('Shiny_Interactive.R')
   
-  df_design <- read_table_try("design", params)
-  stats_comp <- read_table_try("stats_comp", params)
+  df_design <- read_table_try("design", db_path)
+  stats_comp <- read_table_try("stats_comp", db_path)
+  params <- get_params(db_path)
   
   arg_list <- list(input$stats_norm_type, input$stats_onepeptide_plot_comp, input$stats_onepeptide_accession, input$stats_onepeptide_sequence, 
-                   input$stats_onepeptide_plot_spqc, input$stats_onepeptide_use_zscore, df_design, stats_comp, params)
+                   input$stats_onepeptide_plot_spqc, input$stats_onepeptide_use_zscore, df_design, stats_comp, params, db_path)
   
   create_stats_onepeptide_plots <- callr::r_bg(func = create_stats_onepeptide_plots_bg , args = arg_list, stderr = str_c(params$error_path, "//error_create_stats_onepeptide_plots.txt"), supervise = TRUE)
   create_stats_onepeptide_plots$wait()
-  print_stderr("error_create_stats_onepeptide_plots.txt")
+  print_stderr("error_create_stats_onepeptide_plots.txt", db_path)
   
   cat(file = stderr(), "Function create_stats_onepeptide_plots...1", "\n")
   bg_plot_list <- create_stats_onepeptide_plots$get_result()
@@ -844,7 +886,7 @@ create_stats_onepeptide_plots <- function(session, input, output, params) {
 create_stats_onepeptide_plots_bg <- function(input_stats_norm_type, input_stats_onepeptide_plot_comp, 
                                              input_stats_onepeptide_accession, 
                                              input_stats_onepeptide_sequence, input_stats_onepeptide_plot_spqc,
-                                             input_stats_onepeptide_use_zscore, df_design, stats_comp, params) {
+                                             input_stats_onepeptide_use_zscore, df_design, stats_comp, params, db_path) {
   
   #save(list=c("input_stats_norm_type", "input_stats_onepeptide_plot_comp", "input_stats_onepeptide_accession", "input_stats_onepeptide_sequence", "input_stats_onepeptide_plot_spqc", "input_stats_onepeptide_use_zscore", "df_design", "stats_comp"), file="zztop")
   #. load(file="zztop");
@@ -860,10 +902,10 @@ create_stats_onepeptide_plots_bg <- function(input_stats_norm_type, input_stats_
   data_name <- stringr::str_c("peptide_impute_", input_stats_norm_type, "_", input_stats_onepeptide_plot_comp, "_final")
 
   #peptide plot
-  if (data_name %in% list_tables(params) & data_name %in% list_tables(params)  ) {
+  if (data_name %in% list_tables(db_path) & data_name %in% list_tables(db_path)  ) {
     cat(file = stderr(), stringr::str_c(data_name, " is in database"), "\n") 
     
-    df <- read_table_try(data_name, params)
+    df <- read_table_try(data_name, db_path)
     
     if(input_stats_onepeptide_accession != "") {
       df <- df[grepl(input_stats_onepeptide_accession, df$Accession, ignore.case = TRUE),]
@@ -979,7 +1021,7 @@ create_stats_onepeptide_plots_bg <- function(input_stats_norm_type, input_stats_
     table_data <- protein_peptide_table(df, peptide_pos_lookup, start_sample_col)
     df_peptide_table <- table_data[[1]]
     options_DT <- table_data[[2]]
-    write_table_try("onepeptide_peptide_data", df, params)
+    write_table_try("onepeptide_peptide_data", df, db_path)
      
     cat(file = stderr(), "Function create_stats_onepeptide_plots_bg...end", "\n")
     return(list(df_peptide, namex, color_list, peptide_pos_lookup, grouped_color_list, new_df2, df_peptide_table, options_DT))

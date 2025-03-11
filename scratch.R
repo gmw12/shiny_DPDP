@@ -6,35 +6,35 @@ gc()
 params$database_path <- stringr::str_c(getwd(),"/database/test.db")
 database_path <- stringr::str_c("/Users/gregwaitt/Data/project_101224.db")
 
-create_db(params$database_path)
+create_db(db_path)
 
 create_db <- function(db_name) {
   conn <- dbConnect(RSQLite::SQLite(), db_name) 
   RSQLite::dbDisconnect(conn)
 }
 
-read_table <- function(table_name, params){
-  conn <- dbConnect(RSQLite::SQLite(), params$database_path) 
+read_table <- function(table_name, db_path){
+  conn <- dbConnect(RSQLite::SQLite(), db_path) 
   df <- dbReadTable(conn, table_name)
   RSQLite::dbDisconnect(conn)
   return(df)
 }
 
-write_table <- function(table_name, df, params){
-  conn <- dbConnect(RSQLite::SQLite(), params$database_path) 
+write_table <- function(table_name, df, db_path){
+  conn <- dbConnect(RSQLite::SQLite(), db_path) 
   RSQLite::dbWriteTable(conn, table_name, df, overwrite = TRUE)
   RSQLite::dbDisconnect(conn)
 }
 
-list_tables <- function(table_name, params){
-  conn <- dbConnect(RSQLite::SQLite(), params$database_path) 
+list_tables <- function(db_path){
+  conn <- dbConnect(RSQLite::SQLite(), db_path) 
   table_list <- dbListTables(conn)
   RSQLite::dbDisconnect(conn)
   return(table_list)
 }
 
-filter_db <- function(table_name, column_name, key_word, params) {
-  conn <- dbConnect(RSQLite::SQLite(), params$database_path) 
+filter_db <- function(table_name, column_name, key_word, db_path) {
+  conn <- dbConnect(RSQLite::SQLite(), db_path) 
   query <- stringr::str_c("SELECT * FROM ", table_name, " WHERE ", column_name, " LIKE '", accession,"'") 
   df <- dbGetQuery(conn, query)
   RSQLite::dbDisconnect(conn)
@@ -44,59 +44,68 @@ filter_db <- function(table_name, column_name, key_word, params) {
 accession = "A0A087WPF7"
 df_peptide <- filter_db("peptide_sltmm", "Accession", accession, params)
 
-list_tables(params)
+list_tables(db_path)
 
-df_raw <- read_table('precursor_raw', params)
-df_start <- read_table('precursor_start', params)
-df_filter <- read_table('precursor_filter', params)
-df_noise <- read_table_try('precursor_noise', params)
-df_sltmm <- read_table_try('precursor_impute_sltmm', params)
+db_path = stringr::str_c(getwd(), "/database/project_021125.db")
+source('Shiny_File.R')
 
-df_motif <- read_table_try('MotifX_table', params)
+test <- read_table('params', db_path)
 
-phos_fasta <- read_table("phos_fasta", params)
+df_test <- read_table('precursor_norm_impute', db_path)
+test_precursor_missing <- read_table('precursor_missing', db_path)
+test_protein_missing <- read_table('protein_missing', db_path)
 
-mv <- read_table("missing_values", params)
+df_raw <- read_table('precursor_raw', db_path)
+df_start <- read_table('precursor_start', db_path)
+df_filter <- read_table('precursor_filter', db_path)
+df_noise <- read_table_try('precursor_noise', db_path)
+df_sltmm <- read_table_try('precursor_impute_sltmm', db_path)
 
-df1 <- read_table("peptide_impute_sltmm_Control_v_Lrrk2_final", params)
-df2 <- read_table("peptide_impute_sltmm_Lrrk2_v_Control_final", params)
-df3 <- read_table("peptide_impute_sltmm", params)
+df_motif <- read_table_try('MotifX_table', db_path)
 
-testme2 <- read_table("precursor_missing", params)
-df_design <- read_table("design", params)
-test <- read_table("design", params)
-design <- read_table("design", params)
-test_sample_groups <- read_table("sample_groups", params)
-test_stats_comp <- read_table("stats_comp", params)
-test_design <- read_table("design", params)
-test_protein_missing <- read_table("protein_missing", params)
+phos_fasta <- read_table("phos_fasta", db_path)
 
-stats_comp <- read_table("stats_comp", params)
-sample_groups <- read_table("sample_groups", params)
+mv <- read_table("missing_values", db_path)
 
-test <- read_table('params', params)
+df1 <- read_table("peptide_impute_sltmm_Control_v_Lrrk2_final", db_path)
+df2 <- read_table("peptide_impute_sltmm_Lrrk2_v_Control_final", db_path)
+df3 <- read_table("peptide_impute_sltmm", db_path)
+
+testme2 <- read_table("precursor_missing", db_path)
+df_design <- read_table("design", db_path)
+test <- read_table("design", db_path)
+design <- read_table("design", db_path)
+test_sample_groups <- read_table("sample_groups", db_path)
+test_stats_comp <- read_table("stats_comp", db_path)
+test_design <- read_table("design", db_path)
+test_protein_missing <- read_table("protein_missing", db_path)
+
+stats_comp <- read_table("stats_comp", db_path)
+sample_groups <- read_table("sample_groups", db_path)
 
 
 
-df1 <- read_table("peptide_impute_sltmm_Lrrk2_v_Control_final", params)
-df_norm_data <- read_table_try('precursor_normdata', params)
-df <- read_table_try('precursor_noise', params)
-df <- read_table('precursor_filter', params)
-df <- read_table_try('precursor_noise', params)
-df_raw <- read_table_try('precursor_raw', params)
-df <- read_table_try('precursor_start', params)
-df_start <- read_table_try('precursor_start', params)
-df_norm_sltmm <- read_table_try('precursor_norm_sltmm', params)
-df_norm_sltmm_protein <- read_table_try('protein_sltmm_final', params)
-precursor_data <- read_table_try('precursor_impute_sltmm', params)
-df <- read_table_try('precursor_impute_sltmm', params)
-df1 <- read_table_try('peptide_impute_sltmm', params)
-df1f <- read_table_try('peptide_impute_sltmm_final', params)
-dfm <- read_table_try('precursor_missing', params)
-test3 <- read_table('protein_sltmm', params)
-test4 <- read_table('protein_sltmm_final', params)
-df <- read_table(stats_comp$Final_Table_Name[1], params)
-data_to_norm <- read_table_try('precursor_filter', params)
+
+
+df1 <- read_table("peptide_impute_sltmm_Lrrk2_v_Control_final", db_path)
+df_norm_data <- read_table_try('precursor_normdata', db_path)
+df <- read_table_try('precursor_noise', db_path)
+df <- read_table('precursor_filter', db_path)
+df <- read_table_try('precursor_noise', db_path)
+df_raw <- read_table_try('precursor_raw', db_path)
+df <- read_table_try('precursor_start', db_path)
+df_start <- read_table_try('precursor_start', db_path)
+df_norm_sltmm <- read_table_try('precursor_norm_sltmm', db_path)
+df_norm_sltmm_protein <- read_table_try('protein_sltmm_final', db_path)
+precursor_data <- read_table_try('precursor_impute_sltmm', db_path)
+df <- read_table_try('precursor_impute_sltmm', db_path)
+df1 <- read_table_try('peptide_impute_sltmm', db_path)
+df1f <- read_table_try('peptide_impute_sltmm_final', db_path)
+dfm <- read_table_try('precursor_missing', db_path)
+test3 <- read_table('protein_sltmm', db_path)
+test4 <- read_table('protein_sltmm_final', db_path)
+df <- read_table(stats_comp$Final_Table_Name[1], db_path)
+data_to_norm <- read_table_try('precursor_filter', db_path)
 data_name <- 'protein_sltmm_Caskin1_Test_v_Caskin1_Ctrl_final'
 accession <- 'Q9JMG2'
 conn <- dbConnect(RSQLite::SQLite(), params$database_path) 
@@ -847,7 +856,7 @@ t2 <- df_filter_list[[2]]
 t3 <- df_list[[3]]
 t4 <- df_list[[4]]
 
-list_tables(params)
+list_tables(db_path)
 df_raw <- read_table_try('precursor_raw', params)
 df_start <- read_table_try('precursor_start', params)
 df_noise <- read_table_try('precursor_noise', params)
@@ -950,3 +959,154 @@ p = df$K10_v_Ki17778_pval
 #sort p 
 p = sort(p)
 adjpval = p.adjust(p, method = "fdr")
+
+
+#-------------------------------------------------------------------------------------------
+t1=1
+t2=2
+t3=3
+
+test1 <- function() {
+  t1 <- 4
+  t2 <- 5
+  t3 <- 6
+  test2()
+}
+
+test2 <- function() {
+  t1 <<- 7
+  t2 <<- 8
+  t3 <<- 9
+  test3()
+}
+
+test3 <- function() {
+  t1 <<- 10
+  t2 <<- 11
+  t3 <<- 12
+  t4 <- 13
+  assign("t4", t4, envir = .GlobalEnv)
+}
+
+test1()
+test2()
+#-------------------------------------------------------------------------------------------
+#----------------------------------------------------------------------------------------t
+
+testme <- 10
+
+test <- function(testme){
+
+  bg_test <- callr::r_bg(test_bg, args = list(testme), stderr = str_c("eraseme.txt"), supervise = TRUE)
+  bg_test$wait()
+  error_list = readLines(stringr::str_c('eraseme.txt'))
+  for (i in 1:length(error_list)) {
+    cat(file = stderr(), error_list[i], "\n")
+  }
+
+  return(bg_test$get_result())
+}
+
+test2 <- function(testme){
+  testme <- testme + 2
+  return(testme)
+}
+
+
+#----------------------------------------------------------------------------------------
+test_bg <- function(testme){
+  source("scratch.R")
+  return(test2(testme))
+}
+
+result = test(testme)
+
+#----------------------------------------------------------------------------------------
+# Function to delete and recreate a directory
+manage_directory <- function(dir_path) {
+  # Convert to absolute path for safety
+  dir_path <- normalizePath(dir_path, mustWork = FALSE)
+  
+  # Check if the directory exists
+  if (dir.exists(dir_path)) {
+    cat("Directory exists:", dir_path, "\n")
+    cat("Removing directory and all its contents...\n")
+    
+    # Use unlink with recursive=TRUE to delete the directory and all its contents
+    unlink(dir_path, recursive = TRUE)
+    
+    if (dir.exists(dir_path)) {
+      stop("Failed to delete directory:", dir_path)
+    } else {
+      cat("Directory successfully deleted.\n")
+    }
+  } else {
+    cat("Directory does not exist:", dir_path, "\n")
+  }
+  
+  # Create the directory
+  cat("Creating directory:", dir_path, "\n")
+  dir.create(dir_path, recursive = TRUE)
+  
+  if (dir.exists(dir_path)) {
+    cat("Directory successfully created.\n")
+  } else {
+    stop("Failed to create directory:", dir_path)
+  }
+  
+  return(invisible(dir_path))
+}
+manage_directory(name)
+
+# Example usage
+# Replace with your directory path
+# manage_directory("path/to/your/directory")
+
+
+# Function to delete and recreate a directory using system commands
+manage_directory <- function(dir_path) {
+  # Convert to absolute path for safety
+  dir_path <- normalizePath(dir_path, mustWork = FALSE)
+  
+  # Check if the directory exists
+  if (dir.exists(dir_path)) {
+    cat("Directory exists:", dir_path, "\n")
+    cat("Removing directory and all its contents...\n")
+    
+    # Use system commands to delete the directory and all its contents
+    if (.Platform$OS.type == "windows") {
+      # Windows command
+      system2("cmd", args = c("/c", paste0("rmdir /s /q \"", dir_path, "\"")), invisible = FALSE)
+    } else {
+      # Unix/Linux/Mac command
+      system2("rm", args = c("-rf", shQuote(dir_path)), invisible = FALSE)
+    }
+    
+    if (dir.exists(dir_path)) {
+      stop("Failed to delete directory:", dir_path)
+    } else {
+      cat("Directory successfully deleted.\n")
+    }
+  } else {
+    cat("Directory does not exist:", dir_path, "\n")
+  }
+  
+  # Create the directory using system commands
+  cat("Creating directory:", dir_path, "\n")
+  
+  if (.Platform$OS.type == "windows") {
+    # Windows command
+    system2("cmd", args = c("/c", paste0("mkdir \"", dir_path, "\"")), invisible = FALSE)
+  } else {
+    # Unix/Linux/Mac command
+    system2("mkdir", args = c("-p", shQuote(dir_path)), invisible = FALSE)
+  }
+  
+  if (dir.exists(dir_path)) {
+    cat("Directory successfully created.\n")
+  } else {
+    stop("Failed to create directory:", dir_path)
+  }
+  
+  return(invisible(dir_path))
+}

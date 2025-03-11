@@ -1,8 +1,11 @@
 cat(file = stderr(), "Shiny_Menu.R", "\n")
 
 #----------------------------------------------------------------------------------------- 
-load_menu <- function(session, input, output) {
+load_menu <- function(session, input, output, db_path) {
   cat(file = stderr(), "Function load_menu...", "\n")
+
+    params <- get_params(db_path)
+  
   
   if (site_user != "dpmsr") {
     if (params$raw_data_format == "") {
@@ -28,7 +31,7 @@ load_menu <- function(session, input, output) {
     }
   }
 
-  cat(file = stderr(), "Function load_menu...end", "\n")
+  cat(file = stderr(), "Function load_menu...end", "\n\n")
 }
 
 #----------------------------------------------------------------------------------------- 

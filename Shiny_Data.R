@@ -1,95 +1,11 @@
 cat(file = stderr(), "Shiny_Data.R", "\n")
 
 #---------------------------------------------------------------------
-
-load_archive_file <- function(session, input, output, params){
-  cat(file = stderr(), "Function load_archive_file...", "\n")
-  #showModal(modalDialog("Loading archive file...", footer = NULL))
-  
-  if(site_user == "dpmsr") {
-    archive_sfb <- parseFilePaths(volumes, input$sfb_archive_file)
-    archive_path <- str_extract(archive_sfb$datapath, "^/.*/")
-    cat(file = stderr(), stringr::str_c("archive_path --->", archive_path), "\n")
-    archive_zip <- archive_sfb$datapath
-    archive_name <- basename(archive_sfb$datapath)
-    params$archive_path <- archive_path
-    params$error_path <- stringr::str_c(archive_path, "error")
-    params <<- params
-    cat(file = stderr(), stringr::str_c("error_path -->", params$error_path), "\n")
-  }else{
-    archive_zip <-input$sfb_archive_customer_file$datapath
-    cat(file = stderr(), stringr::str_c("archive_zip --->", archive_zip), "\n")
-    archive_path <- str_extract(archive_zip, "^/.*/")
-    cat(file = stderr(), stringr::str_c("archive_path --->", archive_path), "\n")
-    database_dir <- stringr::str_c(database_dir, "/", format(Sys.time(), "%Y%m%d%H%M%S"))
-  }
-  
-  #save(archive_sfb, file = "testarchive_sfb")
-  # load(file = "testarchive_sfb")
-  
-  create_dir(params$error_path)
-  create_dir(database_dir)
-  
-  # if archive_zip has file extention *.zip
-  if (getExtension(archive_zip) == "dpmsr_set") {
-    cat(file = stderr(), stringr::str_c("legacy dpmsr_set file loaded"), "\n")
-    params$archive_source <- "dpmsr_set"
-    params$design_path <- archive_path
-    params <- convert_dpmsr_set(archive_zip, params)
-  }else if (getExtension(archive_zip) == "zip"){
-    cat(file = stderr(), stringr::str_c("unzip file to database_dir:  ", database_dir), "\n")
-    params$archive_source <- "zip"
-    utils::unzip(zipfile = archive_zip, exdir = database_dir)
-  }else{
-    cat(file = stderr(), stringr::str_c("archive file not recognized"), "\n")
-  }
-  
-  
-  temp_files <- list.files(database_dir)
-  if (length(temp_files) == 0) {
-    temp_files <- ""
-  }
-  
-  cat(file = stderr(), stringr::str_c("files in database_dir:  ", temp_files), "\n")
-  
-  if(Sys.getenv("USER") == "erik") {
-    system("chmod -R 777 /home/erik/Shiny_DPDP/database")
-  }
-  
-  # section will load params file from db if not present
-  zip_files <- list.files(path = database_dir, recursive = TRUE) 
-  for (file_name in zip_files){
-    if (tools::file_ext(file_name) == "db"){
-      break
-    }
-  }
-  
-  database_path <- stringr::str_c(database_dir, "/", file_name)
-  
-  #load params file from zip archive only if it exists
-  if (getExtension(archive_zip) == "zip"){
-    if (file.exists(stringr::str_c(database_dir, "/params"))){
-      load(file=stringr::str_c(database_dir, "/params"))
-    }
-  }
-  
-  params$database_dir <- database_dir
-  params$database_path <- stringr::str_c(database_dir, "/", file_name)
-  
-  #check params dir's and update if needed
-  params <- archive_update_app(session, input, output, params, archive_path)
-  
-  params <<- params
-
-  #removeModal()
-  cat(file = stderr(), "Function load_archive_file...end", "\n")
-  return(archive_zip)
-}
-
-#---------------------------------------------------------------------
-load_data_file <- function(session, input, output, params){
+load_data_file <- function(session, input, output, db_path){
   cat(file = stderr(), "Function load_data_file", "\n")
   showModal(modalDialog("Loading data...", footer = NULL))
+  
+  params <- get_params(db_path)
   
   params$data_source <- "unkown"
   data_sfb <- parseFilePaths(volumes, input$sfb_data_file)
@@ -102,96 +18,27 @@ load_data_file <- function(session, input, output, params){
   if (nrow(data_sfb) > 1) {
     cat(file = stderr(), stringr::str_c("data source <---- Proteome Discoverer"), "\n")
     params$data_source <-  "PD"
-    write_table_try("params", params, params)
-    load_PD_data(data_sfb)
+    write_table_try("params", params, db_path)
+    load_PD_data(data_sfb, db_path)
   }else {
     cat(file = stderr(), str_c("data source <---- Spectronaut/Fragpipe"), "\n")
-    bg_load_unknown_data <- callr::r_bg(func = load_unknown_data_bg, args = list(data_sfb, params), stderr = str_c(params$error_path, "//error_load_unknown_data.txt"), supervise = TRUE)
+    write_table_try("params", params, db_path)
+    bg_load_unknown_data <- callr::r_bg(func = load_unknown_data_bg, args = list(data_sfb, db_path), stderr = str_c(params$error_path, "//error_load_unknown_data.txt"), supervise = TRUE)
     bg_load_unknown_data$wait()
-    print_stderr("error_load_unknown_data.txt")
+    print_stderr("error_load_unknown_data.txt", db_path)
   }
-  
-  #parameters are written to db during r_bg (process cannot write to params directly)
-  params <<- read_table_try("params", params)
   
   gc(verbose = getOption("verbose"), reset = FALSE, full = TRUE)
   cat(file = stderr(), "Function load_data_file...end", "\n\n")
   removeModal()
 }
 
-#---------------------------------------------------------------------------------------------------------------------------
-#. convert_dpmsr_set(archive_zip, params)
-
-convert_dpmsr_set <- function(file_name, params){
-  cat(file = stderr(), "function convert_dpmsr_set....", "\n")
-  showModal(modalDialog("Converting dpmsr_set file to database..", footer = NULL))  
-  
-  params_0 <<- params
-  
-  arg_list <- list(file_name, params)
-  bg_convert_dpmsr_set <- callr::r_bg(func = convert_dpmsr_set_bg, args = arg_list, stderr = stringr::str_c(params$error_path, "//bg_convert_dpmsr_set.txt"), supervise = TRUE)
-  bg_convert_dpmsr_set$wait()
-  print_stderr("bg_convert_dpmsr_set.txt")
-  
-  params <- bg_convert_dpmsr_set$get_result()
-  
-  cat(file = stderr(), "function convert_dpmsr_set....end", "\n\n")
-  removeModal()
-  return(params)
-}
-
-#---------------------------------------------------------------------------------------------------------------------------
-convert_dpmsr_set_bg <- function(file_name, params){
-  cat(file = stderr(), "function convert_dpmsr_set_bg....", "\n")
-  source('Shiny_File.R')
-  
-  #save(file_name, file = "z1")
-  #.  load(file = "z1"); load(file = archive_zip);  load(file = "/Users/gregwaitt/Data/10482_062124.dpmsr_set"); 
-  
-  cat(file = stderr(), stringr::str_c("Converting, ", file_name), "\n")
-  load(file = file_name)
-  
-  params$file_prefix <- dpmsr_set$x$file_prefix
-  params$raw_data_format <- tolower(dpmsr_set$x$raw_data_input)
-  params$raw_data_output <- dpmsr_set$x$raw_data_output
-  params$data_source <- dpmsr_set$x$data_source
-  params$primary_group <- dpmsr_set$x$primary_group
-  params$data_output <- dpmsr_set$x$final_data_output
-  params$norm_ptm <- dpmsr_set$x$peptide_ptm_norm
-  
-  design <- dpmsr_set$design[,1:7]
-  colnames(design)[colnames(design) == "PD_Order"] <- "Raw_Order"
-
-  
-  #Global set of data and database paths
-  params$data_path <- stringr::str_c(params$archive_path, params$file_prefix, "/")
-  database_dir <- stringr::str_c(getwd(), "/database/")
-  params$database_path <- stringr::str_c(database_dir, params$file_prefix, ".db")
-  params$error_path <- create_dir(stringr::str_c(params$data_path, "Error"))
-  
-  #create working directory for 
-  create_dir(params$data_path)
-  create_dir(database_dir)
-  create_dir(params$error_path)
-
-  write_table_try("design", design, params)
-  
-  cat(file = stderr(), "function convert_dpmsr_set_bg....end", "\n\n")
-  return(params)
-}
-
-
-
-
-
-
-
-
-
 #----------------------------------------------------------------------------------------
-load_unknown_data_bg <- function(data_sfb, params){
+load_unknown_data_bg <- function(data_sfb, db_path){
   cat(file = stderr(), "Function load_unkown_data_bg...", "\n")
   source('Shiny_File.R')
+  
+  params <- get_params(db_path)
   
   df <- data.table::fread(file = data_sfb$datapath, header = TRUE, stringsAsFactors = FALSE, sep = "\t", fill=TRUE)
   #save(df, file="zdfloadunknowndata")    #  load(file="zdfloadunknowndata") 
@@ -216,7 +63,7 @@ load_unknown_data_bg <- function(data_sfb, params){
       params$data_table_format <- "long"
     }
     
-    write_table_try("precursor_raw", df, params)
+    write_table_try("precursor_raw", df, db_path)
     
   }else if (any(grepl("PG.Quantity", names(df)))){
     cat(file = stderr(), "Spectronaut data, protein...", "\n")
@@ -224,7 +71,7 @@ load_unknown_data_bg <- function(data_sfb, params){
     params$raw_data_format <- "protein"
     params$data_table_format <- "short"
     
-    write_table_try("protein_raw", df, params)
+    write_table_try("protein_raw", df, db_path)
   }else if ("Annotated.Sequence" %in% names(df)) {
     cat(file = stderr(), "PD data...", "\n")
     if ("PSM.Ambiguity" %in% names(df)) {
@@ -240,8 +87,8 @@ load_unknown_data_bg <- function(data_sfb, params){
       df_peptide <- df_peptide |> dplyr::select("Master.Protein.Accessions", "Sequence", "Positions.in.Master.Proteins")
       colnames(df_peptide) <- c("Accession", "Sequence", "Position")    
       
-      write_table_try("precursor_raw", df, params)
-      write_table_try("peptide_raw", df_peptide,params)
+      write_table_try("precursor_raw", df, db_path)
+      write_table_try("peptide_raw", df_peptide, db_path)
     }else{
       cat(file = stderr(), "PD data, still a mystery...", "\n")
     }
@@ -249,8 +96,7 @@ load_unknown_data_bg <- function(data_sfb, params){
     cat(file = stderr(), "Spectronaut data, still a mystery...", "\n")
   }
   
-  write_table_try("params", params, params)
-  #save(params, file="params")
+  write_params(params, db_path)
   
   gc(verbose = getOption("verbose"), reset = FALSE, full = TRUE)
   cat(file = stderr(), "function load_unkown_data_bg...end", "\n\n")
@@ -259,7 +105,7 @@ load_unknown_data_bg <- function(data_sfb, params){
 
 
 #----------------------------------------------------------------------------------------
-load_PD_data <- function(data_sfb){
+load_PD_data <- function(data_sfb, db_path){
   cat(file = stderr(), "function load_PD_data...", "\n")
   start_time <- Sys.time()
   
@@ -299,7 +145,7 @@ load_PD_data <- function(data_sfb){
     }
   }  
   #loop back through and write from background process
-  conn <- dbConnect(RSQLite::SQLite(), database_path)
+  conn <- dbConnect(RSQLite::SQLite(), db_path)
   
   for (i in 1:nrow(data_sfb) ) {
     raw_name <- data_sfb$datapath[i]
@@ -371,14 +217,12 @@ load_PD_data <- function(data_sfb){
   
   #backup text files
   cat(file = stderr(), "backing up text files...", "\n")
-  backup_path <- param_query("backup_path")
+  backup_path <- get_param("backup_path", db_path)
   
   for (i in 1:nrow(data_sfb) ) {
     data_file = data_sfb$datapath[i]
     bg_savedata <- callr::r_bg(func = save_data_bg, args = list(file1 = data_file, dir1 = backup_path), supervise = TRUE)
   }
-  
-  
   
   RSQLite::dbDisconnect(conn)
   
@@ -389,31 +233,30 @@ load_PD_data <- function(data_sfb){
 
 
 #--------------------------------------------------------
-meta_data <- function(table_string, params){
+meta_data <- function(table_string, db_path){
   cat(file = stderr(), "Function meta_data...", "\n")
   showModal(modalDialog("Gathering meta data...", footer = NULL))
   
   table_name <- str_c("precursor_", table_string)
   error_file <- str_c("error_", table_string, "_meta.txt")
   
-  bg_meta <- callr::r_bg(func = meta_data_bg, args = list(table_name, table_string, params), stderr = str_c(params$error_path, "//", error_file), supervise = TRUE)
+  bg_meta <- callr::r_bg(func = meta_data_bg, args = list(table_name, table_string, db_path), stderr = str_c(get_param('error_path', db_path), "//", error_file), supervise = TRUE)
   bg_meta$wait()
-  print_stderr(error_file)
-  
-  params <<- param_load_from_database()
+  print_stderr(error_file, db_path)
   
   cat(file = stderr(), "Function meta_data...end", "\n\n")
   removeModal()
 }
 
 #--------------------------------------------------------
-meta_data_bg <- function(table_name, data_format, params){
+meta_data_bg <- function(table_name, data_format, db_path){
   cat(file = stderr(), "Function meta_data bg...", "\n")
   source('Shiny_File.R')
   
-  #. table_name <- "precursor_start"; data_format <- "start"
+  params <- get_params(db_path)
   
-  df <- read_table_try(table_name, params)
+  #. table_name <- "precursor_start"; data_format <- "start"
+  df <- read_table_try(table_name, db_path)
   
   precursor_name <- stringr::str_c("meta_precursor_", data_format)
   peptide_name <- stringr::str_c("meta_peptide_", data_format)
@@ -473,11 +316,11 @@ meta_data_bg <- function(table_name, data_format, params){
     params$phos_site_unique_all <- length(unique(new_df$Phos_ID))
     params$phos_site_unique_local <- length(unique(new_df[new_df$Local > params$ptm_local,]$Phos_ID))
     
-    write_table_try("phos_sites", new_df, params)
+    write_table_try("phos_sites", new_df, db_path)
     
   }
   
-  write_table_try("params", params, params)
+  write_params(params, db_path)
   
   cat(file = stderr(), "Function meta_data bg...end", "\n\n")
   
@@ -486,27 +329,26 @@ meta_data_bg <- function(table_name, data_format, params){
 #--------------------------------------------------------
 
 #--------------------------------------------------------
-impute_meta_data <- function(){
+impute_meta_data <- function(db_path){
   cat(file = stderr(), "Function impute_meta_data...", "\n")
   showModal(modalDialog("Setting imputation parameters, calculating meta data, setting Duke impute intensity table...", footer = NULL))
   
-  bg_meta <- callr::r_bg(func = impute_meta_data_bg, args = list("precursor_filter", params), stderr = str_c(params$error_path, "//impute_meta_data.txt"), supervise = TRUE)
+  bg_meta <- callr::r_bg(func = impute_meta_data_bg, args = list("precursor_filter", db_path), stderr = str_c(get_param('error_path', db_path), "//impute_meta_data.txt"), supervise = TRUE)
   bg_meta$wait()
-  print_stderr("impute_meta_data.txt")
-  
-  params <<- param_load_from_database()
+  print_stderr("impute_meta_data.txt", db_path)
   
   removeModal()
   cat(file = stderr(), "Function impute_meta_data...end", "\n\n")
 }
 
 #--------------------------------------------------------
-impute_meta_data_bg <- function(table_name, params){
+impute_meta_data_bg <- function(table_name, db_path){
   cat(file = stderr(), "Function impute_meta_data bg...", "\n")
   
-  conn <- RSQLite::dbConnect(RSQLite::SQLite(), params$database_path)
+  conn <- RSQLite::dbConnect(RSQLite::SQLite(), db_path)
   df <- RSQLite::dbReadTable(conn, table_name)
   df_groups <- RSQLite::dbReadTable(conn, "sample_groups")
+  params <- RSQLite::dbReadTable(conn, "params")
   
   #filter data if imputation stats based on modification data only
   # if (params$impute_ptm) {
@@ -640,9 +482,11 @@ protein_to_peptide <- function(){
 }
 
 #----------------------------------------------------------------------------------------
-prepare_data <- function(session, input, output, params) {  #function(data_type, data_file_path){
+prepare_data <- function(session, input, output, db_path) {  #function(data_type, data_file_path){
   cat(file = stderr(), "Function prepare_data...", "\n")
   showModal(modalDialog("Preparing Data...", footer = NULL))
+  
+  params <- get_params(db_path)
   
   sample_error <- FALSE
   
@@ -653,9 +497,9 @@ prepare_data <- function(session, input, output, params) {  #function(data_type,
     params$current_data_format <- "peptide"
   }else if (params$raw_data_format == "protein" & params$data_source == "SP") {
     cat(file = stderr(), "prepare data_type 2", "\n")
-    bg_sp_protein_to_protein <- callr::r_bg(func = sp_protein_to_protein_bg, args = list(params), stderr = str_c(params$error_path, "//error_sp_protein_to_protein.txt"), supervise = TRUE)
+    bg_sp_protein_to_protein <- callr::r_bg(func = sp_protein_to_protein_bg, args = list(db_path), stderr = str_c(params$error_path, "//error_sp_protein_to_protein.txt"), supervise = TRUE)
     bg_sp_protein_to_protein$wait()
-    print_stderr("error_sp_protein_to_protein.txt")
+    print_stderr("error_sp_protein_to_protein.txt", db_path)
     params$current_data_format <- "protein"
   }else if (params$raw_data_format == "peptide") {
     cat(file = stderr(), "prepare data_type 3", "\n")
@@ -663,23 +507,23 @@ prepare_data <- function(session, input, output, params) {  #function(data_type,
     params$current_data_format <- "peptide"
   }else if (params$raw_data_format == "precursor" & params$data_output == "Protein" & params$data_source == "SP") {
     cat(file = stderr(), "prepare data_type 4", "\n")
-    bg_precursor_to_precursor <- callr::r_bg(func = precursor_to_precursor_bg, args = list(params), stderr = str_c(params$error_path, "//error_preparedata.txt"), supervise = TRUE)
+    bg_precursor_to_precursor <- callr::r_bg(func = precursor_to_precursor_bg, args = list(db_path), stderr = str_c(params$error_path, "//error_preparedata.txt"), supervise = TRUE)
     bg_precursor_to_precursor$wait()
     sample_error <- bg_precursor_to_precursor$get_result()
-    print_stderr("error_preparedata.txt")
+    print_stderr("error_preparedata.txt", db_path)
     params$current_data_format <- "precursor"
   }else if (params$raw_data_format == "precursor" & params$data_output == "Peptide" & params$data_source == "SP") {
     cat(file = stderr(), "prepare data_type 5", "\n")
-    bg_precursor_to_precursor_ptm <- callr::r_bg(func = precursor_to_precursor_ptm_bg, args = list(params), stderr = str_c(params$error_path, "//error_preparedata.txt"), supervise = TRUE)
+    bg_precursor_to_precursor_ptm <- callr::r_bg(func = precursor_to_precursor_ptm_bg, args = list(db_path), stderr = str_c(params$error_path, "//error_preparedata.txt"), supervise = TRUE)
     bg_precursor_to_precursor_ptm$wait()
     sample_error <- bg_precursor_to_precursor_ptm$get_result()
-    print_stderr("error_preparedata.txt")
+    print_stderr("error_preparedata.txt", db_path)
     params$current_data_format <- "precursor"
   }else if (params$raw_data_format == "precursor" & params$data_output == "Protein" & params$data_source == "PD") {
     cat(file = stderr(), "prepare data_type 6", "\n")
-    bg_precursor_to_precursor_PD <- callr::r_bg(func = precursor_to_precursor_PD_bg, args = list(params), stderr = str_c(params$error_path, "//error_preparedata.txt"), supervise = TRUE)
+    bg_precursor_to_precursor_PD <- callr::r_bg(func = precursor_to_precursor_PD_bg, args = list(db_path), stderr = str_c(params$error_path, "//error_preparedata.txt"), supervise = TRUE)
     bg_precursor_to_precursor_PD$wait()
-    print_stderr("error_preparedata.txt")
+    print_stderr("error_preparedata.txt", db_path)
     params$current_data_format <- "precursor"
   }else if (params$raw_data_format == "fragment") {
     cat(file = stderr(), "prepare data_type 7", "\n")
@@ -693,9 +537,8 @@ prepare_data <- function(session, input, output, params) {  #function(data_type,
     isoform_to_isoform()
   }
   
-  write_table_try("params", params, params)
-  params <<- params
-  
+  write_params(params, db_path)
+
   if(sample_error){
     shinyalert("Oops!", "Number of columns extracted is not as expected", type = "error")
   }
@@ -707,13 +550,13 @@ prepare_data <- function(session, input, output, params) {  #function(data_type,
 
 
 #----------------------------------------------------------------------------------------
-precursor_to_precursor_PD_bg <- function(params){
+precursor_to_precursor_PD_bg <- function(db_path){
   cat(file = stderr(), "Function precursor_to_precursor_PD_bg", "\n")
   source("Shiny_Rollup.R")
   source("Shiny_File.R")
   #  load(file="zdfloadunknowndata")
   
-  df <- read_table_try("precursor_raw", params)
+  df <- read_table_try("precursor_raw", db_path)
   
   df_colnames <- c("Accession", "Description", "Sequence", "Modifications", "PrecursorId")  
   n_col <- length(df_colnames)
@@ -746,17 +589,18 @@ precursor_to_precursor_PD_bg <- function(params){
   
   df[(n_col + 1):ncol(df)] <- as.data.frame(lapply(df[(n_col + 1):ncol(df)], as.numeric))
   
-  write_table_try("precursor_start", df, params)
+  write_table_try("precursor_start", df, db_path)
   
   cat(file = stderr(), "precursor_to_precursor_PD_bg complete", "\n\n")
 }
 
 #----------------------------------------------------------------------------------------
-precursor_to_precursor_bg <- function(params){
+precursor_to_precursor_bg <- function(db_path){
   cat(file = stderr(), "Function precursor_to_precursor_bg", "\n")
   source("Shiny_Rollup.R")
+  source("Shiny_File.R")
   
-  conn <- RSQLite::dbConnect(RSQLite::SQLite(), params$database_path)
+  conn <- RSQLite::dbConnect(RSQLite::SQLite(), db_path)
   df <- RSQLite::dbReadTable(conn, "precursor_raw")
   
   
@@ -767,12 +611,12 @@ precursor_to_precursor_bg <- function(params){
                             contains('ModifiedSequence'), contains('PrecursorId'), contains('PeptidePosition'),
                             contains("TotalQuantity"))
   
-  if (ncol(df) != (n_col + params$sample_number))
-  {
+  if (ncol(df) != (n_col + get_param('sample_number', db_path))){
     sample_error <- TRUE
+    cat(file = stderr(), "Number of columns extracted is not as expected", "\n")
   }else{
     sample_error <- FALSE
-    cat(file = stderr(), "Number of columns extracted is not as expected", "\n")
+    cat(file = stderr(), "Number of columns extracted is as expected", "\n")
   }
   
   colnames(df)[1:n_col] <- df_colnames  
@@ -794,12 +638,13 @@ precursor_to_precursor_bg <- function(params){
 }
 
 #----------------------------------------------------------------------------------------
-precursor_to_precursor_ptm_bg <- function(params){
+precursor_to_precursor_ptm_bg <- function(db_path){
   cat(file = stderr(), "Function precursor_to_precursor_ptm_bg", "\n")
   source("Shiny_Rollup.R")
   source("Shiny_Data.R")
+  source("Shiny_File.R")
   
-  conn <- RSQLite::dbConnect(RSQLite::SQLite(), params$database_path)
+  conn <- RSQLite::dbConnect(RSQLite::SQLite(), db_path)
   df <- RSQLite::dbReadTable(conn, "precursor_raw")
   
   df_phos_prob <- df |> dplyr::select(contains('PTMProbabilities..Phospho')) 
@@ -811,12 +656,12 @@ precursor_to_precursor_ptm_bg <- function(params){
                             contains('ModifiedSequence'), contains('PrecursorId'), contains('PeptidePosition'),contains('ProteinPTMLocations'),
                             contains("TotalQuantity"))
   
-  if (ncol(df) != (n_col + params$sample_number))
-  {
+  if (ncol(df) != (n_col + get_param('sample_number', db_path))){
     sample_error <- TRUE
+    cat(file = stderr(), "Number of columns extracted is not as expected", "\n")
   }else{
     sample_error <- FALSE
-    cat(file = stderr(), "Number of columns extracted is not as expected", "\n")
+    cat(file = stderr(), "Number of columns extracted as expected", "\n")
   }
   
   colnames(df)[1:n_col] <- df_colnames  
@@ -1059,11 +904,11 @@ localize_summary_trash <- function(df){
 
 
 #----------------------------------------------------------------------------------------
-sp_protein_to_protein_bg <- function(params){
+sp_protein_to_protein_bg <- function(db_path){
   cat(file = stderr(), "Function sp_protein_to_protein_bg...", "\n")
   source("Shiny_File.R")
   
-  df <- read_table_try("protein_raw", params)
+  df <- read_table_try("protein_raw", db_path)
   
   df_colnames <- c("Accession", "Description", "Name", "Genes", "Organisms", "Precursors")  
   n_col <- length(df_colnames)
@@ -1090,7 +935,7 @@ sp_protein_to_protein_bg <- function(params){
   #remove any row with an NA
   df <- df[complete.cases(df),]
   
-  write_table_try("protein_impute", df, params)
+  write_table_try("protein_impute", df, db_path)
   
   cat(file = stderr(), "Function sp_protein_to_protein_bg...end ", "\n")
 }
@@ -1267,17 +1112,17 @@ isoform_to_isoform <- function(){
 
 
 #----------------------------------------------------------------------------------------
-order_rename_columns <- function(){
+order_rename_columns <- function(db_path){
   cat(file = stderr(), "Function order_rename_columns...", "\n")
   showModal(modalDialog("Order and rename Data...", footer = NULL))
   
-  if (params$raw_data_format == "precursor") {
+  if (get_param('raw_data_format', db_path) == "precursor") {
     cat(file = stderr(), "Function order_rename_columns...precursor", "\n")
-    bg_order <- callr::r_bg(func = order_rename_columns_bg, args = list("precursor_start", params), stderr = str_c(params$error_path, "//error_orderrename.txt"), supervise = TRUE)
+    bg_order <- callr::r_bg(func = order_rename_columns_bg, args = list("precursor_start", db_path), stderr = str_c(get_param('error_path', db_path), "//error_orderrename.txt"), supervise = TRUE)
     bg_order$wait()
-    print_stderr("error_orderrename.txt")
+    print_stderr("error_orderrename.txt", db_path)
     bg_order_list <- bg_order$get_result()
-    params$info_col_precursor <<- bg_order_list[[1]]
+    param_update("info_col_precursor", bg_order_list[[1]], db_path)
     Sample_ID_alert <- bg_order_list[[2]]
   }
   
@@ -1291,20 +1136,21 @@ order_rename_columns <- function(){
 
 
 # Rearrange columns if raw data is psm, PD does not organize
-order_rename_columns_bg <- function(table_name, params) {
-  cat(file = stderr(), "Function order_columns_bg...", "\n")
+order_rename_columns_bg <- function(table_name, db_path) {
+  cat(file = stderr(), "Function order_rename_columns_bg...", "\n")
   source('Shiny_Data.R')
   source('Shiny_Rollup.R')
   
-  conn <- RSQLite::dbConnect(RSQLite::SQLite(), params$database_path)
+  conn <- RSQLite::dbConnect(RSQLite::SQLite(), db_path)
   df <- RSQLite::dbReadTable(conn, table_name)
   design <- RSQLite::dbReadTable(conn, "design")
+  params <- RSQLite::dbReadTable(conn, "params")
   
   #save(df, file = "testdf"); save(design, file="testdesign")
   #  load(file = "testdf"); load(file="testdesign")
   
   #confirm sample ID's
-  Sample_ID_alert <- check_sample_id(df, design, params)
+  Sample_ID_alert <- check_sample_id(df, design, params) #params OK here
   
   info_columns <- ncol(df) - params$sample_number
   annotate_df <- df[, 1:(ncol(df) - params$sample_number)]
@@ -1319,7 +1165,7 @@ order_rename_columns_bg <- function(table_name, params) {
   
   #save copy of raw peptide (from precursor start)
   if (params$ptm) {
-    raw_peptide_list <- collapse_precursor_ptm_raw(df, params$sample_number, info_columns = 0, stats = FALSE, add_miss = FALSE, df_missing = NULL, params)
+    raw_peptide_list <- collapse_precursor_ptm_raw(df, params$sample_number, info_columns = 0, stats = FALSE, add_miss = FALSE, df_missing = NULL, params,db_path)
     raw_peptide <- raw_peptide_list[[1]]
   }else{
     raw_peptide <- collapse_precursor_raw(df, info_columns = 0, stats = FALSE, params)
@@ -1327,9 +1173,10 @@ order_rename_columns_bg <- function(table_name, params) {
   
   RSQLite::dbWriteTable(conn, "raw_peptide", raw_peptide, overwrite = TRUE)
   RSQLite::dbWriteTable(conn, "precursor_start", df, overwrite = TRUE)
+  RSQLite::dbWriteTable(conn, "params", params, overwrite = TRUE)
   RSQLite::dbDisconnect(conn)
   
-  cat(file = stderr(), "order columns end", "\n")
+  cat(file = stderr(), "Function order_rename_columns_bg...end", "\n\n")
   return(list(info_columns, Sample_ID_alert))
 }
 

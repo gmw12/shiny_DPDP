@@ -2,7 +2,7 @@
 set_name <- "10658_Precur_F234N73_Human_LFQ"
 source('Shiny_File.R')
 
-stats_df <- read_table_try('stats_comp', params)
+stats_df <- read_table_try('stats_comp', db_path)
 
 ecoli_N = NULL
 human_N = NULL
@@ -62,7 +62,7 @@ for (i in stats_df$Final_Table_Name){
   cat(file = stderr(), str_c("data = ", i), "\n")
   x <- x + 1
   
-  df <- read_table_try(i, params)
+  df <- read_table_try(i, db_path)
   df_ecoli <- df[df$Name %like% "ECOLI", ]
   df_human <- df[df$Name %like% "HUMAN", ]
   df_yeast <- df[df$Name %like% "YEAST", ]

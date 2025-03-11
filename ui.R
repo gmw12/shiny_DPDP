@@ -678,7 +678,7 @@ body <- dashboardBody(
               box(id = "stats_setup_box2", title = "Stats Setup...", status = "primary",
                   solidHeader = TRUE, collapsible = FALSE, align = "left", width = 3, height = 750,
                   tags$b(style = "color:blue", 'Precursor Filters'),
-                  checkboxInput("peptide_refilter", label = "Refilter precursors/peptides? (remove 100% imputed precursors for the comparison samples)", value = FALSE),
+                  checkboxInput("peptide_refilter", label = "Refilter precursors/peptides? (remove 100% imputed precursors for the comparison samples)", value = TRUE),
                   checkboxInput("peptide_missing_filter", label = "Refilter precursors/peptides by requiring X% measured values in one group?", value = FALSE),
                   numericInput("peptide_missing_factor", label = "Peptide X% measured cutoff (decimal)", value = 0.1),
                   checkboxInput("peptide_cv_filter", label = "Refilter precursors/peptides by requiring X %CV one group?"),

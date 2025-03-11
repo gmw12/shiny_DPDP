@@ -2,19 +2,21 @@ cat(file = stderr(), "Shiny_ViSEAGO.R", "\n")
 
 
 #----------------------------------------------------------------------------------------- 
-run_go_analysis <- function(session, input, output, params){
+run_go_analysis <- function(session, input, output, db_path){
   cat(file=stderr(), stringr::str_c("Function run_go_analysis..." ), "\n")
   showModal(modalDialog("Processing Go Analysis...", footer = NULL))  
   
-  arg_list <- list(input$select_go_data_comp, input$go_direction, input$select_ont_go, params)
+  params <- get_params(db_path)
+  
+  arg_list <- list(input$select_go_data_comp, input$go_direction, input$select_ont_go, params, db_path)
   bg_run_go_analysis <- callr::r_bg(func = run_go_analysis_bg , args = arg_list, stderr = stringr::str_c(params$error_path, "//error_run_go_analysis.txt"), supervise = TRUE)
   bg_run_go_analysis$wait()
-  print_stderr("error_run_go_analysis.txt")
+  print_stderr("error_run_go_analysis.txt", db_path)
   go_data <- bg_run_go_analysis$get_result()
   
   
   if (class(go_data) != "try-error") {
-    arg_list <- list(input$select_go_data_comp, input$checkbox_filter_adjpval, params)
+    arg_list <- list(input$select_go_data_comp, input$checkbox_filter_adjpval, params, db_path)
     bg_setup_go_volcano <- callr::r_bg(func = setup_go_volcano_bg , args = arg_list, stderr = stringr::str_c(params$error_path, "//error_setup_go_volcano.txt"), supervise = TRUE)
     #moved wait step to end, data not need immediately
 
@@ -80,28 +82,28 @@ run_go_analysis <- function(session, input, output, params){
   )
   
   bg_setup_go_volcano$wait()
-  print_stderr("error_setup_go_volcano.txt")
+  print_stderr("error_setup_go_volcano.txt", db_path)
   
   removeModal()
   cat(file=stderr(), stringr::str_c("Function run_go_analysis..end." ), "\n")
 }
 #----------------------------------------------------------------------------------------- 
 
-run_go_analysis_bg <- function(input_select_go_data_comp, input_go_direction, input_select_ont_go, params){
+run_go_analysis_bg <- function(input_select_go_data_comp, input_go_direction, input_select_ont_go, params, db_path){
   cat(file=stderr(), stringr::str_c("Function run_go_analysis_bg..." ), "\n")
   require(topGO, quietly = TRUE)
   require(ViSEAGO, quietly = TRUE)
   source('Shiny_File.R')
   source('Shiny_ViSEAGO.R')
   
-  stats_comp <- read_table_try("stats_comp", params)
+  stats_comp <- read_table_try("stats_comp", db_path)
   comp_string <- input_select_go_data_comp
   comp_number <- which(grepl(comp_string, stats_comp$Name))
   
   cat(file = stderr(), stringr::str_c("run_go_analysis_bg...1" ), "\n")
   
   table_name <- stats_comp$Final_Table_Name[comp_number]
-  data_in <- read_table_try(table_name, params)
+  data_in <- read_table_try(table_name, db_path)
   
   if (input_go_direction == 'Up') {
     go_df <- subset(data_in, data_in$Stats == "Up" ) 
@@ -180,7 +182,7 @@ run_go_analysis_bg <- function(input_select_go_data_comp, input_go_direction, in
                      orderBy = "elimKS", ranksOf = "classicFisher", topNodes = 10)
               )
   
-  write_table_try("go_data", allRes, params)
+  write_table_try("go_data", allRes, db_path)
   
   cat(file=stderr(), stringr::str_c("Function run_go_analysis_bg...end" ), "\n")
   return(allRes)
@@ -188,17 +190,17 @@ run_go_analysis_bg <- function(input_select_go_data_comp, input_go_direction, in
 
 
 #----create go lookup data for volcano plots ---------------------
-setup_go_volcano_bg <- function(input_select_go_data_comp, input_checkbox_filter_adjpval, params){  
+setup_go_volcano_bg <- function(input_select_go_data_comp, input_checkbox_filter_adjpval, params, db_path){  
   cat(file = stderr(), stringr::str_c("Function setup_go_volcano_bg..." ), "\n")
   source('Shiny_File.R')
   source('Shiny_ViSEAGO.R')
   
-  stats_comp <- read_table_try("stats_comp", params)
+  stats_comp <- read_table_try("stats_comp", db_path)
   comp_string <- input_select_go_data_comp
   comp_number <- which(grepl(comp_string, stats_comp$Name))
   
   table_name <- stats_comp$Final_Table_Name[comp_number]
-  data_in <- read_table_try(table_name, params)
+  data_in <- read_table_try(table_name, db_path)
   
   cat(file = stderr(), stringr::str_c("Function setup_go_volcano_bg...1" ), "\n")
   if(input_checkbox_filter_adjpval){
@@ -229,27 +231,29 @@ setup_go_volcano_bg <- function(input_select_go_data_comp, input_checkbox_filter
   
   mergedf <- merge(x = volcano_df, y = myGENE2GO_lookup, by.x = "Accession", by.y = "Accession")
   
-  write_table_try("go_volcano_mergedf", mergedf, params)
+  write_table_try("go_volcano_mergedf", mergedf, db_path)
   
   cat(file = stderr(), stringr::str_c("Function setup_go_volcano_bg... end" ), "\n")
   return(mergedf)
   }
 
 #-------------------------------------------------------------------------------------------
-create_go_volcano <- function(session, input, output, params){
+create_go_volcano <- function(session, input, output, db_path){
   cat(file = stderr(), stringr::str_c("Function create_go_volcano..." ), "\n")
   source('Shiny_ViSEAGO.R')
   source('Shiny_Interactive.R')
   #GO:0032259
   
+  params <- get_params(db_path)
+  
   if (input$go_volcano_id != ""){
     
     showModal(modalDialog("Preparing Go Volcano...", footer = NULL))  
     
-    arg_list <- list(input$select_go_data_comp, input$go_volcano_id, params)
+    arg_list <- list(input$select_go_data_comp, input$go_volcano_id, params, db_path)
     bg_create_go_volcano <- callr::r_bg(func = create_go_volcano_bg , args = arg_list, stderr = stringr::str_c(params$error_path, "//error_create_go_volcano.txt"), supervise = TRUE)
     bg_create_go_volcano$wait()
-    print_stderr("error_create_go_volcano.txt")
+    print_stderr("error_create_go_volcano.txt", db_path)
     volcano_data_list <- bg_create_go_volcano$get_result()
     volcano_data <- volcano_data_list[[1]]
     volcano_go_data <- volcano_data_list[[2]]
@@ -320,19 +324,19 @@ create_go_volcano <- function(session, input, output, params){
 }
 
 #-------------------------------------------------------------------------------------------
-create_go_volcano_bg <- function(input_select_go_data_comp, input_go_volcano_id, params){
+create_go_volcano_bg <- function(input_select_go_data_comp, input_go_volcano_id, params, db_path){
   cat(file=stderr(), stringr::str_c("create_go_volcano_bg..." ), "\n")
   source('Shiny_File.R')
   source('Shiny_Misc_Functions.R')
 
-  stats_comp <- read_table_try("stats_comp", params)
+  stats_comp <- read_table_try("stats_comp", db_path)
   comp_string <- input_select_go_data_comp
   comp_number <- which(grepl(comp_string, stats_comp$Name))
   
   table_name <- stats_comp$Final_Table_Name[comp_number]
-  data_in <- read_table_try(table_name, params)
+  data_in <- read_table_try(table_name, db_path)
   
-  mergedf <- read_table_try("go_volcano_mergedf", params)
+  mergedf <- read_table_try("go_volcano_mergedf", db_path)
   sub_df <- mergedf[grep(as.character(input_go_volcano_id), mergedf$Go),]
   
   cat(file=stderr(), stringr::str_c("create_go_volcano_bg...1" ), "\n")
@@ -374,7 +378,7 @@ create_go_volcano_bg <- function(input_select_go_data_comp, input_go_volcano_id,
   volcano_go_data <- round_columns(volcano_go_data, "FC", 2)
   volcano_go_data <- round_columns(volcano_go_data, sample_cols, 2)
   
-  write_table_try("volcano_go_data", volcano_go_data, params)
+  write_table_try("volcano_go_data", volcano_go_data, db_path)
   
   cat(file=stderr(), stringr::str_c("create_go_volcano...end" ), "\n")
   return(list(volcano_data, volcano_go_data, sample_cols))

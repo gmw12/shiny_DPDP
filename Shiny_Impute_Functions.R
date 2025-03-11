@@ -3,7 +3,7 @@ cat(file = stderr(), "Shiny_Impute_Functions.R", "\n")
 
 #--------------------------------------------------------------------------------
 # imputation of missing data
-impute_duke <- function(df, df_random, df_groups, params) {
+impute_duke <- function(df, df_random, df_groups, params, db_path) {
   cat(file = stderr(), "Function - impute_duke...", "\n")
 
   #save(df, file="imputedf"); save(df_random, file="imputedfrandom"); save(df_groups, file="imputedfgroups")
@@ -34,7 +34,7 @@ impute_duke <- function(df, df_random, df_groups, params) {
       
       #get table for intensity, sd, average 
       df_impute_bin_name <- stringr::str_c("impute_bin_", df_groups$Group[i])
-      df_impute_bin <- read_table_try(df_impute_bin_name, params)
+      df_impute_bin <- read_table_try(df_impute_bin_name, db_path)
 
       find_rows <- which((df_temp$missings > 0 & df_temp$missings <= df_temp$max_missing))
       find_na <- data.frame(which(is.na(df_temp[,1:df_groups$Count[i]]), arr.ind = TRUE))

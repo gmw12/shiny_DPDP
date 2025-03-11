@@ -2,8 +2,6 @@ cat(file = stderr(), "Shiny_Rollup_Functions.R", "\n")
 
 #--------------------------------------------------------------------------------
 
-
-
 rollup_selector <- function(df, df_design, params, sample_count){
   cat(file = stderr(), "function rollup_selector...", "\n")
   
@@ -26,7 +24,7 @@ rollup_selector <- function(df, df_design, params, sample_count){
     else if (params$rollup_method == "topn") {df <-  rollup_topn(df, params)}
     else if (params$rollup_method == "iq_maxlfq") {df <-  rollup_maxlfq(df, info_columns, params)}
   
-  cat(file = stderr(), "function rollup_selector...end", "\n")
+  cat(file = stderr(), "function rollup_selector...end", "\n\n")
   return(df)
 }
 
@@ -93,7 +91,7 @@ rollup_maxlfq <- function(peptide_data, info_columns, params){
   
   df[(info_columns + 1):ncol(df)] <- result
   
-  cat(file = stderr(), "rollup_maxlfq triggered...end", "\n")
+  cat(file = stderr(), "rollup_maxlfq triggered...end", "\n\n")
   return(df)  
 }
 #--------------------------------------------------------------------------------
@@ -106,7 +104,7 @@ rollup_sum <- function(df){
   #save(df, file="test_df"); save(protein_df, file="test_protein_df")
   #. load(file="test_df"); load(file="test_protein_df")
   
-  cat(file = stderr(), "function rollup_sum...end", "\n")
+  cat(file = stderr(), "function rollup_sum...end", "\n\n")
   return(protein_df)
 }
 
@@ -139,7 +137,7 @@ rollup_sum_peptide <- function(df, df_design, comp_number, stats_comp, params){
   
   peptide_df <- data.frame(dplyr::ungroup(peptide_df))
   
-  cat(file = stderr(), "function rollup_sum_peptide...end", "\n")
+  cat(file = stderr(), "function rollup_sum_peptide...end", "\n\n")
   return(peptide_df)
 }
 
@@ -161,6 +159,7 @@ rollup_median <- function(df){
   df[,(ncol(df_info) + 1):ncol(df)] <- 2^(df[,(ncol(df_info) + 1):ncol(df)])
   df$Precursors <- df_info$Precursors
   
+  cat(file = stderr(), "function rollup_median...", "\n\n")
   return(df)
 }
 
@@ -182,6 +181,7 @@ rollup_mean <- function(peptide_data, info_columns){
   df[,(ncol(df_info) + 1):ncol(df)] <- 2^(df[,(ncol(df_info) + 1):ncol(df)])
   df$Precursors <- df_info$Precursors
   
+  cat(file = stderr(), "rollup_mean triggered...", "\n\n")
   return(df)
 }
 
@@ -207,6 +207,7 @@ rollup_median_polish <- function(peptide_data, info_columns){
     df[i,(info_columns + 1):ncol(df)] <- 2^data_out
   }
   
+  cat(file = stderr(), "rollup_median_polish triggered...end", "\n\n")
   return(df)
 }
 
@@ -232,6 +233,7 @@ rollup_topn <- function(df, topn_count){
     df_info[i,5:ncol(df_info)] <- 2^data_out
   }
   
+  cat(file = stderr(), "rollup_topn triggered...end", "\n\n")
   return(df_info)
 }
 
@@ -290,6 +292,7 @@ rollup_directlfq <- function(peptide_data, info_columns){
   file.remove(directlfq_ion_file)
   file.remove(directlfq_protein_file)
   
+  cat(file = stderr(), str_c("directlfq_rollup...end"), "\n\n")
   return(ungroup(data_out))
 }
 

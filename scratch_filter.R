@@ -1,4 +1,4 @@
-df <- read_table_try('precursor_filter', params)
+df <- read_table_try('precursor_filter', db_path)
 
 protein_list <- unique(df$Accession)
 bad_df <- data.frame()

@@ -177,7 +177,7 @@ test_df <- df_temp[df_proc$df_row_start[2]:df_proc$df_row_end[2],]
 test_df[1,1]
 #------------------------------------------------------------------------------
 # imputation of missing data
-impute_duke <- function(df, df_random, df_groups, params) {
+impute_duke <- function(df, df_random, df_groups, params, db_path) {
 
   
   conn <- RSQLite::dbConnect(RSQLite::SQLite(), params$database_path)

@@ -1,19 +1,21 @@
 cat(file = stderr(), "Shiny_Norm.R", "\n")
 #--------------------------------------------------------------------
 
-norm_filter <- function() {
+norm_filter <- function(db_path) {
   cat(file = stderr(), "Function - norm_filter...", "\n")
   showModal(modalDialog("Setting normalization parameters...", footer = NULL))
   
+  params <- get_params(db_path)
+  
   if (params$raw_data_format == "precursor") {
     cat(file = stderr(), "norm filter precursor...", "\n")
-    bg_normfilter <- callr::r_bg(func = norm_filter_bg, args = list("precursor_filter", "precursor_normdata", params), stderr = str_c(params$error_path, "//error_normfilter.txt"), supervise = TRUE)
+    bg_normfilter <- callr::r_bg(func = norm_filter_bg, args = list("precursor_filter", "precursor_normdata", params, db_path), stderr = str_c(params$error_path, "//error_normfilter.txt"), supervise = TRUE)
     bg_normfilter$wait()
-    print_stderr("error_normfilter.txt")
+    print_stderr("error_normfilter.txt", db_path)
     
-    bg_bar <- callr::r_bg(func = bar_plot, args = list("precursor_normdata", "Precursor_NormData", params$qc_path, params), stderr = str_c(params$error_path, "//error_normdatabarplot.txt"), supervise = TRUE)
+    bg_bar <- callr::r_bg(func = bar_plot, args = list("precursor_normdata", "Precursor_NormData", params$qc_path, db_path), stderr = str_c(params$error_path, "//error_normdatabarplot.txt"), supervise = TRUE)
     bg_bar$wait()
-    print_stderr("error_normdatabarplot.txt")
+    print_stderr("error_normdatabarplot.txt", db_path)
   } 
 
   cat(file = stderr(), "Function - norm_filter...end", "\n\n")
@@ -22,13 +24,13 @@ norm_filter <- function() {
 
 
 #--------------------------------------------------------------------------------------
-norm_filter_bg <- function(table_name, new_table_name, params) {
+norm_filter_bg <- function(table_name, new_table_name, params, db_path) {
   cat(file = stderr(), "Function - norm_filter_bg...", "\n")
   source('Shiny_Norm_Functions.R')
   
   start <- Sys.time()
     
-  conn <- RSQLite::dbConnect(RSQLite::SQLite(), params$database_path)
+  conn <- RSQLite::dbConnect(RSQLite::SQLite(), db_path)
   df <- RSQLite::dbReadTable(conn, table_name)
 
   df <- norm_filter_exclude_include(df, params)
@@ -42,9 +44,11 @@ norm_filter_bg <- function(table_name, new_table_name, params) {
 
 
 #--------------------------------------------------------------------------------------
-norm_apply <- function(session, input, output){
+norm_apply <- function(session, input, output, db_path){
   cat(file = stderr(), "Function - norm_apply...", "\n")
   showModal(modalDialog("Normalizing data...", footer = NULL))
+  
+  params <- get_params(db_path)
   
   norm_type <- as.list(strsplit(params$norm_type, ",")[[1]])
   
@@ -62,20 +66,20 @@ norm_apply <- function(session, input, output){
     impute_table_name <- stringr::str_replace_all(impute_table_name, " ", "")
     cat(file = stderr(), str_c("first pass adding impute only table... ", impute_table_name), "\n")
     
-    bg_normapply_impute <- callr::r_bg(func = norm_apply_bg, args = list(table_data, table_norm_data, impute_table_name, info_columns, params, norm_type[2]), stderr = str_c(params$error_path, "//error_normapplyimpute.txt"), supervise = TRUE)
+    bg_normapply_impute <- callr::r_bg(func = norm_apply_bg, args = list(table_data, table_norm_data, impute_table_name, info_columns, params, db_path, norm_type[2]), stderr = str_c(params$error_path, "//error_normapplyimpute.txt"), supervise = TRUE)
     bg_normapply_impute$wait()
-    print_stderr("error_normapplyimpute.txt")
+    print_stderr("error_normapplyimpute.txt", db_path)
     cat(file = stderr(), "first pass adding impute only table...end", "\n")
   }
   
   
-  bg_normapply <- callr::r_bg(func = norm_apply_bg, args = list(table_data, table_norm_data, new_table_name, info_columns, params, norm_type[1]), stderr = str_c(params$error_path, "//error_normapply.txt"), supervise = TRUE)
+  bg_normapply <- callr::r_bg(func = norm_apply_bg, args = list(table_data, table_norm_data, new_table_name, info_columns, params, db_path, norm_type[1]), stderr = str_c(params$error_path, "//error_normapply.txt"), supervise = TRUE)
   bg_normapply$wait()
-  print_stderr("error_normapply.txt")
+  print_stderr("error_normapply.txt", db_path)
   
-  bg_normbar <- callr::r_bg(func = bar_plot, args = list(new_table_name, str_c("Precursor_",  norm_type[1]), params$qc_path, params), stderr = str_c(params$error_path, "//error_normbarplot.txt"), supervise = TRUE)
+  bg_normbar <- callr::r_bg(func = bar_plot, args = list(new_table_name, str_c("Precursor_",  norm_type[1]), params$qc_path, db_path), stderr = str_c(params$error_path, "//error_normbarplot.txt"), supervise = TRUE)
   bg_normbar$wait()
-  print_stderr("error_normbarplot.txt")
+  print_stderr("error_normbarplot.txt", db_path)
   
   cat(file = stderr(), "Function - norm_apply...end", "\n\n")
   removeModal()
@@ -83,12 +87,12 @@ norm_apply <- function(session, input, output){
 
 
 #--------------------------------------------------------------------------------------
-norm_apply_bg <- function(table_data, table_norm_data, new_table_name, info_columns, params, norm_type) {
+norm_apply_bg <- function(table_data, table_norm_data, new_table_name, info_columns, params, db_path, norm_type) {
   cat(file = stderr(), stringr::str_c("Function - norm_apply_bg...", norm_type), "\n")
   
   source('Shiny_Norm_Functions.R')
   
-  conn <- RSQLite::dbConnect(RSQLite::SQLite(), params$database_path)
+  conn <- RSQLite::dbConnect(RSQLite::SQLite(), db_path)
   data_to_norm <- RSQLite::dbReadTable(conn, table_data)
   norm_data <- RSQLite::dbReadTable(conn, table_norm_data)
   

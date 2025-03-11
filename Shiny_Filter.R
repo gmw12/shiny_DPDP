@@ -1,15 +1,15 @@
 cat(file = stderr(), "load Shiny_Filter.R", "\n")
 
 #-------------------------------------------------------------------------------------------#----------------------------------------------------------------------------------------
-filter_data <- function(session, input, output){
+filter_data <- function(session, input, output, db_path){
   cat(file = stderr(), "Function - filter_data...", "\n")
   showModal(modalDialog("Applying data filters...", footer = NULL))
 
-  if (params$raw_data_format == "precursor") {
+  if (get_param('raw_data_format', db_path) == "precursor") {
     cat(file = stderr(), "preprocess filter precursor...", "\n")
-    bg_filter <- callr::r_bg(func = filter_data_bg, args = list("precursor_noise", "precursor_filter", params), stderr = str_c(params$error_path, "//error_filter.txt"), supervise = TRUE)
+    bg_filter <- callr::r_bg(func = filter_data_bg, args = list("precursor_noise", "precursor_filter", db_path), stderr = str_c(get_param('error_path', db_path), "//error_filter.txt"), supervise = TRUE)
     bg_filter$wait()
-    print_stderr("error_filter.txt")
+    print_stderr("error_filter.txt", db_path)
     error_alert <- bg_filter$get_result()
     cat(file = stderr(), str_c("filter erorrs -> ", error_alert), "\n")
     
@@ -19,8 +19,6 @@ filter_data <- function(session, input, output){
     
   } 
   
-  params <<- read_table_try("params", params)
-  
   cat(file = stderr(), "Function - filter_data...end", "\n\n")
   removeModal()
 }
@@ -28,7 +26,7 @@ filter_data <- function(session, input, output){
 #----------------------------------------------------------------------------------------
 # create column to flag and delete rows with no data or only one data value
 # require row to contain at least one group that has at least 2 values
-filter_data_bg <- function(table_name, new_table_name, params){
+filter_data_bg <- function(table_name, new_table_name, db_path){
   cat(file = stderr(), "Function - filter_data_bg...", "\n")
   
   # table_name="precursor_noise"; new_table_name="precursor_filter"
@@ -36,11 +34,13 @@ filter_data_bg <- function(table_name, new_table_name, params){
   source("Shiny_Filter.R")
   source("Shiny_File.R")
   
+  params <- get_params(db_path)
+  
   start <- Sys.time()
   error_alert <- ""
   
-  df <- read_table_try(table_name, params)
-  sample_groups <- read_table_try("sample_groups", params)
+  df <- read_table_try(table_name, db_path)
+  sample_groups <- read_table_try("sample_groups", db_path)
 
   info_columns <- ncol(df) - params$sample_number
   total_columns <- ncol(df)
@@ -188,7 +188,7 @@ filter_data_bg <- function(table_name, new_table_name, params){
     dplyr::select(-is.missing) |>
     dplyr::arrange(desc(num.missing)) 
   
-  write_table_try("missing_values", missing.values, params)
+  write_table_try("missing_values", missing.values, db_path)
   
   cat(file = stderr(), "step 10 - create missing.values2 table for impute page plots...", "\n")
   missing.values2 <- df_samples |>
@@ -200,16 +200,16 @@ filter_data_bg <- function(table_name, new_table_name, params){
     dplyr::summarise(num.isna = dplyr::n()) |>
     dplyr::mutate(pct = num.isna / total * 100)
   
-  write_table_try("missing_values_plots", missing.values2, params)
+  write_table_try("missing_values_plots", missing.values2, db_path)
   
   cat(file = stderr(), "step 11 - write data to db...", "\n")
-  write_table_try(new_table_name, df, params)
+  write_table_try(new_table_name, df, db_path)
   
   params$meta_protein_filter <- step7[[1]]
   params$meta_peptide_filter <- step7[[2]]
   params$meta_precursor_filter <- step7[[3]]
   
-  write_table_try("params", params, params)
+  write_params(params, db_path)
   
   cat(file = stderr(), stringr::str_c("filter_data completed in ", Sys.time() - start), "\n")
   return(error_alert)
@@ -218,13 +218,17 @@ filter_data_bg <- function(table_name, new_table_name, params){
 
 #----------------------------------------------------------------------------------
 filter_stats <- function(df) {
+  cat(file = stderr(), "Function - filter_stats...", "\n")
   current_protein <- length(unique(df$Accession))
   current_peptide <- length(unique(df$Sequence))
   current_precursor <- length(unique(df$PrecursorId))
+  cat(file = stderr(), "Function - filter_stats...end", "\n")
   return(list(current_protein, current_peptide, current_precursor))
-  }
+}
+
 #----------------------------------------------------------------------------------
 precursor_spqc_quality <- function(df, info_columns, params) {
+  cat(file = stderr(), "Function - precursor_spqc_quality...", "\n")
   
   df_sample <- df[,(info_columns+1):ncol(df)]
   df_spqc <- df_sample |> dplyr::select(contains("SPQC"))
@@ -240,13 +244,14 @@ precursor_spqc_quality <- function(df, info_columns, params) {
   
   df <- df[-bad_final,]
   
+  cat(file = stderr(), "Function - precursor_spqc_quality...end", "\n")
   return(df)
   }
 
 
 #----------------------------------------
 filter_percentCV <- function(x) {
-  
+  cat(file = stderr(), "Function - filter_percentCV...", "\n")
   getsd <- function(x) {
     return(sd(x, na.rm=TRUE ))
   }
@@ -257,11 +262,14 @@ filter_percentCV <- function(x) {
   cv <- signif((100 * sd / ave), digits = 3)
   cv[is.na(cv)] <- 0
   
+  cat(file = stderr(), "Function - filter_percentCV...end", "\n")
   return(cv)
 }
 
 #----------------------------------------------------------------------------------
 filter_min_group <- function(df, sample_groups, info_columns, total_columns, params) {
+  cat(file = stderr(), "Function - filter_min_group...", "\n")
+  
   for (i in 1:params$group_number) {
     df$na_count <- apply(df[, (sample_groups$start[i] + info_columns):(sample_groups$end[i] + info_columns)], 1, function(x) sum(!is.na(x)))
     df$na_count <- df$na_count / sample_groups$Count[i]
@@ -270,20 +278,26 @@ filter_min_group <- function(df, sample_groups, info_columns, total_columns, par
   df$max <- apply(df[, (total_columns + 1):(ncol(df))], 1, function(x) max(x))
   df <- subset(df, df$max >= params$filter_x_percent_value/100)
   df <- df[1:total_columns]
+  
+  cat(file = stderr(), "Function - filter_min_group...end", "\n")
   return(df)
 }
 #----------------------------------------------------------------------------------
 
 minimum_filter <- function(df, info_columns, total_columns, params) {
+  cat(file = stderr(), "Function - minimum_filter...", "\n")
+  
   df$measured_count <- apply(df[, (info_columns + 1):ncol(df)], 1, function(x) sum(!is.na(x)))
   df <- subset(df, df$measured_count >= params$filter_min_measured_all)
   df <- df[,1:total_columns]
+  
+  cat(file = stderr(), "Function - minimum_filter...end", "\n")
   return(df)
 }
 #----------------------------------------------------------------------------------
 
 remove_duplicates <- function(data_in){
-  cat(file = stderr(), "remove_duplicates...", "\n")
+  cat(file = stderr(), "function remove_duplicates...", "\n")
   
   if (dpmsr_set$x$data_source == "PD") {
     data_in$Modifications[is.na(data_in$Modifications)] <- ""
@@ -297,6 +311,7 @@ remove_duplicates <- function(data_in){
     data_out <- distinct(data_in, PrecursorId, .keep_all = TRUE)
   }
   
+  cat(file = stderr(), "function remove_duplicates...end", "\n")
   return(data_out)
 }
   
