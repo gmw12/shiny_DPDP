@@ -31,7 +31,7 @@ impute_apply <- function(session, input, output, db_path) {
 impute_apply_bg <- function(norm_type, params, db_path) {
   cat(file = stderr(), "Function - impute_apply_bg...", "\n")
 
-  save(params, file = "z1"); save(norm_type, file = "z2"); save(db_path, file = "z3")
+  #save(params, file = "z1"); save(norm_type, file = "z2"); save(db_path, file = "z3")
   #.   load(file = "z1"); load(file = "z2"); load(file = "z3")
   
   source("Shiny_Impute.R")
