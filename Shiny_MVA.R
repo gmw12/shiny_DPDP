@@ -305,6 +305,7 @@ stats_Final_Excel_bg <- function(file_dir, filename, filename_params, params) {
 
   conn <- RSQLite::dbConnect(RSQLite::SQLite(), params$database_path)
   stats_comp <- RSQLite::dbReadTable(conn, "stats_comp")
+  design <- RSQLite::dbReadTable(conn, "design")
   
   cat(file = stderr(), "Creating Excel Output File...2", "\n")
   # Excel worksheets for Precursor/Protein
@@ -322,12 +323,12 @@ stats_Final_Excel_bg <- function(file_dir, filename, filename_params, params) {
   }
   
   # add stat comparisons to excel list
+  excel_table_base <- length(excel_list) + 1
   for (i in 1:nrow(stats_comp))  {
-    table_number <- 6
-    if(params$data_output == "Protein") {final_table_name <- stringr::str_c("Table", table_number, " ", stats_comp$Final_Table_Name[i])}
-    if(params$data_output == "Peptide") {final_table_name <- stringr::str_c("Table", table_number, " ", stats_comp$Final_Table_Name_Peptide[i])}
+    if(params$data_output == "Protein") {final_table_name <- stats_comp$Final_Table_Name[i]}
+    if(params$data_output == "Peptide") {final_table_name <- stats_comp$Final_Table_Name_Peptide[i]}
     excel_list <- c(excel_list, final_table_name)
-    excel_list_name <- c(excel_list_name, stats_comp$Name[i])
+    excel_list_name <- c(excel_list_name, stringr::str_c("Table", i+excel_table_base, " ", stats_comp$Name[i]) )
   }
   
   #check names for excel max length, if too long then truncate to 31 characters
@@ -340,26 +341,53 @@ stats_Final_Excel_bg <- function(file_dir, filename, filename_params, params) {
   cat(file = stderr(), "Creating Excel Output File...3", "\n")
   # build Excel file
   headerStyle <- createStyle(halign = "center", textDecoration = "bold", wrapText = TRUE)
-  dataStyle <- createStyle(halign = "center")
+  statStyle <- createStyle(halign = "center", numFmt = "0.00")
+  pvalStyle <- createStyle(halign = "center", numFmt = "Scientific")
+  dataStyle <- createStyle(numFmt = "0")
+  centerStyle <- createStyle(halign = "center")
+  
   nextsheet <- 1
   wb <- createWorkbook()
+  
+  addWorksheet(wb, "Table1 Sample Info")
+  nextsheet <- nextsheet + 1
+  
   for (i in 1:length(excel_list)) {
     addWorksheet(wb, excel_list_name[i])
     table_name <- unlist(excel_list[i])
     excel_df <- RSQLite::dbReadTable(conn, table_name)
+    
+    #remove column from excel_df if columame contains "_FC2"
+    excel_df <- excel_df[, !grepl("_FC2", colnames(excel_df))]
+    
     writeData(wb, sheet = nextsheet, excel_df)
     
     #format top row
     addStyle(wb, sheet = nextsheet, rows = 1, cols = 1:ncol(excel_df), style = headerStyle)
     col_number <- 1
     for (col_name in colnames(excel_df)){
-      if (col_name %in% c("Accession", "Name", "Genes", "PeptidePosition", "Precursors", "Peptides")){
-        addStyle(wb, sheet = nextsheet, rows = 2:nrow(excel_df), cols=col_number, style = dataStyle)
+      if (col_name %in% c("Name", "Genes", "PeptidePosition", "Precursors", "Peptides", "Stats")){
+        addStyle(wb, sheet = nextsheet, rows = 2:nrow(excel_df), cols=col_number, style = centerStyle)
+        setColWidths(wb, sheet = nextsheet, cols = col_number, widths = 15)
+      }
+      if (grepl("_CV|_FC|_mf", col_name) ){
+        addStyle(wb, sheet = nextsheet, rows = 2:nrow(excel_df), cols=col_number, style = statStyle)
+        setColWidths(wb, sheet = nextsheet, cols = col_number, widths = 15)
+      }
+      if (grepl("_pval|_adjpval", col_name) ){
+        addStyle(wb, sheet = nextsheet, rows = 2:nrow(excel_df), cols=col_number, style = pvalStyle)
+        setColWidths(wb, sheet = nextsheet, cols = col_number, widths = 15)
+      }
+      if (col_name %in% c("Accession")){
+        addStyle(wb, sheet = nextsheet, rows = 2:nrow(excel_df), cols=col_number, style = centerStyle)
         setColWidths(wb, sheet = nextsheet, cols = col_number, widths = 20)
       }
-      if (col_name %in% c("Description", "Sequence")){
-        addStyle(wb, sheet = nextsheet, rows = 2:nrow(excel_df), cols=col_number, style = dataStyle)
+      if (col_name %in% c("Description", "Sequence", "PrecursorId", "Detected_Imputed")){
         setColWidths(wb, sheet = nextsheet, cols = col_number, widths = 30)
+      }
+      if (grepl(paste(design$ID, collapse="|"), col_name)){
+        setColWidths(wb, sheet = nextsheet, cols = col_number, widths = 20)
+        addStyle(wb, sheet = nextsheet, rows = 2:nrow(excel_df), cols=col_number, style = dataStyle)
       }
       col_number <- col_number + 1
     }
