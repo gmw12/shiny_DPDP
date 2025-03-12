@@ -1,35 +1,58 @@
 cat(file = stderr(), "Shiny_Menu.R", "\n")
 
 #----------------------------------------------------------------------------------------- 
-load_menu <- function(session, input, output, db_path) {
+load_menu <- function(session, input, output) {
   cat(file = stderr(), "Function load_menu...", "\n")
 
+  #check if db_path exists
+  
+  if(exists("db_path", envir = .GlobalEnv)) {
+    cat(file = stderr(), "db_path exists", "\n")
     params <- get_params(db_path)
-  
-  
-  if (site_user != "dpmsr") {
-    if (params$raw_data_format == "") {
-      load_menu_customer_start(session, input, output)
-    }else if (params$raw_data_format == "precursor" & params$data_output == "Protein") {
-      load_menu_customer_protein(session, input, output)
-    }else if (params$raw_data_format == "precursor" & params$data_output == "Peptide") {
-      load_menu_customer_peptide(session, input, output)
-    }else if (params$raw_data_format == "protein") {
-      load_menu_customer_protein(session, input, output)
+    
+    if (site_user != "dpmsr") {
+      if (params$raw_data_format == "") {
+        load_menu_customer_start(session, input, output)
+      }else if (params$raw_data_format == "precursor" & params$data_output == "Protein") {
+        load_menu_customer_protein(session, input, output)
+      }else if (params$raw_data_format == "precursor" & params$data_output == "Peptide") {
+        load_menu_customer_peptide(session, input, output)
+      }else if (params$raw_data_format == "protein") {
+        load_menu_customer_protein(session, input, output)
+      }
     }
+    
+    if (site_user == "dpmsr") {
+      if (params$raw_data_format == "") {
+        load_menu_start(session, input, output)
+      }else if (params$raw_data_format == "precursor" & params$data_output == "Protein") {
+        load_menu_precursor_to_protein(session, input, output)
+      }else if (params$raw_data_format == "precursor" & params$data_output == "Peptide") {
+        load_menu_peptide(session, input, output)
+      }else if (params$raw_data_format == "protein") {
+        load_menu_protein(session, input, output)
+      }
+    }
+    
+    
+  }else{
+    cat(file = stderr(), "db_path does not exist", "\n")
+
+    if (site_user != "dpmsr") {
+        load_menu_customer_start(session, input, output)
+    }
+    
+    if (site_user == "dpmsr") {
+        load_menu_start(session, input, output)
+    }
+    
+    
   }
   
-  if (site_user == "dpmsr") {
-    if (params$raw_data_format == "") {
-      load_menu_start(session, input, output)
-    }else if (params$raw_data_format == "precursor" & params$data_output == "Protein") {
-      load_menu_precursor_to_protein(session, input, output)
-    }else if (params$raw_data_format == "precursor" & params$data_output == "Peptide") {
-      load_menu_peptide(session, input, output)
-    }else if (params$raw_data_format == "protein") {
-      load_menu_protein(session, input, output)
-    }
-  }
+
+  
+  
+
 
   cat(file = stderr(), "Function load_menu...end", "\n\n")
 }

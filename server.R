@@ -44,7 +44,7 @@ shinyServer(function(session, input, output) {
     if (table_exists("summary_cv", db_path))  {create_cv_table(session, input, output, db_path)}
     
     #load menu
-    load_menu(session, input, output, db_path)
+    load_menu(session, input, output)
     
     #app start conditions
     app_startup(session, input, output, db_path)
@@ -59,7 +59,7 @@ shinyServer(function(session, input, output) {
     #update_widgets(session, input, output, db_path)
     
     #load menu
-    load_menu_start(session, input, output)
+    load_menu(session, input, output)
     
     #set file_prefix
     updateTextInput(session, "file_prefix", value = str_c("project_", strftime(Sys.time(), format = "%m%d%y")))
@@ -131,7 +131,7 @@ shinyServer(function(session, input, output) {
       ui_render_load_design(session, input, output, db_path)
       
       #re-load menu
-      load_menu(session, input, output, db_path)
+      load_menu(session, input, output)
       
       #update with auto detected params
       update_widgets_parameters(session, input, output, db_path)
@@ -163,7 +163,7 @@ shinyServer(function(session, input, output) {
       if (table_exists("summary_cv", db_path))  {create_cv_table(session, input, output, db_path)}
       
       #load menu
-      load_menu(session, input, output, db_path)
+      load_menu(session, input, output)
       
       cat(file = stderr(), "sfb_archive_file button clicked...end", "\n\n\n")
     }
@@ -186,21 +186,24 @@ shinyServer(function(session, input, output) {
       
       #copy zip file contents to database dir, load params
       archive_name <- load_archive_file(session, input, output)
-      params <- get_params()
       
       output$archive_file_name_customer <- renderText({archive_name})
       
       #update UI
+      cat(file = stderr(), "sfb_archive_customer_file button clicked...2", "\n")
       ui_render_load_data(session, input, output, db_path)
       ui_render_load_design(session, input, output, db_path)
       app_startup(session, input, output, db_path)
       set_comp_names(session, input,output)
+      
+      cat(file = stderr(), "sfb_archive_customer_file button clicked...3", "\n")
       create_design_table(session, input, output, db_path)
       create_stats_design_table(session, input, output, db_path)
-      if (table_exists("summary_cv", db_path))  {create_cv_table(session, input, output, db_path)}
+      if (table_exists("summary_cv", db_path))  {create_cv_table(session, input, output,db_path)}
       
       #load menu
-      load_menu(session, input, output, db_path)
+      cat(file = stderr(), "sfb_archive_customer_file button clicked...4", "\n")
+      load_menu(session, input, output)
       
       removeModal()
       
@@ -231,11 +234,11 @@ shinyServer(function(session, input, output) {
   #     app_startup(session, input, output)
   #     set_comp_names(session, input,output)
   #     create_design_table(session, input, output, db_path)
-  #     create_stats_design_table(session, input, output, db_path)
+  #     create_stats_design_table(session, input, output)
   #     if (table_exists("summary_cv", db_path))  {create_cv_table(session, input, output, db_path)}
   #     
   #     #load menu
-  #     load_menu(session, input, output, db_path)
+  #     load_menu(session, input, output)
   #     
   #     cat(file = stderr(), "\n\n","sfb_archive_customer_file button clicked...end", "\n")
   #   }
@@ -295,7 +298,7 @@ shinyServer(function(session, input, output) {
    update_widgets_filters(session, input, output, db_path) 
    
    #re-load menu
-   load_menu(session, input, output, db_path)
+   load_menu(session, input, output)
    
    cat(file = stderr(), "accept parameters clicked...end", "\n\n\n")
  })
@@ -862,7 +865,7 @@ shinyServer(function(session, input, output) {
       cat(file = stderr(), "Running session end...", "\n")
       cat(file = stderr(), str_c("Database dir ", database_dir,  " exists? ", dir.exists(database_dir)), "\n")
       
-      temp_files <- list.files(params$database_dir)
+      temp_files <- list.files(database_dir)
       if (length(temp_files) == 0) {
         temp_files <- ""
       }

@@ -52,7 +52,7 @@ set_user <- function() {
   Sys.info()["nodename"] %in% c("gregorys-mbp.lan", "Gregorys-MacBook-Pro.local", "mac.lan")
   
   #testing shiny
-  #site_user <<- "not_dpmsr"
+  site_user <<- "not_dpmsr"
   
   cat(file = stderr(), str_c("site_user set to -->  ", site_user), "\n")
   cat(file = stderr(), str_c("volumes --> ", volumes), "\n")

@@ -152,6 +152,8 @@ load_archive_file <- function(session, input, output){
     system("chmod -R 777 /home/erik/Shiny_DPDP/database")
   }
   
+  hide_enable(session, input, output, db_path)
+  
   #removeModal()
   cat(file = stderr(), "Function load_archive_file...end", "\n")
   return(archive_zip)
