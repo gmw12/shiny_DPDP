@@ -24,33 +24,41 @@ create_plot <- function(session, input, output, db_path, plot_number) {
   
   if (plot_number ==1 ) {
     plot_type <- input$plot_type1
+    stats_plot_comp <- input$stats_plot_comp1
   }else{
     plot_type <- input$plot_type2
+    stats_plot_comp <- input$stats_plot_comp2
   }
 
+  #if stats_plot_comp contains more than one string then combine strings
+  if (length(stats_plot_comp) > 1) {
+    stats_plot_comp <- paste(stats_plot_comp, collapse = ", ")
+  }
+  
   
   if (plot_type == "Bar") {
-    interactive_barplot(session, input, output, df, namex, color_list, "stats_barplot", input$stats_plot_comp, plot_number)   
+    create_stats_bar_ui(plot_number=1)
+    interactive_barplot(session, input, output, df, namex, color_list, "stats_barplot", stats_plot_comp, plot_number)   
   }
   
   if (plot_type == "Box") {
-    interactive_boxplot(session, input, output, df, namex, color_list, input$stats_plot_comp, plot_number)  
+    interactive_boxplot(session, input, output, df, namex, color_list, stats_plot_comp, plot_number)  
   }
   
   if (plot_type == "PCA_2D") {
-    interactive_pca2d(session, input, output, df, namex, color_list, groupx, input$stats_plot_comp, plot_number)  
+    interactive_pca2d(session, input, output, df, namex, color_list, groupx, stats_plot_comp, plot_number)  
   }   
   
   if (plot_type == "PCA_3D") {
-    interactive_pca3d(session, input, output, df, namex, color_list, groupx, input$stats_plot_comp, plot_number)  
+    interactive_pca3d(session, input, output, df, namex, color_list, groupx, stats_plot_comp, plot_number)  
   }    
   
   if (plot_type == "Cluster") {
-    interactive_cluster(session, input, output, df, namex, input$stats_plot_comp, plot_number)  
+    interactive_cluster(session, input, output, df, namex, stats_plot_comp, plot_number)  
   }    
   
   if (plot_type == "Heatmap") {
-    interactive_heatmap(session, input, output, df, namex, groupx, input$stats_plot_comp, params, plot_number)  
+    interactive_heatmap(session, input, output, df, namex, groupx, stats_plot_comp, params, plot_number)  
   }    
   
   cat(file = stderr(), stringr::str_c("Function create_plot...end", "    plot_number=", plot_number), "\n")
@@ -119,6 +127,7 @@ create_plot_bg <- function(comp_string, input_stats_norm_type, params, db_path, 
     #from protein normalization there will be standard deviation of 0 for the normalized protein - this will crash some of the pca/cluster/heatmap calcs
     df <- df[apply(df, 1, var) != 0, ]
     
+    cat(file = stderr(), "Function create_plot_bg...4" , "\n")
     namex <- design$Label[comp_cols]
     color_list <- design$colorlist[comp_cols]
     if (params$primary_group == "Primary") {
@@ -127,10 +136,8 @@ create_plot_bg <- function(comp_string, input_stats_norm_type, params, db_path, 
       groupx <- design$Group[comp_cols]
     }
     
-    return(list(df, namex, color_list, groupx))
-    
-
     cat(file = stderr(), "Function create_plot_bg...end" , "\n")
+    return(list(df, namex, color_list, groupx))
   }
 }
 

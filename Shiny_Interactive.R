@@ -14,9 +14,10 @@ interactive_barplot <- function(session, input, output, df, namex, color_list, o
   colnames(df2) <- c("Sample", "Total_Intensity")
   df2$Sample <- factor(df2$Sample, levels = df2$Sample)
   ymax <- max(datay)
-  
+
   cat(file = stderr(), "interactive_barplot...1", "\n")
   create_stats_barplot <- reactive({
+    cat(file = stderr(), "interactive_barplot...reactive", "\n")
     ggplot(data = df2, aes(x = Sample, y = Total_Intensity)) +
       geom_bar(stat = "identity", fill = color_list) + theme_classic() + 
       ggtitle(input[[stringr::str_c(plot_number, "_",output_name, "_title")]]) + 
@@ -32,6 +33,7 @@ interactive_barplot <- function(session, input, output, df, namex, color_list, o
   })
   
   output[[stringr::str_c(plot_number, "_",output_name)]] <- renderPlot({
+    cat(file = stderr(), "interactive_barplot...renderPlot", "\n")
     req(create_stats_barplot())
     create_stats_barplot()
   })

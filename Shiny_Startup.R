@@ -249,9 +249,7 @@ app_startup <- function(session, input, output, db_path) {
   
   #observers
   observe_comp_names(session, input, output, db_path)
-  observe_plot_type1(session, input, output)   
-  observe_plot_type2(session, input, output)  
-  
+
   
   cat(file = stderr(), "Function - app_startup...end", "\n\n")
 }
