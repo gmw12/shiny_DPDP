@@ -39,7 +39,7 @@ hide_enable <- function(session, input, output, db_path) {
       updateRadioButtons(session, "rollup_method", label = NULL,
                    choices = list("Sum" = "sum", "Median" = "median", "Median_Polish" = "median_polish", "Mean" = "mean",
                                   "IQ_MaxLFQ" = "iq_maxlfq", "TopN" = "topn"),
-                   selected = "sum")
+                   selected = params$rollup_method)
     } else {
       shinyjs::show("ptm")
       shinyjs::show("ptm_grep")

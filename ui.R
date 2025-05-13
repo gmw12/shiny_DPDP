@@ -425,7 +425,7 @@ body <- dashboardBody(
                            column(width = 4, 
                                   selectInput("norm_include", label = "Include only for Normalization", 
                                               choices = list("Not_Used"= "not_used", "Accession" = "accession", "Description" = "description", 
-                                                             "Name" = "name", "Genes" = "genes", "Sequence" = "sequence"), selected = "description"),
+                                                             "Name" = "name", "Genes" = "genes", "Sequence" = "sequence"), selected = "not_used"),
                                   textInput("norm_include_grep", label = "Norm include grep (sep=|, no space)", value = "Phospho")),
                            #checkboxInput("norm_include", label = "Include only grep for norm (trypsin|keratin|casein)"),
                            #textInput("include_norm_grep", label = "Filter Include grep", value = "trypsin|keratin|casein"),

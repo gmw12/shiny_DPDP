@@ -323,6 +323,7 @@ update_widgets <- function(session, input, output, db_path) {
     #updateSelectInput(session, "impute_plot_norm", named_list(params$norm_type))
     
     #Rollup---------------------------------------------------
+    cat(file = stderr(), "***updating rollup...", "\n")
     updateRadioButtons(session, "rollup_method", selected = params$rollup_method)
     updateSelectInput(session, "rollup_topn", selected = params$rollup_topn)
     updateCheckboxInput(session, "maxlfq_scale", value = params$maxlfq_scale)
