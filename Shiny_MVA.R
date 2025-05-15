@@ -402,9 +402,14 @@ stats_Final_Excel_bg <- function(file_dir, filename, filename_params, params) {
   cat(file = stderr(), stringr::str_c("Creating Excel Output File...", filename), "\n")
   
   #save parameters
+  temp <- data.frame(t(params))
+  temp$param <- rownames(temp)
+  rownames(temp) <- NULL
+  temp <- temp[,c(2,1)]
+  colnames(temp) <- c("params", "values")
   wb <- openxlsx::createWorkbook()
   openxlsx::addWorksheet(wb, "Parameters")
-  openxlsx::writeData(wb, sheet=1, params)  
+  openxlsx::writeData(wb, sheet=1, temp)  
   openxlsx::saveWorkbook(wb, filename_params, overwrite = TRUE)
   
   

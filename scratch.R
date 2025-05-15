@@ -1111,3 +1111,25 @@ manage_directory <- function(dir_path) {
   
   return(invisible(dir_path))
 }
+
+
+#transpose test into a dataframe with column names: params, values
+#----------------------------------------------------------------------------------------
+# Function to transpose a list into a data frame with column names
+transpose_list_to_df <- function(input_list) {
+  # Convert the list to a data frame
+  df <- as.data.frame(do.call(rbind, input_list), stringsAsFactors = FALSE)
+  
+  # Set the column names
+  colnames(df) <- c("params", "values")
+  
+  return(df)
+}
+
+
+
+test3 <- data.frame(t(test))
+test3$param <- rownames(test3)
+rownames(test3) <- NULL
+test3 <- test3[,c(2,1)]
+colnames(test3) <- c("params", "values")
