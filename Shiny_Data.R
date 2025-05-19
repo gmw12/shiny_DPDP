@@ -512,21 +512,28 @@ prepare_data <- function(session, input, output, db_path) {  #function(data_type
     sample_error <- bg_precursor_to_precursor$get_result()
     print_stderr("error_preparedata.txt", db_path)
     params$current_data_format <- "precursor"
-  }else if (params$raw_data_format == "precursor" & params$data_output == "Peptide" & params$data_source == "SP") {
+  }else if (params$raw_data_format == "precursor" & params$data_output == "Peptide" & params$ptm & params$data_source == "SP") {
     cat(file = stderr(), "prepare data_type 5", "\n")
     bg_precursor_to_precursor_ptm <- callr::r_bg(func = precursor_to_precursor_ptm_bg, args = list(db_path), stderr = str_c(params$error_path, "//error_preparedata.txt"), supervise = TRUE)
     bg_precursor_to_precursor_ptm$wait()
     sample_error <- bg_precursor_to_precursor_ptm$get_result()
     print_stderr("error_preparedata.txt", db_path)
     params$current_data_format <- "precursor"
-  }else if (params$raw_data_format == "precursor" & params$data_output == "Protein" & params$data_source == "PD") {
+  }else if (params$raw_data_format == "precursor" & params$data_output == "Peptide" & !params$ptm & params$data_source == "SP") {
     cat(file = stderr(), "prepare data_type 6", "\n")
+    bg_precursor_to_precursor <- callr::r_bg(func = precursor_to_precursor_bg, args = list(db_path), stderr = str_c(params$error_path, "//error_preparedata.txt"), supervise = TRUE)
+    bg_precursor_to_precursor$wait()
+    sample_error <- bg_precursor_to_precursor$get_result()
+    print_stderr("error_preparedata.txt", db_path)
+    params$current_data_format <- "precursor"
+  }else if (params$raw_data_format == "precursor" & params$data_output == "Protein" & params$data_source == "PD") {
+    cat(file = stderr(), "prepare data_type 7", "\n")
     bg_precursor_to_precursor_PD <- callr::r_bg(func = precursor_to_precursor_PD_bg, args = list(db_path), stderr = str_c(params$error_path, "//error_preparedata.txt"), supervise = TRUE)
     bg_precursor_to_precursor_PD$wait()
     print_stderr("error_preparedata.txt", db_path)
     params$current_data_format <- "precursor"
   }else if (params$raw_data_format == "fragment") {
-    cat(file = stderr(), "prepare data_type 7", "\n")
+    cat(file = stderr(), "prepare data_type 8", "\n")
     peptide_to_peptide()
     params$current_data_format <- "fragment"
   }else{
