@@ -14,7 +14,7 @@ check_comp_names <- function(session, input, output, db_path){
   table_name <- gsub(" ", "", table_name, fixed = TRUE)
   table_name_peptide <- gsub(" ", "", table_name_peptide, fixed = TRUE) 
   
-  params$stat_norm <- input$stats_norm_type
+  params$stat_norm <- trimws(input$stats_norm_type)
   params$comp_spqc <- toString(input$comp_spqc)
   params$comp_number <- input$comp_number
   write_params(params, db_path)
@@ -44,7 +44,7 @@ check_comp_names <- function(session, input, output, db_path){
 
   update_stat_comparisons(session, input, output, db_path)
   
-  final_stats_name <- table_name <- gsub(" ", "", stringr::str_c("Final_", params$stat_norm,  "_stats.xlsx"), fixed = TRUE)
+  final_stats_name <- table_name <- gsub(" ", "", stringr::str_c("Final_", trimws(params$stat_norm),  "_stats.xlsx"), fixed = TRUE)
   updateTextInput(session, "final_stats_name", value = final_stats_name)
   
   cat(file = stderr(), "function check_comp_names....end", "\n")
@@ -169,7 +169,7 @@ stat_calc_bg <- function(db_path, comp_number, stats_comp){
   
   if (!params$peptide_refilter) {
     cat(file = stderr(), "data NOT refiltered at peptide/precursor level....", "\n")
-    table_name <- stringr::str_replace_all(stringr::str_c("protein_", params$stat_norm, "_final"), " ", "")
+    table_name <- stringr::str_replace_all(stringr::str_c("protein_", trimws(params$stat_norm), "_final"), " ", "")
     df <- read_table_try(stats_comp$Table_Name[comp_number], db_path)
     #add imputed column
     if (params$raw_data_format != "protein"){
@@ -184,7 +184,7 @@ stat_calc_bg <- function(db_path, comp_number, stats_comp){
     }
   } else {
     cat(file = stderr(), "data IS refiltered at peptide/precursor level....", "\n")
-    table_name <- stringr::str_replace_all(stringr::str_c("precursor_impute_", params$stat_norm), " ", "")
+    table_name <- stringr::str_replace_all(stringr::str_c("precursor_impute_", trimws(params$stat_norm)), " ", "")
     df <- read_table_try(table_name, db_path) 
     df_missing <- read_table_try("precursor_missing", db_path)
     
@@ -310,12 +310,12 @@ stats_Final_Excel_bg <- function(file_dir, filename, filename_params, params) {
   cat(file = stderr(), "Creating Excel Output File...2", "\n")
   # Excel worksheets for Precursor/Protein
   if (params$raw_data_format == "precursor" && params$data_output == "Protein") {
-    excel_list <- list('precursor_start', 'raw_peptide', stringr::str_c("precursor_impute_", params$stat_norm), 
-                       stringr::str_c("protein_", params$stat_norm, "_final"))
+    excel_list <- list('precursor_start', 'raw_peptide', stringr::str_c("precursor_impute_", trimws(params$stat_norm)), 
+                       stringr::str_c("protein_", trimws(params$stat_norm), "_final"))
     excel_list_name <- list('Table2 Raw Precursor Data', 'Table3 Raw Peptide Data', 'Table4 Imputed Precursor Data', 'Table5 Normalized Data')
   }else if (params$raw_data_format == "precursor" && params$data_output == "Peptide" ) {
-    excel_list <- list('precursor_start', 'raw_peptide', stringr::str_c("precursor_impute_", params$stat_norm), 
-                       stringr::str_c("peptide_impute_", params$stat_norm, "_final"))
+    excel_list <- list('precursor_start', 'raw_peptide', stringr::str_c("precursor_impute_", trimws(params$stat_norm)), 
+                       stringr::str_c("peptide_impute_", trimws(params$stat_norm), "_final"))
     excel_list_name <- list('Table2 Raw Precursor Data', 'Table3 Raw Peptide Data', 'Table4 Imputed Precursor Data', 'Table5 Normalized Data')
   }else if (params$raw_data_format == "protein" && params$data_source == "SP" ) {
     excel_list <- list('protein_raw', 'protein_impute')
