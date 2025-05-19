@@ -11,6 +11,7 @@ create_plot <- function(session, input, output, db_path, plot_number) {
   params <- get_params(db_path)
   
   comp_string <- input[[str_c("stats_plot_comp", plot_number)]]
+  #cat(file = stderr(), stringr::str_c("Plot comp_string=", comp_string), "\n")
   
   bg_create_plot <- callr::r_bg(func = create_plot_bg, args = list(comp_string, input$stats_norm_type, params, db_path, plot_number), stderr = str_c(params$error_path, "//error_create_plot.txt"), supervise = TRUE)
   bg_create_plot$wait()
@@ -78,9 +79,9 @@ create_plot_bg <- function(comp_string, input_stats_norm_type, params, db_path, 
   
   #confirm data exists in database
   if(params$data_output == "Protein") {
-    data_name <- stringr::str_c("protein_", input_stats_norm_type)
+    data_name <- stringr::str_c("protein_", trimws(input_stats_norm_type))
   }else {
-    data_name <- stringr::str_c("peptide_impute_", input_stats_norm_type)
+    data_name <- stringr::str_c("peptide_impute_", trimws(input_stats_norm_type))
   }
   
   if (data_name %in% list_tables(db_path)) {
