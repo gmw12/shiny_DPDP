@@ -158,7 +158,7 @@ body <- dashboardBody(
                                        choices = list("Protein", "Peptide"),
                                        selected = "Protein", width = 300),
                            
-                           checkboxInput("ptm", label = "PTM Analysis?", value = 0, width = 300),
+                           checkboxInput("ptm", label = "Phos Analysis?", value = 0, width = 300),
                            
                            textInput("ptm_grep", label = "PTM grep", value = "Phospho", width = 300),
                            
