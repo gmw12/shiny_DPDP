@@ -450,14 +450,17 @@ shinyServer(function(session, input, output) {
     #save parameters
     rollup_widget_save(session, input, output, db_path) 
     
-    #start rollup
-    rollup_apply(session, input, output, db_path)
-    
-    #start qc stats
-    qc_stats(session, input, output, db_path)
-    create_cv_table(session, input, output, db_path)
-    render_qc_graphs(session, input, output, db_path)
-    
+    #rollup only if data output = protein, otherwise skip (peptide auto sum rollup after impute)
+    if (input$data_output == "Protein"){
+      #start rollup
+      rollup_apply(session, input, output, db_path)
+      
+      #start qc stats
+      qc_stats(session, input, output, db_path)
+      create_cv_table(session, input, output, db_path)
+      render_qc_graphs(session, input, output, db_path) 
+    }
+
     cat(file = stderr(), "rollup_apply clicked...end", "\n\n\n")
   }) 
  

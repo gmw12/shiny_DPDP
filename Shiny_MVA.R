@@ -162,7 +162,7 @@ stat_calc_bg <- function(db_path, comp_number, stats_comp){
 
   #save(comp_number, file="z10"); save(stats_comp, file="z11");
   #. load(file="z10"); load(file="z11");
-  # stats_comp <- read_table_try("stats_comp", params); comp_number = 1
+  # stats_comp <- read_table_try("stats_comp", db_path); comp_number = 1
 
   params <- get_params(db_path)
   df_design <- read_table_try("design", db_path)
@@ -190,12 +190,15 @@ stat_calc_bg <- function(db_path, comp_number, stats_comp){
     
     # reduce precursor df to samples of interest
     df_list <- stat_create_comp_df(df, stats_comp, comp_number, params, df_design)
+    # df_list1 <- df_list[[1]];df_list2 <- df_list[[2]];df_list3 <- df_list[[3]];df_list4 <- df_list[[4]];
     
     # reduce missing df to samples of interest
     df_missing_list <- stat_create_comp_missing_df(df_missing, stats_comp, comp_number, params, df_design)
+    # df_missing_list1 <- df_missing_list[[1]]; df_missing_list2 <- df_missing_list[[2]];
     
     #refilter precursors/peptides
     df_filter_list <- precursor_refilter(df_list, df_missing_list, params)
+    # df_filter_list1 <- df_filter_list[[1]]; df_filter_list2 <- df_filter_list[[2]];
     
     #rollup, and unpack list
     df_rollup_list <- precursor_refilter_rollup(df_filter_list, df_design, params) 

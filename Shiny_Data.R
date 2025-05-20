@@ -273,27 +273,27 @@ meta_data_bg <- function(table_name, data_format, db_path){
   }
   
   if (params$ptm) {
-    phos_which <- which(grepl(params$ptm_grep, df$Sequence))
-    df_other <- df[-phos_which,]
-    df_phos <- df[phos_which,]
-    df_phos_local <- df_phos[which(df_phos$Local2 == "Y"),]
+    ptm_which <- which(grepl(params$ptm_grep, df$Sequence))
+    df_other <- df[-ptm_which,]
+    df_ptm <- df[ptm_which,]
+    df_ptm_local <- df_ptm[which(df_ptm$Local2 == "Y"),]
 
-    params$ptm_precursors <- nrow(df_phos)
-    params$ptm_total <- length(unique(df_phos$Sequence))
-    params$ptm_total_local <- length(unique(df_phos_local$Sequence))
+    params$ptm_precursors <- nrow(df_ptm)
+    params$ptm_total <- length(unique(df_ptm$Sequence))
+    params$ptm_total_local <- length(unique(df_ptm_local$Sequence))
 
-    df_phos <- df_phos[,(ncol(df_phos)- params$sample_number+1):ncol(df_phos)]
+    df_ptm <- df_ptm[,(ncol(df_ptm)- params$sample_number+1):ncol(df_ptm)]
     df_other <- df_other[,(ncol(df_other)- params$sample_number+1):ncol(df_other)]
-    df_phos_local <- df_phos_local[,(ncol(df_phos_local)- params$sample_number+1):ncol(df_phos_local)]
+    df_ptm_local <- df_ptm_local[,(ncol(df_ptm_local)- params$sample_number+1):ncol(df_ptm_local)]
 
-    params$ptm_enrich <- round(sum(df_phos, na.rm = TRUE) / (sum(df_other, na.rm = TRUE) + sum(df_phos, na.rm = TRUE)), 2)
-    params$ptm_enrich_local <- round(sum(df_phos_local, na.rm = TRUE) / (sum(df_other, na.rm = TRUE) + sum(df_phos, na.rm = TRUE)), 2)
+    params$ptm_enrich <- round(sum(df_ptm, na.rm = TRUE) / (sum(df_other, na.rm = TRUE) + sum(df_ptm, na.rm = TRUE)), 2)
+    params$ptm_enrich_local <- round(sum(df_ptm_local, na.rm = TRUE) / (sum(df_other, na.rm = TRUE) + sum(df_ptm, na.rm = TRUE)), 2)
     
     #--calc indiv phos sites
     
     # save(df, file = "zz999b")  #  load(file = "zz999b")
     
-    test_df <- df[phos_which,] |> dplyr::select(contains(c('Accession', 'Genes', 'Local', 'Protein_PTM_Loc')))
+    test_df <- df[ptm_which,] |> dplyr::select(contains(c('Accession', 'Genes', 'Local', 'Protein_PTM_Loc')))
     test_df$Local2 <- NULL
     test_df$Accession <- gsub(";.*$", "", test_df$Accession)
     test_df$Genes <- gsub(";.*$", "", test_df$Genes)
@@ -653,8 +653,9 @@ precursor_to_precursor_ptm_bg <- function(db_path){
   
   conn <- RSQLite::dbConnect(RSQLite::SQLite(), db_path)
   df <- RSQLite::dbReadTable(conn, "precursor_raw")
+  params <- RSQLite::dbReadTable(conn, "params")
   
-  df_phos_prob <- df |> dplyr::select(contains('PTMProbabilities..Phospho')) 
+  df_ptm_prob <- df |> dplyr::select(contains(stringr::str_c('PTMProbabilities..', params$ptm_grep))) 
   
   df_colnames <- c("Accession", "Description", "Name", "Genes", "Organisms", "Sequence", "PrecursorId", "PeptidePosition", "ProteinPTMLocations")  
   n_col <- length(df_colnames)
@@ -681,23 +682,23 @@ precursor_to_precursor_ptm_bg <- function(db_path){
   df$Description <- stringr::str_c(df$Description, ", org=", df$Organisms) 
   df$Organisms <- NULL
   
-  phos_which <- which(grepl("Phospho", df$Sequence))
-  df_phos <- df[phos_which,]
-  df_phos_prob <- df_phos_prob[phos_which,]
-  df_other <- df[-phos_which,]
+  ptm_which <- which(grepl(params$ptm_grep, df$Sequence))
+  df_ptm <- df[ptm_which,]
+  df_ptm_prob <- df_ptm_prob[ptm_which,]
+  df_other <- df[-ptm_which,]
   
-  local_df <- data.frame(localize_summary(df_phos, df_phos_prob))
-  df_phos <- tibble::add_column(df_phos, "Protein_PTM_Loc" = local_df$Protein_PTM_Loc, .after="PrecursorId")
-  df_phos <- tibble::add_column(df_phos, "PTM_Loc" = local_df$PTM_Loc, .after="PrecursorId")
-  df_phos <- tibble::add_column(df_phos, "Local2" = local_df$Local2, .after="PrecursorId")
-  df_phos <- tibble::add_column(df_phos, "Local" = local_df$Local, .after="PrecursorId")
+  local_df <- data.frame(localize_summary(df_ptm, df_ptm_prob))
+  df_ptm <- tibble::add_column(df_ptm, "Protein_PTM_Loc" = local_df$Protein_PTM_Loc, .after="PrecursorId")
+  df_ptm <- tibble::add_column(df_ptm, "PTM_Loc" = local_df$PTM_Loc, .after="PrecursorId")
+  df_ptm <- tibble::add_column(df_ptm, "Local2" = local_df$Local2, .after="PrecursorId")
+  df_ptm <- tibble::add_column(df_ptm, "Local" = local_df$Local, .after="PrecursorId")
 
   df_other <- tibble::add_column(df_other, "Protein_PTM_Loc"= "" , .after="PrecursorId")
   df_other <- tibble::add_column(df_other, "PTM_Loc" = "", .after="PrecursorId")
   df_other <- tibble::add_column(df_other, "Local2"= "" , .after="PrecursorId")
   df_other <- tibble::add_column(df_other, "Local" = "", .after="PrecursorId")
   
-  df <- rbind(df_phos, df_other)
+  df <- rbind(df_ptm, df_other)
   
   RSQLite::dbWriteTable(conn, "precursor_start", df, overwrite = TRUE)
   RSQLite::dbDisconnect(conn)
@@ -707,7 +708,7 @@ precursor_to_precursor_ptm_bg <- function(db_path){
 }
 
 #----------------------------------------------------------------------------------------
-localize_summary <- function(df_phos, df_phos_prob){
+localize_summary <- function(df_ptm, df_ptm_prob){
   cat(file = stderr(), "Function localize_summary...", "\n")
   
   require(foreach)
@@ -718,9 +719,9 @@ localize_summary <- function(df_phos, df_phos_prob){
   
   #Step 1 consolicate localization into one list of max local for each position
   #create df of just probabilities
-  df_phos_prob[df_phos_prob=="Filtered"] <- ""
+  df_ptm_prob[df_ptm_prob=="Filtered"] <- ""
   
-  df_local <- data.frame(cbind(df_phos$Sequence, df_phos$PeptidePosition, df_phos$ProteinPTMLocations))
+  df_local <- data.frame(cbind(df_ptm$Sequence, df_ptm$PeptidePosition, df_ptm$ProteinPTMLocations))
   colnames(df_local) <- c("ModSequence", "PeptidePosition", "ProteinPTMLocations")
   
   df_local$Stripped <- gsub("\\[.*?\\]", "", df_local$ModSequence)
@@ -811,16 +812,16 @@ localize_summary <- function(df_phos, df_phos_prob){
   
   
   #consolidates probabilities for each sample and takes the highest prob for each residue
-  parallel_result2 <- foreach(r = 1:nrow(df_phos_prob), .combine = c) %dopar% {
+  parallel_result2 <- foreach(r = 1:nrow(df_ptm_prob), .combine = c) %dopar% {
     first_value <- FALSE
-    for (c in (1:ncol(df_phos_prob))) {
+    for (c in (1:ncol(df_ptm_prob))) {
       if (!first_value) { 
-        temp1 <- unlist(stringr::str_split(df_phos_prob[[r,c]], ";")) |> as.numeric() 
+        temp1 <- unlist(stringr::str_split(df_ptm_prob[[r,c]], ";")) |> as.numeric() 
         if (!is.na(temp1[[1]])) {
           first_value <- TRUE
         }
       }else {
-        temp2 <- unlist(stringr::str_split(df_phos_prob[[r,c]], ";")) |> as.numeric()
+        temp2 <- unlist(stringr::str_split(df_ptm_prob[[r,c]], ";")) |> as.numeric()
         if (!is.na(temp2[[1]])) {
           temp1 <- pmax(temp1, temp2)
         }

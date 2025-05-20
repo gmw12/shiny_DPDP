@@ -160,8 +160,13 @@ precursor_refilter_rollup <- function(df_filter_list, df_design, params) {
     df_missing_summary <- reduce_imputed_df(df_missing)
     df <- tibble::add_column(df, df_missing_summary, .after = (ncol(df) - sample_count))
     
-  }else{
+  } else if (params$data_output == "Peptide" & params$ptm) {
     df_list <- collapse_precursor_ptm_raw(df, sample_count, info_columns, stats=FALSE, add_miss=TRUE, df_missing, params, db_path)
+    df <- df_list[[1]]
+    df_missing <- df_list[[2]]
+    
+  } else if (params$data_output == "Peptide" & !params$ptm) {
+    df_list <- collapse_precursor_raw2(df, sample_count, info_columns, stats=FALSE, add_miss=TRUE, df_missing, params, db_path)
     df <- df_list[[1]]
     df_missing <- df_list[[2]]
   }

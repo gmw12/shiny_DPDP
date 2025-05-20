@@ -68,7 +68,7 @@ phos_fasta <- read_table("phos_fasta", db_path)
 
 mv <- read_table("missing_values", db_path)
 
-df1 <- read_table("peptide_impute_sltmm_Control_v_Lrrk2_final", db_path)
+df1 <- read_table("peptide_impute_sltmm", db_path)
 df2 <- read_table("peptide_impute_sltmm_Lrrk2_v_Control_final", db_path)
 df3 <- read_table("peptide_impute_sltmm", db_path)
 
