@@ -872,10 +872,10 @@ shinyServer(function(session, input, output) {
       cat(file = stderr(), "Running session end...", "\n")
       cat(file = stderr(), str_c("Database dir ", database_dir,  " exists? ", dir.exists(database_dir)), "\n")
       
-      temp_files <- list.files(database_dir)
-      if (length(temp_files) == 0) {
-        temp_files <- ""
-      }
+      # temp_files <- list.files(database_dir)
+      # if (length(temp_files) == 0) {
+      #   temp_files <- ""
+      # }
       
       cat(file = stderr(), stringr::str_c("files in database_dir:  ", temp_files), "\n")
       

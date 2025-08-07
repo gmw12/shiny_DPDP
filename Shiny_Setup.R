@@ -130,6 +130,7 @@ load_archive_file <- function(session, input, output){
     }
     
     params$database_path <- db_path
+    params$database_dir <- database_dir #test added 8/7/25
     params$archive_source <- "zip"
     params$archive_path <- archive_path
     write_params(params, db_path)

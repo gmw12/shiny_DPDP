@@ -229,7 +229,7 @@ run_string_bg <- function(input_foldchange_cutoff, input_pvalue_cutoff, input_se
   
   cat(file=stderr(), "run_string_bg 7", "\n")
   
-  test_hits <<- hit_list  
+  #test_hits <<- hit_list  
   string_api <- stringr::str_c("https://string-db.org/api/highres_image/network?identifiers=",
                       hit_list,
                       "&species=", params$string_species, 
@@ -268,6 +268,10 @@ run_string_enrich <- function(session, input, output, db_path){
   stats_comp <- read_table_try("stats_comp", db_path)
   arg_list <- list(input$foldchange_cutoff, input$pvalue_cutoff, input$select_data_comp_string_enrich, input$string_enrich_direction, 
                    stats_comp, params, db_path)
+  
+  save(params, file="testse1"); save(stats_comp, file="testse2"); save(arg_list, file="testse3")
+  #load(file="testse1"); load(file="testse2"); load(file="testse3")
+  
   bg_run_string_enrich <- callr::r_bg(func = run_string_enrich_bg , args = arg_list, stderr = stringr::str_c(params$error_path, "//error_run_string_enrich.txt"), supervise = TRUE)
   bg_run_string_enrich$wait()
   print_stderr("error_run_string_enrich.txt", db_path)
@@ -381,6 +385,8 @@ run_string_enrich_bg <- function(input_foldchange_cutoff, input_pvalue_cutoff, i
   hits <- df$stringId
   
   cat(file=stderr(), stringr::str_c("number of hits searched...", length(hits)), "\n")
+  
+  cat(file=stderr(), stringr::str_c("parmas$database_dir check:  ", params$database_dir), "\n")
   
   string_db <- loadRData(stringr::str_c(params$database_dir, "/string_db"))
   enrichment <- string_db$get_enrichment(hits) #, category = input$select_string_enrich )

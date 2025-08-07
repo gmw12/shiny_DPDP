@@ -61,6 +61,15 @@ df_start <- read_table('precursor_start', db_path)
 df_filter <- read_table('precursor_filter', db_path)
 df_noise <- read_table_try('precursor_noise', db_path)
 df_sltmm <- read_table_try('precursor_impute_sltmm', db_path)
+df_noise <- read_table_try('precursor_noise', db_path)
+df_sl <- read_table_try('precursor_impute_sl', db_path)
+
+df_protein <- df_sl[df_sl$Accession=="TurboID",]
+test2 <- colSums(df_protein[,8:ncol(df_protein)])
+
+test2
+
+
 
 df_motif <- read_table_try('MotifX_table', db_path)
 
