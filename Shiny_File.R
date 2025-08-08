@@ -21,7 +21,7 @@ db_table_to_Excel <- function(table_name, sheetname, filename, db_path) {
   
   params <- get_params(db_path)
   
-  arg_list <- list(table_name, sheetname, filename, params)
+  arg_list <- list(table_name, sheetname, filename, params, db_path)
   bg_db_table_to_Excel <- callr::r_bg(func = db_table_to_Excel_bg , args = arg_list, stderr = stringr::str_c(params$error_path, "//error_db_table_to_Excel.txt"), supervise = TRUE)
   bg_db_table_to_Excel$wait()
   print_stderr("error_db_table_to_Excel.txt", db_path)
@@ -29,7 +29,7 @@ db_table_to_Excel <- function(table_name, sheetname, filename, db_path) {
 }
 
 #----------------------------------------------
-db_table_to_Excel_bg <- function(table_name, sheetname, filename, params) {
+db_table_to_Excel_bg <- function(table_name, sheetname, filename, params, db_path) {
   cat(file=stderr(), stringr::str_c("db_table_to_Excel_bg..."), "\n")
   
   source("Shiny_File.R")
