@@ -269,7 +269,7 @@ run_string_enrich <- function(session, input, output, db_path){
   arg_list <- list(input$foldchange_cutoff, input$pvalue_cutoff, input$select_data_comp_string_enrich, input$string_enrich_direction, 
                    stats_comp, params, db_path)
   
-  save(params, file="testse1"); save(stats_comp, file="testse2"); save(arg_list, file="testse3")
+  #save(params, file="testse1"); save(stats_comp, file="testse2"); save(arg_list, file="testse3")
   #load(file="testse1"); load(file="testse2"); load(file="testse3")
   
   bg_run_string_enrich <- callr::r_bg(func = run_string_enrich_bg , args = arg_list, stderr = stringr::str_c(params$error_path, "//error_run_string_enrich.txt"), supervise = TRUE)
