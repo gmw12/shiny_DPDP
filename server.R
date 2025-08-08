@@ -872,11 +872,20 @@ shinyServer(function(session, input, output) {
       cat(file = stderr(), "Running session end...", "\n")
       cat(file = stderr(), str_c("Database dir ", database_dir,  " exists? ", dir.exists(database_dir)), "\n")
       
-      # temp_files <- list.files(database_dir)
-      # if (length(temp_files) == 0) {
-      #   temp_files <- ""
-      # }
+       temp_files <- list.files(database_dir)
+       if (length(temp_files) == 0) {
+         temp_files <- ""
+       }
       
+       rm(db_path, envir = .GlobalEnv)
+       rm(database_dir, envir = .GlobalEnv)
+       rm(python_path, envir = .GlobalEnv)
+       rm(site_user, envir = .GlobalEnv)
+       rm(volumes, envir = .GlobalEnv)
+       
+       try(rm(list = ls(envir = .GlobalEnv), pos = .GlobalEnv, inherits = FALSE))
+       gc(verbose = getOption("verbose"), reset = FALSE, full = TRUE)
+       
       cat(file = stderr(), stringr::str_c("files in database_dir:  ", temp_files), "\n")
       
       #do.call(file.remove, list(list.files(database_dir, full.names = TRUE)))
