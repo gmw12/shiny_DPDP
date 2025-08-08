@@ -59,7 +59,7 @@ body <- dashboardBody(
                          tags$h3("Welcome to the Duke Proteomics and Metabolomics Core Facility Data processing tool."),
                          tags$h3("This tools is designed to integrate directly with your specific proteomic dataset and allow various statistical analysis options, global data reduction visualizations such as PCA and clustering, gene ontology, classifications, pathway analysis and string-db based protein interaction visualizations."),
                           tags$h3("Note that this tool is developed in-house by DPMCF staff and is continuing to be optimized for less common experimental variables."), 
-                          tags$h3("We appreciate feedback on any bugs that you may encounter (greg.waitt@duke.edu). v080825b"),
+                          tags$h3("We appreciate feedback on any bugs that you may encounter (greg.waitt@duke.edu). v080825c"),
                      )
               ),
               column(width = 6, align = "center",   
