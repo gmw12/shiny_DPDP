@@ -21,6 +21,9 @@ set_pathway <- function(input, output, session, db_path){
     cat(file = stderr(), "Tax choice same as previous..." , "\n")
   }else{
     cat(file = stderr(), "Tax choice has updated..." , "\n")
+    removeModal()
+    showModal(modalDialog("Pathway should initially be set by DPMSR Staff, String functions will not work properly...", footer = NULL))  
+    
     
     #save params
     params$tax_choice <- tax_choice
