@@ -1,7 +1,7 @@
 cat(file = stderr(), "Shiny_Pathway.R", "\n")
 
 #----------------------------------------------------------------------------------------- 
-set_pathway <- function(input, output, session, db_path){
+set_pathway <- function(input, output, session, db_path, site_user){
   
   cat(file = stderr(), "Function set_pathway..." , "\n")
   showModal(modalDialog("Downloading and Setting up databases...", footer = NULL))  
@@ -21,8 +21,9 @@ set_pathway <- function(input, output, session, db_path){
     cat(file = stderr(), "Tax choice same as previous..." , "\n")
   }else{
     cat(file = stderr(), "Tax choice has updated..." , "\n")
-    removeModal()
-    showModal(modalDialog("Pathway should initially be set by DPMSR Staff, String functions will not work properly...", footer = NULL))  
+    if(site_user != "dpmsr") {
+      shinyalert("Pathway", str_c("Pathway intially needs to be by DPMSR staff.  String will not work properly otherwise!"), type = "error")  
+    }
     
     
     #save params

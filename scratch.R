@@ -1142,3 +1142,8 @@ test3$param <- rownames(test3)
 rownames(test3) <- NULL
 test3 <- test3[,c(2,1)]
 colnames(test3) <- c("params", "values")
+
+
+#check if file.txt exists in /database folder
+file.exists(str_c(database_dir, "/string_db"))
+database_dir

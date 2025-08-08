@@ -656,7 +656,7 @@ shinyServer(function(session, input, output) {
     cat(file = stderr(), "set_pathway clicked..." , "\n")
     
     source("Shiny_Pathway.R")
-    set_pathway(input, output, session, db_path)
+    set_pathway(input, output, session, db_path, site_user)
 
     cat(file = stderr(), "set_pathway clicked...end" , "\n\n\n")
   })
@@ -834,6 +834,13 @@ shinyServer(function(session, input, output) {
   #-------------------------------------------------------------------------------------------------------------  
   observeEvent(input$archive_data, { 
     cat(file = stderr(), "archive_data clicked..." , "\n")
+    
+    
+    if (!file.exists(str_c(database_dir, "/string_db")))
+      {
+        shinyalert("Pathway not set", str_c("Pathway needs to be set prior to saving zip file.  String will not work properly otherwise!"), type = "error")  
+      }
+    
     
     zip_data_save(session, input, output, db_path)
     
