@@ -81,7 +81,8 @@ body <- dashboardBody(
                           #                       style = "color: #fff; background-color: #337ab7; border-color: #2e6da4")
                           fileInput("sfb_archive_customer_file", "Please select zip file",
                                     multiple = FALSE, width=300,
-                                    accept = c(".dpmsr_set", ".zip")),
+                                    #accept = c(".dpmsr_set", ".zip")),
+                                    accept = c(".zip")),
                           bsTooltip("sfb_archive_customer_file", "Select zip file and wait for the progress bar to complete.",
                                     "left", trigger = "hover", options = list(container = "body")),
                           ),

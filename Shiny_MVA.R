@@ -220,6 +220,12 @@ stat_calc_bg <- function(db_path, comp_number, stats_comp){
   }else{
     stats_out_name <- stringr::str_c(stats_comp$Final_Table_Name_Peptide[comp_number])
   }
+  
+  #check column names if contain "Normalized" change to "Imputed"
+  if (params$stat_norm == "impute") {
+    colnames(df) <- gsub("Normalized", "Imputed", colnames(df))
+  }
+  
   write_table_try(stats_out_name, df, db_path)
   
   cat(file = stderr(), "function stat_calc_bg....end", "\n\n")
@@ -325,6 +331,11 @@ stats_Final_Excel_bg <- function(file_dir, filename, filename_params, params) {
     excel_list_name <- list('SP Protein Data', "Protein Data")
   }
   
+  # if the final output is impute then gsub Normalized with Imputed
+  if (params$stat_norm == "impute") {
+    excel_list_name <- gsub("Normalized", "Imputed", excel_list_name)
+  }
+  
   # add stat comparisons to excel list
   excel_table_base <- length(excel_list) + 1
   for (i in 1:nrow(stats_comp))  {
@@ -360,8 +371,13 @@ stats_Final_Excel_bg <- function(file_dir, filename, filename_params, params) {
     table_name <- unlist(excel_list[i])
     excel_df <- RSQLite::dbReadTable(conn, table_name)
     
-    #remove column from excel_df if columame contains "_FC2"
+    #remove column from excel_df if column name contains "_FC2"
     excel_df <- excel_df[, !grepl("_FC2", colnames(excel_df))]
+    
+    #check column names if contain "Normalized" change to "Imputed"
+    if (params$stat_norm == "impute") {
+      colnames(excel_df) <- gsub("Normalized", "Imputed", colnames(excel_df))
+    }
     
     writeData(wb, sheet = nextsheet, excel_df)
     
