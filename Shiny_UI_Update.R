@@ -392,6 +392,7 @@ update_widgets_parameters <- function(session, input, output, db_path)  {
   updateSelectInput(session, "primary_group", selected = params$primary_goup)
   updateSelectInput(session, "data_output", selected = params$data_output)
   updateCheckboxInput(session, "ptm", value = params$ptm)
+  updateTextInput(session, "ptm_grep", value = params$ptm_grep)
   
   cat(file = stderr(), "Function - update_widgets_parameters...end", "\n\n")
 }
@@ -404,6 +405,8 @@ update_widgets_filters <- function(session, input, output, db_path)  {
   
   unique_groups <- unlist(stringr::str_split(params$unique_groups, pattern = ", "))
   updateSelectInput(session, "filter_cv_group", choices = unique_groups, selected = params$filter_cv_group)
+  updateCheckboxInput(session, "filter_ptm", value = params$filter_ptm)
+  
   
   cat(file = stderr(), "Function - update_widgets_filters...end", "\n\n")
 }

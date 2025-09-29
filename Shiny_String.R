@@ -410,7 +410,7 @@ string_enrich_data_save_excel <- function(session, input, output, db_path) {
   
   params <- get_params(db_path)
   
-  arg_list <- list(input$stats_norm_type,  input$string_enrich_data_filename, params, db_path)
+  arg_list <- list(trimws(input$stats_norm_type),  input$string_enrich_data_filename, params, db_path)
   bg_string_enrich_data_save_excel <- callr::r_bg(func = string_enrich_data_save_excel_bg , args = arg_list, stderr = str_c(params$error_path, "//error_string_enrich_data_save_excel.txt"), supervise = TRUE)
   bg_string_enrich_data_save_excel$wait()
   print_stderr("error_string_enrich_data_save_excel.txt", db_path)

@@ -9,8 +9,8 @@ check_comp_names <- function(session, input, output, db_path){
   
   params <- get_params(db_path)
   
-  table_name <- str_c("protein_", input$stats_norm_type)
-  table_name_peptide <- str_c("peptide_impute_", input$stats_norm_type)
+  table_name <- str_c("protein_", trimws(input$stats_norm_type))
+  table_name_peptide <- str_c("peptide_impute_", trimws(input$stats_norm_type))
   table_name <- gsub(" ", "", table_name, fixed = TRUE)
   table_name_peptide <- gsub(" ", "", table_name_peptide, fixed = TRUE) 
   
@@ -442,7 +442,7 @@ create_stats_data_table <- function(session, input, output, db_path) {
 
   params <- get_params(db_path)
   
-  arg_list <- list(input$stats_norm_type, input$stats_select_data_comp, input$stats_add_filters, 
+  arg_list <- list(trimws(input$stats_norm_type), input$stats_select_data_comp, input$stats_add_filters, 
                    input$stats_search_field, input$stats_data_description, params, db_path)
   
   bg_create_stats_data_table <- callr::r_bg(func = create_stats_data_table_bg, args = arg_list, stderr = str_c(params$error_path, "//error_create_stats_data_table.txt"), supervise = TRUE)
@@ -490,7 +490,7 @@ create_stats_data_table <- function(session, input, output, db_path) {
       input$stats_data_filename
     },
     content = function(file){
-      fullname <- stringr::str_c(params$data_path, input$stats_norm_type, "//", input$stats_data_filename)
+      fullname <- stringr::str_c(params$data_path, trimws(input$stats_norm_type), "//", input$stats_data_filename)
       cat(file = stderr(), stringr::str_c("download_stats_data fullname = ", fullname), "\n")
       file.copy(fullname, file)
     }
@@ -564,7 +564,7 @@ stats_data_save_excel <- function(session, input, output, db_path) {
   
   params <- get_params(db_path)
   
-  arg_list <- list(input$stats_norm_type,  input$stats_data_filename, params, db_path)
+  arg_list <- list(trimws(input$stats_norm_type),  input$stats_data_filename, params, db_path)
 
   bg_stats_data_save_excel <- callr::r_bg(func = stats_data_save_excel_bg , args = arg_list, stderr = str_c(params$error_path, "//error_stats_data_save_excel.txt"), supervise = TRUE)
   bg_stats_data_save_excel$wait()
@@ -646,7 +646,7 @@ stats_table_select <- function(session, input, output, input_stats_data_final_ro
     df_design <- read_table_try("design", db_path)
     stats_comp <- read_table_try("stats_comp", db_path)
     
-    arg_list <- list(input$stats_norm_type, input$stats_oneprotein_plot_comp, input$stats_oneprotein_accession, input$stats_oneprotein_plot_spqc,
+    arg_list <- list(trimws(input$stats_norm_type), input$stats_oneprotein_plot_comp, input$stats_oneprotein_accession, input$stats_oneprotein_plot_spqc,
                      input$stats_use_zscore, df_design, stats_comp, params, db_path)
     
     create_stats_oneprotein_plots <- callr::r_bg(func = create_stats_oneprotein_plots_bg , args = arg_list, stderr = str_c(params$error_path, "//error_create_stats_oneprotein_plots.txt"), supervise = TRUE)
@@ -678,7 +678,7 @@ stats_table_select <- function(session, input, output, input_stats_data_final_ro
         input$stats_oneprotein_data_filename
       },
       content = function(file){
-        fullname <- stringr::str_c(params$data_path, input$stats_norm_type, "//", input$stats_oneprotein_data_filename)
+        fullname <- stringr::str_c(params$data_path, trimws(input$stats_norm_type), "//", input$stats_oneprotein_data_filename)
         cat(file = stderr(), stringr::str_c("download_stats_oneprotein_data fullname = ", fullname), "\n")
         file.copy(fullname, file)
       }
@@ -835,7 +835,7 @@ oneprotein_data_save_excel <- function(session, input, output, db_path) {
   cat(file = stderr(), "Function oneprotein_data_save_excel...", "\n")
   showModal(modalDialog("Saving data table to excel...", footer = NULL))  
   
-  arg_list <- list(input$stats_norm_type,  input$stats_oneprotein_data_filename, db_path)
+  arg_list <- list(trimws(input$stats_norm_type),  input$stats_oneprotein_data_filename, db_path)
   
   bg_stats_data_save_excel <- callr::r_bg(func = oneprotein_data_save_excel_bg , args = arg_list, stderr = str_c(get_param('error_path', db_path), "//error_oneprotein_data_save_excel.txt"), supervise = TRUE)
   bg_stats_data_save_excel$wait()
@@ -881,7 +881,7 @@ create_stats_onepeptide_plots <- function(session, input, output, db_path) {
   stats_comp <- read_table_try("stats_comp", db_path)
   params <- get_params(db_path)
   
-  arg_list <- list(input$stats_norm_type, input$stats_onepeptide_plot_comp, input$stats_onepeptide_accession, input$stats_onepeptide_sequence, 
+  arg_list <- list(trimws(input$stats_norm_type), input$stats_onepeptide_plot_comp, input$stats_onepeptide_accession, input$stats_onepeptide_sequence, 
                    input$stats_onepeptide_plot_spqc, input$stats_onepeptide_use_zscore, df_design, stats_comp, params, db_path)
   
   create_stats_onepeptide_plots <- callr::r_bg(func = create_stats_onepeptide_plots_bg , args = arg_list, stderr = str_c(params$error_path, "//error_create_stats_onepeptide_plots.txt"), supervise = TRUE)
@@ -923,7 +923,7 @@ create_stats_onepeptide_plots <- function(session, input, output, db_path) {
       input$stats_onepeptide_data_filename
     },
     content = function(file){
-      fullname <- stringr::str_c(params$data_path, input$stats_norm_type, "//", input$stats_onepeptide_data_filename)
+      fullname <- stringr::str_c(params$data_path, trimws(input$stats_norm_type), "//", input$stats_onepeptide_data_filename)
       cat(file = stderr(), stringr::str_c("download_stats_onepeptide_data fullname = ", fullname), "\n")
       file.copy(fullname, file)
     }

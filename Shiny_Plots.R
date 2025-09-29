@@ -13,7 +13,7 @@ create_plot <- function(session, input, output, db_path, plot_number) {
   comp_string <- input[[str_c("stats_plot_comp", plot_number)]]
   #cat(file = stderr(), stringr::str_c("Plot comp_string=", comp_string), "\n")
   
-  bg_create_plot <- callr::r_bg(func = create_plot_bg, args = list(comp_string, input$stats_norm_type, params, db_path, plot_number), stderr = str_c(params$error_path, "//error_create_plot.txt"), supervise = TRUE)
+  bg_create_plot <- callr::r_bg(func = create_plot_bg, args = list(comp_string, trimws(input$stats_norm_type), params, db_path, plot_number), stderr = str_c(params$error_path, "//error_create_plot.txt"), supervise = TRUE)
   bg_create_plot$wait()
   print_stderr("error_create_plot.txt", db_path)
   
@@ -167,9 +167,14 @@ create_volcano <- function(session, input, output, db_path, plot_number) {
   stats_volcano_highlight_up <- input[[stringr::str_c(plot_number, "_stats_volcano_highlight_up")]]
   stats_volcano_highlight_down <- input[[stringr::str_c(plot_number, "_stats_volcano_highlight_down")]]
   
-  arg_list <- list(stats_plot_comp, input$stats_norm_type, input$checkbox_filter_adjpval, stats_volcano_fixed_axis, 
+  arg_list <- list(stats_plot_comp, trimws(input$stats_norm_type), input$checkbox_filter_adjpval, stats_volcano_fixed_axis, 
                 stats_volcano_x_axis, stats_volcano_y_axis, volcano_highlight,
                 stats_volcano_highlight_up, stats_volcano_highlight_down, params, db_path, plot_number )
+  
+  #troubleshoot
+  test_arg_list2 <<- arg_list
+  #save(test_arg_list, file="test_arg_list")  load(file="test_arg_list")
+  
   
   cat(file = stderr(), "Function create_volcano...1", "\n")
   bg_create_volcano <- callr::r_bg(func = create_volcano_bg, args = arg_list, stderr = str_c(params$error_path, "//error_create_volcano.txt"), supervise = TRUE)
