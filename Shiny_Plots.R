@@ -172,7 +172,7 @@ create_volcano <- function(session, input, output, db_path, plot_number) {
                 stats_volcano_highlight_up, stats_volcano_highlight_down, params, db_path, plot_number )
   
   #troubleshoot
-  test_arg_list2 <<- arg_list
+  #test_arg_list2 <<- arg_list
   #save(test_arg_list, file="test_arg_list")  load(file="test_arg_list")
   
   
