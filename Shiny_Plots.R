@@ -22,6 +22,7 @@ create_plot <- function(session, input, output, db_path, plot_number) {
   namex <- create_plot_list[[2]]
   color_list <- create_plot_list[[3]]
   groupx <- create_plot_list[[4]]
+  name_id <- create_plot_list[[5]]
   
   if (plot_number ==1 ) {
     plot_type <- input$plot_type1
@@ -47,7 +48,7 @@ create_plot <- function(session, input, output, db_path, plot_number) {
   }
   
   if (plot_type == "PCA_2D") {
-    interactive_pca2d(session, input, output, df, namex, color_list, groupx, stats_plot_comp, plot_number)  
+    interactive_pca2d(session, input, output, df, namex, color_list, groupx, stats_plot_comp, plot_number, name_id)  
   }   
   
   if (plot_type == "PCA_3D") {
@@ -94,6 +95,13 @@ create_plot_bg <- function(comp_string, input_stats_norm_type, params, db_path, 
     stats_comp <- RSQLite::dbReadTable(conn, "stats_comp")
     RSQLite::dbDisconnect(conn)
     
+    #save protein or peptide names
+    if(params$data_output == "Protein") {
+      name_id <- df$Accession
+    }else {
+      name_id <- df$Sequence
+    }
+    
     #reduce to samples
     df <- df[(ncol(df) - params$sample_number + 1):ncol(df)]
     
@@ -138,7 +146,7 @@ create_plot_bg <- function(comp_string, input_stats_norm_type, params, db_path, 
     }
     
     cat(file = stderr(), "Function create_plot_bg...end" , "\n")
-    return(list(df, namex, color_list, groupx))
+    return(list(df, namex, color_list, groupx, name_id))
   }
 }
 

@@ -176,6 +176,12 @@ observe_plot_type1 <- function(session, input, output){
       })
     }
     
+    if (input$plot_type1 == "PCA_2D_Loading") {
+      output$stats_plots1 <- renderUI({
+        create_stats_pca2d_loading_ui(plot_number=1)
+      })
+    }
+    
     if (input$plot_type1 == "PCA_3D") {
       output$stats_plots1 <- renderUI({
         create_stats_pca3d_ui(plot_number=1)
@@ -234,6 +240,12 @@ observe_plot_type2 <- function(session, input, output){
     if (input$plot_type2 == "PCA_2D") {
       output$stats_plots2 <- renderUI({
         create_stats_pca2d_ui(plot_number=2)
+      })
+    }
+    
+    if (input$plot_type2 == "PCA_2D_Loading") {
+      output$stats_plots2 <- renderUI({
+        create_stats_pca2d_loading_ui(plot_number=2)
       })
     }
     

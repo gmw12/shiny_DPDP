@@ -93,7 +93,7 @@ create_stats_box_ui <- function(plot_number) {
 #-------------------------------------------------------------------------
 create_stats_pca2d_ui <- function(plot_number) {
   fluidRow(
-    column(width = 6, offset = 0,
+    column(width = 12, offset = 0,
            dropdownButton(
              selectInput(str_c(plot_number, "_stats_pca2d_x"), label = "pca xaxis", choices = list("PC1", "PC2", "PC3", "PC4", "PC5"), 
                          selected = "PC1"),
@@ -115,11 +115,19 @@ create_stats_pca2d_ui <- function(plot_number) {
                         hover = hoverOpts(str_c(plot_number, "_plot_pca2d_hover"), delay = 100, delayType = "debounce")),
              uiOutput(str_c(plot_number, "_hover_pca2d_info"))
            ),
-           downloadButton(str_c(plot_number, '_download_stats_pca2d'))
-    )  
-  )  
-  
+           fluidRow(
+             column(width = 6, offset = 0, align = "center",
+                    downloadButton(str_c(plot_number, '_download_stats_pca2d'))),
+             column(width = 6, offset = 0, align = "center",
+                    actionButton(str_c('show_loading_', plot_number), label = "Loading Table", width = 120,
+                                 style = "color: #fff; background-color: #337ab7; border-color: #2e6da4,text-align: center;")
+             )
+           )
+    )
+  )
 }
+
+
 
 #-------------------------------------------------------------------------
 create_stats_pca3d_ui <- function(plot_number) {

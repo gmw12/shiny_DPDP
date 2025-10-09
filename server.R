@@ -569,6 +569,44 @@ shinyServer(function(session, input, output) {
     cat(file = stderr(), "create_stats_plots2...end", "\n\n\n")
   })     
 
+  #-------------------------------------------------------------------------------------------------------------
+  observeEvent(input$show_loading_1, {
+    showModal(
+      modalDialog(
+        title = "Loading Table",
+        size = "l",
+        fluidRow(
+          column(width = 12, offset = 0,
+                 div(
+                   style = "position:relative",
+                   DT::dataTableOutput(stringr::str_c(plot_number, "_loadings_table"), width ='100%')
+                 ),
+                 downloadButton(str_c(plot_number, '_download_stats_pca2d_loading'))
+          )  
+        )  
+      )
+    )
+  })
+  
+  #-------------------------------------------------------------------------------------------------------------
+  observeEvent(input$show_loading_2, {
+    showModal(
+      modalDialog(
+        title = "Loading Table",
+        fluidRow(
+          column(width = 12, offset = 0,
+                 div(
+                   style = "position:relative",
+                   DT::dataTableOutput(stringr::str_c(plot_number, "_loadings_table"), width ='100%')
+                 ),
+                 downloadButton(str_c(plot_number, '_download_stats_pca2d_loading'))
+          )  
+        )  
+      )
+    )
+  })
+  
+  
   
   #------------------------------------------------------------------------------------------------------------- 
   observeEvent(input$stats_data_show, { 

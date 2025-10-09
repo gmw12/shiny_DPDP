@@ -96,21 +96,29 @@ interactive_boxplot <- function(session, input, output, df, namex, color_list, c
 #------------------------------------------------------------------------------------------------------------------------
 #------------------------------------------------------------------------------------------------------------------------
 
-interactive_pca2d <- function(session, input, output, df, namex, color_list, groupx, comp_name, plot_number)
+interactive_pca2d <- function(session, input, output, df, namex, color_list, groupx, comp_name, plot_number, name_id, loading)
 {
-  #save(df, file="pcadf"); save(groupx, file="pca_groupx")
-  #load(file="pcadf"); load(file="pca_groupx")
+  #save(df, file="pcadf"); save(groupx, file="pca_groupx"); save(name_id, file="name_id"); 
+  #load(file="pcadf"); load(file="pca_groupx"); load(file="name_id")
+  
   df_sd <-apply(df, 1, sd) 
   
-  
   cat(file = stderr(), "interactive_pca2d..." , "\n")
+  rownames(df) <- name_id 
   x_transpose <- t(df)
+  variables <- colnames(x_transpose) 
   x_transpose <- data.frame(x_transpose)
   cat(file = stderr(), "interactive_pca2d...1" , "\n")
   row.names(x_transpose) <- NULL
   x_transpose <- cbind(groupx, x_transpose)
   
   x_pca <- prcomp(x_transpose[,-1], scale = TRUE)
+  
+  # DEBUG - Check what sdev contains
+  cat(file = stderr(), "First 5 sdev values:", x_pca$sdev[1:5], "\n")
+  cat(file = stderr(), "First 5 sdev^2 values:", (x_pca$sdev^2)[1:5], "\n")
+  cat(file = stderr(), "Sum of sdev^2:", sum(x_pca$sdev^2), "\n")
+  
   
   test_this <- x_transpose[,1]
   x_gr <- factor(unlist(test_this))
@@ -124,77 +132,197 @@ interactive_pca2d <- function(session, input, output, df, namex, color_list, gro
   
   cat(file = stderr(), "interactive_pca2d...3" , "\n")
   
-  pca_y <- input[[stringr::str_c(plot_number, "_stats_pca2d_x")]]
-  pca_x <- input[[stringr::str_c(plot_number, "_stats_pca2d_y")]]
+  # pca_x <- "PC1"; pca_y <- "PC2"
+  pca_x <- input[[stringr::str_c(plot_number, "_stats_pca2d_x")]]
+  pca_y <- input[[stringr::str_c(plot_number, "_stats_pca2d_y")]]
   
   hover_data <- data.frame(cbind(namex, df_out[[pca_x]], df_out[[pca_y]]), stringsAsFactors = FALSE  )
   colnames(hover_data) <- c("Sample", "get(pca_x)", "get(pca_y)")
   hover_data$`get(pca_x)` <- as.numeric(hover_data$`get(pca_x)`)
   hover_data$`get(pca_y)` <- as.numeric(hover_data$`get(pca_y)`)
   
-  cat(file = stderr(), "interactive_pca2d...4" , "\n")
-  create_stats_pca2d <- reactive({
-    ggplot(df_out, aes(x = get(pca_x), y = get(pca_y), color = x_gr )) +
-      geom_point(alpha = 0.8, size = input[[stringr::str_c(plot_number, "_stats_pca2d_dot_size")]] ) +
-      theme(legend.title = element_blank()) +
-      ggtitle(input[[stringr::str_c(plot_number, "_stats_pca2d_title")]]) + 
-      ylab(pca_y) +
-      xlab(pca_x) +
-      scale_color_manual(values = rev(unique(color_list))) +
-      theme(plot.title = element_text(hjust = 0.5, size = input[[stringr::str_c(plot_number, "_stats_pca2d_title_size")]]), 
-            axis.title = element_text(size = input[[stringr::str_c(plot_number, "_stats_pca2d_label_size")]], color = "black"),
-            axis.text.x = element_text(size =  input[[stringr::str_c(plot_number, "_stats_pca2d_label_size")]], angle = 90,  color = "black"),
-            axis.text.y = element_text(size =  input[[stringr::str_c(plot_number, "_stats_pca2d_label_size")]],  color = "black"),
-      ) 
-  })
   
-  cat(file = stderr(), "interactive_pca2d...5" , "\n")
-  output[[stringr::str_c(plot_number, "_stats_pca2d")]] <- renderPlot({
-    req(create_stats_pca2d())
-    create_stats_pca2d()
-  })
+  #test loading table---------------------------------------------------------
   
-  output[[stringr::str_c(plot_number, "_download_stats_pca2d")]] <- downloadHandler(
-    filename = function(){
-      stringr::str_c(plot_number, "_stats_pca2d_", comp_name, ".png", collapse = " ")
-    },
-    content = function(file){
-      req(create_stats_pca2d())
-      ggsave(file, plot = create_stats_pca2d(), device = 'png')
-    }
-  )
+  # ===== NEW: Extract PCA Loadings =====
+  # Get loadings (rotation matrix)
+  loadings <- as.data.frame(x_pca$rotation)
+  loadings$Variable <- variables
+  rownames(loadings) <- NULL
   
-  cat(file = stderr(), "interactive_pca2d...6" , "\n")
-  output[[stringr::str_c(plot_number, "_hover_pca2d_info")]] <- renderUI({
-    hover <- input[[stringr::str_c(plot_number, "_plot_pca2d_hover")]]
-    point <- nearPoints(hover_data, hover, threshold = 5, maxpoints = 1, addDist = TRUE)
-    if (nrow(point) == 0) return(NULL)
+  # Calculate contribution of each variable to each PC
+  # This is the squared loading normalized by the total
+  variance_explained <- (x_pca$sdev^2 / sum(x_pca$sdev^2))
+  names(variance_explained) <- colnames(x_pca$rotation)
+  
+  # Create reactive loadings table for selected PCs
+  create_loadings_table <- reactive({
+    # Get column indices for the selected PCs
+    pc_x_col <- which(colnames(loadings) == pca_x)
+    pc_y_col <- which(colnames(loadings) == pca_y)
     
-    left_pct <- (hover$x - hover$domain$left) / (hover$domain$right - hover$domain$left)
-    top_pct <- (hover$domain$top - hover$y) / (hover$domain$top - hover$domain$bottom)
+    # CRITICAL FIX: Extract variance by INDEX, not by NAME
+    # Convert PC names to indices (e.g., "PC1" -> 1, "PC2" -> 2)
+    pc_x_index <- as.numeric(gsub("PC", "", pca_x))
+    pc_y_index <- as.numeric(gsub("PC", "", pca_y))
     
-    left_px <- left_pct * (hover$range$right - hover$range$left)
-    top_px <- top_pct * (hover$range$bottom - hover$range$top)
+    # Get variance weights using indices
+    var_weight_x <- variance_explained[pc_x_index]
+    var_weight_y <- variance_explained[pc_y_index]
     
-    # create style property fot tooltip
-    # background color is set so tooltip is a bit transparent
-    # z-index is set so we are sure are tooltip will be on top
+    # ADD THIS DEBUG LINE:
+    cat(file = stderr(), "DEBUG inside reactive - var_weight_x:", var_weight_x, 
+        ", var_weight_y:", var_weight_y, "\n")
     
-    cat(file = stderr(), "interactive_pca2d...7" , "\n")
-    if (top_pct > 0.3) {
-      top_custom <- 10
-    }else{
-      top_custom <- 200
-    }
+    # Debug output
+    cat(file = stderr(), "Selected PCs: ", pca_x, " and ", pca_y, "\n")
+    cat(file = stderr(), "Indices: ", pc_x_index, " and ", pc_y_index, "\n")
+    cat(file = stderr(), "Variance weights: ", var_weight_x, " and ", var_weight_y, "\n")
     
-    style <- paste0("position:absolute; z-index:100; background-color: rgba(245, 245, 245, 0.85); ",
-                    "left:", 10, "px; top:", top_custom, "px;")
-    # actual tooltip created as wellPanel
-    wellPanel(
-      style = style,
-      p(HTML(paste0("<b> Sample: </b>", point$Sample, "<br/>")))
+    loadings_subset <- loadings[, c(ncol(loadings), pc_x_col, pc_y_col)]
+    colnames(loadings_subset) <- c("Variable", pca_x, pca_y)
+    
+    # Calculate variance-weighted magnitude
+    loadings_subset$Weighted_Magnitude <- sqrt(
+      (loadings_subset[[pca_x]]^2 * var_weight_x) + 
+        (loadings_subset[[pca_y]]^2 * var_weight_y)
     )
+    
+    # Calculate individual contributions
+    loadings_subset[[paste0(pca_x, "_Contribution")]] <- 
+      abs(loadings_subset[[pca_x]]) * var_weight_x
+    loadings_subset[[paste0(pca_y, "_Contribution")]] <- 
+      abs(loadings_subset[[pca_y]]) * var_weight_y
+    
+    # Calculate overall importance score
+    loadings_subset$Importance_Score <- 
+      abs(loadings_subset[[pca_x]]) * var_weight_x + 
+      abs(loadings_subset[[pca_y]]) * var_weight_y
+    
+    # Add variance explained as percentages
+    loadings_subset[[paste0(pca_x, "_VarExp")]] <- 
+      paste0(round(var_weight_x * 100, 1), "%")
+    loadings_subset[[paste0(pca_y, "_VarExp")]] <- 
+      paste0(round(var_weight_y * 100, 1), "%")
+    
+    # Sort by weighted magnitude
+    loadings_subset <- loadings_subset[order(-loadings_subset$Weighted_Magnitude), ]
+    
+    # Round for readability
+    loadings_subset[[pca_x]] <- round(loadings_subset[[pca_x]], 4)
+    loadings_subset[[pca_y]] <- round(loadings_subset[[pca_y]], 4)
+    loadings_subset$Weighted_Magnitude <- round(loadings_subset$Weighted_Magnitude, 4)
+    loadings_subset$Importance_Score <- round(loadings_subset$Importance_Score, 4)
+    loadings_subset[[paste0(pca_x, "_Contribution")]] <- 
+      round(loadings_subset[[paste0(pca_x, "_Contribution")]], 4)
+    loadings_subset[[paste0(pca_y, "_Contribution")]] <- 
+      round(loadings_subset[[paste0(pca_y, "_Contribution")]], 4)
+    
+    return(loadings_subset)
   })
+  
+  
+  loading_df <- create_loadings_table()
+  #send to excel
+  Simple_Excel(loading_df, "Loading_Table", stringr::str_c(plot_number, "_PCA_Loadings_", comp_name, ".xlsx"))
+  
+  #-----------------------------------------------------------------------------
+    cat(file = stderr(), "interactive_pca2d...4" , "\n")
+    create_stats_pca2d <- reactive({
+      ggplot(df_out, aes(x = get(pca_x), y = get(pca_y), color = x_gr )) +
+        geom_point(alpha = 0.8, size = input[[stringr::str_c(plot_number, "_stats_pca2d_dot_size")]] ) +
+        theme(legend.title = element_blank()) +
+        ggtitle(input[[stringr::str_c(plot_number, "_stats_pca2d_title")]]) + 
+        ylab(pca_y) +
+        xlab(pca_x) +
+        scale_color_manual(values = rev(unique(color_list))) +
+        theme(plot.title = element_text(hjust = 0.5, size = input[[stringr::str_c(plot_number, "_stats_pca2d_title_size")]]), 
+              axis.title = element_text(size = input[[stringr::str_c(plot_number, "_stats_pca2d_label_size")]], color = "black"),
+              axis.text.x = element_text(size =  input[[stringr::str_c(plot_number, "_stats_pca2d_label_size")]], angle = 90,  color = "black"),
+              axis.text.y = element_text(size =  input[[stringr::str_c(plot_number, "_stats_pca2d_label_size")]],  color = "black"),
+        ) 
+    })
+    
+    cat(file = stderr(), "interactive_pca2d...5" , "\n")
+    output[[stringr::str_c(plot_number, "_stats_pca2d")]] <- renderPlot({
+      req(create_stats_pca2d())
+      create_stats_pca2d()
+    })
+    
+    output[[stringr::str_c(plot_number, "_download_stats_pca2d")]] <- downloadHandler(
+      filename = function(){
+        stringr::str_c(plot_number, "_stats_pca2d_", comp_name, ".png", collapse = " ")
+      },
+      content = function(file){
+        req(create_stats_pca2d())
+        ggsave(file, plot = create_stats_pca2d(), device = 'png')
+      }
+    )
+    
+    cat(file = stderr(), "interactive_pca2d...6" , "\n")
+    output[[stringr::str_c(plot_number, "_hover_pca2d_info")]] <- renderUI({
+      hover <- input[[stringr::str_c(plot_number, "_plot_pca2d_hover")]]
+      point <- nearPoints(hover_data, hover, threshold = 5, maxpoints = 1, addDist = TRUE)
+      if (nrow(point) == 0) return(NULL)
+      
+      left_pct <- (hover$x - hover$domain$left) / (hover$domain$right - hover$domain$left)
+      top_pct <- (hover$domain$top - hover$y) / (hover$domain$top - hover$domain$bottom)
+      
+      left_px <- left_pct * (hover$range$right - hover$range$left)
+      top_px <- top_pct * (hover$range$bottom - hover$range$top)
+      
+      # create style property fot tooltip
+      # background color is set so tooltip is a bit transparent
+      # z-index is set so we are sure are tooltip will be on top
+      
+      cat(file = stderr(), "interactive_pca2d...7" , "\n")
+      if (top_pct > 0.3) {
+        top_custom <- 10
+      }else{
+        top_custom <- 200
+      }
+      
+      style <- paste0("position:absolute; z-index:100; background-color: rgba(245, 245, 245, 0.85); ",
+                      "left:", 10, "px; top:", top_custom, "px;")
+      # actual tooltip created as wellPanel
+      wellPanel(
+        style = style,
+        p(HTML(paste0("<b> Sample: </b>", point$Sample, "<br/>")))
+      )
+    })
+    
+
+  
+
+    
+    # Render loadings table
+    output[[stringr::str_c(plot_number, "_loadings_table")]] <- renderDT({
+      req(create_loadings_table())
+      DT::datatable(
+        create_loadings_table(),
+        options = list(
+          pageLength = 10,
+          scrollX = TRUE,
+          order = list(list(4, 'desc')) 
+        ),
+        rownames = FALSE,
+        caption = paste0("Top contributors to ", pca_x, " and ", pca_y)
+      )
+    })
+    
+    # Download handler for loadings table
+    output[[stringr::str_c(plot_number, "_download_stats_pca2d_loading")]] <- downloadHandler(
+      filename = function(){
+        stringr::str_c(plot_number, "_pca_loadings_", comp_name, ".csv")
+      },
+      content = function(file){
+        write.csv(create_loadings_table(), file, row.names = FALSE)
+      }
+    )
+    
+
+  
+  
   cat(file = stderr(), "interactive_pca2d...end" , "\n")
 }
 
