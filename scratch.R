@@ -52,7 +52,8 @@ source('Shiny_File.R')
 
 test <- read_table('params', db_path)
 
-df_test <- read_table('precursor_norm_impute', db_path)
+df_test1 <- read_table('precursor_impute_sl', db_path)
+df_test2 <- read_table('peptide_impute_sl', db_path)
 test_precursor_missing <- read_table('precursor_missing', db_path)
 test_protein_missing <- read_table('protein_missing', db_path)
 

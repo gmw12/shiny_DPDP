@@ -579,9 +579,9 @@ shinyServer(function(session, input, output) {
           column(width = 12, offset = 0,
                  div(
                    style = "position:relative",
-                   DT::dataTableOutput(stringr::str_c(plot_number, "_loadings_table"), width ='100%')
+                   DT::dataTableOutput("1_loadings_table", width ='100%')
                  ),
-                 downloadButton(str_c(plot_number, '_download_stats_pca2d_loading'))
+                 downloadButton('1_download_stats_pca2d_loading')
           )  
         )  
       )
@@ -597,9 +597,9 @@ shinyServer(function(session, input, output) {
           column(width = 12, offset = 0,
                  div(
                    style = "position:relative",
-                   DT::dataTableOutput(stringr::str_c(plot_number, "_loadings_table"), width ='100%')
+                   DT::dataTableOutput("2_loadings_table", width ='100%')
                  ),
-                 downloadButton(str_c(plot_number, '_download_stats_pca2d_loading'))
+                 downloadButton('2_download_stats_pca2d_loading')
           )  
         )  
       )

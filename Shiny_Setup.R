@@ -95,6 +95,7 @@ load_archive_file <- function(session, input, output){
   }else{
     cat(file = stderr(), "loading archive_file for customer...", "\n")
     archive_zip <-input$sfb_archive_customer_file$datapath
+    archive_name <- basename(archive_sfb$datapath)
     cat(file = stderr(), stringr::str_c("archive_zip --->", archive_zip), "\n")
     archive_path <- str_extract(archive_zip, "^/.*/")
     cat(file = stderr(), stringr::str_c("archive_path --->", archive_path), "\n")
@@ -128,7 +129,6 @@ load_archive_file <- function(session, input, output){
     if (file.exists(stringr::str_c(database_dir, "/params"))){
       load(file=stringr::str_c(database_dir, "/params"))
     }
-    
     params$database_path <- db_path
     params$database_dir <- database_dir #test added 8/7/25
     params$archive_source <- "zip"
@@ -137,11 +137,12 @@ load_archive_file <- function(session, input, output){
     
   }else if (getExtension(archive_zip) == "dpmsr_set") {
       cat(file = stderr(), stringr::str_c("legacy dpmsr_set file loaded"), "\n")
+      params <- create_default_params(volumes, python_path)
       params$archive_source <- "dpmsr_set"
       params$design_path <- archive_path
       params$archive_path <- archive_path
-      convert_dpmsr_set(archive_zip, params)
-      params <- get_params()
+      convert_dpmsr_set(archive_zip, params, database_dir)
+      params <- get_params(db_path)
   }else{
     cat(file = stderr(), stringr::str_c("archive file not recognized"), "\n")
   }
@@ -163,7 +164,7 @@ load_archive_file <- function(session, input, output){
 #---------------------------------------------------------------------------------------------------------------------------
 #. convert_dpmsr_set(archive_zip, params) # load(file = "/Users/gregwaitt/Data/10482_062124.dpmsr_set")
 
-convert_dpmsr_set <- function(file_name, db_path){
+convert_dpmsr_set <- function(file_name, params, database_dir){
   cat(file = stderr(), "function convert_dpmsr_set....", "\n")
   showModal(modalDialog("Converting dpmsr_set file to database..", footer = NULL))  
   
@@ -171,18 +172,22 @@ convert_dpmsr_set <- function(file_name, db_path){
   temp_error_path <- stringr::str_c(params$archive_path, "error")
   create_dir(temp_error_path)
   
-  arg_list <- list(file_name, params)
+  cat(file = stderr(), "function convert_dpmsr_set....1", "\n")
+  arg_list <- list(file_name, params, database_dir)
   bg_convert_dpmsr_set <- callr::r_bg(func = convert_dpmsr_set_bg, args = arg_list, stderr = stringr::str_c(temp_error_path, "//bg_convert_dpmsr_set.txt"), supervise = TRUE)
   bg_convert_dpmsr_set$wait()
   print_temp_stderr("bg_convert_dpmsr_set.txt", temp_error_path)
 
   params <- bg_convert_dpmsr_set$get_result()
   
+  cat(file = stderr(), "function convert_dpmsr_set....2", "\n")
   assign("database_dir", params$database_dir, envir = .GlobalEnv)
   assign("database_path", params$database_path, envir = .GlobalEnv)
+  assign("db_path", params$database_path, envir = .GlobalEnv)
 
-  set_sample_groups(db_path)
-  params <- get_params()
+  set_sample_groups(params$db_path)
+  
+  params <- get_params(params$db_path)
   assign("params", params, envir = .GlobalEnv)
   
   cat(file = stderr(), "function convert_dpmsr_set....end", "\n\n")
@@ -190,11 +195,11 @@ convert_dpmsr_set <- function(file_name, db_path){
 }
 
 #---------------------------------------------------------------------------------------------------------------------------
-convert_dpmsr_set_bg <- function(file_name, db_path){
+convert_dpmsr_set_bg <- function(file_name, params, database_dir){
   cat(file = stderr(), "function convert_dpmsr_set_bg....", "\n")
   source('Shiny_File.R')
   
-  #save(file_name, file = "z1")
+  save(file_name, file = "z1")
   #.  load(file = "z1"); load(file = archive_zip);  load(file = "/Users/gregwaitt/Data/10482_062124.dpmsr_set"); 
   
   cat(file = stderr(), stringr::str_c("Converting, ", file_name), "\n")
@@ -208,16 +213,27 @@ convert_dpmsr_set_bg <- function(file_name, db_path){
   params$data_output <- dpmsr_set$x$final_data_output
   params$norm_ptm <- dpmsr_set$x$peptide_ptm_norm
   
+  cat(file = stderr(), "function convert_dpmsr_set_bg....1", "\n")
   design <- dpmsr_set$design[,1:7]
   colnames(design)[colnames(design) == "PD_Order"] <- "Raw_Order"
   
   #Global set of data and database paths
+  cat(file = stderr(), stringr::str_c("parmas$file_prefix = ", params$file_prefix), "\n")
   params$data_path <- stringr::str_c(params$archive_path, params$file_prefix, "/")
   params$database_dir <- database_dir
   params$database_path <- stringr::str_c(database_dir, "//", params$file_prefix, ".db")
+  params$db_path <- stringr::str_c(database_dir, "//", params$file_prefix, ".db")
   params$error_path <- create_dir(stringr::str_c(params$data_path, "Error"))
   
+  #adjust params
+  if (params$raw_data_format == "precursor_ptm") {
+    params$raw_data_format <- "precursor"
+    params$ptm <- TRUE
+    
+  }
+  
   #create working directory for 
+  cat(file = stderr(), "function convert_dpmsr_set_bg....2", "\n")
   create_dir(params$data_path)
   create_dir(params$database_dir)
   create_dir(params$error_path)
@@ -228,29 +244,30 @@ convert_dpmsr_set_bg <- function(file_name, db_path){
   for (i in (1:length(set_names))){
     if (set_names[i] %in% names(dpmsr_set$data)) {
       cat(file = stderr(), stringr::str_c("transferring dpmsr_set$data$", set_names[i], " to ", db_names[i]), "\n")
-      write_table_try(db_names[i], df <- dpmsr_set$data[[set_names[i]]], db_path)
+      write_table_try(db_names[i], df <- dpmsr_set$data[[set_names[i]]], params$db_path)
     }
   }
   
-  
+  cat(file = stderr(), "function convert_dpmsr_set_bg....3", "\n")
   #dpmsr_set$data$normalized
   set_names <- c("impute", "sl", "sl")
   db_names <- c("precursor_norm_impute", "precursor_norm_sl", "precursor_norm_sltmm")
   for (i in (1:length(set_names))){
     if (set_names[i] %in% names(dpmsr_set$data$normalized)) {
       cat(file = stderr(), stringr::str_c("transferring dpmsr_set$data$normalized$", set_names[i], " to ", db_names[i]), "\n")
-      write_table_try(db_names[i], df <- dpmsr_set$data$normalized[[set_names[i]]], db_path)
+      write_table_try(db_names[i], df <- dpmsr_set$data$normalized[[set_names[i]]], params$db_path)
     }
   }
   
   #dpmsr_set$data$impute
+  cat(file = stderr(), "function convert_dpmsr_set_bg....4", "\n")
   set_names <- c("impute", "sl", "sltmm")
   params$norm_type <- paste(set_names, collapse = ",")
   db_names <- c("precursor_impute_impute", "precursor_impute_sl", "precursor_impute_sltmm")
   for (i in (1:length(set_names))){
     if (set_names[i] %in% names(dpmsr_set$data$impute)) {
       cat(file = stderr(), stringr::str_c("transferring dpmsr_set$data$impute$", set_names[i], " to ", db_names[i]), "\n")
-      write_table_try(db_names[i], df <- dpmsr_set$data$impute[[set_names[i]]], db_path)
+      write_table_try(db_names[i], df <- dpmsr_set$data$impute[[set_names[i]]], params$db_path)
     }
   }
   
@@ -260,12 +277,13 @@ convert_dpmsr_set_bg <- function(file_name, db_path){
   for (i in (1:length(set_names))){
     if (set_names[i] %in% names(dpmsr_set$data$final)) {
       cat(file = stderr(), stringr::str_c("transferring dpmsr_set$data$final$", set_names[i], " to ", db_names[i]), "\n")
-      write_table_try(db_names[i], df <- dpmsr_set$data$final[[set_names[i]]], db_path)
+      write_table_try(db_names[i], df <- dpmsr_set$data$final[[set_names[i]]], params$db_path)
     }
   }
   
+  cat(file = stderr(), "function convert_dpmsr_set_bg....5", "\n")
   #no shortcuts here, params needs to be updated globally
-  conn <- RSQLite::dbConnect(RSQLite::SQLite(), params$database_path) 
+  conn <- RSQLite::dbConnect(RSQLite::SQLite(), params$db_path) 
   RSQLite::dbWriteTable(conn, "design", design, overwrite = TRUE)
   RSQLite::dbWriteTable(conn, "params", params, overwrite = TRUE)
   RSQLite::dbDisconnect(conn)
