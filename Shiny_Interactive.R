@@ -222,9 +222,9 @@ interactive_pca2d <- function(session, input, output, df, namex, color_list, gro
   })
   
   
-  loading_df <- create_loadings_table()
+  #loading_df <- create_loadings_table()
   #send to excel
-  Simple_Excel(loading_df, "Loading_Table", stringr::str_c(plot_number, "_PCA_Loadings_", comp_name, ".xlsx"))
+  #Simple_Excel(loading_df, "Loading_Table", stringr::str_c(plot_number, "_PCA_Loadings_", comp_name, ".xlsx"))
   
   #-----------------------------------------------------------------------------
     cat(file = stderr(), "interactive_pca2d...4" , "\n")
