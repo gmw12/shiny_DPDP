@@ -206,7 +206,7 @@ noise_remove <- function(session, input, output, db_path){
 noise_remove_bg <- function(table_name, new_table_name, db_path){
   cat(file = stderr(), "Function - noise_remove_bg...", "\n")
   
-  save(table_name, file="z1"); save(new_table_name, file="z2");
+  #save(table_name, file="z1"); save(new_table_name, file="z2");
   #  load(file="z1"); load(file="z2"); 
   
   conn <- RSQLite::dbConnect(RSQLite::SQLite(), db_path)
