@@ -273,7 +273,11 @@ convert_dpmsr_set_bg <- function(file_name, params, database_dir){
   
   #dpmsr_set$data$final
   set_names <- c("impute", "sl", "sltmm")
-  db_names <- c("protein_impute_final", "protein_sl_final", "protein_sltmm_final")
+  if (params$data_output == "peptide") {
+    db_names <- c("peptide_impute_impute", "peptide_impute_sl", "peptide_impute_sltmm")
+  }else {
+    db_names <- c("protein_impute_impute", "protein_impute_sl", "protein_impute_sltmm")
+  }
   for (i in (1:length(set_names))){
     if (set_names[i] %in% names(dpmsr_set$data$final)) {
       cat(file = stderr(), stringr::str_c("transferring dpmsr_set$data$final$", set_names[i], " to ", db_names[i]), "\n")

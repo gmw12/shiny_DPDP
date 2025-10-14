@@ -60,13 +60,20 @@ hide_enable <- function(session, input, output, db_path) {
   })
 
   observe({
+    if (input$noise_keep) {
+      shinyjs::show("noise_keep_value")
+    } else {
+      shinyjs::hide("noise_keep_value")
+    }
+  })
+  
+  observe({
     if (input$impute_type == "duke") {
       shinyjs::show("missing_cutoff")
     } else {
       shinyjs::hide("missing_cutoff")
     }
   })
-  
   
   observe({
     if (input$rollup_method == "topn") {

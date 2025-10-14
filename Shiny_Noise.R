@@ -206,6 +206,9 @@ noise_remove <- function(session, input, output, db_path){
 noise_remove_bg <- function(table_name, new_table_name, db_path){
   cat(file = stderr(), "Function - noise_remove_bg...", "\n")
   
+  save(table_name, file="z1"); save(new_table_name, file="z2");
+  #  load(file="z1"); load(file="z2"); 
+  
   conn <- RSQLite::dbConnect(RSQLite::SQLite(), db_path)
   df <- RSQLite::dbReadTable(conn, table_name)
   params <- RSQLite::dbReadTable(conn, "params")
@@ -220,7 +223,39 @@ noise_remove_bg <- function(table_name, new_table_name, db_path){
     noise_baseline <- 0
   }
   
-  df[(ncol(df) - params$sample_number + 1):ncol(df)][df[(ncol(df) - params$sample_number + 1):ncol(df)] < noise_baseline] <- NA
+  # noise_keep = TRUE
+
+  
+  if(params$noise_keep) {
+    cat(file = stderr(), stringr::str_c("Removing noise values if less than ", params$noise_keep_value, " precursors above ", noise_baseline), "\n")
+    # Define the column range once for clarity
+    cols <- (ncol(df) - params$sample_number + 1):ncol(df)
+    # Count values above noise_baseline per row
+    noise_above <- rowSums(df[cols] >= noise_baseline, na.rm = TRUE)
+    # Identify which rows meet the threshold
+    rows_to_clean <- noise_above >= params$noise_keep_value
+    
+    # Count how many values will be set to NA (before replacing them)
+    na_count <- sum(df[rows_to_clean, cols] < noise_baseline, na.rm = TRUE)
+    
+    # Apply NA replacement only to those rows
+    df[rows_to_clean, cols][df[rows_to_clean, cols] < noise_baseline] <- NA
+    
+    cat(file = stderr(), stringr::str_c("Set ", na_count, " data points to NA"), "\n")
+    
+  } else {
+    cat(file = stderr(), "Removing noise values...", "\n")
+    
+    # Count how many values will be set to NA (before replacing them)
+    cols <- (ncol(df) - params$sample_number + 1):ncol(df)
+    na_count <- sum(df[cols] < noise_baseline, na.rm = TRUE)
+    
+    df[cols][df[cols] < noise_baseline] <- NA
+    
+    cat(file = stderr(), stringr::str_c("Set ", na_count, " data points to NA"), "\n")
+  }
+  
+  
   
   RSQLite::dbWriteTable(conn, new_table_name, df, overwrite = TRUE)
   RSQLite::dbWriteTable(conn, "params", params, overwrite = TRUE)

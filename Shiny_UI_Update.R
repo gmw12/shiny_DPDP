@@ -482,7 +482,7 @@ noise_widget_save <- function(session, input, output, db_path){
   
   params <- get_params(db_path)
   
-  names <- c('noise_type', 'noise_baseline_value')
+  names <- c('noise_type', 'noise_baseline_value', 'noise_keep', 'noise_keep_value')
   
   for (name in names) {
     params[[name]] <- input[[name]]

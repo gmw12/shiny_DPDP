@@ -239,6 +239,12 @@ body <- dashboardBody(
                              column(width = 6, numericInput("noise_baseline_value", label = "Enter fixed baseline", value = 1))
                            ),
                            br(),
+                           fluidRow( 
+                             column(width = 12, checkboxInput("noise_keep", label = "Keep noise if x value above noise", value=FALSE))
+                           ),
+                           fluidRow( 
+                             column(width = 12, numericInput("noise_keep_value", label = "Number of values above noise", value = 1))
+                           ),
                            hr(),
                            br(),
                            fluidRow(align = "center", 
