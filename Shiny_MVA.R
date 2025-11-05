@@ -160,28 +160,40 @@ stat_calc_bg <- function(db_path, comp_number, stats_comp){
   source("Shiny_Misc_Functions.R")
   source('Shiny_File.R')
 
-  #save(comp_number, file="z10"); save(stats_comp, file="z11");
-  #. load(file="z10"); load(file="z11");
-  # stats_comp <- read_table_try("stats_comp", db_path); comp_number = 1
+  save(comp_number, file="z10"); save(stats_comp, file="z11");
+  #. load(file="z10"); load(file="z11"); comp_number = 1
+  # stats_comp <- read_table_try("stats_comp", db_path); 
 
   params <- get_params(db_path)
   df_design <- read_table_try("design", db_path)
   
   if (!params$peptide_refilter) {
     cat(file = stderr(), "data NOT refiltered at peptide/precursor level....", "\n")
-    table_name <- stringr::str_replace_all(stringr::str_c("protein_", trimws(params$stat_norm), "_final"), " ", "")
-    df <- read_table_try(stats_comp$Table_Name[comp_number], db_path)
     #add imputed column
-    if (params$raw_data_format != "protein"){
-      cat(file = stderr(), "raw format NOT protein...", "\n")
-      #df_list <- add_imputed_df(df, params, db_path, stats_comp, comp_number, "protein_missing")
-      #df <- df_list[[1]]
-      #df_missing <- df_list[[2]]
-      df_missing <- read_table_try("protein_missing", db_path)
+    if (params$raw_data_format == "precursor" & params$data_output == "Protein"){
+      cat(file = stderr(), "raw format is precursor and output is Protein...", "\n")
+      table_name <- stringr::str_replace_all(stringr::str_c("protein_", trimws(params$stat_norm), "_final"), " ", "")
+      df <- read_table_try(table_name, db_path)
+      df_list <- stat_create_comp_df(df, stats_comp, comp_number, params, df_design)
+      df <- cbind(df_list[[1]], df_list[[2]], df_list[[3]], df_list[[4]])
+      df_missing <- extract_missing_to_df(df, params$sample_number)
+      df_missing_list <- stat_create_comp_missing_df(df_missing, stats_comp, comp_number, params, df_design)
+      df_missing <- cbind(df_missing_list[[1]], df_missing_list[[2]])
+    }else if (params$raw_data_format == "precursor" & params$data_output == "Peptide"){
+      cat(file = stderr(), "raw format is precursor and output is Peptide...", "\n")
+      table_name <- stringr::str_replace_all(stringr::str_c("peptide_impute_", trimws(params$stat_norm)), " ", "")
+      df <- read_table_try(table_name, db_path)
+      df_list <- stat_create_comp_df(df, stats_comp, comp_number, params, df_design)
+      df <- cbind(df_list[[1]], df_list[[2]], df_list[[3]], df_list[[4]])
+      df_missing <- extract_missing_to_df(df, params$sample_number)
+      df_missing_list <- stat_create_comp_missing_df(df_missing, stats_comp, comp_number, params, df_design)
+      df_missing <- cbind(df_missing_list[[1]], df_missing_list[[2]])
     }else{
       cat(file = stderr(), "raw format IS protein...", "\n")
       df_missing <- ""
     }
+    
+    
   } else {
     cat(file = stderr(), "data IS refiltered at peptide/precursor level....", "\n")
     table_name <- stringr::str_replace_all(stringr::str_c("precursor_impute_", trimws(params$stat_norm)), " ", "")
@@ -213,6 +225,7 @@ stat_calc_bg <- function(db_path, comp_number, stats_comp){
   }
   
   #add stats to df
+  cat(file = stderr(), "function stat_calc_bg....stat_add", "\n\n")
   df <- stat_add(df, df_missing, params, comp_number, stats_comp, df_design) 
   
   if(params$data_output == "Protein") {
@@ -941,7 +954,7 @@ create_stats_onepeptide_plots_bg <- function(input_stats_norm_type, input_stats_
                                              input_stats_onepeptide_use_zscore, df_design, stats_comp, params, db_path) {
   
   #save(list=c("input_stats_norm_type", "input_stats_onepeptide_plot_comp", "input_stats_onepeptide_accession", "input_stats_onepeptide_sequence", "input_stats_onepeptide_plot_spqc", "input_stats_onepeptide_use_zscore", "df_design", "stats_comp"), file="zztop")
-  #. load(file="zztop");
+  # load(file="zztop");
   
   cat(file = stderr(), "Function create_stats_onepeptide_plots_bg...", "\n")
   
@@ -1007,6 +1020,7 @@ create_stats_onepeptide_plots_bg <- function(input_stats_norm_type, input_stats_
     SPQC_ID <- df_design$ID[str_to_numlist(stats_comp$SPQC_loc[comp_number])]
     df_SPQC <- df_no_stats |> dplyr::select(contains(c("Sequence", SPQC_ID)))
 
+    cat(file = stderr(), "Function create_stats_onepeptide_plots_bg...4", "\n")
     stats_data_N <- tidyr::gather(df_N, test, y, unlist(2:ncol(df_N)))
     colnames(stats_data_N) <- c("Sequence", "Name", "y")
      
@@ -1017,7 +1031,7 @@ create_stats_onepeptide_plots_bg <- function(input_stats_norm_type, input_stats_
     colnames(stats_data_SPQC) <- c("Sequence", "Name", "y")
      
     #may not need this, need to test running primary group
-    cat(file = stderr(), "Function create_stats_onepeptide_plots_bg...4", "\n")
+    cat(file = stderr(), "Function create_stats_onepeptide_plots_bg...5", "\n")
     if (params$primary_group == "Primary"){
       stats_data_N$Comp <- stats_comp$FactorsN[comp_number]
       stats_data_D$Comp <- stats_comp$FactorsD[comp_number]
@@ -1037,7 +1051,7 @@ create_stats_onepeptide_plots_bg <- function(input_stats_norm_type, input_stats_
       stats_data_all <- rbind(stats_data_N, stats_data_D)
     }
      
-    cat(file = stderr(), "Function create_stats_onepeptide_plots_bg...5", "\n")
+    cat(file = stderr(), "Function create_stats_onepeptide_plots_bg...6", "\n")
     stats_data_all$Sequence <- gsub("_", "", stats_data_all$Sequence)
      
     new_df <- merge(stats_data_all, peptide_pos_lookup, by="Sequence")
@@ -1050,7 +1064,7 @@ create_stats_onepeptide_plots_bg <- function(input_stats_norm_type, input_stats_
     new_df$Position <- as.character(new_df$Position )
     new_df$Sequence <- as.character(new_df$Sequence)
      
-    cat(file = stderr(), "Function create_stats_onepeptide_plots_bg...6", "\n") 
+    cat(file = stderr(), "Function create_stats_onepeptide_plots_bg...7", "\n") 
     new_df2 <- new_df |> dplyr::group_by(Order, Comp, Sequence, Position, Start, Stop) |> dplyr::summarise(y_mean=mean(y), sd=sd(y))
     
     new_df2 <- data.frame(dplyr::ungroup(new_df2))

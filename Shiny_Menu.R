@@ -88,6 +88,10 @@ load_menu_precursor_to_protein <- function(session, input, output) {
     menuItem("Load", tabName = "load")
   })
   
+  output$menu_tic <- renderMenu({ 
+    menuItem("TIC", tabName = "tic")
+  })
+  
   output$menu_parameters <- renderMenu({ 
     menuItem("Parameters", tabName = "parameters")
   })
@@ -148,6 +152,10 @@ load_menu_protein <- function(session, input, output) {
   
   output$menu_load <- renderMenu({ 
     menuItem("Load", tabName = "load")
+  })
+  
+  output$menu_tic <- renderMenu({ 
+    menuItem("TIC", tabName = "tic")
   })
   
   output$menu_parameters <- renderMenu({ 
@@ -211,6 +219,10 @@ load_menu_all <- function(session, input, output) {
   
   output$menu_load <- renderMenu({ 
     menuItem("Load", tabName = "load")
+  })
+  
+  output$menu_tic <- renderMenu({ 
+    menuItem("TIC", tabName = "tic")
   })
   
   output$menu_parameters <- renderMenu({ 
@@ -283,6 +295,10 @@ load_menu_peptide <- function(session, input, output) {
     menuItem("Load", tabName = "load")
   })
   
+  output$menu_tic <- renderMenu({ 
+    menuItem("TIC", tabName = "tic")
+  })
+  
   output$menu_parameters <- renderMenu({ 
     menuItem("Parameters", tabName = "parameters")
   })
@@ -331,6 +347,10 @@ load_menu_peptide_phos <- function(session, input, output) {
   
   output$menu_load <- renderMenu({ 
     menuItem("Load", tabName = "load")
+  })
+  
+  output$menu_tic <- renderMenu({ 
+    menuItem("TIC", tabName = "tic")
   })
   
   output$menu_parameters <- renderMenu({ 
@@ -385,6 +405,10 @@ load_menu_protein_inpute <- function(session, input, output) {
   
   output$menu_load <- renderMenu({ 
     menuItem("Load", tabName = "load")
+  })
+  
+  output$menu_tic <- renderMenu({ 
+    menuItem("TIC", tabName = "tic")
   })
   
   output$menu_parameters <- renderMenu({ 

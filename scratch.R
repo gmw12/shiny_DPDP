@@ -44,6 +44,17 @@ filter_db <- function(table_name, column_name, key_word, db_path) {
 accession = "A0A087WPF7"
 df_peptide <- filter_db("peptide_sltmm", "Accession", accession, params)
 
+# load("/mnt/h_black1/00000/10560_GlyGly_dpmsr_set/10560_081924.dpmsr_set")
+
+
+testdf <- dpmsr_set$data$impute$impute
+testdf <- dpmsr_set$data$final$impute
+testmissing <- dpmsr_set$data$precursor_imputed_df
+testpre <- dpmsr_set$data$data_precursor
+testprestart <- dpmsr_set$data$data_precursor_start
+testnorm <- dpmsr_set$data
+
+
 list_tables(db_path)
 
 
@@ -51,9 +62,15 @@ db_path = stringr::str_c(getwd(), "/database/project_021125.db")
 source('Shiny_File.R')
 
 test <- read_table('params', db_path)
+params <- read_table('params', db_path)
 
-df_test1 <- read_table('precursor_impute_sl', db_path)
-df_test2 <- read_table('peptide_impute_sl', db_path)
+t1 <- read_table('raw_tic_1', db_path)
+t2 <- read_table('raw_tic_2', db_path)
+
+df_test1 <- read_table('protein_impute_impute', db_path)
+df_test2 <- read_table('peptide_impute_impute', db_path)
+df_test3 <- read_table('peptide_impute_impute_final', db_path)
+df_test4 <- read_table('peptide_impute_sl', db_path)
 test_precursor_missing <- read_table('precursor_missing', db_path)
 test_protein_missing <- read_table('protein_missing', db_path)
 
@@ -1148,3 +1165,25 @@ colnames(test3) <- c("params", "values")
 #check if file.txt exists in /database folder
 file.exists(str_c(database_dir, "/string_db"))
 database_dir
+
+
+
+
+split_data <- strsplit(as.character(df$Detected_Imputed), ".", fixed = TRUE)
+df_expanded <- as.data.frame(
+  do.call(rbind, lapply(split_data, function(x) x)),
+  stringsAsFactors = FALSE
+)
+colnames(df_expanded) <- paste0("col", 1:ncol(df_expanded))
+
+
+class(df$Detected_Imputed)
+
+# See what the split produces
+strsplit(as.character(df$Detected_Imputed[1]), ".", fixed = TRUE)
+
+
+C2 <- rawrr::readChromatogram(rawfile = raw_data_sfb$datapath[i], type = "xic", mass = chromatogram_mass, tol = as.numeric(10))
+C3 <- C2[[1]]
+C3$times
+

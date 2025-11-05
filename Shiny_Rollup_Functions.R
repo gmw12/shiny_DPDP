@@ -128,9 +128,15 @@ rollup_sum_peptide <- function(df, df_design, comp_number, stats_comp, params){
     peptide_df <- df |> dplyr::group_by(Accession, Description, Name, Genes, Sequence, Modifications) |> dplyr::summarise_all(list(sum))
     
   }else {
-    df <- df |> dplyr::select(contains(c("Accession", "Description", "Name", "Genes", "Sequence", "PeptidePosition", sample_ID))) |> 
-      dplyr::mutate(Precursors = 1, .after = PeptidePosition)
-    peptide_df <- df |> dplyr::group_by(Accession, Description, Name, Genes, Sequence, PeptidePosition) |> dplyr::summarise_all(list(sum))
+    if ("Name" %in% colnames(df)){
+      df <- df |> dplyr::select(contains(c("Accession", "Description", "Name", "Genes", "Sequence", "PeptidePosition", sample_ID))) |> 
+        dplyr::mutate(Precursors = 1, .after = PeptidePosition)
+      peptide_df <- df |> dplyr::group_by(Accession, Description, Name, Genes, Sequence, PeptidePosition) |> dplyr::summarise_all(list(sum))
+    } else {
+      df <- df |> dplyr::select(contains(c("Accession", "Description", "Genes", "Sequence", "PeptidePosition", sample_ID))) |> 
+        dplyr::mutate(Precursors = 1, .after = PeptidePosition)
+      peptide_df <- df |> dplyr::group_by(Accession, Description, Genes, Sequence, PeptidePosition) |> dplyr::summarise_all(list(sum))
+    }
   }
   
   

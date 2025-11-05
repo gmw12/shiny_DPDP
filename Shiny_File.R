@@ -310,6 +310,7 @@ read_table <- function(table_name, db_path){
 
 #----------------------------------------------------------------------------------------
 read_table_try <- function(table_name, db_path){
+  cat(file = stderr(), stringr::str_c("Function read_table_try... ", table_name), "\n")
   for (i in 1:10) {
     df <- try(read_table(table_name, db_path))
     if (class(df) != "try-error"){
@@ -350,7 +351,7 @@ write_table <- function(table_name, df, db_path){
 
 #----------------------------------------------------------------------------------------
 write_table_try <- function(table_name, df, db_path){
-  cat(file = stderr(), "function write_table_try...", "\n")
+  cat(file = stderr(), stringr::str_c("function write_table_try... ", table_name), "\n")
   for (i in 1:10) {
     test <- try(write_table(table_name, df, db_path))
     if (class(test) != "write-error"){

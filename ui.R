@@ -12,6 +12,7 @@ sidebar <- dashboardSidebar(width = 165,
                               menuItem("Welcome", tabName = "welcome", selected = TRUE),
                               menuItemOutput("menu_load"),
                               menuItemOutput("menu_load_customer"),
+                              menuItemOutput("menu_tic"),
                               menuItemOutput("menu_parameters"),
                               menuItemOutput("menu_noise"),
                               menuItemOutput("menu_filter"),
@@ -110,26 +111,26 @@ body <- dashboardBody(
                            span(textOutput("data_table_format"), style = "color:blue; font-size:16px"),
                            span(textOutput("data_ptm"), style = "color:blue; font-size:16px")
                        ),
-                       box(title = "Start from Scratch", status = "primary", solidHeader = TRUE, collapsible = FALSE, align = "left", width = 12, height = 375,
-                           tags$h4("1. Enter file prefix for data output"),
+                       box(title = "Start from Scratch", status = "primary", solidHeader = TRUE, collapsible = FALSE, align = "left", width = 12, height = 450,
+                           tags$h3("1. Enter file prefix for data output"),
                            fluidRow(align = "center", textInput("file_prefix", label = "", width = 300, value = "project_date")),
                            
-                           tags$h4("2. Select and Load the study design file..."),
+                           tags$h3("2. Select and Load the study design file..."),
                            
                            fluidRow(align = "center", shinyFilesButton('sfb_design_file', label = 'Load Design File', title = 'Please select excel design file', multiple = FALSE,
                                                                        style = "color: #fff; background-color: #337ab7; border-color: #2e6da4; display:center")),
                            
-                           span(textOutput("design_file_name"), style = "color:blue; font-size:16px"),
+                           span(textOutput("design_file_name"), style = "color:blue; font-size:14px"),
                            
-                           tags$h4("3. Select data file(s).."),
+                           tags$h3("3. Select data file(s).."),
                            
                            fluidRow(align = "center", shinyFilesButton('sfb_data_file', label = 'Select Data File(s)', title = 'Please select data file(s)', multiple = TRUE,
                                                                        style = "color: #fff; background-color: #337ab7; border-color: #2e6da4")),
-                           span(textOutput("data_file_name"), style = "color:blue; font-size:16px")
+                           span(textOutput("data_file_name"), style = "color:blue; font-size:14px")
                        ),
                        
-                       box(title = "Start from Previous Analysis", status = "primary", solidHeader = TRUE, collapsible = FALSE, align = "center", width = 12, height = 200,
-                           tags$h3("Select database file"),
+                       box(title = "Start from Previous Analysis", status = "primary", solidHeader = TRUE, collapsible = FALSE, align = "center", width = 12, height = 150,
+                           tags$h4("Select database file"),
                            fluidRow(align = "center", shinyFilesButton('sfb_archive_file', label = 'Select Archive/Zip File', title = 'Please select zip file', multiple = FALSE,
                                                                        style = "color: #fff; background-color: #337ab7; border-color: #2e6da4")),
                            span(textOutput("archive_file_name"), style = "color:blue; font-size:16px")
@@ -138,14 +139,60 @@ body <- dashboardBody(
               
               
               column(width = 8,  
-                     box(title = "Study Design Table", status = "primary", solidHeader = TRUE, collapsible = FALSE, width = 12, height = 725,
+                     box(title = "Study Design Table", status = "primary", solidHeader = TRUE, collapsible = FALSE, width = 12, height = 750,
                          rHandsontableOutput("stats_design_table")
                          #div(style = 'overflow-x: scroll; overflow-y: scroll;', DT::dataTableOutput("stats_design_table")) #), width = '100%'))
-                         
                      ))
             )
     ),
+  
+    # TIC
+    tabItem(tabName = "tic",
+            fluidRow(
+              column(width = 2,
+                     fluidRow(
+                       box(title = "Raw Data TIC", status = "primary", solidHeader = TRUE, collapsible = FALSE, align = "left", width = 12, height = 750,
+                           
+                           selectInput("chromatogram_type", label = ("Select Chromatogram Type"),
+                                       choices = list("TIC", "BPC", "XIC"),
+                                       selected = "TIC", width = 300),
+                           textInput("chromatogram_mass", label = "XIC m/z (555.55)", value = "", width = 300),
+                           
+                           numericInput("chromatogram_tolerance", label = "Mass tolerance: ppm", value = 10, width = 300),
+                           
+                           tags$h5("Select raw data file(s).."),
+                           
+                           shinyFilesButton('sfb_raw_data_file', label = 'Select Raw Data File(s)', title = 'Please select raw data file(s)', multiple = TRUE,
+                                                                       style = "color: #fff; background-color: #337ab7; border-color: #2e6da4"),
+                           br(),
+                           br(),
+                           actionButton("tic_process", label = "Process Files",
+                                        style = "color: #fff; background-color: #337ab7; border-color: #2e6da4"),
+                           br(),
+                           br(),
+                           pickerInput("tic_picker", label = "Files to Display",  choices = "All", 
+                                       options = list(`actions-box` = TRUE, size = 10,
+                                                      `selected-text-format` = "count > 20"),  multiple = TRUE)
+                       )
+                     )),
+              
+              column(width = 10,  
+                     box(
+                       title = "Chromatograms", 
+                       status = "primary", 
+                       solidHeader = TRUE, 
+                       collapsible = FALSE, 
+                       width = 12, 
+                       height = 750, 
+                       style = "overflow-y: auto;",
+
+                       uiOutput("tic_plots")
+                     )
+                )
+            )
+    ),    
     
+      
     #Parameters
     tabItem(tabName = "parameters",
             fluidRow(

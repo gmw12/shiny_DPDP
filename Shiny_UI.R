@@ -277,3 +277,34 @@ create_stats_volcano_ui_part2 <- function(plot_number){
   
 }
 
+#---------------------------------------------------------------------------
+
+
+create_tic_ui <- function(n_plots, n_cols, n_rows, plot_height){
+  cat(file = stderr(), stringr::str_c("Function create_tic_ui...", n_plots, " ", n_cols, " ", n_rows, " ", plot_height), "\n") 
+  
+  ui_elements <- list()
+  plot_idx <- 1
+  
+  for(row in 1:n_rows) {
+    # Create columns for this row
+    columns_in_row <- list()
+    
+    for(col in 1:n_cols) {
+      if(plot_idx <= n_plots) {
+        columns_in_row[[col]] <- column(
+          width = 12 / n_cols,
+          plotOutput(str_c("tic_plot_", plot_idx), height = paste0(plot_height, "px"))
+        )
+        plot_idx <- plot_idx + 1
+      }
+    }
+    
+    # Add this row to ui_elements
+    ui_elements[[row]] <- fluidRow(columns_in_row)
+  }
+  
+  cat(file = stderr(), "Function create_tic_ui...end", "\n") 
+  
+  return(tagList(ui_elements))
+}

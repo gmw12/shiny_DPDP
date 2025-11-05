@@ -1,4 +1,32 @@
 cat(file = stderr(), "Shiny_Observers.R", "\n")
+
+#---------------------------------------------------------
+observe_tic_plots <- function(session, input, output, db_path) {
+  cat(file = stderr(), "observe tic_plots...", "\n")
+  
+  observe({
+    if (length(input$tic_picker) > 0){
+      cat(file = stderr(), "observe tic_plots triggered...", "\n")
+      selected_items <- input$tic_picker
+      n_plots <- length(selected_items)
+      # Determine optimal layout
+      n_cols <- if(n_plots <= 4) 2 else 3
+      n_rows <- ceiling(n_plots / n_cols)
+      plot_height <- max(150, (700 - 50) / n_rows)
+      
+      # First render the plots
+      render_tic_plots(session, input, output, db_path)
+      
+      # Then create UI (it will connect to already-created renders)
+      output$tic_plots <- renderUI({
+        create_tic_ui(n_plots, n_cols, n_rows, plot_height)
+      })
+    }
+  })
+  
+  cat(file = stderr(), "observe tic_plots...end", "\n")
+}
+
 #---------------------------------------------------------
 observe_buttons <- function(session, input , output) {
   cat(file = stderr(), "observe buttons loaded...", "\n")
@@ -285,3 +313,8 @@ observe_plot_type2 <- function(session, input, output){
   })
 
 }
+
+
+#-------------------------------------------------------------------------------------------------------------
+
+

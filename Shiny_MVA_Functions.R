@@ -72,7 +72,9 @@ precursor_refilter <- function(df_list, df_missing_list, params) {
   df_N <- df_list[[2]]
   df_D <- df_list[[3]]
   df_N_missing <- df_missing_list[[1]]
+  df_N_missing[] <- lapply(df_N_missing, as.numeric)
   df_D_missing <- df_missing_list[[2]]
+  df_D_missing[] <- lapply(df_D_missing, as.numeric)
   
   if (params$comp_spqc != ""){
     df_SPQC <- df_list[[4]]
@@ -340,6 +342,7 @@ create_imputed_df <- function(params, db_path) {
   info_columns <- ncol(df) - params$sample_number
   
   cat(file = stderr(), "function create_imputed_df....1", "\n")
+  df_peptide_info <- df |> dplyr::select(contains(c("Accession", "Description","Name", "Genes", "Sequence")))
   df_protein_info <- df |> dplyr::select(contains(c("Accession", "Description","Name", "Genes")))
   df <- df[(info_columns + 1):ncol(df)]
   
@@ -347,12 +350,18 @@ create_imputed_df <- function(params, db_path) {
   df[is.na(df)] <- 0
   
   cat(file = stderr(), "function create_imputed_df....2", "\n")
+  df_peptide <- cbind(df_peptide_info, df)
+  df_peptide <- df_peptide |> dplyr::group_by(Accession, Description, Name, Genes, Sequence) |> dplyr::summarise_all(list(sum))
+  df_peptide <- data.frame(dplyr::ungroup(df_peptide))
+  df_peptide <- df_peptide[6:ncol(df_peptide)]
+  
+  cat(file = stderr(), "function create_imputed_df....3", "\n")
   df_protein <- cbind(df_protein_info, df)
   df_protein <- df_protein |> dplyr::group_by(Accession, Description, Name, Genes) |> dplyr::summarise_all(list(sum))
   df_protein <- data.frame(dplyr::ungroup(df_protein))
   df_protein <- df_protein[5:ncol(df_protein)]
   
-  cat(file = stderr(), "function create_imputed_df....3", "\n")
+  cat(file = stderr(), "function create_imputed_df....4", "\n")
   RSQLite::dbWriteTable(conn, "precursor_missing", df, overwrite = TRUE)
   RSQLite::dbWriteTable(conn, "protein_missing", df_protein, overwrite = TRUE)
   RSQLite::dbDisconnect(conn)
@@ -395,6 +404,33 @@ add_imputed_df <- function(df, params, db_path, stats_comp, comp_number, table_n
   cat(file = stderr(), "function add_imputed_df...end", "\n")
   return(list(df, df_missing))
 }
+
+
+#-------------------------------------------------------------------------------
+extract_missing_to_df <- function(df, sample_number)  {
+  cat(file = stderr(), "function extract_missing_to_df...", "\n")
+
+  split_data <- strsplit(as.character(df$Detected_Imputed), ".", fixed = TRUE)
+  df_expanded <- as.data.frame(
+    do.call(rbind, lapply(split_data, function(x) x)),
+    stringsAsFactors = FALSE
+  )
+  
+  #replace "-" with 0
+  df_expanded <- data.frame(lapply(df_expanded, function(x) gsub("-", 0, x)), stringsAsFactors = FALSE)
+  df_expanded <- data.frame(lapply(df_expanded, as.numeric), stringsAsFactors = FALSE)
+  
+  colnames(df_expanded) <- colnames(df[(ncol(df) - sample_number +1):ncol(df)] )
+  
+  cat(file = stderr(), "function extract_missing_to_df...end", "\n")
+  
+  return(df_expanded)
+}
+
+
+
+
+
 
 
 # data table filter ------------------------------------------------------
@@ -603,7 +639,7 @@ peptide_position_lookup <- function(df_peptide, params)  {
   cat(file = stderr(), "function peptide_position_lookup...", "\n")
   source('Shiny_File.R')
   
-  #save(df_peptide, file="zzpeptideposlookup") #    load(file="zzpeptideposlookup")
+  #save(df_peptide, file="z1")   #  load(file="z1")
 
   if (params$data_source == "PD" & params$raw_data_format =="precursor") {
     # create peptide lookup table

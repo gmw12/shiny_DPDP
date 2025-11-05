@@ -39,6 +39,80 @@ ui_render_load_data <- function(session, input, output, db_path) {
 }
 
 
+#-------------------------------------------------------------------------------------------
+ui_render_tic_data <- function(session, input, output, db_path) {
+  cat(file = stderr(), "Function ui_render_tic_data", "\n")
+  #showModal(modalDialog("Render data...", footer = NULL))
+  
+  try(updateSelectInput(session, 'chromatogram_type', selected = get_param('chromatogram_type', db_path)))
+  try(updateTextInput(session, 'chromatogram_mass', value = get_param('chromatogram_mass', db_path)))
+  try(updateNumericInput(session, 'chromatogram_tolerance', value = as.numeric(get_param('chromatogram_tolerance', db_path))))
+  
+  raw_data_names <- get_param('raw_data_names ', db_path)
+  data_names <- as.list(strsplit(raw_data_names, ",")[[1]])
+  try(updatePickerInput(session, "tic_picker", choices = data_names, selected = data_names[1]))
+  
+  #removeModal()
+  cat(file = stderr(), "Function ui_render_tic_data... end", "\n\n")
+}
+
+#-------------------------------------------------------------------------------------------
+render_tic_plots <- function(session, input, output, db_path) {
+  cat(file = stderr(), "Function render_tic_plots", "\n")
+  
+  params <- get_params(db_path)
+  
+  #check if params$raw_data_names is NULL
+   if (params$raw_data_loaded){
+     cat(file = stderr(), stringr::str_c("raw data loaded"), "\n")
+     
+     data_names <- params$raw_data_names
+     data_names <- as.list(strsplit(data_names, ",")[[1]])
+     
+     selected_names <- input$tic_picker
+     #get index of selected_names in data_names
+     selected_indices <- which(unlist(data_names) %in% selected_names)
+     
+     #find maximum intensity
+     max_intensity <- 0
+     for (i in selected_indices){
+       df <- read_table(stringr::str_c("raw_tic_", i), db_path)
+       if (max(df$intensities) > max_intensity){
+         max_intensity <- max(df$intensities)
+       }
+     }
+     
+     cat(file = stderr(), stringr::str_c("Max Intensity -> ", max_intensity), "\n")
+     chromatogram_type <- input$chromatogram_type
+     
+     lapply(seq_along(selected_indices), function(plot_number) {
+       i <- selected_indices[plot_number]
+       data_name <- unlist(data_names[i])
+       data_name <- stringr::str_replace_all(data_name, " ", "")
+       df <- read_table(stringr::str_c("raw_tic_", i), db_path)
+       plot_name <- stringr::str_c("tic_plot_", plot_number)
+       
+       cat(file = stderr(), stringr::str_c("Render ", plot_name, " -> ", data_name), "\n")
+       
+       output[[plot_name]] <- renderPlot({
+         ggplot2::ggplot(df, aes(x = times, y = intensities)) +
+           ggplot2::geom_line() +
+           ggplot2::labs(title = stringr::str_c(chromatogram_type, " - ", data_name), 
+                         x = "Retention Time (min)", 
+                         y = "Intensity") +
+           ggplot2::ylim(0, max_intensity*1.1) +
+           ggplot2::theme_minimal()
+       })
+       plot_number <- plot_number + 1
+     })
+       
+
+     }
+
+  cat(file = stderr(), "Function render_tic_plots...end", "\n\n")
+}
+
+
 #------------------------------------------------------------------------
 ui_render_parameters <- function(session, input, output, db_path) {
   cat(file = stderr(), "Function ui_render_parameters...", "\n")
@@ -458,6 +532,24 @@ update_widgets_stats <- function(session, input, output, db_path) {
   
   cat(file = stderr(), "Function - update_widget_stats...end", "\n\n") 
 }
+
+#-----------------------------------------------------------------------------------
+parameter_tic_save <- function(session, input, output, db_path){
+  cat(file = stderr(), "Function - parameter_widget_save...", "\n")
+  
+  params <- get_params(db_path)
+  
+  names <- c('chromatogram_type', 'chromatogram_mass', 'chromatogram_tolerance')
+  
+  for (name in names) {
+    params[[name]] <- input[[name]]
+  }
+  
+  write_params(params, db_path)
+  
+  cat(file = stderr(), "Function - parameter_tic_save...end", "\n\n")
+}
+
 
 #-----------------------------------------------------------------------------------
 parameter_widget_save <- function(session, input, output, db_path){

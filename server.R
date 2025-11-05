@@ -72,8 +72,12 @@ shinyServer(function(session, input, output) {
   observe_buttons(session, input, output)
   
   #observers
+  observe_tic_plots(session, input, output, db_path) 
   observe_plot_type1(session, input, output)   
   observe_plot_type2(session, input, output)  
+  
+  #tic plots
+
   
   #create message for customer version
   if (site_user != "dpmsr") {
@@ -115,8 +119,6 @@ shinyServer(function(session, input, output) {
     cat(file = stderr(), "sfb_design_file button clicked...end", "\n\n\n")
   })
   
-
-  
   #------------------------------------------------------------------------------------------------------  
   #Load data file
   observeEvent(input$sfb_data_file, {
@@ -143,6 +145,36 @@ shinyServer(function(session, input, output) {
     
     cat(file = stderr(), "sfb_data_file button clicked...end", "\n\n\n")
   }) 
+  
+  #------------------------------------------------------------------------------------------------------  
+  #Set raw data file
+  observeEvent(input$sfb_raw_data_file, {
+    
+    cat(file = stderr(), "sfb_raw_data_file button clicked...", "\n")
+    
+    if (is.list(input$sfb_raw_data_file)) {
+      
+      #read data files
+      set_raw_data_file(session, input, output, db_path)
+      
+      parameter_tic_save(session, input, output, db_path)
+    }
+    
+    cat(file = stderr(), "sfb_raw_data_file button clicked...end", "\n\n\n")
+  }) 
+
+    #------------------------------------------------------------------------------------------------------  
+  #Load raw data file
+  observeEvent(input$tic_process, {
+    
+    cat(file = stderr(), "tic_process clicked...", "\n")
+
+    parameter_tic_save(session, input, output, db_path)
+    load_raw_data_file(session, input, output, db_path)
+      
+    cat(file = stderr(), "tic_process clicked...end", "\n\n\n")
+  }) 
+  
 
   #------------------------------------------------------------------------------------------------------  
   #Load data file

@@ -186,6 +186,8 @@ set_file_choosers <- function(session, input, output, volumes) {
   
   shinyFileChoose(input, 'motif_fasta_file', session = session, roots = volumes, filetypes = c('', 'fasta'))
   
+  shinyFileChoose(input, 'sfb_raw_data_file', session = session, roots = volumes, filetypes = c('raw'))
+  
   cat(file = stderr(), "Function - set_file_choosers...end", "\n\n")
 }
 
@@ -197,6 +199,8 @@ set_file_choosers_data <- function(session, input, output, volumes) {
   cat(file = stderr(), stringr::str_c("Volumes ---> ", volumes), "\n")
   
   shinyFileChoose(input, 'sfb_data_file', session = session, roots = volumes, filetypes = c('', 'tsv', 'txt'))
+  
+  shinyFileChoose(input, 'sfb_raw_data_file', session = session, roots = volumes, filetypes = c('raw'))
   
   shinyFileChoose(input, 'motif_fasta_file', session = session, roots = volumes, filetypes = c('', 'fasta'))
   
@@ -232,7 +236,9 @@ app_startup <- function(session, input, output, db_path) {
     render_impute_graphs(session, input, output, db_path)
     #create_impute_table(session, input, output) 
     render_qc_graphs(session, input, output, db_path)
- 
+    
+    ui_render_tic_data(session, input, output, db_path)
+    #render_tic_plots(session, input, output, db_path)
       
     #update Widgets
     update_widgets(session, input, output, db_path)

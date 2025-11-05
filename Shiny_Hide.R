@@ -6,6 +6,17 @@ hide_enable <- function(session, input, output, db_path) {
   params <- get_params(db_path)
   
   observe({
+    if (input$chromatogram_type == "XIC") {
+      shinyjs::show("chromatogram_mass")
+      shinyjs::show("chromatogram_tolerance")
+    } else {
+      shinyjs::hide("chromatogram_mass")
+      shinyjs::hide("chromatogram_tolerance")
+    }
+  })
+  
+  
+  observe({
     if (params$raw_data_format == "protein") {
       updateCheckboxInput(session, "peptide_refilter", value = FALSE)
       updateCheckboxInput(session, "peptide_missing_filter", value = FALSE)

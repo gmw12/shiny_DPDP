@@ -198,6 +198,7 @@ convert_dpmsr_set <- function(file_name, params, database_dir){
 convert_dpmsr_set_bg <- function(file_name, params, database_dir){
   cat(file = stderr(), "function convert_dpmsr_set_bg....", "\n")
   source('Shiny_File.R')
+  source('Shiny_MVA_Functions.R')
   
   save(file_name, file = "z1")
   #.  load(file = "z1"); load(file = archive_zip);  load(file = "/Users/gregwaitt/Data/10482_062124.dpmsr_set"); 
@@ -212,6 +213,8 @@ convert_dpmsr_set_bg <- function(file_name, params, database_dir){
   params$primary_group <- dpmsr_set$x$primary_group
   params$data_output <- dpmsr_set$x$final_data_output
   params$norm_ptm <- dpmsr_set$x$peptide_ptm_norm
+  params$ptm_grep <- dpmsr_set$x$peptide_norm_grep
+  params$ptm <- FALSE
   
   cat(file = stderr(), "function convert_dpmsr_set_bg....1", "\n")
   design <- dpmsr_set$design[,1:7]
@@ -228,8 +231,6 @@ convert_dpmsr_set_bg <- function(file_name, params, database_dir){
   #adjust params
   if (params$raw_data_format == "precursor_ptm") {
     params$raw_data_format <- "precursor"
-    params$ptm <- TRUE
-    
   }
   
   #create working directory for 
@@ -271,17 +272,23 @@ convert_dpmsr_set_bg <- function(file_name, params, database_dir){
     }
   }
   
+  
   #dpmsr_set$data$final
   set_names <- c("impute", "sl", "sltmm")
-  if (params$data_output == "peptide") {
-    db_names <- c("peptide_impute_impute", "peptide_impute_sl", "peptide_impute_sltmm")
+  if (tolower(params$data_output) == "peptide") {
+    db_names <- c("peptide_impute_impute_final", "peptide_impute_sl_final", "peptide_impute_sltmm_final")
+    db_names2 <- c("peptide_impute_impute", "peptide_impute_sl", "peptide_impute_sltmm")
   }else {
-    db_names <- c("protein_impute_impute", "protein_impute_sl", "protein_impute_sltmm")
+    db_names <- c("protein_impute_impute_final", "protein_impute_sl_final", "protein_impute_sltmm_final")
+    db_names2 <- c("protein_impute_impute", "protein_impute_sl", "protein_impute_sltmm")
   }
   for (i in (1:length(set_names))){
     if (set_names[i] %in% names(dpmsr_set$data$final)) {
       cat(file = stderr(), stringr::str_c("transferring dpmsr_set$data$final$", set_names[i], " to ", db_names[i]), "\n")
-      write_table_try(db_names[i], df <- dpmsr_set$data$final[[set_names[i]]], params$db_path)
+      df <- dpmsr_set$data$final[[set_names[i]]]
+      df_noCV <- df[, !grepl("_CV$", colnames(df))]
+      write_table_try(db_names[i], df, params$db_path)
+      write_table_try(db_names2[i], df_noCV, params$db_path)
     }
   }
   
@@ -290,6 +297,24 @@ convert_dpmsr_set_bg <- function(file_name, params, database_dir){
   conn <- RSQLite::dbConnect(RSQLite::SQLite(), params$db_path) 
   RSQLite::dbWriteTable(conn, "design", design, overwrite = TRUE)
   RSQLite::dbWriteTable(conn, "params", params, overwrite = TRUE)
+  RSQLite::dbWriteTable(conn, "precursor_filter", dplyr::ungroup(dpmsr_set$data$data_precursor_start), overwrite = TRUE)
+  cat(file = stderr(), "function convert_dpmsr_set_bg....6", "\n")
+  if (!is.null(dpmsr_set$data$precursor_imputed_df)) {
+    precursor_missing <- extract_missing_to_df(dpmsr_set$data$impute$impute, dpmsr_set$y$sample_number)
+    RSQLite::dbWriteTable(conn, "precursor_missing", precursor_missing, overwrite = TRUE)
+  }
+  if (!is.null(dpmsr_set$data$peptide_imputed_df)) {  
+    peptide_missing <- dplyr::ungroup(dpmsr_set$data$peptide_imputed_df)
+    peptide_missing <- peptide_missing[(ncol(peptide_missing) - dpmsr_set$y$sample_number + 1):ncol(peptide_missing)]
+    peptide_missing[] <- lapply(peptide_missing, as.numeric)
+    RSQLite::dbWriteTable(conn, "peptide_missing", peptide_missing, overwrite = TRUE)
+  }
+  if (!is.null(dpmsr_set$data$protein_imputed_df)) {  
+    protein_missing <- dplyr::ungroup(dpmsr_set$data$protein_imputed_df)
+    protein_missing <- protein_missing[(ncol(protein_missing) - dpmsr_set$y$sample_number + 1):ncol(protein_missing)]
+    protein_missing[] <- lapply(protein_missing, as.numeric)
+    RSQLite::dbWriteTable(conn, "protein_missing", protein_missing, overwrite = TRUE)
+  }
   RSQLite::dbDisconnect(conn)
   
   cat(file = stderr(), "function convert_dpmsr_set_bg....end", "\n\n")

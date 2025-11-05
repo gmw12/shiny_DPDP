@@ -1,6 +1,119 @@
 cat(file = stderr(), "Shiny_Data.R", "\n")
 
 #---------------------------------------------------------------------
+set_raw_data_file <- function(session, input, output, db_path){
+  cat(file = stderr(), "Function load_raw_data_file", "\n")
+  
+  require(rawrr)
+  require(plotly)
+  require(ggplot2)
+  
+  params <- get_params(db_path)
+  
+  raw_data_sfb <- parseFilePaths(volumes, input$sfb_raw_data_file)
+  test_rdsfb <<- raw_data_sfb #  raw_data_sfb <- test_rdsfb
+  
+  raw_data_path <- str_extract(raw_data_sfb$datapath, "^/.*/")
+  
+  combined_paths <- paste(raw_data_sfb$datapath, collapse = ",")
+  combined_names <- paste(basename(raw_data_sfb$datapath), collapse = ",")
+  
+  params$raw_data_paths <- combined_paths
+  params$raw_data_fullnames <- combined_names
+  params$raw_data_loaded <- FALSE
+  
+  data_names <- stringr::str_extract(basename(raw_data_sfb$datapath), "^[^_]+_[^_]+")
+  combined_data_names <- paste(data_names, collapse = ",")
+  
+  params$raw_data_names <- combined_data_names
+  
+  write_table_try("params", params, db_path)
+  
+  updatePickerInput(session, "tic_picker", choices = data_names, selected = data_names[1])
+  
+  gc(verbose = getOption("verbose"), reset = FALSE, full = TRUE)
+  cat(file = stderr(), "Function load_raw_data_file...end", "\n\n")
+
+  
+}
+
+#---------------------------------------------------------------------
+load_raw_data_file <- function(session, input, output, db_path){
+  cat(file = stderr(), "Function load_raw_data_file", "\n")
+  showModal(modalDialog("Loading raw data...", footer = NULL))
+  
+  require(rawrr)
+  require(plotly)
+  require(ggplot2)
+  
+  params <- get_params(db_path)
+  
+  raw_data_sfb <- parseFilePaths(volumes, input$sfb_raw_data_file)
+  #test_rdsfb <<- raw_data_sfb #  raw_data_sfb <- test_rdsfb
+  
+  raw_data_path <- str_extract(raw_data_sfb$datapath, "^/.*/")
+  
+  combined_paths <- paste(raw_data_sfb$datapath, collapse = ",")
+  combined_names <- paste(basename(raw_data_sfb$datapath), collapse = ",")
+  
+  params$raw_data_paths <- combined_paths
+  params$raw_data_fullnames <- combined_names
+  
+  data_names <- stringr::str_extract(basename(raw_data_sfb$datapath), "^[^_]+_[^_]+")
+  combined_data_names <- paste(data_names, collapse = ",")
+  
+  params$raw_data_names <- combined_data_names
+  
+  chromatogram_type <- tolower(input$chromatogram_type)
+  chromatogram_mass <- as.numeric(strsplit(params$chromatogram_mass, ",")[[1]])
+  
+  cat(file = stderr(), "DEBUG: chromatogram_type =", chromatogram_type, "\n")
+  cat(file = stderr(), "DEBUG: params$chromatogram_mass =", params$chromatogram_mass, "\n")
+  cat(file = stderr(), "DEBUG: chromatogram_mass =", chromatogram_mass, "\n")
+  cat(file = stderr(), "DEBUG: is.null(chromatogram_mass) =", is.null(chromatogram_mass), "\n")
+  cat(file = stderr(), "DEBUG: length(chromatogram_mass) =", length(chromatogram_mass), "\n")
+  
+  
+  for (i in 1:length(raw_data_sfb$datapath)) {
+    cat(file = stderr(), stringr::str_c("File -> ", raw_data_sfb$datapath[i] ), "\n")
+    if (chromatogram_type == "bpc") {
+      cat(file = stderr(), stringr::str_c("  Reading BPC chromatogram"), "\n")
+      C <- rawrr::readChromatogram(rawfile = raw_data_sfb$datapath[i], type = "bpc")
+    } else if (chromatogram_type == "xic") {
+      cat(file = stderr(), stringr::str_c("  Reading XIC chromatogram"), "\n")
+      C <- rawrr::readChromatogram(rawfile = raw_data_sfb$datapath[i], type = "xic", mass = chromatogram_mass, 
+                                   tol = as.numeric(input$chromatogram_tolerance))
+      C <- C[[1]]
+    } else {
+      cat(file = stderr(), stringr::str_c("  Reading TIC chromatogram"), "\n")
+      C <- rawrr::readChromatogram(rawfile = raw_data_sfb$datapath[i], type = "tic")
+    }
+    
+    
+    #convert C to dataframe
+    df_C <- cbind(as.data.frame(C$times), as.data.frame(C$intensities))
+    colnames(df_C) <- c("times", "intensities")
+    
+    #need to set df_C to numeric
+    df_C$times <- as.numeric(df_C$times)
+    df_C$intensities <- as.numeric(df_C$intensities)
+
+    raw_db_name <- str_c("raw_tic_", i)
+    write_table_try(raw_db_name, df_C, db_path)
+
+  }
+  
+  params$raw_data_loaded <- TRUE
+  write_table_try("params", params, db_path)
+  
+  gc(verbose = getOption("verbose"), reset = FALSE, full = TRUE)
+  cat(file = stderr(), "Function load_raw_data_file...end", "\n\n")
+  removeModal()
+  
+}
+
+
+#---------------------------------------------------------------------
 load_data_file <- function(session, input, output, db_path){
   cat(file = stderr(), "Function load_data_file", "\n")
   showModal(modalDialog("Loading data...", footer = NULL))
