@@ -66,14 +66,7 @@ load_raw_data_file <- function(session, input, output, db_path){
   
   chromatogram_type <- tolower(input$chromatogram_type)
   chromatogram_mass <- as.numeric(strsplit(params$chromatogram_mass, ",")[[1]])
-  
-  cat(file = stderr(), "DEBUG: chromatogram_type =", chromatogram_type, "\n")
-  cat(file = stderr(), "DEBUG: params$chromatogram_mass =", params$chromatogram_mass, "\n")
-  cat(file = stderr(), "DEBUG: chromatogram_mass =", chromatogram_mass, "\n")
-  cat(file = stderr(), "DEBUG: is.null(chromatogram_mass) =", is.null(chromatogram_mass), "\n")
-  cat(file = stderr(), "DEBUG: length(chromatogram_mass) =", length(chromatogram_mass), "\n")
-  
-  
+
   for (i in 1:length(raw_data_sfb$datapath)) {
     cat(file = stderr(), stringr::str_c("File -> ", raw_data_sfb$datapath[i] ), "\n")
     if (chromatogram_type == "bpc") {
@@ -724,11 +717,11 @@ precursor_to_precursor_bg <- function(db_path){
   df <- RSQLite::dbReadTable(conn, "precursor_raw")
   
   
-  df_colnames <- c("Accession", "Description", "Name", "Genes", "Organisms", "Sequence", "PrecursorId", "PeptidePosition")  
+  df_colnames <- c("Accession", "Description", "Name", "Genes", "Organisms", "Sequence", "Unique", "PrecursorId", "PeptidePosition")  
   n_col <- length(df_colnames)
   
   df <- df |> dplyr::select(contains('ProteinAccessions'), contains('ProteinDescriptions'), contains('ProteinNames'), contains('Genes'), contains('Organisms'),
-                            contains('ModifiedSequence'), contains('PrecursorId'), contains('PeptidePosition'),
+                            contains('ModifiedSequence'), contains('ProteinGroupSpecific'), contains('PrecursorId'), contains('PeptidePosition'),
                             contains("TotalQuantity"))
   
   if (ncol(df) != (n_col + get_param('sample_number', db_path))){
@@ -748,6 +741,9 @@ precursor_to_precursor_bg <- function(db_path){
   
   df$Description <- stringr::str_c(df$Description, ", org=", df$Organisms) 
   df$Organisms <- NULL
+  
+  #set df$Unique to strings: True/False
+  df$Unique <- ifelse(df$Unique == TRUE, "True", "False")
   
   RSQLite::dbWriteTable(conn, "precursor_start", df, overwrite = TRUE)
   RSQLite::dbDisconnect(conn)
@@ -770,11 +766,11 @@ precursor_to_precursor_ptm_bg <- function(db_path){
   
   df_ptm_prob <- df |> dplyr::select(contains(stringr::str_c('PTMProbabilities..', params$ptm_grep))) 
   
-  df_colnames <- c("Accession", "Description", "Name", "Genes", "Organisms", "Sequence", "PrecursorId", "PeptidePosition", "ProteinPTMLocations")  
+  df_colnames <- c("Accession", "Description", "Name", "Genes", "Organisms", "Sequence", "Unique", "PrecursorId", "PeptidePosition", "ProteinPTMLocations")  
   n_col <- length(df_colnames)
   
   df <- df |> dplyr::select(contains('ProteinAccessions'), contains('ProteinDescriptions'), contains('ProteinNames'), contains('Genes'), contains('Organisms'),
-                            contains('ModifiedSequence'), contains('PrecursorId'), contains('PeptidePosition'),contains('ProteinPTMLocations'),
+                            contains('ModifiedSequence'), contains('ProteinGroupSpecific'), contains('PrecursorId'), contains('PeptidePosition'),contains('ProteinPTMLocations'),
                             contains("TotalQuantity"))
   
   if (ncol(df) != (n_col + get_param('sample_number', db_path))){
@@ -794,6 +790,9 @@ precursor_to_precursor_ptm_bg <- function(db_path){
   
   df$Description <- stringr::str_c(df$Description, ", org=", df$Organisms) 
   df$Organisms <- NULL
+  
+  #set df$Unique to strings: True/False
+  df$Unique <- ifelse(df$Unique == TRUE, "True", "False")
   
   ptm_which <- which(grepl(params$ptm_grep, df$Sequence))
   df_ptm <- df[ptm_which,]
