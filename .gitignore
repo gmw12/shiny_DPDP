@@ -6,7 +6,7 @@
 .db
 .Rproj
 =======
-shiny_DPDP.Rproj
+shiny_Qual.Rproj
 error*.txt
 erase*
 *heatmap.png
