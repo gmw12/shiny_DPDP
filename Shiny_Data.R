@@ -38,47 +38,53 @@ load_raw_data_file <- function(session, input, output, db_path){
   cat(file = stderr(), "Function load_raw_data_file", "\n")
   showModal(modalDialog("Loading raw data...", footer = NULL))
   
-  arg_list <- list(input$chromatogram_type, input$chromatogram_tolerance, db_path)
-  bg_load_raw_data_file <- callr::r_bg(func = load_raw_data_file_bg, args = arg_list , stderr = str_c(params$error_path, "//error_load_raw_data_file.txt"), supervise = TRUE)
-  bg_load_raw_data_file$wait()
-  print_stderr("error_load_raw_data_file.txt", db_path)
+  params <- get_params(db_path)
+  raw_data_path <- params$raw_data_paths
+  #convert raw_data_path to list
+  raw_data_path <- strsplit(raw_data_path, ",")[[1]]
+  chromatogram_type <- tolower(input$chromatogram_type)
+  chromatogram_mass <- as.numeric(strsplit(params$chromatogram_mass, ",")[[1]])
+  chromatogram_tolerance <- as.numeric(input$chromatogram_tolerance)
+  
+  for (i in 1:length(raw_data_path)) {
+    showModal(modalDialog(stringr::str_c("Loading raw data...", raw_data_path[i]), footer = NULL))
+    cat(file = stderr(), stringr::str_c("File -> ", raw_data_path[i] ), "\n")
+    arg_list <- list(raw_data_path[i], chromatogram_type, chromatogram_mass, chromatogram_tolerance, i, db_path)
+    bg_load_raw_data_file <- callr::r_bg(func = load_raw_data_file_bg, args = arg_list , stderr = str_c(params$error_path, "//error_load_raw_data_file.txt"), supervise = TRUE)
+    bg_load_raw_data_file$wait()
+    print_stderr("error_load_raw_data_file.txt", db_path)
+    removeModal()
+  }
+  
+  params$raw_data_loaded <- TRUE
+  write_table_try("params", params, db_path)
   
   gc(verbose = getOption("verbose"), reset = FALSE, full = TRUE)
   cat(file = stderr(), "Function load_raw_data_file...end", "\n\n")
-  removeModal()
+  
   
 }
 
 #----------------------------------------------------------------------------------------
-load_raw_data_file_bg <- function(input_chromatogram_type, input_chromatogram_tolerance, db_path){
+load_raw_data_file_bg <- function(raw_data_path, chromatogram_type, chromatogram_mass, chromatogram_tolerance, i, db_path){
   cat(file = stderr(), "Function load_raw_data_file_bg...", "\n")
   
   source('Shiny_File.R')
   require(rawrr)
   
-  params <- get_params(db_path)
-  raw_data_path <- params$raw_data_paths
-  #convert raw_data_path to list
-  raw_data_path <- strsplit(raw_data_path, ",")[[1]]
 
-  chromatogram_type <- tolower(input_chromatogram_type)
-  chromatogram_mass <- as.numeric(strsplit(params$chromatogram_mass, ",")[[1]])
-  
-  for (i in 1:length(raw_data_path)) {
-    cat(file = stderr(), stringr::str_c("File -> ", raw_data_path[i] ), "\n")
     if (chromatogram_type == "bpc") {
       cat(file = stderr(), stringr::str_c("  Reading BPC chromatogram"), "\n")
-      C <- rawrr::readChromatogram(rawfile = raw_data_path[i], type = "bpc")
+      C <- rawrr::readChromatogram(rawfile = raw_data_path, type = "bpc")
     } else if (chromatogram_type == "xic") {
       cat(file = stderr(), stringr::str_c("  Reading XIC chromatogram"), "\n")
-      C <- rawrr::readChromatogram(rawfile = raw_data_path[i], type = "xic", mass = chromatogram_mass, 
-                                   tol = as.numeric(input_chromatogram_tolerance))
+      C <- rawrr::readChromatogram(rawfile = raw_data_path, type = "xic", mass = chromatogram_mass, 
+                                   tol = chromatogram_tolerance)
       C <- C[[1]]
     } else {
       cat(file = stderr(), stringr::str_c("  Reading TIC chromatogram"), "\n")
-      C <- rawrr::readChromatogram(rawfile = raw_data_path[i], type = "tic")
+      C <- rawrr::readChromatogram(rawfile = raw_data_path, type = "tic")
     }
-    
     
     #convert C to dataframe
     df_C <- cbind(as.data.frame(C$times), as.data.frame(C$intensities))
@@ -91,12 +97,6 @@ load_raw_data_file_bg <- function(input_chromatogram_type, input_chromatogram_to
     raw_db_name <- stringr::str_c("raw_tic_", i)
     write_table_try(raw_db_name, df_C, db_path)
     
-  }
-  
-  params$raw_data_loaded <- TRUE
-  write_table_try("params", params, db_path)
-  
-  gc(verbose = getOption("verbose"), reset = FALSE, full = TRUE)
   cat(file = stderr(), "function load_raw_data_file_bg...end", "\n\n")
 }
 
