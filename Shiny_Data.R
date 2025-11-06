@@ -59,6 +59,9 @@ load_raw_data_file <- function(session, input, output, db_path){
   params$raw_data_loaded <- TRUE
   write_table_try("params", params, db_path)
   
+  raw_data_names <- strsplit(params$raw_data_names, ",")[[1]]
+  updatePickerInput("tic_picker", session = session, selected = raw_data_names)
+  
   gc(verbose = getOption("verbose"), reset = FALSE, full = TRUE)
   cat(file = stderr(), "Function load_raw_data_file...end", "\n\n")
   

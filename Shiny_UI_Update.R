@@ -83,7 +83,7 @@ render_tic_plots <- function(session, input, output, db_path) {
      }
      
      cat(file = stderr(), stringr::str_c("Max Intensity -> ", max_intensity), "\n")
-     chromatogram_type <- input$chromatogram_type
+     chromatogram_type <- params$chromatogram_type
      
      lapply(seq_along(selected_indices), function(plot_number) {
        i <- selected_indices[plot_number]
