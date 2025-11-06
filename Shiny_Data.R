@@ -3,11 +3,7 @@ cat(file = stderr(), "Shiny_Data.R", "\n")
 #---------------------------------------------------------------------
 set_raw_data_file <- function(session, input, output, db_path){
   cat(file = stderr(), "Function load_raw_data_file", "\n")
-  
-  require(rawrr)
-  require(plotly)
-  require(ggplot2)
-  
+
   params <- get_params(db_path)
   
   raw_data_sfb <- parseFilePaths(volumes, input$sfb_raw_data_file)
@@ -42,44 +38,45 @@ load_raw_data_file <- function(session, input, output, db_path){
   cat(file = stderr(), "Function load_raw_data_file", "\n")
   showModal(modalDialog("Loading raw data...", footer = NULL))
   
+  arg_list <- list(input$chromatogram_type, input$chromatogram_tolerance, db_path)
+  bg_load_raw_data_file <- callr::r_bg(func = load_raw_data_file_bg, args = arg_list , stderr = str_c(params$error_path, "//error_load_raw_data_file.txt"), supervise = TRUE)
+  bg_load_raw_data_file$wait()
+  print_stderr("error_load_raw_data_file.txt", db_path)
+  
+  gc(verbose = getOption("verbose"), reset = FALSE, full = TRUE)
+  cat(file = stderr(), "Function load_raw_data_file...end", "\n\n")
+  removeModal()
+  
+}
+
+#----------------------------------------------------------------------------------------
+load_raw_data_file_bg <- function(input_chromatogram_type, input_chromatogram_tolerance, db_path){
+  cat(file = stderr(), "Function load_raw_data_file_bg...", "\n")
+  
+  source('Shiny_File.R')
   require(rawrr)
-  require(plotly)
-  require(ggplot2)
   
   params <- get_params(db_path)
-  
-  raw_data_sfb <- parseFilePaths(volumes, input$sfb_raw_data_file)
-  #test_rdsfb <<- raw_data_sfb #  raw_data_sfb <- test_rdsfb
-  
-  raw_data_path <- str_extract(raw_data_sfb$datapath, "^/.*/")
-  
-  combined_paths <- paste(raw_data_sfb$datapath, collapse = ",")
-  combined_names <- paste(basename(raw_data_sfb$datapath), collapse = ",")
-  
-  params$raw_data_paths <- combined_paths
-  params$raw_data_fullnames <- combined_names
-  
-  data_names <- stringr::str_extract(basename(raw_data_sfb$datapath), "^[^_]+_[^_]+")
-  combined_data_names <- paste(data_names, collapse = ",")
-  
-  params$raw_data_names <- combined_data_names
-  
-  chromatogram_type <- tolower(input$chromatogram_type)
-  chromatogram_mass <- as.numeric(strsplit(params$chromatogram_mass, ",")[[1]])
+  raw_data_path <- params$raw_data_paths
+  #convert raw_data_path to list
+  raw_data_path <- strsplit(raw_data_path, ",")[[1]]
 
-  for (i in 1:length(raw_data_sfb$datapath)) {
-    cat(file = stderr(), stringr::str_c("File -> ", raw_data_sfb$datapath[i] ), "\n")
+  chromatogram_type <- tolower(input_chromatogram_type)
+  chromatogram_mass <- as.numeric(strsplit(params$chromatogram_mass, ",")[[1]])
+  
+  for (i in 1:length(raw_data_path)) {
+    cat(file = stderr(), stringr::str_c("File -> ", raw_data_path[i] ), "\n")
     if (chromatogram_type == "bpc") {
       cat(file = stderr(), stringr::str_c("  Reading BPC chromatogram"), "\n")
-      C <- rawrr::readChromatogram(rawfile = raw_data_sfb$datapath[i], type = "bpc")
+      C <- rawrr::readChromatogram(rawfile = raw_data_path[i], type = "bpc")
     } else if (chromatogram_type == "xic") {
       cat(file = stderr(), stringr::str_c("  Reading XIC chromatogram"), "\n")
-      C <- rawrr::readChromatogram(rawfile = raw_data_sfb$datapath[i], type = "xic", mass = chromatogram_mass, 
-                                   tol = as.numeric(input$chromatogram_tolerance))
+      C <- rawrr::readChromatogram(rawfile = raw_data_path[i], type = "xic", mass = chromatogram_mass, 
+                                   tol = as.numeric(input_chromatogram_tolerance))
       C <- C[[1]]
     } else {
       cat(file = stderr(), stringr::str_c("  Reading TIC chromatogram"), "\n")
-      C <- rawrr::readChromatogram(rawfile = raw_data_sfb$datapath[i], type = "tic")
+      C <- rawrr::readChromatogram(rawfile = raw_data_path[i], type = "tic")
     }
     
     
@@ -90,19 +87,17 @@ load_raw_data_file <- function(session, input, output, db_path){
     #need to set df_C to numeric
     df_C$times <- as.numeric(df_C$times)
     df_C$intensities <- as.numeric(df_C$intensities)
-
-    raw_db_name <- str_c("raw_tic_", i)
+    
+    raw_db_name <- stringr::str_c("raw_tic_", i)
     write_table_try(raw_db_name, df_C, db_path)
-
+    
   }
   
   params$raw_data_loaded <- TRUE
   write_table_try("params", params, db_path)
   
   gc(verbose = getOption("verbose"), reset = FALSE, full = TRUE)
-  cat(file = stderr(), "Function load_raw_data_file...end", "\n\n")
-  removeModal()
-  
+  cat(file = stderr(), "function load_raw_data_file_bg...end", "\n\n")
 }
 
 

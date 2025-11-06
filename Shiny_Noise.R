@@ -77,9 +77,9 @@ noise_inflection_bg <- function(table_name, db_path){
     ggplot2::geom_vline(xintercept = df_row) +
     ggplot2::annotate("text", x=(df_row-200), y=10, label="Dynamic", angle=90)+
     ggplot2::geom_hline(yintercept = custom_noise) +
-    ggplot2::annotate("text", x=10, y=(custom_noise+1), label="Custom", angle=0)+
+    ggplot2::annotate("text", x=10, y=(custom_noise+1), label=stringr::str_c(" Custom ", custom_noise), angle=0)+
     ggplot2::labs(title = stringr::str_c("Dataset Values - Inflection = ", params$noise_inflection), x =
-                    'Count', y = custom_noise, "Intensity") +
+                    'Count', y = "Intensity") +
     ggplot2::theme(plot.title = ggplot2::element_text(hjust = 0.5))
   ggplot2::ggsave(stringr::str_c(params$qc_path, "Inflection_Point.png"), width = 8, height = 6)
   
