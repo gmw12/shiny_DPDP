@@ -764,11 +764,11 @@ precursor_to_precursor_ptm_bg <- function(db_path){
   
   df_ptm_prob <- df |> dplyr::select(contains(stringr::str_c('PTMProbabilities..', params$ptm_grep))) 
   
-  df_colnames <- c("Accession", "Description", "Name", "Genes", "Organisms", "Sequence", "Unique", "PrecursorId", "PeptidePosition", "ProteinPTMLocations")  
+  df_colnames <- c("Accession", "Description", "Name", "Genes", "Organisms", "Sequence", "PrecursorId", "PeptidePosition", "ProteinPTMLocations")  
   n_col <- length(df_colnames)
   
   df <- df |> dplyr::select(contains('ProteinAccessions'), contains('ProteinDescriptions'), contains('ProteinNames'), contains('Genes'), contains('Organisms'),
-                            contains('ModifiedSequence'), contains('ProteinGroupSpecific'), contains('PrecursorId'), contains('PeptidePosition'),contains('ProteinPTMLocations'),
+                            contains('ModifiedSequence'), contains('PrecursorId'), contains('PeptidePosition'),contains('ProteinPTMLocations'),
                             contains("TotalQuantity"))
   
   if (ncol(df) != (n_col + get_param('sample_number', db_path))){
@@ -788,9 +788,6 @@ precursor_to_precursor_ptm_bg <- function(db_path){
   
   df$Description <- stringr::str_c(df$Description, ", org=", df$Organisms) 
   df$Organisms <- NULL
-  
-  #set df$Unique to strings: True/False
-  df$Unique <- ifelse(df$Unique == TRUE, "True", "False")
   
   ptm_which <- which(grepl(params$ptm_grep, df$Sequence))
   df_ptm <- df[ptm_which,]
