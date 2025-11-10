@@ -44,13 +44,23 @@ ui_render_tic_data <- function(session, input, output, db_path) {
   cat(file = stderr(), "Function ui_render_tic_data", "\n")
   #showModal(modalDialog("Render data...", footer = NULL))
   
-  try(updateSelectInput(session, 'chromatogram_type', selected = get_param('chromatogram_type', db_path)))
-  try(updateTextInput(session, 'chromatogram_mass', value = get_param('chromatogram_mass', db_path)))
-  try(updateNumericInput(session, 'chromatogram_tolerance', value = as.numeric(get_param('chromatogram_tolerance', db_path))))
+  params <- get_params(db_path)
+
+  #check if 'raw_data_names" is in params
+  if ('raw_data_names' %in% names(params)) {
+    
+    updateSelectInput(session, 'chromatogram_type', selected = get_param('chromatogram_type', db_path))
+    updateTextInput(session, 'chromatogram_mass', value = get_param('chromatogram_mass', db_path))
+    updateNumericInput(session, 'chromatogram_tolerance', value = as.numeric(get_param('chromatogram_tolerance', db_path)))
+    
+    raw_data_names <- params$raw_data_names
+    data_names <- as.list(strsplit(raw_data_names, ",")[[1]])
+    updatePickerInput(session, "tic_picker", choices = data_names, selected = data_names[1])
+    
+  }
   
-  raw_data_names <- get_param('raw_data_names ', db_path)
-  data_names <- as.list(strsplit(raw_data_names, ",")[[1]])
-  try(updatePickerInput(session, "tic_picker", choices = data_names, selected = data_names[1]))
+
+
   
   #removeModal()
   cat(file = stderr(), "Function ui_render_tic_data... end", "\n\n")
