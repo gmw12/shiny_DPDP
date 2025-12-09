@@ -67,6 +67,8 @@ params <- read_table('params', db_path)
 t1 <- read_table('raw_tic_1', db_path)
 t2 <- read_table('raw_tic_2', db_path)
 
+df_test1 <- read_table('sample_groups', db_path)
+df_test1 <- read_table('protein_sltmm_cv', db_path)
 df_test1 <- read_table('protein_impute_impute', db_path)
 df_test2 <- read_table('peptide_impute_impute', db_path)
 df_test3 <- read_table('peptide_impute_impute_final', db_path)

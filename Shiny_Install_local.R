@@ -8,7 +8,7 @@ package_list <- c('devtools', 'tidyr', 'httr', 'png', 'tidyverse', 'dplyr', 'fs'
                   'shinyjs', 'shinyalert', 'DT', 'ggraph', 'imp4p', 'Peptides',
                   'flexdashboard', 'openxlsx', 'stringi', 'jsonlite', 'remotes', 
                   'BiocManager', 'rAmCharts', 'future', 'promises', 'miscTools', 'reticulate', 'iq',
-                  'inflection', 'foreach', "doParallel", "shinybrowser", 'ggtangle')
+                  'inflection', 'foreach', "doParallel", "shinybrowser", 'ggtangle', 'officer')
 
 
 biocmanager_list = c('clusterProfiler', 'impute', 'ViSEAGO', 'topGO', 'enrichplot', 'GSEABase', 'rWikiPathways', 

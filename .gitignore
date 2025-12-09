@@ -9,6 +9,7 @@
 shiny_DPDP.Rproj
 error*.txt
 erase*
+proteomics-sheets-access*.*
 *heatmap.png
 database/
 .DS_Store

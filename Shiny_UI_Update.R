@@ -73,7 +73,7 @@ render_tic_plots <- function(session, input, output, db_path) {
   params <- get_params(db_path)
   
   #check if params$raw_data_names is NULL
-   if (params$raw_data_loaded){
+   if (params$raw_data_loaded & table_exists("raw_tic_1", db_path)){
      cat(file = stderr(), stringr::str_c("raw data loaded"), "\n")
      
      data_names <- params$raw_data_names
