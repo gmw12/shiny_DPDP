@@ -330,15 +330,30 @@ stats_Final_Excel_bg <- function(file_dir, filename, filename_params, params) {
   design <- RSQLite::dbReadTable(conn, "design")
   
   cat(file = stderr(), "Creating Excel Output File...2", "\n")
+  
+  # # Excel worksheets for Precursor/Protein
+  # if (params$raw_data_format == "precursor" && params$data_output == "Protein") {
+  #   excel_list <- list('precursor_start', 'raw_peptide', stringr::str_c("precursor_impute_", trimws(params$stat_norm)), 
+  #                      stringr::str_c("protein_", trimws(params$stat_norm), "_final"))
+  #   excel_list_name <- list('Table2 Raw Precursor Data', 'Table3 Raw Peptide Data', 'Table4 Imputed Precursor Data', 'Table5 Normalized Data')
+  # }else if (params$raw_data_format == "precursor" && params$data_output == "Peptide" ) {
+  #   excel_list <- list('precursor_start', 'raw_peptide', stringr::str_c("precursor_impute_", trimws(params$stat_norm)), 
+  #                      stringr::str_c("peptide_impute_", trimws(params$stat_norm), "_final"))
+  #   excel_list_name <- list('Table2 Raw Precursor Data', 'Table3 Raw Peptide Data', 'Table4 Imputed Precursor Data', 'Table5 Normalized Data')
+  # }else if (params$raw_data_format == "protein" && params$data_source == "SP" ) {
+  #   excel_list <- list('protein_raw', 'protein_impute')
+  #   excel_list_name <- list('SP Protein Data', "Protein Data")
+  # }
+  
   # Excel worksheets for Precursor/Protein
   if (params$raw_data_format == "precursor" && params$data_output == "Protein") {
-    excel_list <- list('precursor_start', 'raw_peptide', stringr::str_c("precursor_impute_", trimws(params$stat_norm)), 
+    excel_list <- list('precursor_start', 'raw_peptide', 
                        stringr::str_c("protein_", trimws(params$stat_norm), "_final"))
-    excel_list_name <- list('Table2 Raw Precursor Data', 'Table3 Raw Peptide Data', 'Table4 Imputed Precursor Data', 'Table5 Normalized Data')
+    excel_list_name <- list('Table2 Raw Precursor Data', 'Table3 Raw Peptide Data', 'Table4 Normalized Data')
   }else if (params$raw_data_format == "precursor" && params$data_output == "Peptide" ) {
-    excel_list <- list('precursor_start', 'raw_peptide', stringr::str_c("precursor_impute_", trimws(params$stat_norm)), 
+    excel_list <- list('precursor_start', 'raw_peptide', 
                        stringr::str_c("peptide_impute_", trimws(params$stat_norm), "_final"))
-    excel_list_name <- list('Table2 Raw Precursor Data', 'Table3 Raw Peptide Data', 'Table4 Imputed Precursor Data', 'Table5 Normalized Data')
+    excel_list_name <- list('Table2 Raw Precursor Data', 'Table3 Raw Peptide Data', 'Table4 Normalized Data')
   }else if (params$raw_data_format == "protein" && params$data_source == "SP" ) {
     excel_list <- list('protein_raw', 'protein_impute')
     excel_list_name <- list('SP Protein Data', "Protein Data")
