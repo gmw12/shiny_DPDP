@@ -23,6 +23,7 @@ sidebar <- dashboardSidebar(width = 165,
                               menuItemOutput("menu_stats"),
                               menuItemOutput("menu_pathway"),
                               menuItemOutput("menu_phos"),
+                              menuItemOutput("menu_report"),
                               menuItemOutput("menu_admin")
                             )
 )
@@ -1637,7 +1638,77 @@ tabItem("phos_momo",
       )
     ), 
 
-
+tabItem(tabName = "report",
+        fluidRow(
+          column(width = 3,
+                 box(title = "Report Generation", status = "primary", solidHeader = TRUE, collapsible = FALSE, align = "center", width = 12, height = 750,
+                 br(),
+                 br(),
+                 h5(tags$b("1. Load meta data")),
+                 actionButton("update_report_options", label = "Load Meta Data", width = 150,
+                              style="color: #fff; background-color: #337ab7; border-color: #2e6da4"),
+                 br(),
+                 br(),
+                 h5(tags$b("2.Select Report Template")),
+                 selectInput("report_template", label = "Report Template", choices = c()),
+                 br(),
+                 br(),
+                 h5(tags$b("3.  Make report selections")),
+                 br(),
+                 h5(tags$b("4.  Name report")),
+                 
+                 textInput("report_filename", tags$span("Report File Name", style = "color: blue;"), value = "mydata.docx", width = 250),
+                 br(),
+                 h5(tags$b("5.  DukeBox Folder")),
+                 
+                 textInput("dukebox_folder", tags$span("DukeBox Folder Link", style = "color: blue;"), value = "DukeBox", width = 250),
+                 br(),
+                 br(),
+                 h5(tags$b("6.  Create report")),
+                 div(style = "text-align: center;",
+                  actionButton("create_report", label = "Create Report", width = 150,
+                              style="color: #fff; background-color: #337ab7; border-color: #2e6da4")
+                 )
+                 
+          )),
+          column(width = 3, align = "center",
+              box(title = "Report Selections", status = "primary", solidHeader = TRUE, collapsible = FALSE, align = "center", width = 12, height = 750,
+                 br(),
+                 selectInput("report_type", label = "Report Type", choices = c()),
+                 br(),
+                 pickerInput(inputId = "report_sample_prep", label = "Sample Prep",  choices = "None", 
+                             options = list(`actions-box` = TRUE,size = 10,
+                                            `selected-text-format` = "count > 7"),  multiple = TRUE),
+                 
+                 pickerInput(inputId = "report_data_collection", label = "Data Collection",  choices = "None", 
+                             options = list(`actions-box` = TRUE,size = 10,
+                                            `selected-text-format` = "count > 7"),  multiple = TRUE),
+                 
+                 pickerInput(inputId = "report_data_analysis", label = "Data_Analysis",  choices = "None", 
+                             options = list(`actions-box` = TRUE,size = 10,
+                                            `selected-text-format` = "count > 7"),  multiple = TRUE),
+                 
+                 pickerInput(inputId = "report_writing", label = "Report Writing",  choices = "None", 
+                             options = list(`actions-box` = TRUE,size = 10,
+                                            `selected-text-format` = "count > 7"),  multiple = TRUE),
+                 
+                 pickerInput(inputId = "report_study_design", label = "Study Design",  choices = "None", 
+                             options = list(`actions-box` = TRUE,size = 10,
+                                            `selected-text-format` = "count > 7"),  multiple = TRUE),
+                 br(),
+                 pickerInput(inputId = "report_databases", label = "Searched Databases",  choices = "None", 
+                             options = list(`actions-box` = TRUE,size = 10,
+                                            `selected-text-format` = "count > 7"),  multiple = TRUE)
+          )),
+          
+          column(width = 6, align = "center",
+                 box(title = "Report Output", status = "primary", solidHeader = TRUE, collapsible = FALSE, align = "center", width = 12, height = 750,
+                     br(),
+                     
+          ))
+          
+        )
+),
 
 
 

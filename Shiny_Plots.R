@@ -215,13 +215,17 @@ create_volcano_bg <- function(stats_plot_comp, input_stats_norm_type, input_chec
   cat(file = stderr(), "Function create_volcano_bg...", "\n")
   source('Shiny_File.R')
   
+  # args <- as.list(environment())
+  # saveRDS(args, "create_volcano_bg_args.rds")
+  #  args <- readRDS("create_volcano_bg_args.rds");   list2env(args, envir = .GlobalEnv)
+  #  rm(list = names(args), envir = .GlobalEnv)
+  
   #confirm data exists in database
   if(params$data_output == "Protein") {
     data_name <- stringr::str_c("protein_", input_stats_norm_type, "_", stats_plot_comp, "_final")
   }else {
     data_name <- stringr::str_c("peptide_impute_", input_stats_norm_type, "_", stats_plot_comp, "_final")
   }
-  
   
   
   if (data_name %in% list_tables(db_path)) {
@@ -240,9 +244,11 @@ create_volcano_bg <- function(stats_plot_comp, input_stats_norm_type, input_chec
   df_fc <- df |> dplyr::select(contains(stringr::str_c(stats_plot_comp, "_fc")))
   
   if (!input_checkbox_filter_adjpval) {
-    df_pval <- df[[stringr::str_c(stats_plot_comp, "_pval")]]
+    pval_string <- stringr::str_c(stats_plot_comp, "_pval")
+    df_pval <- df[[ grep(pval_string, names(df), value = TRUE)[1] ]]
   }else{
-    df_pval <- df[[stringr::str_c(stats_plot_comp, "_adjpval")]]
+    pval_string <- stringr::str_c(stats_plot_comp, "_adjpval")
+    df_pval <- df[[ grep(pval_string, names(df), value = TRUE)[1] ]]
   }
   
   df <- cbind(df$Stats, df$Accession, df$Description, df_fc, df_pval)

@@ -61,8 +61,9 @@ list_tables(db_path)
 db_path = stringr::str_c(getwd(), "/database/project_021125.db")
 source('Shiny_File.R')
 
-test <- read_table('params', db_path)
+
 params <- read_table('params', db_path)
+test <- read_table('params', db_path)
 
 t1 <- read_table('raw_tic_1', db_path)
 t2 <- read_table('raw_tic_2', db_path)

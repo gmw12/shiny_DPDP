@@ -899,7 +899,27 @@ shinyServer(function(session, input, output) {
     cat(file = stderr(), "momo_create clicked...end" , "\n\n\n")
   })
   
-  
+ 
+  #-------------------------------------------------------------------------------------------------------------  
+  observeEvent(input$update_report_options, { 
+    cat(file = stderr(), "update_report_options clicked..." , "\n")
+    source("Shiny_Report.R")
+    source("Shiny_Report_Functions.R")
+    
+    report_options(session, input, output, db_path)
+    
+    cat(file = stderr(), "update_report_options clicked...end" , "\n\n\n")
+  })
+   
+  #-------------------------------------------------------------------------------------------------------------  
+  observeEvent(input$create_report, { 
+    cat(file = stderr(), "create_report clicked..." , "\n")
+    source("Shiny_Report.R")
+    
+    create_report(session, input, output, db_path)
+    
+    cat(file = stderr(), "create_report clicked... end" , "\n\n\n")
+  })
   
   #-------------------------------------------------------------------------------------------------------------  
   observeEvent(input$archive_data, { 

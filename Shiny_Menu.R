@@ -52,11 +52,6 @@ load_menu <- function(session, input, output) {
     
     
   }
-  
-
-  
-  
-
 
   cat(file = stderr(), "Function load_menu...end", "\n\n")
 }
@@ -141,6 +136,10 @@ load_menu_precursor_to_protein <- function(session, input, output) {
     )
   })
   
+  output$menu_report <- renderMenu({ 
+    menuItem("Report", tabName = "report")
+  })
+  
   output$menu_admin <- renderMenu({ 
     menuItem("Admin", tabName = "admin")
   })
@@ -207,6 +206,10 @@ load_menu_protein <- function(session, input, output) {
     )
   })
 
+  output$menu_report <- renderMenu({ 
+    menuItem("Report", tabName = "report")
+  })
+  
   output$menu_admin <- renderMenu({ 
     menuItem("Admin", tabName = "admin")
   })
@@ -281,6 +284,10 @@ load_menu_all <- function(session, input, output) {
     )
   })
   
+  output$menu_report <- renderMenu({ 
+    menuItem("Report", tabName = "report")
+  })
+  
   output$menu_admin <- renderMenu({ 
     menuItem("Admin", tabName = "admin")
   })
@@ -334,6 +341,10 @@ load_menu_peptide <- function(session, input, output) {
              menuItem("Peptide Plots", tabName = "stats_peptide_plots"))
   })
 
+  output$menu_report <- renderMenu({ 
+    menuItem("Report", tabName = "report")
+  })
+  
   output$menu_admin <- renderMenu({ 
     menuItem("Admin", tabName = "admin")
   })
@@ -395,13 +406,17 @@ load_menu_peptide_phos <- function(session, input, output) {
              menuItem("MEME_Momo", tabName = "phos_momo"))
   })
   
+  output$menu_report <- renderMenu({ 
+    menuItem("Report", tabName = "report")
+  })
+  
   output$menu_admin <- renderMenu({ 
     menuItem("Admin", tabName = "admin")
   })
   
 }
 #----------------------------------------------------------------------------------------- 
-load_menu_protein_inpute <- function(session, input, output) {
+load_menu_protein_impute <- function(session, input, output) {
   
   output$menu_load <- renderMenu({ 
     menuItem("Load", tabName = "load")
@@ -434,6 +449,10 @@ load_menu_protein_inpute <- function(session, input, output) {
              menuItem("StringDB", tabName = "pathway_string"),
              menuItem("StringDB Enrich", tabName = "pathway_string_enrich")
     )
+  })
+  
+  output$menu_report <- renderMenu({ 
+    menuItem("Report", tabName = "report")
   })
   
   output$menu_admin <- renderMenu({ 
