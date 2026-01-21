@@ -2,3 +2,5 @@
 2.  From docker dir in home directory, run the shell script to clone the app code from github
 3.  docker build -t gregwaitt/app-shinyproxy:1.0 -f /home/dpmsr/Docker/Shiny_DPDP/shinyproxy-app2/Dockerfile .
 4.  docker push gregwaitt/app-shinyproxy:1.0
+5.  on OKD, Administrator/Workloads/ConfigMaps update yml file to current docker app image.
+6.  Workloads/Deployments, click Actions -> Restart rollout
