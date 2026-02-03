@@ -34,12 +34,15 @@ shinyServer(function(session, input, output) {
     cat(file = stderr(), "db_path exists...", "\n\n")
     
     #update UI
-    ui_render_load_design(session, input, output, db_path)
-    
-    if (get_param("data_path", db_path) != "")  {
-      create_design_table(session, input, output, db_path)
-      create_stats_design_table(session, input, output, db_path)
+    if (table_exists("params", db_path)){
+      ui_render_load_design(session, input, output, db_path)
+      
+      if (get_param("data_path", db_path) != "")  {
+        create_design_table(session, input, output, db_path)
+        create_stats_design_table(session, input, output, db_path)
+      }
     }
+    
     
     if (table_exists("summary_cv", db_path))  {create_cv_table(session, input, output, db_path)}
     

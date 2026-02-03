@@ -259,6 +259,7 @@ table_exists <- function(table_name, db_path){
   cat(file = stderr(), stringr::str_c("Function - table exists...end, ", table_name, "  ", table_name %in% tables_list), "\n")
   return(table_name %in% tables_list)
 }
+
 #-----------------------------------------------------------------------------------------
 filter_db <- function(table_name, column_name, key_word, params) {
   require('RSQLite')

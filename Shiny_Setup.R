@@ -94,6 +94,7 @@ load_archive_file <- function(session, input, output){
     archive_name <- basename(archive_sfb$datapath)
   }else{
     cat(file = stderr(), "loading archive_file for customer...", "\n")
+    archive_sfb <- parseFilePaths(volumes, input$sfb_archive_customer_file)
     archive_zip <-input$sfb_archive_customer_file$datapath
     archive_name <- basename(archive_sfb$datapath)
     cat(file = stderr(), stringr::str_c("archive_zip --->", archive_zip), "\n")
