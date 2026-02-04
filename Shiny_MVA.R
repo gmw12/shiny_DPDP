@@ -160,7 +160,7 @@ stat_calc_bg <- function(db_path, comp_number, stats_comp){
   source("Shiny_Misc_Functions.R")
   source('Shiny_File.R')
 
-  save(comp_number, file="z10"); save(stats_comp, file="z11");
+  #save(comp_number, file="z10"); save(stats_comp, file="z11");
   #. load(file="z10"); load(file="z11"); comp_number = 1
   # stats_comp <- read_table_try("stats_comp", db_path); 
 
