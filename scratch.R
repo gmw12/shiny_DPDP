@@ -90,7 +90,9 @@ test2 <- colSums(df_protein[,8:ncol(df_protein)])
 
 test2
 
-
+df_raw_pre <- read_table('precursor_raw', db_path)
+df_raw_pep <- read_table('raw_peptide', db_path)
+df_pre_start <- read_table('precursor_start', db_path)
 
 df_motif <- read_table_try('MotifX_table', db_path)
 

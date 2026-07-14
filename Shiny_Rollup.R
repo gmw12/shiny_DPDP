@@ -120,9 +120,13 @@ collapse_precursor_raw <- function(precursor_data, info_columns = 0, stats = FAL
   
   columns = names(precursor_data)[1:info_columns]
   
+  #peptide_data <- precursor_data |>
+  #  dplyr::group_by_at(dplyr::vars(all_of(columns))) |>
+  #  dplyr::summarise_all(list(sum))
+  
   peptide_data <- precursor_data |>
-    dplyr::group_by_at(dplyr::vars(all_of(columns))) |>
-    dplyr::summarise_all(list(sum))
+    dplyr::group_by(across(all_of(columns))) |>
+    dplyr::summarise(across(everything(), ~ sum(., na.rm = TRUE)))
   
   peptide_data <- data.frame(dplyr::ungroup(peptide_data))
   
