@@ -920,6 +920,167 @@ localize_summary <- function(df_ptm, df_ptm_prob){
   
   #consolidates probabilities for each sample and takes the highest prob for each residue
   parallel_result2 <- foreach(r = 1:nrow(df_ptm_prob), .combine = c) %dopar% {
+    temp1 <- NULL
+    for (c in 1:ncol(df_ptm_prob)) {
+      temp2 <- unlist(stringr::str_split(df_ptm_prob[[r, c]], ";")) |> as.numeric()
+      if (is.null(temp1)) {
+        temp1 <- temp2
+      } else {
+        temp1 <- pmax(temp1, temp2, na.rm = TRUE)
+      }
+    }
+    temp1[is.infinite(temp1)] <- NA
+    list(temp1)
+  }
+  
+  df_local$pr <- parallel_result2
+  
+  #mark as localized or not
+  parallel_result3 <- foreach(r = 1:nrow(df_local), .combine = rbind) %dopar% {
+    prob <- unlist(df_local$pr[r])
+    residue <- unlist(df_local$phos_res[r])
+    
+    local <- prob[residue]
+    local[!is.finite(local)] <- 0
+    
+    if (max(local) >= 0.75) {
+      local2 <- if (min(local) >= 0.75) "Y" else "P"
+    } else {
+      local2 <- "N"
+    }
+    
+    list(local, local2)
+  }
+  
+  parallel_result3 <- data.frame(parallel_result3)
+  colnames(parallel_result3) <- c("Local", "Local2")
+  row.names(parallel_result3) <- NULL
+  
+  numlist_to_string <- function(x) {
+    return(toString(paste(unlist(x$Local) |> as.character() |> paste(collapse = ","))))
+  }
+  
+  numlist_to_string2 <- function(x) {
+    return(toString(paste(unlist(x$Local2) |> as.character() |> paste(collapse = ","))))
+  }
+  
+  parallel_result3$Local <- apply(parallel_result3, 1, numlist_to_string)
+  parallel_result3$Local2 <- apply(parallel_result3, 1, numlist_to_string2)
+  
+  parallel_result3$Protein_PTM_Loc <- df_local$Protein_PTM_Loc
+  parallel_result3$PTM_Loc <-  df_local$PTM_Loc
+  
+  stopCluster(cl) 
+  cat(file = stderr(), "Function localize_summary...end", "\n")
+  return(parallel_result3) 
+}
+
+#----------------------------------------------------------------------------------------
+localize_summary_080726 <- function(df_ptm, df_ptm_prob){
+  cat(file = stderr(), "Function localize_summary...", "\n")
+  
+  require(foreach)
+  require(doParallel)
+  cores <- detectCores()
+  cl <- makeCluster(cores - 2)
+  registerDoParallel(cl)
+  
+  #Step 1 consolicate localization into one list of max local for each position
+  #create df of just probabilities
+  df_ptm_prob[df_ptm_prob=="Filtered"] <- ""
+  
+  df_local <- data.frame(cbind(df_ptm$Sequence, df_ptm$PeptidePosition, df_ptm$ProteinPTMLocations))
+  colnames(df_local) <- c("ModSequence", "PeptidePosition", "ProteinPTMLocations")
+  
+  df_local$Stripped <- gsub("\\[.*?\\]", "", df_local$ModSequence)
+  df_local$Stripped <- gsub("_", "", df_local$Stripped)
+  
+  #Step 2 reduce modified sequence to STY with phos residue marked with *
+  df_local$phos_seq <- gsub("\\[Phospho \\(STY\\)\\]", "*", df_local$ModSequence)
+  df_local$phos_seq <- gsub("_", "", df_local$phos_seq)
+  df_local$phos_seq <- gsub("\\[.*?\\]", "", df_local$phos_seq)
+  df_local$phos_seq <- gsub("[^STY*]", "", df_local$phos_seq)
+  
+  
+  #new step
+  df_local$ModSequence2 <- df_local$ModSequence
+  df_local$ModSequence2 <- gsub("S\\[Phospho \\(STY\\)\\]", "s", df_local$ModSequence2)
+  df_local$ModSequence2 <- gsub("T\\[Phospho \\(STY\\)\\]", "t", df_local$ModSequence2)
+  df_local$ModSequence2 <- gsub("Y\\[Phospho \\(STY\\)\\]", "y", df_local$ModSequence2)
+  df_local$ModSequence2 <- gsub("\\[.*?\\]", "", df_local$ModSequence2)
+  df_local$ModSequence2 <- gsub("_", "", df_local$ModSequence2)
+  df_local$ModSequence2 <- gsub("\\[.*?\\]", "", df_local$ModSequence2)
+  df_local$ModSequence2 <- gsub("_", "", df_local$ModSequence2)
+  
+  
+  #new step
+  df_local$PTM_Loc <- ""
+  
+  for (r in (1:nrow(df_local))) {
+    find_s <- unlist(stringr::str_locate_all(df_local$ModSequence2[r], "s"))
+    find_t <- unlist(stringr::str_locate_all(df_local$ModSequence2[r], "t"))
+    find_y <- unlist(stringr::str_locate_all(df_local$ModSequence2[r], "y"))
+    
+    
+    if (length(find_s) > 0) {
+      find_s <- unlist(stringr::str_split(paste("S", find_s, collapse = " ", sep = ""), pattern=" "))
+      find_s <- find_s[1:(length(find_s)/2)]
+    }else{
+      find_s <- ""
+    }
+    
+    
+    if (length(find_t) > 0) {
+      find_t <- unlist(stringr::str_split(paste("T", find_t, collapse = " ", sep = ""), pattern=" "))
+      find_t <- find_t[1:(length(find_t)/2)]
+    }else{
+      find_t <- ""
+    }
+    
+    if (length(find_y) > 0) {
+      find_y <- unlist(stringr::str_split(paste("Y", find_y, collapse = " ", sep = ""), pattern=" "))
+      find_y <- find_y[1:(length(find_y)/2)]
+    }else{
+      find_y <- ""
+    }
+    
+    final_all <- c(find_s, find_t, find_y)
+    final_all <- final_all[final_all != ""]
+    final_all <- paste(final_all, collapse = ",", sep = ",")
+    df_local$PTM_Loc[r] <- final_all  
+  }
+  
+  
+  #new step
+  df_local$Protein_PTM_Loc <- gsub("([CM][0-9]+)", "", df_local$ProteinPTMLocations) 
+  df_local$Protein_PTM_Loc <- gsub("\\(,", "\\(",  df_local$Protein_PTM_Loc) 
+  df_local$Protein_PTM_Loc <- gsub("\\),", "\\)",  df_local$Protein_PTM_Loc) 
+  df_local$Protein_PTM_Loc <- gsub(",\\(", "\\(",  df_local$Protein_PTM_Loc) 
+  df_local$Protein_PTM_Loc <- gsub(",\\)", "\\)",  df_local$Protein_PTM_Loc) 
+  df_local$Protein_PTM_Loc <- gsub("\\(", "",  df_local$Protein_PTM_Loc)  
+  df_local$Protein_PTM_Loc <- gsub("\\)", "",  df_local$Protein_PTM_Loc)  
+  df_local$Protein_PTM_Loc <- gsub(",,,,", ",",  df_local$Protein_PTM_Loc)  
+  df_local$Protein_PTM_Loc <- gsub(",,,", ",",  df_local$Protein_PTM_Loc) 
+  df_local$Protein_PTM_Loc <- gsub(",,", ",",  df_local$Protein_PTM_Loc)  
+  
+  # determines residue location for phos on sequence reduced to STY
+  parallel_result1 <- foreach(r = 1:nrow(df_local), .combine = c) %dopar% {
+    phos_count <- stringr::str_count(df_local$phos_seq[r], "\\*")
+    temp_list <- c()
+    if (phos_count >= 1) {
+      phos_loc <- stringr::str_locate_all(df_local$phos_seq[r], "\\*")
+      for(c in (1:phos_count)){
+        temp_list <- c(temp_list, (phos_loc[[1]][[c]] - c))
+      }
+    }
+    list(temp_list)
+  }
+  
+  df_local$phos_res <- parallel_result1
+  
+  
+  #consolidates probabilities for each sample and takes the highest prob for each residue
+  parallel_result2 <- foreach(r = 1:nrow(df_ptm_prob), .combine = c) %dopar% {
     first_value <- FALSE
     for (c in (1:ncol(df_ptm_prob))) {
       if (!first_value) { 
@@ -981,7 +1142,6 @@ localize_summary <- function(df_ptm, df_ptm_prob){
   cat(file = stderr(), "Function localize_summary...end", "\n")
   return(parallel_result3) 
 }
-
 
 #----------------------------------------------------------------------------------------
 localize_summary_trash <- function(df){

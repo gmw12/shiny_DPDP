@@ -1,10 +1,10 @@
 
-file <- "/mnt/h_black2/11135/20260107_130119_11135_Feng_SEER_AB_010726_Report.tsv"
+file <- "/mnt/h_black2/11384/20260723_094854_11384_Block_072326_Report.tsv"
 df_raw <- data.table::fread(file = file, header = TRUE, stringsAsFactors = FALSE, sep = "\t", fill = TRUE)
 
 df_raw <- data.frame(df_raw)
 
-data_column_total <- 26
+data_column_total <- 13
 
 df_info <- df_raw[, 1:(ncol(df_raw)-data_column_total)]
 df_data <- df_raw[, (ncol(df_raw)-data_column_total+1):ncol(df_raw)]
